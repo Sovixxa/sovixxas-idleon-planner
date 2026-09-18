@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>IdleOn Jelly Operator Optimizer</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="shell">
+    <header class="hero">
+      <div>
+        <p class="eyebrow">IdleOn · Jelly Operator</p>
+        <h1>Timed Operation Optimizer</h1>
+        <p class="subtitle">Paste a fresh IdleOn JSON at any time. Everything is parsed and simulated locally in your browser.</p>
+      </div>
+      <div class="hero-actions">
+        <span id="version" class="version"></span>
+        <span id="liveBadge" class="live-badge" title="The local dev server reloads this page when project files change.">LOCAL LIVE</span>
+      </div>
+    </header>
+
+    <section class="panel input-panel">
+      <div class="section-head">
+        <div>
+          <h2>1. Load your current JSON</h2>
+          <p>The full IdleOn export or the data-only export both work. It never leaves localhost.</p>
+        </div>
+        <label class="file-button">Open JSON/TXT<input id="fileInput" type="file" accept=".json,.txt,application/json,text/plain"></label>
+      </div>
+      <textarea id="jsonInput" spellcheck="false" autocomplete="off" placeholder="Paste your IdleOn JSON here…"></textarea>
+      <div class="button-row">
+        <button id="parseBtn" class="primary">Parse JSON</button>
+        <button id="clearBtn" class="secondary">Clear</button>
+        <label class="check"><input id="rememberTab" type="checkbox" checked> Preserve pasted JSON during local hot reloads</label>
+      </div>
+      <p id="error" class="error hidden" role="alert"></p>
+    </section>
+
+    <section id="workspace" class="workspace hidden">
+      <section class="panel status-panel">
+        <div class="section-head compact">
+          <div>
+            <h2>2. Operation state</h2>
+            <p id="stateLine">Loaded.</p>
+          </div>
+          <img id="obstructionIcon" class="obstruction-small" alt="Current Jelly Operator obstruction">
+        </div>
+        <div id="stats" class="stats"></div>
+      </section>
+
+      <section class="panel optimize-panel">
+        <div class="section-head">
+          <div>
+            <h2>3. Find the fastest reliable clear</h2>
+            <p>This simulates attack timing, projectile travel, Amoeba ramp, the operation timer, Critical Condition, Immunoid shielding, Fever, Steroid and revives.</p>
+          </div>
+          <div class="controls">
+            <label>Observed current clear <span class="optional">optional</span>
+              <div class="number-wrap"><input id="observedTime" type="number" min="0.01" step="0.01" inputmode="decimal" placeholder="seconds"><span>s</span></div>
+            </label>
+            <label>Revive reaction <span class="optional">future-proof</span>
+              <div class="number-wrap"><input id="reviveDelay" type="number" min="0" max="2" step="0.05" inputmode="decimal" value="0.12"><span>s</span></div>
+            </label>
+            <label>Search quality
+              <select id="searchQuality">
+                <option value="quick">Quick</option>
+                <option value="normal" selected>Normal</option>
+                <option value="deep">Deep</option>
+              </select>
+            </label>
+            <button id="optimizeBtn" class="primary">Optimize timed clear</button>
+          </div>
+        </div>
+        <div id="solverStatus" class="solver-status" aria-live="polite">Parse your JSON first.</div>
+        <div id="calibrationNote" class="calibration-note"></div>
+      </section>
+
+      <section class="comparison">
+        <article class="panel board-card">
+          <div class="board-heading">
+            <div><span class="board-label">CURRENT</span><h3>Your pasted layout</h3></div>
+            <div id="currentVerdict" class="verdict"></div>
+          </div>
+          <div id="currentBoard" class="jelly-board" aria-label="Current Jelly Operator board"></div>
+          <div id="currentSummary" class="operation-summary"></div>
+          <div id="currentTimeline" class="operation-timeline"></div>
+        </article>
+
+        <article class="panel board-card recommended">
+          <div class="board-heading">
+            <div><span class="board-label">RECOMMENDED</span><h3>Timed optimizer layout</h3></div>
+            <div id="bestVerdict" class="verdict"></div>
+          </div>
+          <div id="bestBoard" class="jelly-board" aria-label="Recommended Jelly Operator board"></div>
+          <div id="bestSummary" class="operation-summary"></div>
+          <div id="bestTimeline" class="operation-timeline"></div>
+        </article>
+      </section>
+
+      <section class="panel cell-panel">
+        <div class="section-head compact">
+          <div><h2>Cell mix</h2><p>Real game sprites; counts update with the recommendation.</p></div>
+        </div>
+        <div id="cellMix" class="cell-mix"></div>
+      </section>
+
+      <section class="panel upgrade-panel">
+        <div class="section-head compact">
+          <div>
+            <h2>What to buy next</h2>
+            <p>Timed impact is simulated for non-board-changing upgrades. Shape/slot unlocks are flagged to re-optimize.</p>
+          </div>
+        </div>
+        <div id="upgrades" class="upgrades"></div>
+      </section>
+
+      <section class="panel model-panel">
+        <details>
+          <summary>Simulation model / caveats</summary>
+          <div class="model-copy">
+            <p>The operation loop is simulated on the same 1/60-second logical timer used by the shipped client. Cell attack progress, projectile travel, Amoeba weakening stacks, Organelle speed, Fever, Critical Condition square-by-square deaths, Immunoid aggro, Steroid timing and revives are modeled as timed events. Multi-square cells keep attacking until their anchor square dies, matching the shipped client.</p>
+            <p>Account-wide damage sources outside the Jelly blob still need calibration. Leave “Observed current clear” blank to use the saved best-DPS fallback, or enter the clear time you just observed with the pasted current board to anchor the model to your live game state.</p>
+            <p>Random initial attack progress and Critical Condition target selection are Monte Carlo simulated, so the optimizer compares clear probability and clear-time distributions instead of one fake-perfect DPS number. If Stronkroid is unlocked, the solver also searches when to press it during the operation.</p>
+          </div>
+        </details>
+      </section>
+    </section>
+  </main>
+
+  <script src="engine.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
