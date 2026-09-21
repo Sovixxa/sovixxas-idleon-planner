@@ -1,0 +1,122 @@
+(function(root){
+'use strict';
+const parse=v=>{if(typeof v==='string'){try{return JSON.parse(v);}catch{return null;}}return v;};
+const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const registry=[
+['Alchemy','Grind Time','add','grind','+0.3 base points per level after unlocking. No diminishing-return curve.'],
+['Stamps','Gud EXP Stamp','add','stamp','Base curve: 4 × level / (level + 200). Approaches 4 points before stamp amplifiers; 200 is half strength, not a hard cap.'],
+['Vault','Wicked Smart','add','vaultLevel','2 base points per level, strengthened by Vault Mastery. Normal paid cap 500; bonus levels can exceed it.'],
+['Vault','Schoolin Fish','add','','Scales with fish progress; separate from Wicked Smart.'],
+['The Hole','Justice Monument — Class EXP','add','justiceExp','Reward levels are amplified by Justice multiplier rewards, Cosmo and Fountain. The reward amplifier is NOT an independent total EXP multiplier.'],
+['The Hole','Gloomie Expie','add','colonies','25 points per cleared colony once the schematic is built.'],
+['The Hole','Sanctum of EXP','add','sanctums','40 points per sanctum once the schematic is built.'],
+['Dungeons','Flurbo Class EXP','add','dungeon','Base curve: 45 × level / (level + 100). Level 100 gives half its asymptotic strength.'],
+['Alchemy','Mimicraught vial','add','','Monster EXP vial bonus.'],
+['Equipment','XP FROM MONSTERS','add','','All matching equipment bonuses join the main additive pool.'],
+['Character','LUK + EXP talent','add','','LUK uses a different curve from 1,000 onward; its talent amplifier strengthens this component only.'],
+['Character','Just EXP star talent','add','','30 × level / (level + 50) base curve; level 50 is half strength.'],
+['Character','Additional EXP talent bonus (client 55)','add','','Conditional talent contribution.'],
+['Food','Class EXP food','add','','Food effect and food activation affect this contribution.'],
+['Food','Golden Class EXP food','add','','Golden food quantity and effect affect this contribution.'],
+['Star signs','Main EXP signs','add','','Equipped / infinite sign bonuses.'],
+['Cards','Monster EXP cards','add','','Card bonus group 44, with card level and activation rules.'],
+['Cards','Card set 5','add','','Additive EXP set contribution.'],
+['Statues','EXP Book statue','add','','Effective statue bonus, including statue amplifiers.'],
+['Construction','EXP shrine','add','','Shrine 5; activation and level apply.'],
+['Construction','Salt Lick EXP','add','','Salt Lick upgrade 3.'],
+['Prayers','EXP blessings and curse','add','','Prayers 0 and 2 add EXP; prayer 9 subtracts EXP. Check active prayers per character.'],
+['Achievements','Class EXP achievements','add','','Client achievement IDs 57, 61, 124, 188, 286 and 357.'],
+['Arcade','Additive Class EXP','add','','Arcade bonus 12.'],
+['Lab','EXP sigil','add','','Sigil 8.'],
+['Breeding','Shiny pet EXP','add','','Shiny bonus 1.'],
+['Worship','MSA EXP','add','','MSA bonus 4.'],
+['Owl','Class EXP bonus','add','','Owl bonus 0.'],
+['Voting','Class EXP vote','add','','Voting bonus 15; depends on current vote.'],
+['Compass','Class EXP upgrade','add','','Compass upgrade 51.'],
+['Summoning','Class EXP win reward','add','','Win bonus 23.'],
+['Grimoire','Class EXP upgrade','add','','Grimoire upgrade 24.'],
+['Farming','Exotic Class EXP','add','','Exotic bonus 50.'],
+['Equipment','Iron equipment set','add','','Activated Iron set contributes to the additive pool.'],
+['Social','Friend EXP bonus','add','','Friend bonus 1.'],
+['Minehead','Class EXP button','add','','Button 8.'],
+['Other','Post office monster EXP','add','','BoxRewards monsterExp.'],
+['Conditional','Lowest-level character bonuses','add','','W1 merit and Vault bonus apply to the lowest-level character, subject to their conditions.'],
+['Conditional','Early character catch-up','add','','Client bonuses change at levels 10, 30 and 50; early equipment set applies below 50.'],
+['Conditional','Cooking Class EXP meal','add','','Applies below character level 120.'],
+['Conditional','Weekly boss EXP','add','','WeeklyBoss c contribution capped at 150 points.'],
+['Divinity','Minor EXP bonus','add','','Divinity minor bonus 4.'],
+['Events','Spring card and shimmer bonuses','add','','Spring event card levels and shimmer bonus 0. Event-dependent; no spending recommendation.'],
+['Companions','Additive companion EXP','add','','Companion groups 3, 50, 47, 111 and 128. Availability varies; no purchase needed by this planner.'],
+['Other','Account EXP counters','add','','Client account options 421 and shimmer count 179. Values are not decoded here.'],
+['Jelly','First Class EXP reward','multi','obstruction','×1.20 after obstruction 31.'],
+['Jelly','Second Class EXP reward','multi','obstruction','A separate ×1.25 after obstruction 63. Together: ×1.50.'],
+['Equipment','CLASS EXP MULTI pool','multi','','Add matching gear values, then apply ×(1 + sum / 100) once. Two 7% rings give ×1.14, not ×1.1449.'],
+['Equipment','BONUS CLASS EXP pool','multi','','A second equipment pool. Sum its items, then multiply separately from CLASS EXP MULTI.'],
+['Research','Class EXP research grid','multi','','Nodes 130, 131, 132 and 152 sum into ONE multiplier.'],
+['Farming','EXP sticker','multi','','Farming sticker 0.'],
+['Gaming','Superbit 63','multi','','Adds 10% to its independent factor when unlocked.'],
+['Gaming','Lowest-level Superbit + bundle','multi','','Lowest-level Superbit 19 and bundle bun_q share ONE pool. Bundle is optional paid content.'],
+['Zenith','Class EXP market','multi','','Zenith market 9.'],
+['Cards','Class EXP multi cards','multi','','Card bonus group 100.'],
+['Cards','Card set 12','multi','','Separate multiplier from the additive card set.'],
+['Arcade','Class EXP multiplier','multi','','Arcade bonus 60; distinct from additive bonus 12.'],
+['Alchemy','World 7 Class EXP vial','multi','','Vial key 7classexp; separate from Mimicraught.'],
+['Talents','Titan kill scaling','multi','','Talent 434 factor raised to total Titan kills.'],
+['Talents','Conditional talent multiplier','multi','','Talent 429 applies when its character condition is met.'],
+['Arcane','Map EXP multiplier','multi','','ArcaneMapMulti bonus 1.'],
+['Fishing','Big Fish EXP','multi','','Big Fish bonus 4.'],
+['Coral','Dancing Coral EXP','multi','','Dancing Coral bonus 3.'],
+['Coral','Coral Kid / Divinity scaling','multi','','Coral Kid upgrade 2 raised to max(0, Divinity 25 − 10).'],
+['Progression','Bubba reward','multi','','Bubba reward 6.'],
+['Progression','Sushi reward','multi','','Sushi reward 15.'],
+['Clouds','Class EXP cloud','multi','','Cloud bonus 70 contributes 5 points per effective bonus level to its factor.'],
+['Fountain','Class EXP multiplier','multi','','Fountain total bonus 16.'],
+['Royal statues','Class EXP multiplier','multi','','Royal statue bonus 3.'],
+['Spelunking','Conditional catch-up multiplier','multi','','Combined factor uses 1.03 per discovered entry, Superbit 24, merit 27 and account counter 464. Subject to client activation conditions.'],
+['Companions','Multiplicative companion EXP','multi','','Companions 37, 33, 160, 32, 168, 34, 145, 128 and level bonus 2; companion 50 also has a capped factor. Optional acquisition; no paid recommendation.'],
+['Workbench','Extra EXP and drop rate','multi','','Workbench AdditionExtraEXPnDR factor.'],
+['Active play','Active Learning','mode','activeLearning','Active-kill bonus; normal paid upgrade cap 100. Keep separate from the shared character-sheet EXP calculation.']
+];
+const routes={EquipmentRings38:['Craft · early target','Anvil tab 2. Unlock the Starstrut recipe; each ring uses 1 Bejeweled Ring, 1,500 Wakka Cherry, 300 Fruitfly and 40 Distilled Water.','https://www.digitaltq.com/wiki/idleon/anvil-tab-2'],EquipmentCape17:['Boss drop · long farm','Farm The Emperor for Gilded Emperor Wings. Rare drop: do not treat this as a quick upgrade.','https://www.digitaltq.com/wiki/idleon/the-emperor-world-6-boss'],EquipmentNametag26:['Earned reward','Improve Tome standing and claim Tome Pro when eligible.',''],EquipmentNametagReplica26:['Earned replica','Requires the matching nametag progression; check the W7 replica shop.','']};
+for(const id of ['EquipmentHats123','EquipmentShirts41','EquipmentPants32','EquipmentShoes41','EquipmentPunching12','EquipmentSword10','EquipmentBows15','EquipmentWands14'])routes[id]=['Craft · late-game target','World 7 crafting progression. Check the recipe unlock and material costs at the anvil; ownership of materials is not yet checked.',''];
+const stats=item=>{const b=[0,0,0];for(const i of [1,2]){const k=['%_XP_FROM_MONSTERS','%_CLASS_EXP_MULTI','%_BONUS_CLASS_EXP'].indexOf(item['UQ'+i+'txt']);if(k>=0)b[k]+=Number(item['UQ'+i+'val'])||0;}return b;};
+const name=x=>x.displayName.replace(/[_|]/g,' ');
+function owned(state,catalog){const d=state?.rawData||{},result=[],map=new Map(catalog.map(x=>[x.id,x]));const read=(order,qty,location)=>{order=parse(order);qty=parse(qty);for(const k of Object.keys(order||{})){if(!/^\d+$/.test(k)||!map.has(order[k])||!(Number(qty?.[k])>0))continue;result.push({item:map.get(order[k]),count:Number(qty[k]),location});}};read(d.ChestOrder,d.ChestQuantity,'Storage');for(const k of Object.keys(d)){const m=k.match(/^InventoryOrder_(\d+)$/);if(m)read(d[k],d['ItemQTY_'+m[1]],'Inventory · '+(state.rawRoot?.charNames?.[m[1]]||'Character '+(+m[1]+1)));const e=k.match(/^EquipOrder_(\d+)$/);if(e)read(parse(d[k])?.[0],parse(d['EquipQTY_'+e[1]])?.[0],'Equipped · '+(state.rawRoot?.charNames?.[e[1]]||'Character '+(+e[1]+1)));}return result;}
+function render(host,tab,state){if(tab==='sources')return sources(host,state);return gear(host,state);}
+function evaluateSources(state,engine,catalog){
+ const a=engine.inspect(state),h=a.hole,fmt=n=>Number(n).toLocaleString(undefined,{maximumFractionDigits:2});
+ const results={};const put=(name,value,note)=>results[name]={value,note};
+ if(a.grind!=null)put('Grind Time',`Lv ${fmt(a.grind)} · +${fmt(engine.grind(a.grind))} base points`,'Before bubble amplifiers and character activation. Next 100 levels: +30 base points.');
+ if(a.stamp!=null)put('Gud EXP Stamp',a.stamp===0?'Missing · Lv 0':`Lv ${fmt(a.stamp)} · +${fmt(engine.stamp(a.stamp))} base points`,'Before Lab, exaltation and other stamp amplifiers. Next 10 levels: +'+fmt(engine.stamp(a.stamp+10)-engine.stamp(a.stamp))+' base points.');
+ if(a.vaultBonus!=null)put('Wicked Smart',`Lv ${fmt(a.vaultLevel)} · +${fmt(a.vaultBonus)} points`,'Includes saved Vault Mastery. Normal purchase cap: 500; bonus levels may exceed it.');
+ if(a.dungeonBonus!=null)put('Flurbo Class EXP',`Lv ${fmt(a.dungeon)} · +${fmt(a.dungeonBonus)} points`,'Next 10 levels: +'+fmt(45*(a.dungeon+10)/(a.dungeon+110)-a.dungeonBonus)+' points.');
+ if(a.activeLearning!=null)put('Active Learning',`Lv ${fmt(a.activeLearning)}${a.activeLearning>=100?' · normal purchase cap reached':''}`,'Level decoded. Effective active-kill bonus is not calculated here.');
+ if(a.obstruction!=null)for(const [name,threshold,multi] of [['First Class EXP reward',31,1.2],['Second Class EXP reward',63,1.25]])put(name,a.obstruction>=threshold?`Unlocked · ×${multi}`:`Locked · obstruction ${a.obstruction}/${threshold}`,a.obstruction>=threshold?'Independent multiplier unlocked.':'Heavy time gate. Progress alongside immediate upgrades.');
+ for(const [name,built,count,points] of [['Gloomie Expie',h.gloomieBuilt,h.colonies,25],['Sanctum of EXP',h.sanctumBuilt,h.sanctums,40]])if(built!=null&&count!=null)put(name,`+${fmt(built>0?count*points:0)} points · ${fmt(count)} clears`,built>0?`Next clear: +${points} points. Summon resources and difficulty still apply.`:`Schematic inactive. Building it would activate +${fmt(count*points)} points from saved clears.`);
+ if(h.justiceExp!=null&&h.justiceMulti!=null&&h.cosmo!=null){const factor=Math.max(1,1+Math.ceil(h.justiceMulti/(250+h.justiceMulti)*2500)/1000+h.cosmo*.25);put('Justice Monument — Class EXP',`Lv ${fmt(h.justiceExp)} · +${fmt(h.justiceExp*factor)} points before Fountain`,`Saved reward amplifier: ×${fmt(factor)}. Next 100 reward levels: +${fmt(100*factor)} points before Fountain. This is not an independent total EXP multiplier.`);}
+ const d=state?.rawData||{},map=new Map((catalog||[]).map(x=>[x.id,x]));
+ const read=(key,index)=>{const v=parse(d[key])?.[index];return v!=null&&v!==''&&Number.isFinite(Number(v))&&Number(v)>=0?Number(v):null;};
+ const salt=read('SaltLick',3);if(salt!=null)put('Salt Lick EXP',`Lv ${fmt(salt)} · +${fmt(salt*.2)} points`,salt>=100?'Normal upgrade cap reached.':'Next level: +0.2 additive Class EXP points. Costs refinery salts; compare against other salt uses.');
+ for(const [index,label,base] of [[12,'Additive Class EXP',20],[60,'Class EXP multiplier',50]]){const level=read('ArcadeUpg',index);if(level!=null){const bonus=base*level/(level+100)*(level===101?2:1);put(label,`Lv ${fmt(level)} · +${fmt(bonus)}% before companion`,`${index===60?'Independent multiplier pool':'Additive pool'}. Includes the client’s level-101 doubling. Companion 27 can double this again; ownership is not decoded. Level 100 is half curve strength; 101 activates a separate doubling, not a normal +1-level gain.`);}}
+ const weekly=parse(d.WeeklyBoss);if(weekly&&Object.prototype.hasOwnProperty.call(weekly,'c')&&Number.isFinite(Number(weekly.c)))put('Weekly boss EXP',`+${fmt(Math.min(150,Math.max(0,Number(weekly.c))))} points`,'WeeklyBoss c bonus capped at 150 additive points. Current exported bonus only; future rewards are not predicted.');
+ const levels=a.roster.filter(c=>c.level!=null);if(levels.length){put('Early character catch-up',levels.every(c=>c.level>=50)?'All saved characters have outgrown this bonus':levels.filter(c=>c.level<50).length+' characters eligible',levels.map(c=>`${c.name}: +${c.level<10?150:c.level<30?100:c.level<50?50:0} points`).join(' • ')+'. Automatic catch-up only; early card-set bonus is separate.');if(levels.every(c=>c.level>=120))put('Cooking Class EXP meal','Inactive · all saved characters Lv 120+','This Class EXP meal contribution only applies below level 120. It is not an account EXP upgrade for this roster.');}
+
+ for(const [index,label] of ['XP FROM MONSTERS','CLASS EXP MULTI pool','BONUS CLASS EXP pool'].entries()){
+ const rows=[];for(const char of a.roster){const eq=parse(parse(d['EquipOrder_'+char.id])?.[0]),qty=parse(parse(d['EquipQTY_'+char.id])?.[0]);if(!eq||!qty)continue;let sum=0;for(const k of Object.keys(eq)){if(!/^\d+$/.test(k)||!(Number(qty[k])>0))continue;const item=map.get(eq[k]);if(item)sum+=stats(item)[index];}rows.push(`${char.name}: +${fmt(sum)}% base${index?' (×'+fmt(1+sum/100)+')':''}`);}
+ if(rows.length)put(label,'Equipped base bonuses · '+rows.length+' characters',rows.join(' • ')+'. Base item definitions only; upgrade stones, conversion and other equipment modifiers are not decoded. This is not the final equipped bonus.');
+ }
+ return results;
+}
+function sources(host,state){const values=evaluateSources(state,root.ClassExp,root.ExpEquipment);host.innerHTML=`<section class="exp-card"><h3>Your checked EXP sources</h3><p>Current bonuses and next steps from your save. Base-only calculations are labeled; they are not your complete EXP total.</p><label>Find a source <input id="expSourceSearch" type="search" placeholder="Bubble, stamp, Hole, cards…"></label> <label>Show <select id="expSourceFilter"><option value="all">All types</option><option value="add">Additive</option><option value="multi">Multiplicative</option><option value="mode">Active only</option></select></label></section><div id="expSourceRows"></div>`;
+const draw=()=>{const q=host.querySelector('input').value.toLowerCase(),filter=host.querySelector('select').value,matched=registry.filter(r=>(filter==='all'||r[2]===filter)&&r.join(' ').toLowerCase().includes(q)),checked=matched.filter(r=>values[r[1]]),pending=matched.filter(r=>!values[r[1]]);host.querySelector('#expSourceRows').innerHTML=['add','multi','mode'].map(t=>{const rows=checked.filter(r=>r[2]===t);return rows.length?`<section class="exp-card"><h3>${{add:'Additive pool',multi:'Multiplicative factors',mode:'Active only'}[t]} · ${rows.length} checked</h3>${rows.map(r=>{const v=values[r[1]];return `<details class="exp-source"><summary><strong>${esc(r[1])}</strong><span>${esc(v.value)}</span></summary><p>${esc(v.note)}</p><p>${esc(r[4])}</p></details>`;}).join('')}</section>`:'';}).join('')+(!checked.length?'<p>No checked sources match. Load a complete export if you have not loaded one.</p>':'')+(pending.length?`<details class="exp-card"><summary>Not checked yet · ${pending.length} sources</summary><p>These are reference entries, not detected gaps or upgrade recommendations. Save decoding or effective-bonus formulas remain incomplete. They are excluded from your account ranking.</p>${pending.map(r=>`<details class="exp-source"><summary><strong>${esc(r[1])}</strong><span>${esc(r[0])} · ${r[2]==='add'?'Additive':r[2]==='multi'?'Multiplicative':'Active only'}</span></summary><p>${esc(r[4])}</p></details>`).join('')}</details>`:'');};host.querySelector('input').oninput=draw;host.querySelector('select').onchange=draw;draw();}
+function gear(host,state){if(!state){host.innerHTML='<section class="exp-card"><h3>Load your save to match owned gear.</h3><p>The planner checks storage, bags and equipped items.</p></section>';return;}
+const catalog=root.ExpEquipment,items=owned(state,catalog),a=root.ClassExp.inspect(state);host.innerHTML=`<section class="exp-card"><h3>Your EXP gear, without spending money</h3><p>Owned items include gear already on other characters. Transfer suggestions are for <strong>one character at a time</strong>.</p><label>Character <select id="expGearChar">${a.roster.map(c=>`<option value="${c.id}">${esc(c.name)} · Lv ${c.level}</option>`).join('')}</select></label><p>Base direct EXP stats only. Upgrade stones, sets, premium-slot conversion and damage/AFK trade-offs are not scored. Keep your current item in slots with no verified EXP upgrade.</p></section><div id="expGearResult"></div><details class="exp-card"><summary>Other owned EXP items · no purchase suggestions</summary><p>Paid, event and acquisition-unverified items are listed here only if your account already owns them. They are excluded from the free progression setup.</p>${items.filter(x=>!routes[x.item.id]&&stats(x.item).some(Boolean)).map(x=>`<p><strong>${esc(name(x.item))}</strong> · ${esc(x.location)} · ${esc(statText(x.item))}</p>`).join('')||'<p>None found.</p>'}</details>`;
+const draw=()=>{const char=a.roster.find(c=>c.id===Number(host.querySelector('select').value)),d=state.rawData,eq=parse(parse(d['EquipOrder_'+char.id])?.[0])||{},weapon=catalog.find(x=>x.id===eq[1]),classType=weapon?.Class;const eligible=x=>Number(x.lvReqToEquip)<=char.level&&(x.Class==='ALL'||(classType&&classType!=='ALL'&&x.Class===classType));const byType=new Map();for(const x of items.filter(x=>routes[x.item.id]&&eligible(x.item))){const key=x.item.typeGen;if(!byType.has(key))byType.set(key,[]);for(let i=0;i<Math.min(2,x.count);i++)byType.get(key).push(x);}const rows=[];for(const [type,list] of byType){list.sort((x,y)=>stats(y.item)[1]-stats(x.item)[1]);rows.push(...list.slice(0,type==='aRing'?2:1));}const total=rows.reduce((n,x)=>n+stats(x.item)[1],0);const farm=catalog.filter(x=>routes[x.id]&&!/Replica/.test(x.id)&&stats(x).some(Boolean)&&(x.Class==='ALL'||x.Class===classType)).filter(x=>{const count=items.filter(o=>o.item.id===x.id).reduce((n,o)=>n+o.count,0);return count<(x.typeGen==='aRing'?2:1);});host.querySelector('#expGearResult').innerHTML=`<section class="exp-card"><h3>Best owned free-progression picks</h3><p>Highest base CLASS EXP MULTI in each supported slot · selected items together: <strong>+${total}% in that gear pool</strong>. This is not the account’s total multiplier.</p>${rows.length?`<div class="exp-gear-grid">${rows.map(x=>`<article><p class="eyebrow">${esc(x.item.Type)}</p><h4>${esc(name(x.item))}</h4><strong>${esc(statText(x.item))}</strong><p>${esc(x.location)}</p></article>`).join('')}</div>`:'<p>No eligible items from the verified free progression list found. Keep your current gear and use the targets below.</p>'}${!classType||classType==='ALL'?'<p>Weapon class could not be inferred safely; class-specific weapons are omitted.</p>':''}</section><section class="exp-card"><h3>Farm or craft next</h3><p>Start with rings; rare wings and late-game crafts are longer projects. Targets below are not affordability or unlock claims.</p>${farm.sort((x,y)=>(x.id==='EquipmentRings38'?-1:y.id==='EquipmentRings38'?1:0)).map(x=>`<details class="exp-source"><summary><strong>${esc(name(x))}</strong><span>${esc(statText(x))} · ${Number(x.lvReqToEquip)>char.level?'Needs Lv '+x.lvReqToEquip:routes[x.id][0]}</span></summary><p>${esc(routes[x.id][1])}</p>${routes[x.id][2]?`<a href="${routes[x.id][2]}" target="_blank" rel="noopener noreferrer">Recipe / drop reference</a>`:''}</details>`).join('')||'<p>You own the listed progression targets for this class.</p>'}</section>`;};host.querySelector('select').onchange=draw;draw();}
+function statText(x){const b=stats(x);return b.map((n,i)=>n?`+${n}% ${['additive EXP','Class EXP multi pool','bonus Class EXP pool'][i]}`:'').filter(Boolean).join(' · ');}
+function worldInfo(page,state){
+ const pages={stamps:['Gud EXP Stamp'],alchemy:['Grind Time'],arcade:['Additive Class EXP','Class EXP multiplier'],construction:['Salt Lick EXP'],refinery:['Salt Lick EXP'],hole:['Justice Monument — Class EXP','Gloomie Expie','Sanctum of EXP'],cooking:['Cooking Class EXP meal'],characters:['Early character catch-up'],challenges:['Weekly boss EXP'],dungeons:['Flurbo Class EXP']};
+ const names=pages[page];if(!names)return '';const values=evaluateSources(state,root.ClassExp,root.ExpEquipment),rows=names.filter(n=>values[n]);if(!rows.length)return '';
+ return `<section class="exp-card"><h3>Class EXP · your account</h3>${rows.map(n=>`<details class="exp-source"><summary><strong>${esc(n)}</strong><span>${esc(values[n].value)}</span></summary><p>${esc(values[n].note)}</p></details>`).join('')}<p class="muted">Shared with EXP Sources. Base-only or incomplete calculations are labeled.</p></section>`;
+}
+const api={render,owned,stats,registry,routes,evaluateSources,worldInfo};if(typeof module!=='undefined')module.exports=api;else root.ExpTabs=api;
+})(typeof window!=='undefined'?window:globalThis);

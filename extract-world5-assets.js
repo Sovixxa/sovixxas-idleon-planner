@@ -1,0 +1,9 @@
+'use strict';
+const fs=require('node:fs'),path=require('node:path'),zlib=require('node:zlib'),vm=require('node:vm');
+const root=__dirname,client=fs.readFileSync(path.resolve(root,'../audit/N.js'),'utf8');
+function list(name){const token='.'+name+'=function(){return',start=client.indexOf(token)+token.length,end=client.indexOf('},na.',start);if(start<token.length)throw Error(name+' missing');return vm.runInNewContext(client.slice(start,end));}
+const data={ArtifactInfo:list('ArtifactInfo'),IslandInfo:list('IslandInfo'),IslandInfobox:list('IslandInfobox'),CaptainBonuses:list('CaptainBonuses'),GamingUpg:list('GamingUpg'),GamingBoxes:list('GamingBoxes')};
+fs.writeFileSync(path.resolve(root,'world5-data.js'),'window.WORLD5_CATALOG='+JSON.stringify(data)+';\n');
+const names=[...Array.from({length:35},(_,i)=>`SailT${i}`),...Array.from({length:5},(_,i)=>`GamingPlant${i}`),...Array.from({length:9},(_,i)=>`GamingPlant${String.fromCharCode(97+i)}0`),...Array.from({length:9},(_,i)=>`GamingItem${i}`),'TomeBG','TomeClaim','SlabBG','Slab4','Slab5'];
+const archive=path.resolve(root,'../Idleon resources/app.asar'),fd=fs.openSync(archive,'r');
+try{const prefix=Buffer.alloc(16);fs.readSync(fd,prefix,0,16,0);const header=Buffer.alloc(prefix.readUInt32LE(12));fs.readSync(fd,header,0,header.length,16);let entry=JSON.parse(header.toString('utf8'));for(const part of 'distBuild/static/game/lib/default.pak'.split('/'))entry=entry.files[part];const offset=8+prefix.readUInt32LE(4)+Number(entry.offset);let count=0;for(const name of names){const match=client.match(new RegExp(`R0i(\\d+)R1zR2R3R4y\\d+:assets%2Fdata%2F${name}\\.pngR6i(\\d+)`));if(!match)continue;const packed=Buffer.alloc(Number(match[2]));fs.readSync(fd,packed,0,packed.length,offset+Number(match[1]));fs.writeFileSync(path.resolve(root,'assets',name+'.png'),zlib.gunzipSync(packed));count++;}console.log(`Extracted ${count} World 5 sprites.`);}finally{fs.closeSync(fd);}

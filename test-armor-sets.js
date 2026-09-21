@@ -1,0 +1,10 @@
+const fs=require('fs'),vm=require('vm'),assert=require('assert');
+const c={};c.window=c;vm.createContext(c);vm.runInContext(fs.readFileSync('armor-sets.js','utf8'),c);
+const raw='0,COPPER_SET,IRON_SET,SECRET_SET,1';
+const m=c.ArmorSets.model({OptLacc:raw});
+assert.equal(m.rows.length,19);assert.equal(m.unlocked.length,3);
+assert(m.rows.find(x=>x.key==='SECRET_SET').unlocked);
+assert.equal(m.rows.find(x=>x.key==='SECRET_SET').bonus,'1.25x Golden Food Effect');
+const host={innerHTML:''};c.ArmorSets.render(host,{OptLacc:raw});
+assert(host.innerHTML.includes('3 / 19'));assert(host.innerHTML.includes('Vman Nametag'));
+console.log('armor sets tests passed');

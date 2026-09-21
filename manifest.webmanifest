@@ -1,0 +1,9 @@
+{
+  "name": "Sovixxa’s Idleon Planner",
+  "short_name": "Sovixxa Planner",
+  "description": "Sovixxa’s private browser-based IdleOn account planner and optimizer.",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#0b1018",
+  "theme_color": "#111827"
+}

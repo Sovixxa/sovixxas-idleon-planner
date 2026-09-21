@@ -7,7 +7,7 @@ const {spawn}=require('child_process');
 
 const ROOT=__dirname;
 const HOST='127.0.0.1';
-const PORT=Number(process.env.JELLY_PORT||8787);
+const PORT=Number(process.env.JELLY_PORT||3000);
 const AUTO_PULL=process.env.JELLY_AUTO_PULL==='1';
 const PULL_MS=Math.max(1500,Number(process.env.JELLY_PULL_MS||3000));
 const clients=new Set();
@@ -58,7 +58,7 @@ const server=http.createServer((req,res)=>{
 });
 
 // Portable hot reload: watch core source files plus direct asset changes.
-const watchFiles=['index.html','styles.css','app.js','engine.js','README.txt'];
+const watchFiles=['index.html','styles.css','app.js','engine.js','solver-worker.js','beanstalk-engine.js','beanstalk.js','beanstalk.css','pets.js','pets.css','README.txt'];
 let reloadTimer=null;
 function changed(file){clearTimeout(reloadTimer);reloadTimer=setTimeout(()=>broadcast('reload',path.basename(file)),120);}
 for(const f of watchFiles){const p=path.join(ROOT,f);if(fs.existsSync(p))fs.watchFile(p,{interval:450},(cur,prev)=>{if(cur.mtimeMs!==prev.mtimeMs||cur.size!==prev.size)changed(p);});}
@@ -70,7 +70,7 @@ if(AUTO_PULL&&fs.existsSync(path.join(ROOT,'.git'))){
 
 server.listen(PORT,HOST,()=>{
   const url=`http://${HOST}:${PORT}`;
-  console.log(`\nJelly Operator Optimizer running at ${url}`);
+  console.log(`\nSovixxa’s Idleon Planner running at ${url}`);
   console.log('Keep this window open. Source-file edits hot-reload the browser.');
   if(AUTO_PULL)console.log(`Git auto-pull: ON (every ${Math.round(PULL_MS/1000)}s; clean working tree only).`);
   console.log('');

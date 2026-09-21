@@ -1,31 +1,79 @@
 <!doctype html>
 <html lang="en">
 <head>
+  <meta name="theme-color" content="#111827">
+  <meta name="description" content="Sovixxa’s private browser-based IdleOn account planner and optimizer.">
+  <link rel="manifest" href="manifest.webmanifest">
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="color-scheme" content="dark">
-  <title>IdleOn Jelly Operator Optimizer</title>
+  <title>Sovixxa’s Idleon Planner</title>
   <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="cog-board.css">
+  <link rel="stylesheet" href="worship.css">
+  <link rel="stylesheet" href="armor-sets.css?v=1">
+  <link rel="stylesheet" href="lab.css">
+  <link rel="stylesheet" href="world4.css">
+  <link rel="stylesheet" href="cooking.css">
+  <link rel="stylesheet" href="divinity.css">
+  <link rel="stylesheet" href="world5.css">
+  <link rel="stylesheet" href="collections.css">
+  <link rel="stylesheet" href="equinox.css">
+  <link rel="stylesheet" href="world6.css">
+    <link rel="stylesheet" href="world7.css">
+  <link rel="stylesheet" href="gallery.css">
+  <link rel="stylesheet" href="cards.css">
+  <link rel="stylesheet" href="card-loadout.css">
+  <link rel="stylesheet" href="card-bonus-panel.css">
+  <link rel="stylesheet" href="account-pages.css">
+  <link rel="stylesheet" href="character-talents.css">
+  <link rel="stylesheet" href="research-grid.css">
+  <link rel="stylesheet" href="misc-buffs.css">
+  <link rel="stylesheet" href="bonus-systems.css">
+  <link rel="stylesheet" href="remaining-worlds.css">
+  <link rel="stylesheet" href="credits.css">
+  <link rel="stylesheet" href="gold-food.css">
+  <link rel="stylesheet" href="beanstalk.css">
+  <link rel="stylesheet" href="pets.css?v=7">
 </head>
 <body>
+  <div class="app-layout">
+  <aside class="side-nav" aria-label="IdleOn planner navigation">
+    <div class="side-brand" aria-label="Sovixxa's Idleon Planner">
+      <span class="side-brand-mark" aria-hidden="true">SP</span>
+      <span class="side-brand-copy"><strong>Sovixxa's</strong><strong>Idleon Planner</strong></span>
+    </div>
+    <button id="navHome" class="side-link active">Home</button>
+    <div class="side-section-label">Account &amp; Tools</div>
+    <div class="side-group collapsed"><span>Account</span><button id="navCharacters" class="side-link">Characters & Talents</button><button id="navFamilyBonuses" class="side-link">Family Bonuses</button><button id="navFriendBonuses" class="side-link">Friend Bonuses</button><button id="navGemShop" class="side-link">Gem Shop Upgrades</button><button id="navCards" class="side-link">Cards</button><button id="navGuilds" class="side-link">Guilds</button><button id="navTasks" class="side-link">Tasks / Achievements / Merit Shop</button><button id="navEvents" class="side-link">Event Bonuses</button><button id="navEventShop" class="side-link">Event Shop</button><button id="navGoldFood" class="side-link">Gold Food Bonuses</button></div>
+    <div class="side-group collapsed"><span>Optimizers</span><button id="navClassExp" class="side-link">Class EXP</button><button id="navLoadouts" class="side-link">Loadouts</button></div>
+    <div class="side-group collapsed"><span>Clickers</span><button id="navOrion" class="side-link">Orion</button><button id="navPoppy" class="side-link">Poppy</button><button id="navBubba" class="side-link">Bubba</button></div>
+    <div class="side-group collapsed"><span>Masterclasses</span><button id="navMasterclasses" class="side-link">Overview</button><button id="navCompass" class="side-link">Compass</button><button id="navGrimoire" class="side-link">Grimoire</button><button id="navTesseract" class="side-link">Tesseract</button><button id="navRoyalArmory" class="side-link">Royal Armory</button></div>
+    <div class="side-group collapsed"><span>Misc</span><button id="navBuffs" class="side-link">All Bonuses</button><button id="navPets" class="side-link">Pets</button></div>
+    <div class="side-section-label worlds">Worlds</div>
+    <div class="side-group collapsed"><span>World 1</span><button id="navBribes" class="side-link">Bribes</button><button id="navStamps" class="side-link">Stamps</button><button id="navStatues" class="side-link">Statues</button><button id="navStarSigns" class="side-link">Star Signs</button><button id="navForgeBonuses" class="side-link">Forge Bonuses</button><button id="navDungeons" class="side-link">Dungeons</button></div>
+    <div class="side-group collapsed"><span>World 2</span><button id="navAlchemy" class="side-link">Alchemy</button><button id="navVotes" class="side-link">Weekly Votes</button><button id="navKillroy" class="side-link">Killroy Prime</button><button id="navPostOffice" class="side-link">Post Office</button><button id="navIslandExpeditions" class="side-link">Island Expeditions</button><button id="navArcade" class="side-link">Arcade</button><button id="navObols" class="side-link">Obols</button></div>
+    <div class="side-group collapsed"><span>World 3</span><button id="navConstruction" class="side-link">Construction</button><button id="navRefinery" class="side-link">Refinery</button><button id="navPrinter" class="side-link">3D Printer</button><button id="navAtomCollider" class="side-link">Atom Collider</button><button id="navWorship" class="side-link">Worship</button><button id="navPrayers" class="side-link">Prayers</button><button id="navSaltLick" class="side-link">Salt Lick</button><button id="navDeathNote" class="side-link">Death Note</button><button id="navArmorSets" class="side-link">Armor Sets</button><button id="navEquinox" class="side-link">Equinox</button></div>
+    <div class="side-group collapsed"><span>World 4</span><button id="navLab" class="side-link">Lab</button><button id="navBreeding" class="side-link">Breeding</button><button id="navCooking" class="side-link">Cooking</button><button id="navRift" class="side-link">Rift</button><button id="navTome" class="side-link">Tome</button></div>
+    <div class="side-group collapsed"><span>World 5</span><button id="navDivinity" class="side-link">Divinity</button><button id="navSailing" class="side-link">Sailing</button><button id="navGaming" class="side-link">Gaming</button><button id="navGamingPalette" class="side-link">Gaming Palette</button><button id="navUpgradeVault" class="side-link">Upgrade Vault</button><button id="navHole" class="side-link">The Hole</button><button id="navSlab" class="side-link">Slab</button></div>
+    <div class="side-group collapsed"><span>World 6</span><button id="navFarming" class="side-link">Farming</button><button id="navSneaking" class="side-link">Sneaking</button><button id="navSummoning" class="side-link">Summoning</button><button id="navBeanstalk" class="side-link">Beanstalk</button><button id="navEmperorBonuses" class="side-link">Emperor Bonuses</button></div>
+    <div class="side-group collapsed"><span>World 7</span><button id="navMinehead" class="side-link">Minehead</button><button id="navSpelunking" class="side-link">Spelunking</button><button id="navResearch" class="side-link">Research</button><button id="navSushi" class="side-link">Sushi</button><button id="navButton" class="side-link">The Button</button><button id="navCoral" class="side-link">Coral</button><button id="navClamworks" class="side-link">Clamworks</button><button id="navMeritocracy" class="side-link">Meritocracy</button><button id="navBigFish" class="side-link">Big Fish</button><button id="navCoralKid" class="side-link">Coral Kid</button><button id="navCoralReef" class="side-link">Coral Reef</button><button id="navDancingCoral" class="side-link">Dancing Coral</button><button id="navHoops" class="side-link">Hoops</button><button id="navDarts" class="side-link">Darts</button><button id="navZenithMarket" class="side-link">Zenith Market</button><button id="navNametags" class="side-link">Nametags & Trophies</button><button id="navLegendTalents" class="side-link">Legend Talents</button><button id="navJelly" class="side-link">Jelly Operator</button></div>
+    <div class="side-footer"><button id="navCredits" class="side-link">Credits &amp; Resources</button><small>All assets belong to LavaFlame2.</small></div>
+  </aside>
   <main class="shell">
     <header class="hero">
-      <div>
-        <p class="eyebrow">IdleOn · Jelly Operator</p>
-        <h1>Timed Operation Optimizer</h1>
-        <p class="subtitle">Paste a fresh IdleOn JSON at any time. Everything is parsed and simulated locally in your browser.</p>
-      </div>
       <div class="hero-actions">
         <span id="version" class="version"></span>
+        <button id="changeJsonBtn" class="secondary hidden">Change local save</button>
         <span id="liveBadge" class="live-badge" title="The local dev server reloads this page when project files change.">LOCAL LIVE</span>
       </div>
     </header>
 
-    <section class="panel input-panel">
+    <section id="inputPanel" class="panel input-panel">
       <div class="section-head">
         <div>
           <h2>1. Load your current JSON</h2>
-          <p>The full IdleOn export or the data-only export both work. It never leaves localhost.</p>
+          <p>The full IdleOn export or the data-only export both work. For large exports, use Open JSON/TXT with the original file to avoid truncated pastes. It never leaves localhost.</p>
         </div>
         <label class="file-button">Open JSON/TXT<input id="fileInput" type="file" accept=".json,.txt,application/json,text/plain"></label>
       </div>
@@ -33,13 +81,14 @@
       <div class="button-row">
         <button id="parseBtn" class="primary">Parse JSON</button>
         <button id="clearBtn" class="secondary">Clear</button>
-        <label class="check"><input id="rememberTab" type="checkbox" checked> Preserve pasted JSON during local hot reloads</label>
+        <label class="check"><input id="autoOptimize" type="checkbox" checked> Auto optimize when JSON loads</label>
+        <label class="check"><input id="rememberTab" type="checkbox"> Preserve pasted JSON during local hot reloads</label>
       </div>
       <p id="error" class="error hidden" role="alert"></p>
     </section>
 
     <section id="workspace" class="workspace hidden">
-      <section class="panel status-panel">
+      <section id="operationStatePanel" class="panel status-panel hidden">
         <div class="section-head compact">
           <div>
             <h2>2. Operation state</h2>
@@ -49,6 +98,27 @@
         </div>
         <div id="stats" class="stats"></div>
       </section>
+
+      <nav id="jellyTabs" class="workspace-tabs hidden" role="tablist" aria-label="Jelly Operator workspace">
+        <button id="tabHome" class="workspace-tab active" role="tab" aria-selected="true" aria-controls="panelHome">Home</button>
+        <button id="tabOptimizer" class="workspace-tab" role="tab" aria-selected="false" aria-controls="panelOptimizer">Optimizer</button>
+        <button id="tabPractice" class="workspace-tab" role="tab" aria-selected="false" aria-controls="panelPractice">Practice game</button>
+        <button id="tabUpgrades" class="workspace-tab" role="tab" aria-selected="false" aria-controls="panelUpgrades">Upgrade optimizer</button>
+        <button id="tabBonuses" class="workspace-tab" role="tab" aria-selected="false" aria-controls="panelBonuses">Bonuses & cells</button>
+      </nav>
+
+      <div id="panelHome" class="tab-panel" role="tabpanel" aria-labelledby="tabHome">
+        <section class="panel home-panel">
+          <div class="section-head compact"><div><h2>Account home</h2><p>Character activity is read from your local export. Time is the currently saved AFK duration, not a live game connection.</p></div></div>
+          <div id="characterDashboard" class="character-dashboard"></div>
+        </section>
+      </div>
+
+      <div id="panelWorld" class="tab-panel hidden" role="tabpanel">
+        <section class="panel world-panel"><div id="worldContent"></div></section>
+      </div>
+
+      <div id="panelOptimizer" class="tab-panel hidden" role="tabpanel" aria-labelledby="tabOptimizer">
 
       <section class="panel optimize-panel">
         <div class="section-head">
@@ -61,7 +131,14 @@
               <div class="number-wrap"><input id="observedTime" type="number" min="0.01" step="0.01" inputmode="decimal" placeholder="seconds"><span>s</span></div>
             </label>
             <label>Revive reaction <span class="optional">future-proof</span>
-              <div class="number-wrap"><input id="reviveDelay" type="number" min="0" max="2" step="0.05" inputmode="decimal" value="0.12"><span>s</span></div>
+              <div class="number-wrap"><input id="reviveDelay" type="number" min="0" max="2" step="0.05" inputmode="decimal" value="0"><span>s</span></div>
+            </label>
+            <label>Optimize for
+              <select id="objectiveMode">
+                <option value="balanced">Balanced</option>
+                <option value="chance" selected>Max clear chance</option>
+                <option value="fastest">Fastest successful clear</option>
+              </select>
             </label>
             <label>Search quality
               <select id="searchQuality">
@@ -70,11 +147,30 @@
                 <option value="deep">Deep</option>
               </select>
             </label>
+            <label class="check"><input id="searchFever" type="checkbox" checked> Compare unlocked Fevers</label>
+            <button id="cancelBtn" class="secondary" disabled>Cancel</button>
             <button id="optimizeBtn" class="primary">Optimize timed clear</button>
           </div>
         </div>
         <div id="solverStatus" class="solver-status" aria-live="polite">Parse your JSON first.</div>
         <div id="calibrationNote" class="calibration-note"></div>
+      </section>
+
+      <section class="panel trainer-panel">
+        <div class="section-head compact">
+          <div>
+            <h2>Self-play trainer</h2>
+            <p>Run repeated local simulations to evolve layouts. Strong results are retained in this browser and offered as seeds in future training runs for the same boss and legal board.</p>
+          </div>
+          <div class="trainer-controls">
+            <label>Generations <select id="trainGenerations"><option value="1">1</option><option value="3" selected>3</option><option value="6">6</option><option value="60">Auto until reliable (60 cap)</option></select></label>
+            <button id="trainBtn" class="secondary" disabled>Train playbook</button>
+            <button id="exportMemoryBtn" class="secondary" disabled>Export memory</button>
+            <button id="clearMemoryBtn" class="secondary" disabled>Forget this board</button>
+          </div>
+        </div>
+        <div id="trainerStatus" class="trainer-status">Load a save to start local self-play.</div>
+        <div id="trainerMemory" class="trainer-memory"></div>
       </section>
 
       <section class="comparison">
@@ -94,40 +190,79 @@
             <div id="bestVerdict" class="verdict"></div>
           </div>
           <div id="bestBoard" class="jelly-board" aria-label="Recommended Jelly Operator board"></div>
+          <p id="layoutChanges" aria-live="polite"></p>
           <div id="bestSummary" class="operation-summary"></div>
           <div id="bestTimeline" class="operation-timeline"></div>
+          <div id="replayPanel" class="hidden">
+            <label for="replayFrame">Sample run · drag to inspect square deaths</label>
+            <input id="replayFrame" type="range" min="0" max="0" value="0" style="width:100%">
+            <p id="replayStatus"></p>
+          </div>
         </article>
       </section>
 
+      <section id="alternativesPanel" class="hidden">
+        <h2>Other tested layouts</h2>
+        <div id="alternatives" class="alternative-grid"></div>
+      </section>
+
+      </div>
+
+      <div id="panelPractice" class="tab-panel hidden" role="tabpanel" aria-labelledby="tabPractice">
+      <section class="panel practice-panel">
+        <div class="section-head compact">
+          <div>
+            <h2>Practice operation</h2>
+            <p>Play a private, deterministic Jelly operation using your decoded levels and bonuses. It never consumes a real attempt or writes to your save.</p>
+          </div>
+          <div class="controls">
+            <label>Fever <select id="practiceFever"></select></label>
+            <label>Layout <select id="practiceLayout"><option value="current">Current layout</option><option value="recommended">Recommended layout</option><option value="custom">Edited practice board</option></select></label>
+            <label>Cell <select id="practiceCellType"></select></label>
+            <button id="practiceStart" class="primary">Start practice</button>
+            <button id="practicePlay" class="primary">Play</button>
+            <button id="practiceSteroid" class="secondary">Use Stronkroid</button>
+            <button id="practiceRevive" class="secondary">Revive selected square</button>
+          </div>
+        </div>
+        <div class="practice-editor" role="group" aria-label="Practice board editor">
+          <span>Board editor</span>
+          <button id="practiceAdd" class="secondary">Add selected cell</button>
+          <button id="practiceMove" class="secondary">Move placed cell</button>
+          <button id="practiceRemove" class="secondary">Remove placed cell</button>
+          <span id="practiceEditHint">Choose an edit, then click a board square.</span>
+        </div>
+        <div id="practicePalette" class="practice-palette" aria-label="Available draggable Jelly cells"></div>
+        <div id="practiceStatus" class="solver-status">Load a save to start a no-risk practice operation.</div>
+        <div id="practiceBoard" class="jelly-board" aria-label="Interactive Jelly Operator practice board"></div>
+        <div id="practiceActions" class="practice-actions"></div>
+        <label class="practice-timeline" for="practiceFrame">Operation time <input id="practiceFrame" type="range" min="0" max="0" value="0"><span id="practiceTime">0.00s</span></label>
+      </section>
+
+      </div>
+
+      <div id="panelBonuses" class="tab-panel hidden" role="tabpanel" aria-labelledby="tabBonuses">
       <section class="panel cell-panel">
         <div class="section-head compact">
-          <div><h2>Cell mix</h2><p>Real game sprites; counts update with the recommendation.</p></div>
+          <div><h2>Cell mix</h2><p>Real game sprites; ◆ marks each core. Counts update with the recommendation.</p></div>
         </div>
         <div id="cellMix" class="cell-mix"></div>
       </section>
 
-      <section class="panel next-move-panel">
-        <div class="section-head compact">
-          <div>
-            <h2>Best next move for the timer</h2>
-            <p>After the layout search, this compares affordable combat upgrades and board expansion. Plot unlocks are paired with the actual best plot choice.</p>
-          </div>
-        </div>
-        <div id="nextMove" class="next-move"><p class="subtitle">Run Optimize timed clear to calculate the next purchase.</p></div>
-        <div id="nextMoveBoardWrap" class="next-board-wrap hidden">
-          <div class="next-board-head"><span id="nextBoardLabel"></span><span id="nextBoardVerdict"></span></div>
-          <div id="nextMoveBoard" class="jelly-board compact-board" aria-label="Projected board after the recommended next move"></div>
-          <div id="nextMoveTimeline" class="operation-timeline"></div>
-        </div>
-      </section>
+      <section class="panel"><h2>Active bonuses</h2><div id="bonusAudit"></div></section>
+      <section class="panel"><details><summary>All eight cells: passives and abilities</summary><div id="cellReference"></div></details></section>
+      </div>
 
+      <div id="panelUpgrades" class="tab-panel hidden" role="tabpanel" aria-labelledby="tabUpgrades">
       <section class="panel upgrade-panel">
         <div class="section-head compact">
           <div>
             <h2>What to buy next</h2>
-            <p>Timed impact is simulated for non-board-changing upgrades. Shape/slot unlocks are flagged to re-optimize.</p>
+            <p>Ranks reachable upgrades by marginal board damage, Bloodcell gain and cost. Use the compact recommendation to decide the next action, then compare the full ranked list below.</p>
           </div>
         </div>
+        <button id="planBtn" class="secondary" disabled>Plan next purchase</button>
+        <div id="nextMove" class="next-move"></div>
         <div id="upgrades" class="upgrades"></div>
       </section>
 
@@ -135,16 +270,72 @@
         <details>
           <summary>Simulation model / caveats</summary>
           <div class="model-copy">
-            <p>The operation loop is simulated on the same 1/60-second logical timer used by the shipped client. Cell attack progress, projectile travel, Amoeba weakening stacks, Organelle speed, Fever, Critical Condition square-by-square deaths, Immunoid aggro, Steroid timing and revives are modeled as timed events. Multi-square cells keep attacking until their anchor square dies, matching the shipped client.</p>
-            <p>Account-wide damage sources outside the Jelly blob still need calibration. Leave “Observed current clear” blank to use the saved best-DPS fallback, or enter the clear time you just observed with the pasted current board to anchor the model to your live game state.</p>
+            <p>The operation loop is simulated on the same 1/60-second logical timer used by the shipped client. Cell attack progress, projectile travel, Amoeba weakening stacks, Organelle speed, Fever, Critical Condition square-by-square deaths, Immunoid aggro, Steroid timing and revives are modeled as timed events. Each boss hit randomly selects one living occupied square (or one living Immunoid square while any remain). A hit kills only that square; the rest of a multi-square shape remains. The shape keeps attacking until its anchor/core square is dead, matching the shipped client.</p>
+            <p>When you paste a full export, the model reads the account-wide Jelly damage inputs directly too: Gaming Palette, Research Grid Cellular Warfare, its Observation multiplier, companion/Dream/Sushi Grid multipliers, and the Jelly upgrade stack. A data-only export remains exact while Cellular Warfare is level 0; later, use the full export so companion bonuses are present. “Observed current clear” is optional validation/override, not the default source of truth.</p>
             <p>Random initial attack progress and Critical Condition target selection are Monte Carlo simulated, so the optimizer compares clear probability and clear-time distributions instead of one fake-perfect DPS number. If Stronkroid is unlocked, the solver also searches when to press it during the operation.</p>
           </div>
         </details>
       </section>
+      </div>
     </section>
   </main>
+  </div>
 
   <script src="engine.js"></script>
+  <script src="stamps-data.js"></script>
+  <script src="alchemy-data.js"></script>
+  <script src="alchemy-save.js"></script>
+  <script src="game-currency.js"></script>
+  <script src="construction-data.js"></script>
+  <script src="construction.js"></script>
+  <script src="cog-assets.js"></script>
+  <script src="cog-board.js"></script>
+  <script src="worship.js"></script>
+  <script src="lab-data.js"></script>
+  <script src="lab.js"></script>
+  <script src="world4-data.js"></script>
+  <script src="world4.js"></script>
+  <script src="cooking.js"></script>
+  <script src="divinity-data.js"></script>
+  <script src="divinity.js"></script>
+  <script src="world5-data.js"></script>
+  <script src="world5.js"></script>
+  <script src="collections-data.js"></script>
+  <script src="collections.js"></script>
+  <script src="equinox-data.js"></script>
+  <script src="equinox.js"></script>
+  <script src="world6-data.js"></script>
+  <script src="world6.js"></script>
+  <script src="world7-data.js"></script>
+    <script src="world7.js"></script>
+    <script src="gallery-data.js"></script>
+    <script src="gallery.js"></script>
+    <script src="cards-data.js"></script>
+    <script src="card-names-data.js"></script>
+    <script src="cards.js"></script>
+    <script src="account-data.js"></script>
+    <script src="account-pages.js"></script>
+    <script src="remaining-data.js"></script>
+    <script src="remaining-worlds.js"></script>
+    <script src="royal-armory-data.js"></script>
+    <script src="royal-armory.js"></script>
+    <script src="misc-buffs.js?v=3"></script>
+    <script src="talents-data.js"></script>
+    <script src="character-talents.js"></script>
+    <script src="gold-food.js"></script>
+    <script src="beanstalk-engine.js?v=5"></script>
+    <script src="bonus-systems.js?v=1"></script>
+    <script src="beanstalk.js"></script>
+    <script src="armor-sets.js?v=1"></script>
+    <script src="pets-data.js?v=4"></script>
+    <script src="pets.js?v=7"></script>
+  <script src="bribes-data.js"></script>
+  <script src="arcade-data.js"></script>
+  <script src="post-office-data.js"></script>
+  <script src="post-office.js"></script>
+  <script src="class-exp.js"></script>
+  <script src="equipment-data.js"></script>
+  <script src="exp-tabs.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

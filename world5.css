@@ -1,0 +1,35 @@
+.w5-summary{color:#e5c77a;font-size:.82rem;text-align:right}
+.w5-grid{display:grid;gap:7px;margin-top:9px}
+.w5-grid.artifacts{grid-template-columns:repeat(7,minmax(82px,1fr))}
+.w5-grid.superbits{grid-template-columns:repeat(6,minmax(95px,1fr));gap:5px;margin-top:5px}
+.w5-tile{position:relative;display:flex;min-width:0;min-height:108px;flex-direction:column;align-items:center;justify-content:center;padding:7px;color:inherit;background:linear-gradient(145deg,#291b43,#171125);border:1px solid #513c70;border-radius:9px;cursor:pointer}
+.w5-tile:hover,.w5-row:hover,.gaming-plant:hover{border-color:#be8cff}
+.w5-tile.locked{opacity:.48;filter:saturate(.35)}
+.w5-tile img{width:52px;height:52px;object-fit:contain}
+.w5-tile strong{max-width:100%;font-size:.7rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.w5-tile small{font-size:.61rem;color:var(--muted)}
+.w5-fallback{display:grid;place-items:center;width:38px;height:38px;border-radius:50%;background:#684b8c;font-weight:800}
+.w5-tip{display:none;position:absolute;z-index:30;left:50%;bottom:calc(100% + 6px);transform:translateX(-50%);width:230px;padding:8px;text-align:left;background:#0d0917;border:1px solid #76569e;border-radius:8px;box-shadow:0 10px 28px #000b;pointer-events:none}
+.w5-tip b,.w5-tip span{display:block}.w5-tip span{font-size:.7rem;margin-top:4px}.w5-tile:hover .w5-tip{display:block}
+.w5-list,.gaming-upgrades{display:grid;grid-template-columns:repeat(2,minmax(240px,1fr));gap:7px;margin-top:9px}
+.w5-row{display:grid;grid-template-columns:1.1fr repeat(3,1fr);align-items:center;gap:7px;min-height:48px;padding:8px;color:inherit;text-align:left;background:#211633;border:1px solid #493464;border-radius:8px;cursor:pointer}
+.w5-row span,.w5-row small{font-size:.7rem;color:var(--muted)}.w5-row strong{font-size:.72rem}
+.gaming-garden{display:grid;grid-template-columns:repeat(5,minmax(90px,1fr));gap:8px;margin-top:9px}
+.gaming-plant{display:flex;min-height:105px;flex-direction:column;align-items:center;justify-content:center;color:inherit;background:#211633;border:1px solid #493464;border-radius:9px;cursor:pointer}
+.gaming-plant.empty{opacity:.42}.gaming-plant img{width:55px;height:55px;object-fit:contain}.gaming-plant b{font-size:.72rem}.gaming-plant small{font-size:.62rem;color:var(--muted)}
+.superbit-heading{display:flex;align-items:center;gap:12px;margin-top:8px;padding:7px 10px;background:#090b0e;border:1px solid #59616b;border-radius:7px}
+.superbit-heading b{font-size:1rem}.superbit-heading span{font-size:.78rem;color:#d9dee5;font-weight:700}
+.superbit-card{min-height:82px;border-radius:3px;background-color:#171a1d;background-image:radial-gradient(#30353a 1px,transparent 1.5px);background-size:7px 7px;border-color:#777;box-shadow:inset 0 -14px 0 #0b0d0f;opacity:1!important;filter:none!important}
+.superbit-card strong{white-space:normal;text-align:center;text-transform:uppercase;font-size:.76rem;line-height:1.08;letter-spacing:.02em}
+.superbit-card small{position:absolute;bottom:3px;font-weight:900;font-size:.56rem;letter-spacing:.04em}
+.superbits.super .superbit-card strong,.superbits.super .superbit-card small{color:#83f09a}.superbits.super .superbit-card{border-color:#5cab69}
+.superbits.duper .superbit-card strong,.superbits.duper .superbit-card small{color:#89dcff}.superbits.duper .superbit-card{border-color:#579fc0}
+.superbits.zuper .superbit-card strong,.superbits.zuper .superbit-card small{color:#ff91a5}.superbits.zuper .superbit-card{border-color:#b95c6f}
+.superbit-card.locked{opacity:.55!important}
+.superbit-pages{display:flex;gap:12px;margin-top:9px;padding:7px 10px;background:#11151a;border:1px solid #4a515b;border-radius:6px}
+.superbit-pages button{min-width:76px;padding:7px 15px;border:2px solid #d6dde2;border-radius:9px;color:#102016;font-weight:950;text-transform:uppercase;cursor:pointer;filter:saturate(.65) brightness(.75)}
+.superbit-pages button.active{filter:none;transform:translateY(-1px)}
+.superbit-pages .super{background:linear-gradient(#a5f5a0,#60c955)}.superbit-pages .duper{background:linear-gradient(#bdeeff,#65bfe8)}.superbit-pages .zuper{background:linear-gradient(#ffc1cb,#ef6f88)}
+.w5-detail{position:fixed;z-index:60;right:22px;bottom:20px;width:min(430px,calc(100vw - 44px));max-height:58vh;overflow:auto;box-shadow:0 16px 50px #000c}.w5-detail.detail-dismissed{display:none}.w5-close{float:right}
+@media(max-width:1000px){.w5-grid.artifacts{grid-template-columns:repeat(6,minmax(78px,1fr))}.w5-grid.superbits{grid-template-columns:repeat(6,minmax(75px,1fr))}.w5-list,.gaming-upgrades{grid-template-columns:1fr}}
+@media(max-width:700px){.w5-grid.artifacts,.w5-grid.superbits{grid-template-columns:repeat(3,minmax(80px,1fr))}.gaming-garden{grid-template-columns:repeat(3,minmax(80px,1fr))}.w5-row{grid-template-columns:1fr 1fr}.w5-summary{text-align:left}.w5-detail{right:10px;bottom:10px;width:calc(100vw - 20px)}.superbit-pages{justify-content:center}.superbit-pages button{min-width:0;flex:1}}

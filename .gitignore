@@ -1,3 +1,13 @@
 node_modules/
+dist/
 *.log
 .DS_Store
+
+# Keep local account exports and source archives out of the public repository.
+*.zip
+*.7z
+*.rar
+*save*.json
+*export*.json
+.env
+.env.*

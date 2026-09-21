@@ -1,0 +1,1 @@
+window.WORSHIP_ASSETS=["Soul1.png","Soul2.png","Soul3.png","Soul4.png","Soul5.png","Soul6.png","Soul7.png","Soul8.png","TotMini.png","TotMiniB.png","TotMiniC.png","TotMiniD.png","WorshipTop0.png","WorshipTop1.png","WorshipTop2.png","WorshipTop3.png","WorshipTop4.png","WorshipTop5.png","WorshipTop6.png","WorshipTop7.png"];

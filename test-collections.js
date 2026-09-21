@@ -1,0 +1,4 @@
+const assert=require('node:assert/strict');global.window={};require('./collections-data.js');const C=require('./collections.js'),catalog=window.COLLECTION_CATALOG;
+assert.equal(catalog.tomeMetrics.length,97);assert.equal(catalog.tomeMetrics[0].name,'Stamp Total LV');assert.equal(catalog.tomeMetrics.at(-1).levelReq,4910);assert.equal(catalog.tomeBonuses.length,10);assert.equal(catalog.slabBonuses.length,17);
+const tome=C.decodeTome({TomeScore:12345,AccountLevel:600,TomeStats:[11,22,33]},catalog);assert.equal(tome.score,12345);assert.equal(tome.metrics[0].value,11);assert.equal(tome.metrics[0].unlocked,true);assert.equal(tome.metrics[10].unlocked,false);
+const slab=C.decodeSlab({SlabItems:[1,0,1,1]},catalog);assert.equal(slab.found,3);assert.equal(slab.total,4);assert.equal(slab.bonuses[8].name,'Ruble Cuble');assert.equal(C.decodeSlab({},catalog).available,false);console.log('tome and slab tests passed');

@@ -1,0 +1,29 @@
+(function(root){
+  'use strict';
+  const parse=v=>{if(typeof v==='string'){try{return JSON.parse(v);}catch{return null;}}return v;};
+  const num=v=>v!=null&&v!==''&&Number.isFinite(Number(v))?Number(v):null;
+  const pretty=v=>String(v??'').replaceAll('_',' ').replaceAll('@','\n');
+  const esc=v=>String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  function decode(kind,data,c){
+    if(kind==='cooking'){const meals=parse(data.Meals);return c.MealINFO.map((r,id)=>({name:pretty(r[0]),image:`CookingM${id}.png`,value:num(meals?.[0]?.[id]),label:'Lv',description:`Effect: ${pretty(r[3]).replace('{%','%').replace('{','')}.\n${pretty(r[4])}\nThis page shows saved meal levels. Account-wide effect multipliers are not calculated here.`}));}
+    if(kind==='rift'){const rift=parse(data.Rift),level=num(rift?.[0]);return Array.from({length:c.RiftStuff[1].length/5},(_,id)=>({name:pretty(c.RiftStuff[1][id*5+2]),value:level===null?null:level>=5*(id+1)?1:0,label:'Rift '+5*(id+1),description:`Unlocks at Rift ${5*(id+1)}.\nYour saved progress: ${level??'unavailable'}.\n${level===null?'Load a full save to check this reward.':level>=5*(id+1)?'Unlocked.':`${5*(id+1)-level} more Rift clears needed.`}`}));}
+    const pets=parse(data.Pets),stored=parse(data.PetsStored),list=[];
+    for(const [zone,values] of [['Assigned',pets],['Storage',stored]])for(const [slot,raw] of Object.entries(values||{})){const p=parse(raw);if(!Array.isArray(p)||p[0]==null||p[0]==='Blank'||p[0]==='None'||Number(p[2])<=0)continue;const gene=c.PetGenes[Number(p[1])];list.push({name:pretty(c.MonsterNames?.[p[0]]||p[0]),value:num(p[2]),label:zone+' #'+(Number(slot)+1),ability:pretty(gene?.[0]||'Unknown ability'),description:`${zone} slot ${Number(slot)+1}\nAbility: ${pretty(gene?.[0]||'Unknown')}\n${pretty(gene?.[5]||'')}\n${pretty(gene?.[6]||'')}`});}
+    return list;
+  }
+  function render(host,kind,data,rawRoot){
+    if(kind==='cooking'&&root.Cooking){root.Cooking.render(host,data,rawRoot);return;}
+    const c=root.WORLD4_CATALOG,rows=decode(kind,data,c),title={cooking:'Cooking',breeding:'Breeding',rift:'Rift'}[kind],rift=parse(data.Rift);let page=0,filter='All';
+    const fmt=n=>n===null?'?':n.toLocaleString(undefined,{maximumFractionDigits:1,notation:n>=100000?'compact':'standard'});
+    function paint(){
+      const shown=kind==='breeding'&&filter!=='All'?rows.filter(r=>r.label.startsWith(filter)):rows,pageSize=kind==='rift'?16:24,pages=Math.max(1,Math.ceil(shown.length/pageSize));page=Math.min(page,pages-1);
+      const summary=kind==='cooking'?`${rows.filter(r=>r.value>0).length}/${rows.length} meals leveled · ${rows.reduce((n,r)=>n+(r.value||0),0)} total levels`:kind==='rift'?`Saved Rift progress: ${num(rift?.[0])??'?'} · ${rows.filter(r=>r.value===1).length}/${rows.length} rewards unlocked`:`${rows.length} saved pets · ${rows.length?fmt(Math.max(...rows.map(r=>r.value||0))):'—'} best power`;
+      const taskId=kind==='rift'&&num(rift?.[0])!==null?Number(c.RiftStuff[4][Number(rift[0])%100]):null;
+      host.innerHTML=`<div class="section-head compact"><div><p class="eyebrow">World 4</p><h2>${title}</h2></div><span class="muted">${summary}</span></div>${kind==='breeding'?'<nav class="skill-tabs" role="tablist" aria-label="Breeding sections"><button class="skill-tab active" data-breeding-page="breeding">Breeding</button><button class="skill-tab" data-breeding-page="petArena">Pet Arena</button><button class="skill-tab" data-breeding-page="shinyPets">Shiny Pets</button></nav>':''}${kind==='rift'&&taskId!==null?`<p class="w4-task">${esc(pretty(c.RiftStuff[0][taskId]).replace('{',fmt(num(rift?.[1]))))}</p>`:''}<div class="w4-controls">${kind==='breeding'?`<label>Pets <select id="w4Filter">${['All','Assigned','Storage'].map(v=>`<option ${filter===v?'selected':''}>${v}</option>`).join('')}</select></label>`:''}${pages>1?`<button id="w4Prev" ${page===0?'disabled':''}>‹</button><span>Page ${page+1} / ${pages}</span><button id="w4Next" ${page===pages-1?'disabled':''}>›</button>`:''}</div><div class="w4-grid ${kind==='rift'?'w4-rift':''}">${shown.slice(page*pageSize,(page+1)*pageSize).map(r=>`<button class="w4-tile ${r.value===0?'w4-zero':''}" data-w4="${rows.indexOf(r)}" title="${esc(r.name)}">${r.image?`<img src="assets/${r.image}" alt="">`:kind==='rift'?`<b class="w4-rift-number">${r.label}</b>`:`<small>${esc(r.label)}</small>`}<span>${esc(r.name)}</span><strong>${kind==='rift'?(r.value===null?'Unknown':r.value?'Unlocked':'Locked'):kind==='cooking'?'Lv '+fmt(r.value):fmt(r.value)+' power'}</strong>${r.ability?`<small>${esc(r.ability)}</small>`:''}</button>`).join('')||'<p>These records are missing from the loaded export.</p>'}</div><section id="w4Detail" class="exp-card w4-detail" hidden></section>`;
+      host.querySelectorAll('[data-breeding-page]').forEach(button=>button.onclick=()=>root.dispatchEvent(new CustomEvent('idleon:navigate',{detail:button.dataset.breedingPage})));
+      host.querySelector('#w4Prev')?.addEventListener('click',()=>{page--;paint();});host.querySelector('#w4Next')?.addEventListener('click',()=>{page++;paint();});host.querySelector('#w4Filter')?.addEventListener('change',e=>{filter=e.target.value;page=0;paint();});
+      host.querySelectorAll('[data-w4]').forEach(b=>b.onclick=()=>{const r=rows[Number(b.dataset.w4)],panel=host.querySelector('#w4Detail');panel.hidden=false;panel.innerHTML=`<button id="w4Close" class="secondary" aria-label="Close details">Close</button><h3>${esc(r.name)}</h3><p>${kind==='cooking'?'Level '+fmt(r.value):kind==='breeding'?'Power '+fmt(r.value):r.label}</p><p style="white-space:pre-line">${esc(r.description)}</p>`;host.querySelector('#w4Close').onclick=()=>{panel.hidden=true;};});
+    }paint();
+  }
+  const api={decode,render};if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.World4=api;
+})(typeof window!=='undefined'?window:globalThis);

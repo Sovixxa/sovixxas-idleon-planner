@@ -1,0 +1,12 @@
+'use strict';
+const fs=require('node:fs'),path=require('node:path'),zlib=require('node:zlib');
+const root=__dirname,client=fs.readFileSync(path.resolve(root,'../audit/N.js'),'utf8'),equipment=require('./equipment-data.js');
+const clean=s=>String(s||'').replaceAll('_',' ').replaceAll('|',' ').replace(/\s+/g,' ').trim();
+const bonus=(text,value)=>String(text)!=='0'&&Number(value)?{name:clean(String(text).replace(/^%_/,'').toLowerCase()),value:Number(value)}:null;
+const record=(x,id)=>({id,itemId:x.id,name:clean(x.displayName),bonuses:[bonus(x.UQ1txt,x.UQ1val),bonus(x.UQ2txt,x.UQ2val)].filter(Boolean)});
+const trophies=equipment.filter(x=>/^Trophy\d+$/.test(x.id)).map(x=>record(x,Number(x.id.match(/\d+/)[0]))).sort((a,b)=>a.id-b.id);
+const nametags=equipment.filter(x=>/^EquipmentNametag(?!Replica)\d+b?$/.test(x.id)).map(x=>record(x,Number(x.id.match(/\d+/)[0]))).sort((a,b)=>a.id-b.id);
+fs.writeFileSync(path.resolve(root,'gallery-data.js'),'window.GALLERY_CATALOG='+JSON.stringify({trophies,nametags})+';\n');
+const wanted=[...new Set([...client.matchAll(/assets%2Fdata%2F((?:Trophy\d+(?:disp|_x1)?|Nametag(?:Left|Middle|Right)(?:_\d+|_default)?))\.png/g)].map(m=>m[1]))];
+const matches=wanted.map(name=>{const m=client.match(new RegExp(`R0i(\\d+)R1zR2R3R4y\\d+:assets%2Fdata%2F${name}\\.pngR6i(\\d+)`));return m&&[m[1],name,m[2]];}).filter(Boolean);
+const archive=path.resolve(root,'../Idleon resources/app.asar'),fd=fs.openSync(archive,'r');let count=0;try{const prefix=Buffer.alloc(16);fs.readSync(fd,prefix,0,16,0);const header=Buffer.alloc(prefix.readUInt32LE(12));fs.readSync(fd,header,0,header.length,16);let entry=JSON.parse(header.toString('utf8'));for(const part of 'distBuild/static/game/lib/default.pak'.split('/'))entry=entry.files[part];const offset=8+prefix.readUInt32LE(4)+Number(entry.offset);for(const [position,name,size] of matches){const out=path.resolve(root,'assets',name+'.png');if(fs.existsSync(out))continue;const packed=Buffer.alloc(Number(size));fs.readSync(fd,packed,0,packed.length,offset+Number(position));try{fs.writeFileSync(out,zlib.gunzipSync(packed));count++;}catch{}}}finally{fs.closeSync(fd);}console.log(`Wrote Gallery catalog and extracted ${count} sprites from ${matches.length} candidates.`);

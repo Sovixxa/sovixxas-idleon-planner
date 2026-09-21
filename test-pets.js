@@ -1,0 +1,24 @@
+const fs=require('fs'),vm=require('vm'),assert=require('assert');
+const c={};c.window=c;vm.createContext(c);
+for(const file of ['pets-data.js','pets.js'])vm.runInContext(fs.readFileSync(file,'utf8'),c);
+const raw={companion:{l:['48,0,0,0,1','48,0,0,0,0','174,0,0,0,1']},data:{OptLacc:[]}};
+raw.data.OptLacc[606]='174';
+const m=c.PetsPage.model(raw.data,raw);
+assert(m.available);assert.equal(m.owned.length,2);assert.equal(m.upgraded.length,2);
+assert.equal(m.all.find(x=>x.id===48).copies,2);
+assert.equal(m.all.find(x=>x.id===48).effectiveBonus,7);
+assert.equal(m.all.find(x=>x.id===174).effectiveBonus,1);
+assert.equal(m.all.find(x=>x.id===0).name,'King Doot');
+assert.equal(m.all.find(x=>x.id===1).name,'Rift Slug');
+assert.equal(m.all.find(x=>x.id===2).name,'Dedotated Ram');
+assert.equal(c.PetsPage.model({},{}).borrowed.length,0);
+assert.equal(c.PetsPage.model({},{}).available,false);
+assert.equal(c.PetsPage.model({companion:JSON.stringify(raw.companion)}).owned.length,2);
+const host={innerHTML:'',querySelectorAll:()=>[],querySelector:()=>({})};
+c.PetsPage.render(host,raw.data,raw);
+assert(host.innerHTML.includes('2</strong><span>unique owned'));
+assert(!host.innerHTML.includes('This export has no companion list'));
+assert(host.innerHTML.includes('assets/pets-static/mushP.png'));
+assert(!host.innerHTML.includes('<code>mushP</code>'));
+if(process.argv[2]){const actual=JSON.parse(fs.readFileSync(process.argv[2],'utf8'));c.PetsPage.render(host,actual.data,actual);assert(host.innerHTML.includes('88</strong><span>unique owned'));assert(host.innerHTML.includes('20 upgraded'));console.log('Toolbox export renders 88 owned and 20 upgraded pets');}
+console.log('Pets parsing and rendering pass without BeanValueEngine');

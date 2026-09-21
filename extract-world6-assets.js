@@ -1,0 +1,12 @@
+'use strict';
+const fs=require('node:fs'),path=require('node:path'),zlib=require('node:zlib'),vm=require('node:vm');
+const root=__dirname,client=fs.readFileSync(path.resolve(root,'../audit/N.js'),'utf8');
+function list(name){const token='.'+name+'=function(){return',start=client.indexOf(token)+token.length;if(start<token.length)throw Error(name+' missing');let depth=0,quote='',escaped=false,end=-1;for(let i=start;i<client.length;i++){const ch=client[i];if(quote){if(escaped)escaped=false;else if(ch==='\\')escaped=true;else if(ch===quote)quote='';continue;}if(ch==='"'||ch==="'"){quote=ch;continue;}if(ch==='['||ch==='{'||ch==='(')depth++;else if(ch===']'||ch==='}'||ch===')'){depth--;if(depth===0){end=i+1;break;}}}if(end<0)throw Error(name+' end missing');return vm.runInNewContext(client.slice(start,end));}
+const names=['SeedInfo','MarketInfo','MarketExoticInfo','NinjaInfo','NinjaUpg','SummonEnemies','SummonUnits','SummonUPG'];
+const data=Object.fromEntries(names.map(name=>[name,list(name)]));
+fs.writeFileSync(path.resolve(root,'world6-data.js'),'window.WORLD6_CATALOG='+JSON.stringify(data)+';\n');
+const wanted=[...new Set([...client.matchAll(/assets%2Fdata%2F((?:FarmCrop|FarmPlant|FarmStFood|NinjaBar|NjI|SummC|SummMob|SummSt)[A-Za-z0-9_]*)\.png/g)].map(m=>m[1]))];
+const matches=wanted.map(name=>{const m=client.match(new RegExp(`R0i(\\d+)R1zR2R3R4y\\d+:assets%2Fdata%2F${name}\\.pngR6i(\\d+)`));return m&&[m[1],name,m[2]];}).filter(Boolean);
+const archive=path.resolve(root,'../Idleon resources/app.asar'),fd=fs.openSync(archive,'r');let count=0;
+try{const prefix=Buffer.alloc(16);fs.readSync(fd,prefix,0,16,0);const header=Buffer.alloc(prefix.readUInt32LE(12));fs.readSync(fd,header,0,header.length,16);let entry=JSON.parse(header.toString('utf8'));for(const part of 'distBuild/static/game/lib/default.pak'.split('/'))entry=entry.files[part];const offset=8+prefix.readUInt32LE(4)+Number(entry.offset);for(const [position,name,size] of matches){const out=path.resolve(root,'assets',name+'.png');if(fs.existsSync(out))continue;const packed=Buffer.alloc(Number(size));fs.readSync(fd,packed,0,packed.length,offset+Number(position));try{fs.writeFileSync(out,zlib.gunzipSync(packed));count++;}catch{}}
+}finally{fs.closeSync(fd);}console.log(`Extracted ${count} World 6 sprites from ${matches.length} candidates.`);
