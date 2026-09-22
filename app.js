@@ -583,7 +583,6 @@
       state=E.parseInput(text);loadedExport=typeof text==='string'?JSON.parse(text.replace(/^\uFEFF/,'').trim()):text;$('workspace').classList.remove('hidden');persistInput();$('inputPanel').classList.add('hidden');$('changeJsonBtn').classList.remove('hidden');selectSideNav('home');renderInitial();
       $('navJelly').disabled=state.hasJelly===false;$('navJelly').title=state.hasJelly===false?'Jelly Operator data is not available in this export. Other account pages still work.':'';
       $('workspace').scrollIntoView({behavior:'smooth',block:'start'});
-      if(state.hasJelly!==false&&$('autoOptimize').checked)setTimeout(()=>$('optimizeBtn').click(),0);
     }catch(e){fail(e?.message||String(e));}
   }
 
