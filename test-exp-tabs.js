@@ -1,5 +1,7 @@
 const assert=require('assert/strict'),X=require('./exp-tabs'),catalog=require('./equipment-data');
 const ring=catalog.find(x=>x.id==='EquipmentRings38');assert.deepEqual(X.stats(ring),[0,7,0]);
+assert.equal(X.gearScore(ring),70000);
+assert.deepEqual(X.realisticBuffRows([{source:'Stamps',name:'Class EXP',effect:'+1%',level:'Lv 0',status:'missing'},{source:'Companions',name:'Class EXP pet',effect:'+5%',level:'Not owned',status:'missing'},{source:'Cards',name:'Damage',effect:'+5%',level:'Tier 1',status:'active'}]).map(x=>x.source),['Stamps']);
 const state={rawData:{ChestOrder:['EquipmentRings38','EquipmentRings38'],ChestQuantity:[1,0],InventoryOrder_0:JSON.stringify(['EquipmentRings38']),ItemQTY_0:'[1]',EquipOrder_0:[{'5':'EquipmentRings38',length:16}],EquipQTY_0:[{'5':1}],Slab:['EquipmentHats123']},rawRoot:{charNames:['Test']}};
 const rows=X.owned(state,catalog);assert.equal(rows.length,3);assert.equal(rows.reduce((n,x)=>n+x.count,0),3);assert(!rows.some(x=>x.item.id==='EquipmentHats123'));assert.equal(new Set(catalog.map(x=>x.id)).size,catalog.length);assert(X.registry.some(r=>r[1]==='CLASS EXP MULTI pool'));assert(X.registry.some(r=>r[1]==='BONUS CLASS EXP pool'));assert(X.registry.some(r=>r[2]==='mode'));console.log('EXP tabs: ownership quantities, serialized fields, stat pools and source categories OK');
 const engine=require('./class-exp');
