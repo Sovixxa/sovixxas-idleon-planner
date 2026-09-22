@@ -1,0 +1,31 @@
+'use strict';
+const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),review=require('./account-review');
+const c={window:{}};
+for(const f of ['stamps-data.js','alchemy-data.js','construction-data.js','world4-data.js'])vm.runInNewContext(fs.readFileSync(f,'utf8'),c);
+const catalogs=c.window;
+const section=(m,id)=>m.sections.find(s=>s.id===id);
+let m=review.model({},catalogs);
+assert.equal(m.known,0);assert.equal(m.ranked.length,0);
+const raw={data:{StampLv:JSON.stringify([[0,9,null,'oops',-1,100]]),CauldronInfo:[[11]],Meals:[[4]],Lv0_0:'[29]',Tower:[0,1],Rift:[4],TotemInfo:[JSON.stringify([9])]}};
+const before=JSON.stringify(raw);m=review.model(raw,catalogs);
+const stamps=section(m,'stamps').rows;
+assert.equal(stamps[0].status,'unstarted');assert.equal(stamps[1].target,10);
+for(const i of [2,3,4])assert.equal(stamps[i].status,'unknown');
+assert.equal(stamps[5].status,'complete');assert.equal(section(m,'characters').next.target,30);
+assert.equal(section(m,'worship').next.current,9);assert.equal(section(m,'cooking').next.target,5);
+assert.equal(section(m,'rift').next.target,5);assert.equal(section(m,'construction').rows[1].status,'complete');
+assert.equal(section(m,'alchemy').next.target,25);assert(!section(m,'alchemy').rows.some(r=>r.name==='BUBBLE'));
+assert.equal(JSON.stringify(raw),before,'Review must not mutate save');
+const changed=review.model({StampLv:[[0,10]]},catalogs);assert.equal(section(changed,'stamps').rows[1].target,25);
+assert.equal(section(review.model({StampLv:[[false,'',Infinity]]},catalogs),'stamps').known,0);
+const sample=review.model(JSON.parse(fs.readFileSync('../example json.txt','utf8')),catalogs);
+assert.equal(sample.sections.filter(s=>s.known).length,7);
+for(const s of sample.sections)for(const r of s.rows){assert(r.progress>=0&&r.progress<=1);if(r.status==='next')assert(r.target>r.current);}
+// Render escaping and filter wiring without retaining private fixture data.
+const elements=new Map();const host={innerHTML:'',querySelector(s){if(!elements.has(s))elements.set(s,{});return elements.get(s);},querySelectorAll(){return[];}};
+const ui={...catalogs,document:{},console};ui.window=ui;vm.createContext(ui);vm.runInContext(fs.readFileSync('account-review.js','utf8'),ui);
+ui.STAMP_CATALOG=[{stamps:[{name:'<script>bad</script>',bonus:'<img onerror=bad>'}]}];
+ui.AccountReview.render(host,{StampLv:[[1]]});assert(host.innerHTML.includes('&lt;script&gt;'));assert(!host.innerHTML.includes('<script>'));
+elements.get('[aria-label="Review status"]').value='all';elements.get('[aria-label="Review status"]').onchange();assert(!host.innerHTML.includes('No saved progress'));assert(!host.innerHTML.includes('This value is missing or invalid'));
+ui.AccountReview.render(host,{});assert(host.innerHTML.includes('Start with your account'));
+console.log('Account Review: partial exports, boundaries, fresh saves, seven-system fixture, placeholder exclusion, escaping and filters OK');

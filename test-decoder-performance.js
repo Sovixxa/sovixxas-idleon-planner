@@ -1,0 +1,13 @@
+'use strict';
+const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
+let calls=0,calculations=0;const c={BeanValueEngine:{systems(raw){calls++;if(raw.fail)throw Error('Invalid save');return new Map([['save',raw]]);},calculate(raw){calculations++;return[{multiplier:2}];}}};c.window=c;vm.createContext(c);vm.runInContext(fs.readFileSync('decoder-cache.js','utf8'),c);
+const a={},b={};const first=c.BeanValueEngine.systems(a);for(let i=0;i<20;i++)assert.equal(c.BeanValueEngine.systems(a),first);assert.equal(calls,1,'Page changes must not decode the same account again');
+c.BeanValueEngine.systems(b);assert.equal(calls,2);assert.throws(()=>c.BeanValueEngine.systems({fail:true}));c.BeanValueEngine.systems(b);assert.equal(calls,3,'A failed decode must not invalidate a good cached account');
+const values=c.BeanValueEngine.calculate(b);assert.equal(calls,3);assert.equal(c.BeanValueEngine.calculate(b),values);assert.equal(calculations,1);
+c.BeanValueEngine.primeCalculated(a,values);assert.equal(c.BeanValueEngine.calculate(a),values);assert.equal(calculations,1,'Worker results must avoid main-thread Beanstalk calculations');
+const app=fs.readFileSync('app.js','utf8');
+const load=app.slice(app.indexOf('  function loadText('),app.indexOf("  $('parseBtn').addEventListener"));assert(!load.includes('renderInitial()'),'Do not simulate Jelly during save import');
+assert(load.includes('nextExport=nextState.rawRoot'),'Use one save identity for background and page caches');
+const roster=app.slice(app.indexOf('  function characterRows('),app.indexOf('  function stampLevels('));assert(!roster.includes('BeanValueEngine'),'Home must not run the full synchronous decoder');assert(roster.includes('getRosterAsync'));
+const playButton={textContent:'Pause'},cancelled=[];const playback={practice:{playing:true},practiceAnimation:17,$:()=>playButton,cancelAnimationFrame:id=>cancelled.push(id)};vm.createContext(playback);vm.runInContext(app.slice(app.indexOf('  function stopPracticePlayback(){'),app.indexOf('  function togglePracticePlayback(){')),playback);playback.stopPracticePlayback();assert.equal(playback.practice.playing,false);assert.equal(playback.practiceAnimation,null);assert.deepEqual(cancelled,[17]);assert.equal(playButton.textContent,'Play');
+console.log('Decoder performance: one decode per save, cached results reused, Home background decoding and lazy Jelly initialization OK');

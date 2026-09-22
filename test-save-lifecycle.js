@@ -2,7 +2,7 @@
 const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
 const source=fs.readFileSync('app.js','utf8'),nodes=new Map(),saved=new Map();
 const $=id=>{if(!nodes.has(id))nodes.set(id,{value:'',checked:false,classList:{add(){},remove(){}},scrollIntoView(){}});return nodes.get(id);};
-const ctx={$ ,SESSION_KEY:'save',sessionStorage:{setItem:(k,v)=>saved.set(k,v),removeItem:k=>saved.delete(k)},state:null,loadedExport:null,E:{parseInput(text){return{rawRoot:JSON.parse(text)};}},clearFail(){},fail(message){ctx.error=message;},selectSideNav(){},renderInitial(){}};
+const ctx={$ ,SESSION_KEY:'save',sessionStorage:{setItem:(k,v)=>saved.set(k,v),removeItem:k=>saved.delete(k)},state:null,loadedExport:null,E:{parseInput(text){return{rawRoot:JSON.parse(text)};}},clearFail(){},fail(message){ctx.error=message;},selectSideNav(){},renderHome(){}};
 vm.createContext(ctx);
 vm.runInContext(source.slice(source.indexOf('  function persistInput(){'),source.indexOf('  function chooseCalibration(){')),ctx);
 vm.runInContext(source.slice(source.indexOf('  function loadText(text){'),source.indexOf("  $('parseBtn').addEventListener")),ctx);

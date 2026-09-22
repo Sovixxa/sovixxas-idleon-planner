@@ -3,6 +3,7 @@
   const E=window.JellyEngine;
   const $=id=>document.getElementById(id);
   let state=null,loadedExport=null,lastResult=null,currentArrangement=null,currentStats=null,calibration=null,lastNextMove=null,practice=null;
+  let jellyReadyState=null,homeRosterSave=null,homeDecodedPlayers=[];
   const SESSION_KEY='idleon-jelly-json-session-v3';
   const OBS_KEY='idleon-jelly-observed-clear-v1';
   const REVIVE_KEY='idleon-jelly-revive-delay-v1';
@@ -11,6 +12,7 @@
   $('version').textContent='engine v'+E.VERSION;
 
   function selectWorkspaceTab(name){
+    $('panelWorld').classList.add('hidden');
     const tabs={home:['tabHome','panelHome'],optimizer:['tabOptimizer','panelOptimizer'],practice:['tabPractice','panelPractice'],upgrades:['tabUpgrades','panelUpgrades'],bonuses:['tabBonuses','panelBonuses']};
     for(const [key,[button,panel]] of Object.entries(tabs)){
       const active=key===name;$(button).classList.toggle('active',active);$(button).setAttribute('aria-selected',String(active));$(panel).classList.toggle('hidden',!active);
@@ -18,6 +20,7 @@
     if(name!=='practice'&&practice?.playing)stopPracticePlayback();
   }
   const SKILL_PAGES={
+    accountReview:{title:'Account Review',world:'Optimizers',copy:'Review saved progress and plan your next account milestones.'},
     bribes:{title:"Bribes",world:"World 1",copy:"Purchased bribes and account bonuses."},
     classExp:{title:'Class EXP Optimizer',world:'Optimizers',copy:'Find Class EXP upgrades and compare measured EXP per hour.'},
     mining:{title:'Mining',world:'World 1',copy:'Mining characters, ore targets, and gain planning will be modeled here.'},smithing:{title:'Smithing',world:'World 1',copy:'Smithing production and material targets will be planned here.',tabs:['forge','anvilUpgrades']},chopping:{title:'Chopping',world:'World 1',copy:'Chopping characters, log targets, and gain planning will be modeled here.'},forge:{title:'Forge & Anvil',world:'World 1',copy:'Forge bars, anvil production, and capacity planning will be modeled here.',parent:'smithing'},anvilUpgrades:{title:'Anvil Upgrades',world:'World 1',copy:'Per-character Anvil speed, XP, capacity, and point investment.',parent:'smithing'},forgeBonuses:{title:'Forge Bonuses',world:'World 1',copy:'Permanent Forge upgrade levels and effects.'},starSigns:{title:'Star Signs',world:'World 1',copy:'Unlocked, aligned, and infinite Star Sign bonuses.',tabs:['constellations']},constellations:{title:'Constellations',world:'World 1',copy:'Constellation completion and Star Chart points.',parent:'starSigns'},stamps:{title:'Stamps',world:'World 1',copy:'Stamp costs, material requirements, and account-wide priority planning will be modeled here.'},statues:{title:'Statues',world:'World 1',copy:'Statue levels, deposits, and account-wide statue bonuses will be modeled here.'},dungeons:{title:'Dungeons',world:'World 1',copy:'Dungeon runs, cards, and reward planning will be modeled here.'},
@@ -95,14 +98,15 @@
   ];
   const HOLE_VILLAGER_ICONS={hole:0,holeSchematics:1,holeMajik:2,holeMeasurements:3,holeStudies:4};
   function selectSideNav(name){
+    if(name!=='jelly'&&practice?.playing)stopPracticePlayback();
     if(name==='jelly'&&state?.hasJelly===false){selectSideNav('classExp');return;}
-    if(!state)$('workspace').classList.toggle('hidden',name!=='classExp');
+    if(!state)$('workspace').classList.toggle('hidden',!['classExp','accountReview'].includes(name));
     const selected=SKILL_PAGES[name]?.parent||name;
     for(const id of ['navHome','navJelly',...Object.keys(SKILL_PAGES).map(key=>'nav'+key[0].toUpperCase()+key.slice(1))])$(id)?.classList.toggle('active',id===('nav'+selected[0].toUpperCase()+selected.slice(1)));
     const jelly=name==='jelly';$('operationStatePanel').classList.toggle('hidden',!jelly);$('jellyTabs').classList.toggle('hidden',!jelly);
     document.querySelector('.hero')?.classList.toggle('hidden',name!=='home'&&!jelly);
     if(name==='home'){selectWorkspaceTab('home');return;}
-    if(jelly){selectWorkspaceTab('optimizer');return;}
+    if(jelly){if(state&&jellyReadyState!==state){renderInitial();jellyReadyState=state;}selectWorkspaceTab('optimizer');return;}
     document.querySelectorAll('.tab-panel').forEach(panel=>panel.classList.add('hidden'));$('panelWorld').classList.remove('hidden');renderWorldPage(name);
   }
   $('tabHome').addEventListener('click',()=>selectSideNav('home'));
@@ -305,13 +309,15 @@
   }
   function characterRows(){
     const data=state?.rawData||{},names=Array.isArray(state?.rawRoot?.charNames)?state.rawRoot.charNames:[],parse=value=>{if(typeof value==='string')try{return JSON.parse(value);}catch{return null;}return value;},timeAway=parse(data.TimeAway)||{},savedAt=Number(timeAway.Player);let decodedPlayers=[];
-    try{decodedPlayers=window.BeanValueEngine?.systems?.(loadedExport||state?.rawRoot)?.get?.('players')||[];}catch(error){console.warn('Could not decode roster activities.',error);}
+    decodedPlayers=homeDecodedPlayers;
     const ids=Object.keys(data).map(k=>{const m=k.match(/^AFKtarget_(\d+)$/);return m?Number(m[1]):null;}).filter(x=>x!=null).sort((a,b)=>a-b);
     return ids.map(id=>{const lv=parse(data['Lv0_'+id]),level=Array.isArray(lv)?Math.round(Number(lv[0])||0):null,decodedPlayer=decodedPlayers.find(player=>Number(player?.playerID)===id)||decodedPlayers[id],rawTarget=data['AFKtarget_'+id],activity=activityFor(rawTarget,decodedPlayer),world=String(rawTarget||'').match(/^w(\d+)/i)?.[1],lastClaim=Number(data['PTimeAway_'+id]),seconds=Number.isFinite(savedAt)&&Number.isFinite(lastClaim)?Math.max(0,savedAt-lastClaim*1000):NaN,decodedTarget=decodedPlayer?.currentMonster,prettyTarget=decodedTarget?.details?.Name||decodedTarget?.details?.name||decodedTarget?.name||decodedTarget?.id;
       return {id,name:names[id]||`Character ${id+1}`,target:humanTarget(prettyTarget||rawTarget),afk:afkDuration(seconds),level,classId:data['CharacterClass_'+id],classIcon:classIcon(data['CharacterClass_'+id]),activity,world};
     });
   }
   function renderHome(){
+    const raw=loadedExport||state?.rawRoot;
+    if(raw&&homeRosterSave!==raw){homeRosterSave=raw;homeDecodedPlayers=[];window.BonusSystems.getRosterAsync(raw).then(players=>{if(homeRosterSave!==raw)return;homeDecodedPlayers=players;renderHome();}).catch(error=>console.warn('Could not decode roster activities.',error));}
     const rows=characterRows();
     const fighting=rows.filter(x=>x.activity.kind==='fighting').length,skills=rows.length-fighting;
     $('homeRosterSummary').innerHTML=rows.length?`<span><strong>${rows.length}</strong> characters</span><span><strong>${fighting}</strong> fighting</span><span><strong>${skills}</strong> elsewhere</span>`:'<span>No roster loaded</span>';
@@ -470,11 +476,21 @@
   function renderWorldPage(name){
     const page=SKILL_PAGES[name];if(!page)return;
     $('worldContent').dataset.page=name;
+    const decodeRequest={};$('worldContent').decodeRequest=decodeRequest;
+    const afterDecode=(draw,prepare=()=>window.BonusSystems.getRowsAsync(loadedExport||state.rawRoot))=>{
+      if(!state){draw();return;}
+      const host=$('worldContent');host.innerHTML='<p role="status">Preparing account data…</p>';
+      prepare().then(()=>{if(host.decodeRequest===decodeRequest&&host.dataset.page===name)draw();}).catch(error=>{if(host.decodeRequest===decodeRequest&&host.dataset.page===name)host.innerHTML=`<p>Could not prepare account data: ${esc(error.message)}</p>`;});
+    };
+    $('worldContent').bonusAfterRender=null;
+    if(name==='accountReview'){window.AccountReview.render($('worldContent'),loadedExport||state?.rawRoot||{});return;}
     $('worldContent').classList.toggle('jar-page',name==='holeJars');
     const addSubtabs=()=>{const parentKey=page.parent||name,parent=SKILL_PAGES[parentKey],keys=[parentKey,...(parent.tabs||[])];if(keys.length<2)return;const head=$('worldContent').querySelector('.section-head,.bonus-system-hero,.divinity-hero');if(parentKey==='hole'){const activeGroup=HOLE_TAB_GROUPS.find(group=>group.keys.includes(name))||HOLE_TAB_GROUPS[0],stack=document.createElement('div');stack.className='hole-tab-stack';stack.innerHTML=`<nav class="skill-tabs hole-group-tabs" role="tablist" aria-label="The Hole groups">${HOLE_TAB_GROUPS.map(group=>`<button class="skill-tab${group===activeGroup?' active':''}" data-hole-group="${esc(group.keys[0])}" role="tab" aria-selected="${group===activeGroup}">${esc(group.label)}</button>`).join('')}</nav><nav class="skill-tabs hole-section-tabs${activeGroup.label==='Villagers'?' hole-villager-tabs':''}" role="tablist" aria-label="${esc(activeGroup.label)} sections">${activeGroup.keys.map(key=>`<button class="skill-tab${key===name?' active':''}" data-skill-tab="${esc(key)}" role="tab" aria-selected="${key===name}">${HOLE_VILLAGER_ICONS[key]!=null?`<span class="hole-portrait"><img src="assets/HoleUIvillager${HOLE_VILLAGER_ICONS[key]}.png" alt=""></span>`:''}<span>${esc(key==='hole'?'Explore':SKILL_PAGES[key].title)}</span></button>`).join('')}</nav>`;head?.insertAdjacentElement('afterend',stack);stack.querySelectorAll('[data-hole-group]').forEach(button=>button.onclick=()=>selectSideNav(button.dataset.holeGroup));stack.querySelectorAll('[data-skill-tab]').forEach(button=>button.onclick=()=>selectSideNav(button.dataset.skillTab));return;}const nav=document.createElement('nav');nav.className='skill-tabs';nav.setAttribute('role','tablist');nav.setAttribute('aria-label',`${parent.title} sections`);nav.innerHTML=keys.map(key=>`<button class="skill-tab${key===name?' active':''}" data-skill-tab="${esc(key)}" role="tab" aria-selected="${key===name}">${esc(SKILL_PAGES[key].title)}</button>`).join('');head?.insertAdjacentElement('afterend',nav);nav.querySelectorAll('[data-skill-tab]').forEach(button=>button.onclick=()=>selectSideNav(button.dataset.skillTab));};
+    $('worldContent').bonusAfterRender=addSubtabs;
     if(name==='research'){window.ResearchPage.render($('worldContent'),loadedExport||state?.rawRoot||{});return;}
     if(name==='minigames'){ $('worldContent').innerHTML='<div class="section-head compact"><div><h2>Minigames</h2><p>Select Hoops or Darts to see your saved scores and bonuses.</p></div></div>';addSubtabs();return;}
-    if(name==='classExp'){renderClassExp();return;}
+    if(['orion','poppy','bubba'].includes(name)){afterDecode(()=>{window.BonusSystems.render($('worldContent'),name,loadedExport||state?.rawRoot||{});addSubtabs();});return;}
+    if(name==='classExp'){afterDecode(renderClassExp);return;}
     if(name==='royalArmory'){window.RoyalArmory.render($('worldContent'),loadedExport||state?.rawRoot||{});return;}
     if(name==='arcade'){renderArcade();return;}
     if(['bribes','dungeons','vials','sigils','killroy','atomCollider','prayers','saltLick','deathNote','armorSets','petArena','shinyPets','upgradeVault','emperorBonuses','spelunking','sushi','button','clamworks','meritocracy','bigFish','coralKid','coralReef','dancingCoral','zenithMarket','legendTalents','hoops','darts'].includes(name)){window.ArcadePages.render($('worldContent'),name,loadedExport||state?.rawRoot||{},addSubtabs);return;}
@@ -490,7 +506,7 @@
     if(name==='tome'||name==='slab'){window.ProgressionPages.render($('worldContent'),name,loadedExport||state?.rawRoot||{});return;}
     if(name==='equinox'){window.Equinox.render($('worldContent'),state?.rawData||{});return;}
     if(name==='farming'||name==='sneaking'||name==='summoning'){window.World6.render($('worldContent'),name,state?.rawData||{});return;}
-    if(name==='beanstalk'){window.Beanstalk.render($('worldContent'),state?.rawData||{},state?.rawRoot||{});return;}
+    if(name==='beanstalk'){afterDecode(()=>window.Beanstalk.render($('worldContent'),state?.rawData||{},state?.rawRoot||{}),()=>window.BeanValueEngine.calculateAsync(loadedExport||state.rawRoot));return;}
       if(name==='minehead'||name==='spelunking'||name==='research'||name==='coral'){window.World7.render($('worldContent'),name,state?.rawData||{});return;}
     if(name==='nametags'){window.Gallery.render($('worldContent'),state?.rawData||{});return;}
     if(name==='cards'){window.CardsPage.render($('worldContent'),state?.rawData||{},state?.rawRoot||{});return;}
@@ -614,8 +630,8 @@
   function loadText(text){
     clearFail();
     try{
-      const nextState=E.parseInput(text),nextExport=typeof text==='string'?JSON.parse(text.replace(/^\uFEFF/,'').trim()):text;
-      state=nextState;loadedExport=nextExport;$('workspace').classList.remove('hidden');persistInput();$('jsonInput').value='';$('inputPanel').classList.add('hidden');$('changeJsonBtn').classList.remove('hidden');selectSideNav('home');renderInitial();
+      const nextState=E.parseInput(text),nextExport=nextState.rawRoot;
+      state=nextState;loadedExport=nextExport;$('workspace').classList.remove('hidden');persistInput();$('jsonInput').value='';$('inputPanel').classList.add('hidden');$('changeJsonBtn').classList.remove('hidden');selectSideNav('home');renderHome();
       $('navJelly').disabled=state.hasJelly===false;$('navJelly').title=state.hasJelly===false?'Jelly Operator data is not available in this export. Other account pages still work.':'';
       $('workspace').scrollIntoView({behavior:'smooth',block:'start'});
     }catch(e){fail(e?.message||String(e));}
@@ -719,6 +735,7 @@
   function stopPracticePlayback(){
     if(practiceAnimation){cancelAnimationFrame(practiceAnimation);practiceAnimation=null;}
     if(practice)practice.playing=false;
+    $('practicePlay').textContent='Play';
   }
   function togglePracticePlayback(){
     if(!practice?.run)return;
@@ -770,6 +787,7 @@
   }
   $('practiceStart').addEventListener('click',()=>runPractice(true,false));
   $('practicePlay').addEventListener('click',togglePracticePlayback);
+  document.addEventListener('visibilitychange',()=>{if(document.hidden&&practice?.playing)stopPracticePlayback();});
   $('practiceFrame').addEventListener('input',()=>{stopPracticePlayback();renderPractice();});
   $('practiceLayout').addEventListener('change',()=>runPractice(true,true));
   $('practiceFever').addEventListener('change',()=>runPractice(true,false));
@@ -886,13 +904,8 @@
     const url=URL.createObjectURL(blob),link=document.createElement('a');link.href=url;link.download='idleon-jelly-playbook.json';link.click();setTimeout(()=>URL.revokeObjectURL(url),0);
   });
 
-  // Local dev-server hot reload. It is localhost-only and carries no game/account data.
-  try{
-    const ev=new EventSource('/__events');
-    ev.addEventListener('reload',()=>{persistInput();location.reload();});
-    ev.addEventListener('open',()=>{$('liveBadge').textContent='LOCAL LIVE';$('liveBadge').classList.remove('offline');});
-    ev.onerror=()=>{$('liveBadge').textContent='STATIC MODE';$('liveBadge').classList.add('offline');};
-  }catch(_){$('liveBadge').textContent='STATIC MODE';}
+  // Background tabs must not occupy the browser's limited localhost connections.
+  window.PlannerLiveReload?.start({badge:$('liveBadge'),beforeReload:persistInput});
 
   try{
     const observed=sessionStorage.getItem(OBS_KEY);if(observed)$('observedTime').value=observed;

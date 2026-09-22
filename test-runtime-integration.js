@@ -30,6 +30,9 @@ async function main(){
  const w={console:quiet,structuredClone};w.self=w;vm.createContext(w);w.importScripts=(...files)=>files.forEach(f=>vm.runInContext(fs.readFileSync(f,'utf8'),w));let result;w.postMessage=x=>result=x;vm.runInContext(fs.readFileSync('bonus-worker.js','utf8'),w);
  for(const save of [{},{data:{}}]){w.onmessage({data:save});assert(!result.error);assert.equal(Object.keys(result.groups).length,0);}
  w.onmessage({data:raw});assert(!result.error,result.error);for(const key of ['tome','slab','research'])assert(result.groups[key].length);
+ let foodResult;w.postMessage=x=>foodResult=x;vm.runInContext(fs.readFileSync('gold-food-worker.js','utf8'),w);w.onmessage({data:raw});assert(!foodResult.error,foodResult.error);assert(foodResult.values.length>0);
+ const direct={console:quiet,localStorage:{getItem(){return null;}}};direct.window=direct;vm.createContext(direct);vm.runInContext(fs.readFileSync('beanstalk-engine.js','utf8'),direct);
+ assert.equal(JSON.stringify(foodResult.values),JSON.stringify(direct.BeanValueEngine.calculate(raw)),'Reusing decoded systems must preserve Golden Food calculations');
  console.log('Runtime integration: browser script order, enriched cache, concurrent saves, retry, quest navigation, all bonus sprites, empty workers OK');
 }
 main().catch(e=>{console.error(e);process.exitCode=1;});

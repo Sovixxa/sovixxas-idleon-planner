@@ -23,7 +23,7 @@
     detail.innerHTML=`<div class="clicker-reward-detail-head">${rewardImage(meta,index,`${meta.label} ${index+1}`)}<div><span>${esc(meta.label)} ${index+1}</span><strong>${esc(status)}</strong></div></div>${effect?`<p><b>Bonus:</b> ${esc(effect)}</p>`:gain>0?`<p><b>Bonus:</b> +${fmt(gain)}% permanent clicker-bonus multiplier.</p>`:''}`;
   }
   function enhance(host,key,rawRoot){
-    const meta=cfg[key],page=host.querySelector('.clicker-page'),system=root.BonusSystems.systems(rawRoot).get(key);
+    const meta=cfg[key],page=host.querySelector('.clicker-page'),system=root.BonusSystems.getClicker(rawRoot,key);
     if(!meta||!page||!system)return;
     const grid=page.querySelector('.clicker-reward-grid');
     if(!grid||grid.dataset.rewardDetails==='true')return;
