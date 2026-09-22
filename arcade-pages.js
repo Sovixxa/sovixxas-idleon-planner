@@ -1,0 +1,40 @@
+(function(root){
+  'use strict';
+  const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const titles={bribes:'Bribes',dungeons:'Dungeons',vials:'Vials',sigils:'Sigils',killroy:'Killroy',atomCollider:'Atom Collider',prayers:'Prayers',saltLick:'Salt Lick',deathNote:'Death Note',armorSets:'Armor Sets',petArena:'Pet Arena',shinyPets:'Shiny Pets',upgradeVault:'Upgrade Vault',emperorBonuses:'Emperor Bonuses',spelunking:'Spelunking',sushi:'Sushi',button:'The Button',clamworks:'Clamworks',meritocracy:'Meritocracy',bigFish:'Big Fish',coralKid:'Coral Kid',coralReef:'Coral Reef',dancingCoral:'Dancing Coral',zenithMarket:'Zenith Market',legendTalents:'Legend Talents',hoops:'Hoops',darts:'Darts'};
+  const selections=new Map();
+  async function render(host,key,raw,afterRender){
+    const token={};host.arcadeRequest=token;
+    host.innerHTML=`<div class="section-head compact"><div><h2>${titles[key]}</h2><p>Loading saved bonuses…</p></div></div>`;
+    afterRender?.();
+    try{
+      if(!Object.keys(raw?.data||raw||{}).length){host.innerHTML=`<div class="section-head compact"><h2>${titles[key]}</h2></div><p>Load your save from Home to see levels and missing bonuses.</p>`;afterRender?.();return;}
+      const groups=await root.BonusSystems.getRowsAsync(raw);
+      if(host.arcadeRequest!==token||host.dataset.page!==key)return;
+      const rows=groups[key]||[],state=selections.get(key)||{group:null,query:'',filter:'all',page:0};
+      selections.set(key,state);
+      const tabs=[...new Set(rows.map(x=>x.group).filter(Boolean))];
+      if(key==='dungeons')tabs.sort((a,b)=>['Account Bonuses','Dungeon Stats','RNG Items','Traits'].indexOf(a)-['Account Bonuses','Dungeon Stats','RNG Items','Traits'].indexOf(b));
+      if(!tabs.includes(state.group))state.group=tabs[0]||null;
+      const paint=()=>{
+        const matches=rows.filter(x=>(!state.group||x.group===state.group)&&(!state.query||`${x.name} ${x.effect}`.toLowerCase().includes(state.query))&&(state.filter==='all'||state.filter==='missing'&&x.status==='missing'||state.filter==='active'&&['active','maxed'].includes(x.status)));
+        const pages=Math.max(1,Math.ceil(matches.length/40));state.page=Math.min(state.page,pages-1);
+        const summary=matches.find(x=>x.summary)?.summary||rows[0]?.summary;const shown=matches.slice(state.page*40,state.page*40+40),missing=rows.filter(x=>x.status==='missing').length,unknown=rows.filter(x=>x.status==='unknown').length;
+        host.innerHTML=`<div class="section-head compact"><div><p class="eyebrow">${['bribes','dungeons'].includes(key)?'World 1':['vials','sigils','killroy'].includes(key)?'World 2':['petArena','shinyPets'].includes(key)?'World 4':key==='emperorBonuses'?'World 6':['upgradeVault','hoops','darts'].includes(key)?'Misc':key==='coralKid'?'Divinity':['spelunking','sushi','button','clamworks','meritocracy','bigFish','coralReef','dancingCoral','zenithMarket','legendTalents'].includes(key)?'World 7':'World 3'}</p><h2>${titles[key]}</h2><p>Hover for a preview. Click for full effects and upgrade details.</p></div><strong>${rows.length} entries · ${missing} missing${unknown?` · ${unknown} unknown`:''}</strong></div>${summary?`<p class="collection-note">${esc(summary)}</p>`:''}${key==='deathNote'?`<details class="deathnote-guide" open><summary>Skull points &amp; multikill guide</summary><div class="skull-guide">${[['25K',1],['100K',2],['250K',3],['500K',4],['1M',5],['5M',7],['100M',10]].map(([kills,points],i)=>`<div><img src="assets/StatusSkull${i}.png" alt=""><strong>${kills}+</strong><span>${points} point${points===1?'':'s'}</span></div>`).join('')}</div><p>Regular monsters: each skull point adds 1% world multikill per damage tier. Damage tiers increase when your damage exceeds monster HP. Multikill increases the amount of eligible item drops.</p><small>Minibosses have separate thresholds (100, 250, 1K, 5K, 25K, 100K, 1M). With the Rift upgrade, more than 1B regular kills earns 20 points.</small></details>`:''}${tabs.length>1?`<nav class="skill-tabs" aria-label="${titles[key]} categories">${tabs.map(t=>`<button class="skill-tab ${state.group===t?'active':''}" data-category="${esc(t)}">${esc(t)}</button>`).join('')}</nav>`:''}<div class="arcade-page-controls"><input aria-label="Search ${titles[key]}" type="search" placeholder="Search bonuses…" value="${esc(state.query)}"><select aria-label="Bonus status"><option value="all">All</option><option value="missing">Missing</option><option value="active">Owned / leveled</option></select><span>${matches.length} shown</span></div><div class="arcade-grid compact-upgrades focused-arcade-grid ${key==='legendTalents'?'legend-talents-grid':''}">${shown.map((x,i)=>`<button type="button" class="arcade-tile ${x.next?'next-kill-bonus':''} ${x.status==='missing'?'arcade-zero':''}" data-bonus="${i}" aria-pressed="false">${x.icon?`<img class="arcade-icon" src="${esc(x.icon)}" alt="" loading="lazy">`:''}<span class="arcade-name">${esc(x.name)}</span><strong>${esc(x.level)}</strong><span class="arcade-bonus">${esc(x.effect)}</span>${x.projection?`<small class="upgrade-projection">${esc(x.projection)}</small>`:''}<span class="upgrade-tip"><strong>${esc(x.name)}</strong><span>${esc(x.effect)}</span></span></button>`).join('')||'<p>No bonuses match this view.</p>'}</div>${pages>1?`<div class="collection-pager"><button class="secondary" data-page="-1" ${!state.page?'disabled':''}>Previous</button><span>${state.page+1} / ${pages}</span><button class="secondary" data-page="1" ${state.page===pages-1?'disabled':''}>Next</button></div>`:''}<section class="exp-card upgrade-detail detail-dismissed" id="focusedBonusDetail" aria-live="polite"></section>`;
+        afterRender?.();
+        host.querySelectorAll('img').forEach(img=>img.onerror=()=>{img.hidden=true;});
+        host.querySelectorAll('[data-category]').forEach(b=>b.onclick=()=>{state.group=b.dataset.category;state.page=0;paint();});
+        host.querySelectorAll('[data-page]').forEach(b=>b.onclick=()=>{state.page+=Number(b.dataset.page);paint();});
+        const input=host.querySelector('input');input.oninput=()=>{const position=input.selectionStart;state.query=input.value.toLowerCase();state.page=0;paint();const next=host.querySelector('input');next.focus();try{next.setSelectionRange(position,position);}catch{}};
+        const filter=host.querySelector('select');filter.value=state.filter;filter.onchange=()=>{state.filter=filter.value;state.page=0;paint();};
+        const detail=host.querySelector('#focusedBonusDetail');
+        host.querySelectorAll('[data-bonus]').forEach(b=>b.onclick=()=>{
+          const x=shown[Number(b.dataset.bonus)];host.querySelectorAll('[data-bonus]').forEach(tile=>{tile.classList.toggle('selected',tile===b);tile.setAttribute('aria-pressed',String(tile===b));});
+          detail.innerHTML=`<button class="secondary upgrade-close" aria-label="Close bonus details">Close</button><p class="eyebrow">${esc(x.source||titles[key])}</p><h3>${esc(x.name)}</h3><strong>${esc(x.level)}</strong><p class="exp-benefit">${esc(x.effect)}</p>${x.cost!=null?`<p>Listed cost: ${(root.GameCurrency?.coins(x.cost)||[]).map(c=>`<span class="coin-amount"><strong>${esc(c.amount)}</strong><img src="assets/Coins${c.tier}.png" alt="Coin tier ${c.tier}"></span>`).join('')}</p>`:''}${x.projection?`<p>${esc(x.projection)}</p>`:''}<p class="bonus-full-detail">${esc(x.detail||'')}</p>`;
+          detail.classList.remove('detail-dismissed');const close=()=>{detail.classList.add('detail-dismissed');b.classList.remove('selected');b.setAttribute('aria-pressed','false');b.focus();};detail.querySelector('button').onclick=close;detail.onkeydown=e=>{if(e.key==='Escape')close();};detail.querySelector('button').focus();
+        });
+      };paint();
+    }catch(error){if(host.arcadeRequest===token&&host.dataset.page===key)host.innerHTML=`<div class="section-head compact"><h2>${titles[key]}</h2></div><p>Could not load saved bonuses: ${esc(error.message)}</p>`;}
+  }
+  root.ArcadePages={render};
+})(window);

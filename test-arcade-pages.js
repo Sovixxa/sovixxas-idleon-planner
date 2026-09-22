@@ -1,0 +1,35 @@
+'use strict';
+const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
+const box={console:{log(){},warn(){},error(){}},structuredClone};box.self=box;
+vm.createContext(box);
+box.importScripts=(...files)=>files.forEach(file=>vm.runInContext(fs.readFileSync(file,'utf8'),box,{filename:file}));
+let response;box.postMessage=value=>{response=structuredClone(value);};
+vm.runInContext(fs.readFileSync('bonus-worker.js','utf8'),box,{filename:'bonus-worker.js'});
+const save=JSON.parse(fs.readFileSync('../example json.txt','utf8'));
+box.onmessage({data:save});assert(!response.error,response.error);
+const groups=response.groups;
+for(const [key,count] of Object.entries({bribes:41,dungeons:92,vials:86,sigils:24,killroy:9,atomCollider:16,prayers:19,saltLick:11,deathNote:113,armorSets:19}))assert.equal(groups[key].length,count,key);
+for(const key of ['bribes','dungeons','vials','sigils','killroy','atomCollider','prayers','saltLick','deathNote','armorSets'])for(const row of groups[key]){
+  assert(row.name&&row.effect,`${key}: empty tile`);
+  assert(!/undefined|NaN|[{}]/.test(row.effect),`${key}: ${row.effect}`);
+  assert(fs.existsSync(row.icon),`Missing sprite: ${row.icon}`);
+}
+const parse=v=>typeof v==='string'?JSON.parse(v):v;
+assert.equal(groups.dungeons.find(x=>x.group==='Account Bonuses').level,'Lv '+parse(save.data.DungUpg)[5][0]);
+assert(groups.prayers[0].effect.includes('177%'));
+assert(groups.atomCollider[15].name.includes('Sulfur'));
+assert(groups.sigils.some(x=>x.level==='Eclectic'));
+const opts=Array(500).fill(0);opts[227]=1;opts[230]=0;opts[379]='COPPER_SET,SECRET_SET,';
+const partial=box.ArcadePageModels.build(new Map(),{data:{OptionsListAccount:JSON.stringify(opts)}});
+assert.equal(partial.killroy[0].level,'Unlocked');
+assert.equal(partial.armorSets.filter(x=>x.status==='maxed').length,2);
+assert(partial.bribes.every(x=>x.status==='unknown'));
+const rank=box.ArcadePageModels.rank;
+assert.equal(rank(25000),1);assert.equal(rank(100000),2);assert.equal(rank(5000000),7);assert.equal(rank(1e9,false,true),10);assert.equal(rank(1e9+1,false,true),20);
+assert.equal(rank(100,true),1);assert.equal(rank(1e6,true),10);assert.equal(rank(1e8,true),10);
+global.REMAINING_CATALOG={};const R=require('./remaining-worlds');
+const printer=R.printer({Printer:[0,0,0,0,0,'Copper',100,'Blank',0,'Blank',0,'Blank',0,'Blank',0,'Copper',100,'OakTree',200],PrinterXtra:['Iron',300,'Blank',0,'Blank',0,'Blank',0,'Blank',0]},{charNames:['A']});
+assert.equal(printer.characters[0].slots.length,4);assert.equal(printer.main.length,2);assert.equal(printer.characters[0].slots.filter(x=>!x.active).length,2);
+const shell=fs.readFileSync('index.html','utf8'),app=fs.readFileSync('app.js','utf8');
+assert(!shell.includes('id="navForgeBonuses"'));assert(!shell.includes('id="navPrinter"'));assert(app.includes("tabs:['shrines','printer','refinery']"));
+console.log('Arcade pages: worker decoding, all ten catalogs, sprites, missing data, exact skull boundaries, armor aliases and printer slots pass.');

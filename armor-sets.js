@@ -23,7 +23,9 @@ const SETS=[
 ].map((x,id)=>({id,key:x[0],name:x[1],bonus:x[2],armor:x[3],tools:x[4],weapons:x[5],requiredTools:x[6],requiredWeapon:x[7]}));
 const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function model(data={}){
- const raw=String(data.OptionsListAccount??data.OptLacc??'');
+ let options=data.OptionsListAccount??data.OptLacc??'';
+ if(typeof options==='string'){try{options=JSON.parse(options);}catch{}}
+ const raw=Array.isArray(options)?String(options[379]??''):String(options);
  const available=raw.length>0;
  const unlocked=new Set(SETS.filter(set=>new RegExp(`(?:^|,)${set.key}(?:,|$)`).test(raw)).map(set=>set.key));
  const rows=SETS.map(set=>({...set,unlocked:unlocked.has(set.key)}));

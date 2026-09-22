@@ -20,5 +20,8 @@ assert(host.innerHTML.includes('2</strong><span>unique owned'));
 assert(!host.innerHTML.includes('This export has no companion list'));
 assert(host.innerHTML.includes('assets/pets-static/mushP.png'));
 assert(!host.innerHTML.includes('<code>mushP</code>'));
+const borrowedPet=m.all.find(x=>x.id===174);
+const borrowedCard=host.innerHTML.split('<article').find(x=>x.includes('>#174</span>'));
+assert(borrowedCard.includes(`<p class="pet-active-bonus">${borrowedPet.description}</p>`),'Borrowed pet displays its base effect even when an upgraded copy is owned');
 if(process.argv[2]){const actual=JSON.parse(fs.readFileSync(process.argv[2],'utf8'));c.PetsPage.render(host,actual.data,actual);assert(host.innerHTML.includes('88</strong><span>unique owned'));assert(host.innerHTML.includes('20 upgraded'));console.log('Toolbox export renders 88 owned and 20 upgraded pets');}
 console.log('Pets parsing and rendering pass without BeanValueEngine');

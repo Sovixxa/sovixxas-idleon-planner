@@ -49,7 +49,9 @@ const server=http.createServer((req,res)=>{
   if(req.url==='/__pull'&&req.method==='POST'){
     gitPull((err,output)=>{if(err)return sendJson(res,500,{ok:false,error:err.message});sendJson(res,200,{ok:true,output});});return;
   }
-  const full=safePath(req.url||'/');if(!full)return sendJson(res,403,{error:'Forbidden'});
+  let full;
+  try{full=safePath(req.url||'/');}catch(error){if(error instanceof URIError)return sendJson(res,400,{error:'Malformed URL'});throw error;}
+  if(!full)return sendJson(res,403,{error:'Forbidden'});
   fs.stat(full,(err,st)=>{
     if(err||!st.isFile())return sendJson(res,404,{error:'Not found'});
     const ext=path.extname(full).toLowerCase(),headers={'Content-Type':MIME[ext]||'application/octet-stream','Cache-Control':'no-store'};
@@ -58,11 +60,18 @@ const server=http.createServer((req,res)=>{
 });
 
 // Portable hot reload: watch core source files plus direct asset changes.
-const watchFiles=['index.html','styles.css','app.js','engine.js','solver-worker.js','bonus-worker.js','quest-worker.js','beanstalk-engine.js','beanstalk.js','beanstalk.css','pets.js','pets.css','remaining-worlds.js','remaining-worlds.css','bonus-systems.js','bonus-systems.css','quests-v2.js','quests-v3.js','quests-v5.js','README.txt'];
+const watchFiles=fs.readdirSync(ROOT).filter(name=>/\.(?:html|css|js|webmanifest)$/.test(name)&&!/^(?:test-|extract-|inspect-|build-static|server\.)/.test(name));
 let reloadTimer=null;
 function changed(file){clearTimeout(reloadTimer);reloadTimer=setTimeout(()=>broadcast('reload',path.basename(file)),120);}
 for(const f of watchFiles){const p=path.join(ROOT,f);if(fs.existsSync(p))fs.watchFile(p,{interval:450},(cur,prev)=>{if(cur.mtimeMs!==prev.mtimeMs||cur.size!==prev.size)changed(p);});}
-try{fs.watch(path.join(ROOT,'assets'),{persistent:false},(_evt,name)=>{if(name)changed(name);});}catch(_){/* assets are static; core watchers still work */}
+try{
+  const assets=path.join(ROOT,'assets'),versions=new Map();
+  const version=name=>{try{const stat=fs.statSync(path.join(assets,name));return `${stat.size}:${stat.mtimeMs}`;}catch{return null;}};
+  for(const name of fs.readdirSync(assets))versions.set(name,version(name));
+  // Windows can report access/metadata events when a sprite is merely served.
+  // Reload only for actual writes, additions or removals, never ordinary reads.
+  fs.watch(assets,{persistent:false},(_evt,name)=>{if(!name)return;name=String(name);const next=version(name);if(versions.get(name)===next)return;versions.set(name,next);changed(name);});
+}catch(_){/* core watchers still work when assets cannot be watched */}
 
 if(AUTO_PULL&&fs.existsSync(path.join(ROOT,'.git'))){
   setInterval(()=>gitPull(()=>{}),PULL_MS).unref();

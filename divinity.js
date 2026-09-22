@@ -19,7 +19,7 @@
     return {available:Array.isArray(div),points:number(div?.[24]),unlockedCount,godRank:unlockedCount===null?null:Math.max(0,unlockedCount-10),unlinks:number(div?.[38]),atoms:number(div?.[39]),characters:chars,gods,styles:catalog.styles};
   }
   let activeTab='characters',selected=null;
-  function render(host,data={},account={}){
+  function render(host,data={},account={},afterRender){
     const model=decode(data,account),catalog=root.DIVINITY_CATALOG;
     function detail(kind,id){
       selected={kind,id};const panel=host.querySelector('#divinityDetail');if(!panel)return;
@@ -39,6 +39,7 @@
       host.querySelectorAll('[data-div-tab]').forEach(button=>button.onclick=()=>{activeTab=button.dataset.divTab;selected=null;paint();});
       host.querySelectorAll('[data-divinity-kind]').forEach(button=>button.onclick=()=>detail(button.dataset.divinityKind,Number(button.dataset.divinityId)));
       if(selected&&host.querySelector(`[data-divinity-kind="${selected.kind}"][data-divinity-id="${selected.id}"]`))detail(selected.kind,selected.id);
+      afterRender?.();
     }paint();
   }
   const api={decode,render};if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.Divinity=api;
