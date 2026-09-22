@@ -58,7 +58,7 @@ const server=http.createServer((req,res)=>{
 });
 
 // Portable hot reload: watch core source files plus direct asset changes.
-const watchFiles=['index.html','styles.css','app.js','engine.js','solver-worker.js','beanstalk-engine.js','beanstalk.js','beanstalk.css','pets.js','pets.css','remaining-worlds.js','remaining-worlds.css','bonus-systems.js','bonus-systems.css','README.txt'];
+const watchFiles=['index.html','styles.css','app.js','engine.js','solver-worker.js','bonus-worker.js','beanstalk-engine.js','beanstalk.js','beanstalk.css','pets.js','pets.css','remaining-worlds.js','remaining-worlds.css','bonus-systems.js','bonus-systems.css','README.txt'];
 let reloadTimer=null;
 function changed(file){clearTimeout(reloadTimer);reloadTimer=setTimeout(()=>broadcast('reload',path.basename(file)),120);}
 for(const f of watchFiles){const p=path.join(ROOT,f);if(fs.existsSync(p))fs.watchFile(p,{interval:450},(cur,prev)=>{if(cur.mtimeMs!==prev.mtimeMs||cur.size!==prev.size)changed(p);});}
