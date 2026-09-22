@@ -4,6 +4,7 @@
   const $=id=>document.getElementById(id);
   let state=null,loadedExport=null,lastResult=null,currentArrangement=null,currentStats=null,calibration=null,lastNextMove=null,practice=null;
   let jellyReadyState=null,homeRosterSave=null,homeDecodedPlayers=[];
+  let initialUpgradesPending=false,initialPracticePending=false;
   const SESSION_KEY='idleon-jelly-json-session-v3';
   const OBS_KEY='idleon-jelly-observed-clear-v1';
   const REVIVE_KEY='idleon-jelly-revive-delay-v1';
@@ -18,6 +19,8 @@
       const active=key===name;$(button).classList.toggle('active',active);$(button).setAttribute('aria-selected',String(active));$(panel).classList.toggle('hidden',!active);
     }
     if(name!=='practice'&&practice?.playing)stopPracticePlayback();
+    if(name==='upgrades'&&initialUpgradesPending){initialUpgradesPending=false;renderUpgrades(currentArrangement,currentStats,calibration.scale);}
+    if(name==='practice'&&initialPracticePending){initialPracticePending=false;refreshPracticeFevers();refreshPracticeCells();runPractice(true,true);}
   }
   const SKILL_PAGES={
     accountReview:{title:'Account Review',world:'Optimizers',copy:'Review saved progress and plan your next account milestones.'},
@@ -100,7 +103,8 @@
   function selectSideNav(name){
     if(name!=='jelly'&&practice?.playing)stopPracticePlayback();
     if(name==='jelly'&&state?.hasJelly===false){selectSideNav('classExp');return;}
-    if(!state)$('workspace').classList.toggle('hidden',!['classExp','accountReview'].includes(name));
+    if(!state)$('workspace').classList.toggle('hidden',!['classExp','accountReview','loadouts'].includes(name));
+    if(!state)$('inputPanel').classList.toggle('hidden',name==='loadouts');
     const selected=SKILL_PAGES[name]?.parent||name;
     for(const id of ['navHome','navJelly',...Object.keys(SKILL_PAGES).map(key=>'nav'+key[0].toUpperCase()+key.slice(1))])$(id)?.classList.toggle('active',id===('nav'+selected[0].toUpperCase()+selected.slice(1)));
     const jelly=name==='jelly';$('operationStatePanel').classList.toggle('hidden',!jelly);$('jellyTabs').classList.toggle('hidden',!jelly);
@@ -117,7 +121,7 @@
   $('navHome').addEventListener('click',()=>selectSideNav('home'));
   $('navJelly').addEventListener('click',()=>selectSideNav('jelly'));
   for(const key of Object.keys(SKILL_PAGES))$('nav'+key[0].toUpperCase()+key.slice(1))?.addEventListener('click',()=>selectSideNav(key));
-  window.addEventListener('idleon:navigate',event=>{if(SKILL_PAGES[event.detail])selectSideNav(event.detail);});
+  window.addEventListener('idleon:navigate',event=>{const reviewPages={questUnlocks:'quests',sushiReview:'sushi',vialsReview:'vials',constructionReady:'construction',sailingReview:'sailing',cookingReview:'cooking',starsReview:'starSigns',storageReview:'home',worldGates:'rift'};if(reviewPages[event.detail])selectSideNav(reviewPages[event.detail]);else if(SKILL_PAGES[event.detail])selectSideNav(event.detail);});
   document.querySelectorAll('.side-group>span').forEach(label=>{
     label.parentElement.classList.add('collapsed');
     label.tabIndex=0;label.setAttribute('role','button');label.setAttribute('aria-expanded','false');
@@ -484,6 +488,7 @@
     };
     $('worldContent').bonusAfterRender=null;
     if(name==='accountReview'){window.AccountReview.render($('worldContent'),loadedExport||state?.rawRoot||{});return;}
+    if(name==='loadouts'){window.Loadouts.render($('worldContent'),loadedExport||state?.rawRoot||{});return;}
     $('worldContent').classList.toggle('jar-page',name==='holeJars');
     const addSubtabs=()=>{const parentKey=page.parent||name,parent=SKILL_PAGES[parentKey],keys=[parentKey,...(parent.tabs||[])];if(keys.length<2)return;const head=$('worldContent').querySelector('.section-head,.bonus-system-hero,.divinity-hero');if(parentKey==='hole'){const activeGroup=HOLE_TAB_GROUPS.find(group=>group.keys.includes(name))||HOLE_TAB_GROUPS[0],stack=document.createElement('div');stack.className='hole-tab-stack';stack.innerHTML=`<nav class="skill-tabs hole-group-tabs" role="tablist" aria-label="The Hole groups">${HOLE_TAB_GROUPS.map(group=>`<button class="skill-tab${group===activeGroup?' active':''}" data-hole-group="${esc(group.keys[0])}" role="tab" aria-selected="${group===activeGroup}">${esc(group.label)}</button>`).join('')}</nav><nav class="skill-tabs hole-section-tabs${activeGroup.label==='Villagers'?' hole-villager-tabs':''}" role="tablist" aria-label="${esc(activeGroup.label)} sections">${activeGroup.keys.map(key=>`<button class="skill-tab${key===name?' active':''}" data-skill-tab="${esc(key)}" role="tab" aria-selected="${key===name}">${HOLE_VILLAGER_ICONS[key]!=null?`<span class="hole-portrait"><img src="assets/HoleUIvillager${HOLE_VILLAGER_ICONS[key]}.png" alt=""></span>`:''}<span>${esc(key==='hole'?'Explore':SKILL_PAGES[key].title)}</span></button>`).join('')}</nav>`;head?.insertAdjacentElement('afterend',stack);stack.querySelectorAll('[data-hole-group]').forEach(button=>button.onclick=()=>selectSideNav(button.dataset.holeGroup));stack.querySelectorAll('[data-skill-tab]').forEach(button=>button.onclick=()=>selectSideNav(button.dataset.skillTab));return;}const nav=document.createElement('nav');nav.className='skill-tabs';nav.setAttribute('role','tablist');nav.setAttribute('aria-label',`${parent.title} sections`);nav.innerHTML=keys.map(key=>`<button class="skill-tab${key===name?' active':''}" data-skill-tab="${esc(key)}" role="tab" aria-selected="${key===name}">${esc(SKILL_PAGES[key].title)}</button>`).join('');head?.insertAdjacentElement('afterend',nav);nav.querySelectorAll('[data-skill-tab]').forEach(button=>button.onclick=()=>selectSideNav(button.dataset.skillTab));};
     $('worldContent').bonusAfterRender=addSubtabs;
@@ -621,8 +626,8 @@
     renderStateStats();renderBoard($('currentBoard'),currentArrangement);renderBoard($('bestBoard'),currentArrangement);
     renderSummary($('currentSummary'),currentStats);renderSummary($('bestSummary'),currentStats);renderTimeline($('currentTimeline'),currentStats);renderTimeline($('bestTimeline'),currentStats);
     $('currentVerdict').innerHTML=verdict(currentStats);$('bestVerdict').innerHTML=verdict(currentStats);
-    renderCellMix(currentArrangement);renderUpgrades(currentArrangement,currentStats,calibration.scale);renderTrainer();renderHome();
-    refreshPracticeFevers();refreshPracticeCells();runPractice(true,true);
+    renderCellMix(currentArrangement);renderTrainer();renderHome();
+    initialUpgradesPending=true;initialPracticePending=true;
     $('solverStatus').textContent='Loaded. Current layout has been timed. Hit Optimize timed clear to search legal arrangements.';
     $('calibrationNote').textContent=calibrationText(calibration);
   }

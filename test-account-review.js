@@ -15,6 +15,9 @@ assert.equal(stamps[5].status,'complete');assert.equal(section(m,'characters').n
 assert.equal(section(m,'worship').next.current,9);assert.equal(section(m,'cooking').next.target,5);
 assert.equal(section(m,'rift').next.target,5);assert.equal(section(m,'construction').rows[1].status,'complete');
 assert.equal(section(m,'alchemy').next.target,25);assert(!section(m,'alchemy').rows.some(r=>r.name==='BUBBLE'));
+assert(m.unlocks.some(item=>item.system==='Stamps'&&item.name===stamps[0].name));
+assert(m.unlocks.some(item=>item.system==='Stamps'&&item.sourceUrl));
+assert(review.model({CauldronInfo:[[0]]},catalogs).unlocks.some(item=>item.system==='Alchemy bubbles'));
 assert.equal(JSON.stringify(raw),before,'Review must not mutate save');
 const changed=review.model({StampLv:[[0,10]]},catalogs);assert.equal(section(changed,'stamps').rows[1].target,25);
 assert.equal(section(review.model({StampLv:[[false,'',Infinity]]},catalogs),'stamps').known,0);
