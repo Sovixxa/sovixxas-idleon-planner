@@ -1,7 +1,8 @@
 'use strict';
 const fs=require('fs'),path=require('path');
 const root=__dirname,out=path.join(root,'dist');
-require('./build-stat-items').write();
+// The checked-in catalog is the deployable data source. Its generator is a
+// local maintenance tool and is intentionally not required by GitHub Pages.
 if(path.dirname(out)!==root||path.basename(out)!=='dist')throw new Error('Refusing to clean an unexpected build directory.');
 fs.rmSync(out,{recursive:true,force:true});fs.mkdirSync(out,{recursive:true});
 const allowed=new Set(['.html','.css','.js','.png','.jpg','.jpeg','.svg','.ico','.webp','.woff','.woff2']);
