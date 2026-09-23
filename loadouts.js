@@ -17,66 +17,24 @@ function model(){
  const source=data();return{builds:source?.builds||[],items:source?.items||{}};
 }
 function fmt(value){const n=Number(value);return Number.isFinite(n)?n.toLocaleString('en-US'):'—';}
-function carryModel(raw){
- if(!raw||!Object.keys(raw.data||raw).length)return {players:[]};
- try{
-  const systems=root.BeanValueEngine?.systems?.(raw);
-  const players=systems?.get?.('players')||[],capacity=systems?.get?.('capacity'),capacityPlayers=capacity?.players||[];
-  return {players:players.map(player=>({...player,capacity:capacityPlayers.find(entry=>entry.playerID===player.playerID)})),capacity,systems};
- }catch(error){return {players:[],error};}
-}
-function carryRows(player){
- const slots=Number(player?.capacity?.totalInventorySlots)||0;
- return (player?.capacity?.bags||[]).map(bag=>({
-  type:bag.name,name:bag.displayName||bag.name,base:bag.capacity,perSlot:bag.maxCarry,max:Number(bag.maxCarry||0)*slots,missing:!Number(bag.capacity)
- }));
-}
-function carryAudit(player,systems){
- const findStamp=id=>(systems?.get?.('stamps')||[]).flat().find(stamp=>stamp.raw_name===id);
- const value=(fn,fallback=0)=>{try{const result=fn?.();return Number.isFinite(Number(result))?Number(result):fallback;}catch{return fallback;}};
- const activePrayers=player?.activePrayers||[],prayers=systems?.get?.('prayers')||[];
- const starSigns=(player?.starSigns||[]).map(star=>({name:star.name||'Carry Cap star sign',value:value(()=>star.getBonus('Carry Cap'))})).filter(star=>star.value);
- const bribe=(systems?.get?.('bribes')||[]).find(row=>row.name==='Bottomless Bags');
- const gem=systems?.get?.('gems')?.purchases?.[58],gemBuys=Number(gem?.pucrhased)||0;
- const source=(scope,name,current,status,detail)=>({scope,name,current,status,detail});
- const isActive=current=>current?'active':'missing';
- const allCarryStamp=findStamp('StampC2'),allStamp=value(()=>allCarryStamp?.getBonus());
- const guild=value(()=>systems?.get?.('guild')?.guildBonuses?.[2]?.getBonus()),telekinetic=value(()=>player?.getTalentBonus?.(634)),shrine=value(()=>systems?.get?.('shrines')?.[3]?.getBonus?.(player?.currentMapId)),vault=value(()=>systems?.get?.('upgradeVault')?.getBonusForId?.(17)),extraBags=value(()=>player?.getTalentBonus?.(78));
- const rows=[
-  source('All bags','Guild Rucksack',guild,isActive(guild),'Guild bonus'),
-  source('All bags','Telekinetic Storage',telekinetic,isActive(telekinetic),'Character talent'),
-  source('All bags','Carry Shrine',shrine,isActive(shrine),'Map-dependent shrine bonus'),
-  source('All bags','Ruck Sack prayer',value(()=>prayers[12]?.getBonus?.()),activePrayers.includes(12)?'active':'inactive','Only applies while this prayer is active'),
-  source('All bags','Bottomless Bags bribe',bribe?.status===1?Number(bribe.value)||5:0,bribe?.status===1?'active':'missing','Account bribe'),
-  source('All bags','Carry Cap star signs',starSigns.reduce((sum,star)=>sum+star.value,0),starSigns.length?'active':'missing',starSigns.length?starSigns.map(star=>`${star.name} +${fmt(star.value)}%`).join(', '):'No equipped carry-cap star sign'),
-  source('All bags',allCarryStamp?.name||'Mason Jar Stamp',allStamp,allStamp?'active':'missing','All carry-capacity stamp'),
-  source('All bags','Gem Shop capacity',gemBuys,gemBuys?'active':'missing',`${fmt(gemBuys)}/${fmt(gem?.maxPurchases)} purchases · +${fmt(gemBuys*25)}%`),
-  source('All bags','Upgrade Vault capacity',vault,isActive(vault),'Flat capacity before multipliers'),
-  source('Materials only','Extra Bags',extraBags,isActive(extraBags),'Character talent'),
-  source('All bags','Inventory slots',Number(player?.capacity?.totalInventorySlots)||0,'active','Multiplies each per-slot capacity into the total'),
-  source('All bags','Zerg Rushogen',activePrayers.includes(4)?-value(()=>prayers[4]?.getCurse?.()):0,activePrayers.includes(4)?'penalty':'inactive',activePrayers.includes(4)?'Active prayer reduces all capacity':'No carry-capacity penalty')
- ];
- for(const bag of player?.capacity?.bags||[]){if(!bag.stampName)continue;const stamp=findStamp(bag.stampName),level=player?.skills?.get?.(bag.skill)?.level||0,bonus=value(()=>stamp?.getBonus?.(level));rows.push(source(`${bag.displayName||bag.name} only`,stamp?.name||`${bag.displayName||bag.name} carry-capacity stamp`,bonus,bonus?'active':'missing',`Scales with ${bag.displayName||bag.name.toLowerCase()} skill level: ${fmt(level)}`));}
- return rows;
-}
-function carryAdvice(player,systems){
- const rows=carryRows(player),seen=new Set(),advice=[];
- rows.filter(row=>row.missing).forEach(row=>{const id='bag:'+row.type;if(!seen.has(id)){seen.add(id);advice.push({title:`${row.type} bag is missing`,detail:`${player.playerName||'This character'} has no recognized ${row.type.toLowerCase()} bag. Craft, buy, or earn the next bag tier, then equip it.`});}});
- carryAudit(player,systems).filter(source=>source.status==='missing'||source.status==='inactive').forEach(source=>advice.push({title:`${source.name}: ${source.status}`,detail:source.detail}));
- if(!advice.length)advice.push({title:'No missing decoded carry-capacity source',detail:'All audited sources have a current bonus. Raise bag tiers or inventory slots for further capacity.'});
- return advice;
-}
+function carryRows(player){return player.rows||[];}
+function carryAudit(player){return player.audit||[];}
+function carryAdvice(player){return [{title:'Saved setup, not a theoretical loadout',detail:'Only currently applied bonuses are counted. Total capacity assumes an empty inventory. W1 town capacity recalculates shrine coverage at the stamp vendor.'}];}
 function renderDrop(host,raw){
  return root.DropRate.render(host,raw,tab=>{activeTab=tab;render(host,raw);});
 }
-function renderCarry(host,raw){
- const m=carryModel(raw),players=m.players;
+async function renderCarry(host,raw){
+ const token={};host._carryToken=token;
+ host.innerHTML='<p class="loadout-note">Calculating carry capacity and active bonuses…</p>';
+ let m;try{m=await root.CarryCapacity.load(raw);}catch(error){m={players:[],error};}
+ if(host._carryToken!==token||activeTab!=='carry'||!host.isConnected)return;
+ const players=m.players;
  if(!players.length){host.innerHTML=`<section class="loadouts-page"><div class="section-head compact loadout-heading"><div><p class="eyebrow">Optimizers</p><h2>Carry Capacity</h2><p>Load a complete IdleOn export to calculate each character’s bags, slot capacity, and missing upgrades.</p></div></div><nav class="skill-tabs loadout-groups" aria-label="Loadout sections"><button type="button" class="skill-tab" data-loadout-tab="builds">Build loadouts</button><button type="button" class="skill-tab active" data-loadout-tab="carry" aria-current="page">Carry Capacity</button><button type="button" class="skill-tab" data-loadout-tab="drop">Drop Rate</button><button type="button" class="skill-tab" data-loadout-tab="damage">Damage</button><button type="button" class="skill-tab" data-loadout-tab="classExp">Class EXP</button></nav><section class="carry-empty"><h3>No character capacity data yet</h3><p>${m.error?'The save could not be decoded. Try importing a fresh full export.':'Import your save from Home, then return here.'}</p></section></section>`;host.querySelectorAll('[data-loadout-tab]').forEach(button=>button.onclick=()=>{activeTab=button.dataset.loadoutTab;render(host,raw);});return;
  }
  const selected=carryCharacter==='all'?null:players.find(player=>String(player.playerID)===carryCharacter)||players[0];
  const display=selected?[selected]:players;
- const table=player=>{const rows=carryRows(player),slots=player?.capacity?.totalInventorySlots,audit=selected?carryAudit(player,m.systems):[];return `<details class="carry-character"><summary><div><h3>${esc(player.playerName||player.name||`Character ${Number(player.playerID)+1}`)}</h3><small>${esc(player.class||'Character')} · ${fmt(slots)} inventory slots</small></div><div class="carry-summary"><strong>${fmt(Math.max(0,...rows.map(row=>Number(row.max)||0)))}</strong><span>largest total · expand</span></div></summary><div class="carry-table-wrap"><table class="carry-table"><thead><tr><th>Bag type</th><th>Bag</th><th>Base</th><th>Per slot</th><th>Total capacity</th><th>Status</th></tr></thead><tbody>${rows.map(row=>`<tr class="${row.missing?'carry-missing':''}"><td>${esc(row.type)}</td><td>${esc(row.name)}</td><td>${fmt(row.base)}</td><td>${fmt(row.perSlot)}</td><td>${fmt(row.max)}</td><td>${row.missing?'Missing bag':'Equipped'}</td></tr>`).join('')||'<tr><td colspan="6">No carry bags were decoded for this character.</td></tr>'}</tbody></table></div>${selected?`<section class="carry-audit"><h4>Carry-capacity source audit</h4><div class="carry-table-wrap"><table class="carry-table"><thead><tr><th>Scope</th><th>Source</th><th>Current</th><th>Status</th><th>Notes</th></tr></thead><tbody>${audit.map(source=>`<tr class="carry-source-${esc(source.status)}"><td>${esc(source.scope)}</td><td>${esc(source.name)}</td><td>${fmt(source.current)}${source.name==='Gem Shop capacity'?' purchases':source.name==='Upgrade Vault capacity'?' base':source.name==='Inventory slots'?' slots':'%'}</td><td>${esc(source.status)}</td><td>${esc(source.detail)}</td></tr>`).join('')}</tbody></table></div></section><div class="carry-advice"><h4>Missing &amp; upgrade opportunities</h4><ul>${carryAdvice(player,m.systems).map(item=>`<li><strong>${esc(item.title)}</strong><span>${esc(item.detail)}</span></li>`).join('')}</ul></div>`:''}</details>`;};
- host.innerHTML=`<section class="loadouts-page"><div class="section-head compact loadout-heading"><div><p class="eyebrow">Optimizers · saved account</p><h2>Carry Capacity</h2><p>Actual carry capacity per inventory slot and total capacity, calculated from your bags and active account bonuses.</p></div></div><nav class="skill-tabs loadout-groups" aria-label="Loadout sections"><button type="button" class="skill-tab" data-loadout-tab="builds">Build loadouts</button><button type="button" class="skill-tab active" data-loadout-tab="carry" aria-current="page">Carry Capacity</button><button type="button" class="skill-tab" data-loadout-tab="drop">Drop Rate</button><button type="button" class="skill-tab" data-loadout-tab="damage">Damage</button><button type="button" class="skill-tab" data-loadout-tab="classExp">Class EXP</button></nav><div class="loadout-controls carry-controls"><label>Character<select id="carryCharacter"><option value="all">All characters — capacity overview</option>${players.map(player=>`<option value="${esc(player.playerID)}" ${selected===player?'selected':''}>${esc(player.playerName||player.name||`Character ${Number(player.playerID)+1}`)}</option>`).join('')}</select></label></div>${selected?'<p class="loadout-note">Expand the character to see every decoded carry-capacity source. “Missing” is a zero bonus; “inactive” is unlocked but not currently active; “penalty” lowers capacity. Total capacity is per-slot capacity × inventory slots.</p>':'<p class="loadout-note">Each character starts collapsed for quick comparison. Choose one to audit every carry-capacity source and upgrade opportunity.</p>'}<div class="carry-characters">${display.map(table).join('')}</div></section>`;
+ const table=player=>{const rows=carryRows(player),slots=player?.capacity?.totalInventorySlots,audit=selected?carryAudit(player,m.systems):[];return `<details class="carry-character"><summary><div><h3>${esc(player.playerName||player.name||`Character ${Number(player.playerID)+1}`)}</h3><small>${esc(player.class||'Character')} · ${fmt(slots)} inventory slots</small></div><div class="carry-summary"><strong>${fmt(Math.max(0,...rows.map(row=>Number(row.max)||0)))}</strong><span>largest total · expand</span></div></summary><div class="carry-table-wrap"><table class="carry-table"><thead><tr><th>Bag type</th><th>Bag</th><th>Base</th><th>Per slot</th><th>Empty-bag total</th><th>W1 town total</th><th>Status</th></tr></thead><tbody>${rows.map(row=>`<tr class="${row.missing?'carry-missing':''}"><td>${esc(row.type)}</td><td>${esc(row.name)}</td><td>${fmt(row.base)}</td><td>${fmt(row.perSlot)}</td><td>${fmt(row.max)}</td><td>${fmt(row.townMax)}</td><td>${row.missing?'Missing bag':'Equipped'}</td></tr>`).join('')||'<tr><td colspan="6">No carry bags were decoded for this character.</td></tr>'}</tbody></table></div>${selected?`<section class="carry-audit"><h4>Carry-capacity source audit</h4><div class="carry-table-wrap"><table class="carry-table"><thead><tr><th>Scope</th><th>Source</th><th>Current</th><th>Status</th><th>Notes</th></tr></thead><tbody>${audit.map(source=>`<tr class="carry-source-${esc(source.status)}"><td>${esc(source.scope)}</td><td>${esc(source.name)}</td><td>${fmt(source.current)}${esc(source.unit||'%')}</td><td>${esc(source.status)}</td><td>${esc(source.detail)}</td></tr>`).join('')}</tbody></table></div></section><div class="carry-advice"><h4>Missing &amp; upgrade opportunities</h4><ul>${carryAdvice(player,m.systems).map(item=>`<li><strong>${esc(item.title)}</strong><span>${esc(item.detail)}</span></li>`).join('')}</ul></div>`:''}</details>`;};
+ host.innerHTML=`<section class="loadouts-page"><div class="section-head compact loadout-heading"><div><p class="eyebrow">Optimizers · saved account</p><h2>Carry Capacity</h2><p>Saved-map capacity and W1 stamp-vendor capacity, calculated from your bags and active bonuses. Totals assume every inventory slot is available.</p></div></div><nav class="skill-tabs loadout-groups" aria-label="Loadout sections"><button type="button" class="skill-tab" data-loadout-tab="builds">Build loadouts</button><button type="button" class="skill-tab active" data-loadout-tab="carry" aria-current="page">Carry Capacity</button><button type="button" class="skill-tab" data-loadout-tab="drop">Drop Rate</button><button type="button" class="skill-tab" data-loadout-tab="damage">Damage</button><button type="button" class="skill-tab" data-loadout-tab="classExp">Class EXP</button></nav><div class="loadout-controls carry-controls"><label>Character<select id="carryCharacter"><option value="all">All characters — capacity overview</option>${players.map(player=>`<option value="${esc(player.playerID)}" ${selected===player?'selected':''}>${esc(player.playerName||player.name||`Character ${Number(player.playerID)+1}`)}</option>`).join('')}</select></label></div>${selected?'<p class="loadout-note">Expand the character to see every decoded carry-capacity source. Zero means no applied bonus; it does not prove an upgrade is obtainable. Star-sign modifiers are included in the star-sign total, not added again. Total capacity is per-slot capacity × inventory slots.</p>':'<p class="loadout-note">Each character starts collapsed for quick comparison. Choose one to audit every carry-capacity source and upgrade opportunity.</p>'}<div class="carry-characters">${display.map(table).join('')}</div></section>`;
  host.querySelectorAll('[data-loadout-tab]').forEach(button=>button.onclick=()=>{activeTab=button.dataset.loadoutTab;render(host,raw);});
  host.querySelector('#carryCharacter').onchange=e=>{carryCharacter=e.target.value;renderCarry(host,raw);};
 }

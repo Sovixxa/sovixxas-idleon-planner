@@ -1,5 +1,15 @@
 # Project changelog
 
+## 2026-09-23 - Planner quality-of-life tools
+
+- Added favorite pages and keyboard quick search (Ctrl/Cmd+K) for pages and imported bonuses.
+- Remember page filters, character selectors, tabs, sidebar groups, and the last visited page.
+- Added page notes alongside the existing general notepad, with a mobile position that leaves the toolbar accessible.
+- Added manual and save-tracked goals, a Home goal summary, and recurring daily/weekly tasks with configurable local reset times.
+- Added save age, import comparisons for decoded progression, and per-page hiding of recognized completed entries.
+- Added downloadable personal settings backups with validated, previewed restore, including the notepad and Account Review plan.
+- Settings stay in this browser; import comparisons start with a baseline and use later imported saves.
+
 ## 2026-09-20 - Beanstalk bonus audit
 
 - Added a Misc → Pets page showing the complete companion catalog, owned copies, upgraded state, borrowed companion, and active base/upgraded bonus.

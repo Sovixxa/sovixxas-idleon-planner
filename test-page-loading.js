@@ -5,6 +5,7 @@ const navigation=source.slice(source.indexOf('  function selectSideNav('),source
 const nodes=new Map();
 const $=id=>{if(!nodes.has(id))nodes.set(id,{classList:{values:new Set(),toggle(key,on){on?this.values.add(key):this.values.delete(key);},add(key){this.values.add(key);},remove(key){this.values.delete(key);}}});return nodes.get(id);};
 const context={$,state:null,practice:null,SKILL_PAGES:{},document:{querySelector:()=>null,querySelectorAll:()=>[]},renderWorldPage(){},selectWorkspaceTab(){}};
+context.window=context;
 vm.createContext(context);vm.runInContext(navigation,context);
 for(const name of ['communitySheets','credits','shadowCaps','loadouts']){
  context.selectSideNav(name);

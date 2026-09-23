@@ -1,0 +1,54 @@
+'use strict';
+const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
+const {chromium}=require(process.env.PLAYWRIGHT_PATH||'C:/Users/Sofia/AppData/Local/npm-cache/_npx/e41f203b7505f1fb/node_modules/playwright');
+(async()=>{
+ const browser=await chromium.launch({headless:true});
+ try{
+ const page=await browser.newPage({viewport:{width:1440,height:1000}}),errors=[];page.on('pageerror',e=>errors.push(e.message));
+ await page.route('http://localhost:7331/**',async route=>{
+  const pathname=decodeURIComponent(new URL(route.request().url()).pathname);
+  if(pathname.startsWith('/__'))return route.fulfill({contentType:'application/json',body:'{}'});
+  const file=path.resolve(__dirname,'.'+(pathname==='/'?'/index.html':pathname));
+  if(!file.startsWith(__dirname+path.sep)||!fs.existsSync(file)||fs.statSync(file).isDirectory())return route.fulfill({status:404,body:''});
+  const type={'.js':'text/javascript','.css':'text/css','.html':'text/html','.png':'image/png','.json':'application/json','.svg':'image/svg+xml'}[path.extname(file)]||'application/octet-stream';
+  return route.fulfill({contentType:type,body:fs.readFileSync(file)});
+ });
+ await page.goto('http://localhost:7331/');await page.locator('#qolSearchOpen').waitFor();
+ await page.keyboard.press('Control+k');await page.locator('#qolQuery').fill('printer');await page.keyboard.press('Enter');
+ assert.equal(await page.locator('#qolPageName').innerText(),'3D Printer');
+ await page.locator('#qolFavorite').click();assert.equal(await page.locator('.qol-favorites button').count(),1);
+ await page.locator('#qolNotesOpen').click();await page.locator('#qolPageNote').fill('Remember to resample <safe text>');await page.locator('[data-close]').click();
+ await page.locator('#quickNotesInput').fill('Global note');
+ await page.locator('#qolPlanOpen').click();await page.locator('#qolTaskForm [name=name]').fill('Daily salts');await page.locator('#qolTaskForm button').click();await page.locator('[data-task]').check();
+ await page.locator('#qolAddGoal').click();await page.locator('#qolGoalForm [name=name]').fill('Printing target');await page.locator('#qolGoalForm [name=current]').fill('5');await page.locator('#qolGoalForm [name=target]').fill('10');await page.locator('#qolGoalForm button').click();assert.equal(await page.locator('.qol-dialog .qol-goal').count(),1);await page.locator('[data-close]').click();
+ const raw=JSON.parse(fs.readFileSync('../example json.txt','utf8'));
+ await page.locator('#jsonInput').fill(JSON.stringify(raw));await page.locator('#parseBtn').click();
+ await page.waitForFunction(()=>/^(Save age|Imported):/.test(document.getElementById('qolFreshness').textContent),{},{timeout:60000});
+ assert.equal(await page.locator('#qolPageName').innerText(),'3D Printer');
+ await page.evaluate(()=>window.dispatchEvent(new CustomEvent('idleon:navigate',{detail:'characters'})));
+ await page.locator('#talentCharacter').selectOption('2');
+ await page.evaluate(()=>window.dispatchEvent(new CustomEvent('idleon:navigate',{detail:'home'})));
+ await page.evaluate(()=>window.dispatchEvent(new CustomEvent('idleon:navigate',{detail:'characters'})));
+ assert.equal(await page.locator('#talentCharacter').inputValue(),'2');
+ await page.locator('#qolSearchOpen').click();await page.locator('#qolQuery').fill(raw.charNames[0]);await page.locator('[data-track]').first().click();await page.locator('#qolGoalForm button').click();assert.equal(await page.locator('.qol-dialog .qol-goal').count(),2);await page.locator('[data-close]').click();
+ await page.evaluate(()=>window.dispatchEvent(new CustomEvent('idleon:navigate',{detail:'gemShop'})));
+ await page.locator('.gem-shop-tile').first().waitFor({timeout:60000});await page.locator('#qolHideDone').check();
+ assert(await page.locator('.qol-completed-hidden').count()>0);await page.locator('#qolHideDone').uncheck();assert.equal(await page.locator('.qol-completed-hidden').count(),0);
+ await page.locator('#qolBackupOpen').click();const downloadPromise=page.waitForEvent('download');await page.locator('#qolExport').click();const download=await downloadPromise;const backup=JSON.parse(fs.readFileSync(await download.path(),'utf8'));assert.equal(backup.extra['idleon-planner-quick-notes-v1'],'Global note');assert.equal(backup.settings.goals.length,2);
+ await page.locator('#qolRestore').setInputFiles({name:'invalid.json',mimeType:'application/json',buffer:Buffer.from('{}')});await page.waitForFunction(()=>document.getElementById('qolBackupStatus').textContent.includes('version 1'));
+ await page.locator('#qolRestore').setInputFiles({name:'backup.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(backup))});await page.locator('#qolApplyRestore').click();await page.locator('[data-close]').click();
+ const updated=structuredClone(raw),data=updated.data||updated;const old=typeof data.Lv0_0==='string'?JSON.parse(data.Lv0_0):data.Lv0_0;old[0]=Number(old[0])+1;data.Lv0_0=old;
+ await page.evaluate(()=>window.dispatchEvent(new CustomEvent('idleon:navigate',{detail:'home'})));await page.locator('#changeJsonBtn').click();await page.locator('#jsonInput').fill(JSON.stringify(updated));await page.locator('#parseBtn').click();
+ await page.waitForFunction(()=>document.getElementById('qolChangesOpen').textContent.includes('('),{},{timeout:60000});await page.locator('#qolChangesOpen').click();assert.match(await page.locator('.qol-dialog').innerText(),/Level gained/);await page.locator('[data-close]').click();
+ await page.locator('#qolPlanOpen').click();const progress=await page.locator('.qol-goal').last().innerText();assert.match(progress,/Complete/);await page.locator('[data-close]').click();
+ await page.screenshot({path:'../audit/planner-qol-desktop.png'});
+ await page.setViewportSize({width:390,height:844});await page.locator('#qolPlanOpen').click();await page.screenshot({path:'../audit/planner-qol-mobile.png'});assert(await page.locator('.qol-dialog').evaluate(el=>el.scrollWidth<=el.clientWidth+1),'Dialog must not overflow on mobile');await page.locator('[data-close]').click();
+ await page.reload();await page.locator('.qol-favorites button').click();await page.locator('#qolNotesOpen').click();assert.equal(await page.locator('#qolPageNote').inputValue(),'Remember to resample <safe text>');await page.locator('[data-close]').click();
+ await page.setViewportSize({width:1440,height:1000});await page.locator('#jsonInput').fill(JSON.stringify(updated));await page.locator('#parseBtn').click();
+ await page.waitForFunction(()=>/^(Save age|Imported):/.test(document.getElementById('qolFreshness').textContent),{},{timeout:60000});
+ await page.evaluate(()=>window.dispatchEvent(new CustomEvent('idleon:navigate',{detail:'characters'})));await page.waitForFunction(()=>document.getElementById('talentCharacter')?.value==='2');
+ await page.locator('[data-talent-loadout="1"]').click();await page.evaluate(()=>window.dispatchEvent(new CustomEvent('idleon:navigate',{detail:'home'})));
+ await page.evaluate(()=>window.dispatchEvent(new CustomEvent('idleon:navigate',{detail:'characters'})));assert(await page.locator('[data-talent-loadout="1"]').evaluate(el=>el.classList.contains('active')));
+ assert.deepEqual(errors,[]);console.log('Planner QoL browser: search, favorites, notes, goals, resettable tasks, preferences, hide completed, backup/restore, import diff, persistence and mobile OK');
+ }finally{await browser.close();}
+})().catch(error=>{console.error(error);process.exitCode=1;});

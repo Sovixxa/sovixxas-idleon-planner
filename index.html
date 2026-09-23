@@ -20,15 +20,20 @@
   <link rel="stylesheet" href="world5.css">
   <link rel="stylesheet" href="collections.css">
   <link rel="stylesheet" href="equinox.css">
-  <link rel="stylesheet" href="world6.css">
-    <link rel="stylesheet" href="world7.css">
-  <link rel="stylesheet" href="gallery.css">
+  <link rel="stylesheet" href="world6.css?v=6">
+    <link rel="stylesheet" href="world7.css?v=3">
+  <link rel="stylesheet" href="gallery.css?v=2">
   <link rel="stylesheet" href="cards.css">
   <link rel="stylesheet" href="card-loadout.css">
   <link rel="stylesheet" href="card-bonus-panel.css">
   <link rel="stylesheet" href="account-pages.css">
   <link rel="stylesheet" href="character-talents.css">
   <link rel="stylesheet" href="research-grid.css">
+  <link rel="stylesheet" href="dancing-coral-page.css">
+  <link rel="stylesheet" href="button-page.css">
+  <link rel="stylesheet" href="button-layout.css?v=3">
+  <link rel="stylesheet" href="clamworks-page.css">
+  <link rel="stylesheet" href="coral-reef-page.css">
   <link rel="stylesheet" href="misc-buffs.css">
   <link rel="stylesheet" href="quests.css">
   <link rel="stylesheet" href="bonus-systems.css?v=15">
@@ -63,7 +68,7 @@
     <div class="side-group collapsed"><span>World 4</span><button id="navLab" class="side-link">Lab</button><button id="navBreeding" class="side-link">Breeding</button><button id="navCooking" class="side-link">Cooking</button><button id="navRift" class="side-link">Rift</button><button id="navTome" class="side-link">Tome</button></div>
     <div class="side-group collapsed"><span>World 5</span><button id="navDivinity" class="side-link">Divinity</button><button id="navSailing" class="side-link">Sailing</button><button id="navGaming" class="side-link">Gaming</button><button id="navHole" class="side-link">The Hole</button><button id="navSlab" class="side-link">Slab</button></div>
     <div class="side-group collapsed"><span>World 6</span><button id="navFarming" class="side-link">Farming</button><button id="navSneaking" class="side-link">Sneaking</button><button id="navSummoning" class="side-link">Summoning</button><button id="navBeanstalk" class="side-link">Beanstalk</button><button id="navEmperorBonuses" class="side-link">Emperor Bonuses</button></div>
-    <div class="side-group collapsed"><span>World 7</span><button id="navMinehead" class="side-link">Minehead</button><button id="navSpelunking" class="side-link">Spelunking</button><button id="navResearch" class="side-link">Research</button><button id="navSushi" class="side-link">Sushi</button><button id="navButton" class="side-link">The Button</button><button id="navCoral" class="side-link">Coral</button><button id="navClamworks" class="side-link">Clamworks</button><button id="navMeritocracy" class="side-link">Meritocracy</button><button id="navBigFish" class="side-link">Big Fish</button><button id="navCoralReef" class="side-link">Coral Reef</button><button id="navDancingCoral" class="side-link">Dancing Coral</button><button id="navZenithMarket" class="side-link">Zenith Market</button><button id="navNametags" class="side-link">Nametags & Trophies</button><button id="navLegendTalents" class="side-link">Legend Talents</button><button id="navJelly" class="side-link">Jelly Operator</button></div>
+    <div class="side-group collapsed"><span>World 7</span><button id="navMinehead" class="side-link">Minehead</button><button id="navGlimbo" class="side-link">Glimbo</button><button id="navSpelunking" class="side-link">Spelunking</button><button id="navResearch" class="side-link">Research</button><button id="navSushi" class="side-link">Sushi</button><button id="navButton" class="side-link">The Button</button><button id="navClamworks" class="side-link">Clamworks</button><button id="navMeritocracy" class="side-link">Meritocracy</button><button id="navBigFish" class="side-link">Big Fish</button><button id="navCoralReef" class="side-link">Coral Reef</button><button id="navZenithMarket" class="side-link">Zenith Market</button><button id="navNametags" class="side-link">Nametags & Trophies</button><button id="navLegendTalents" class="side-link">Legend Talents</button><button id="navJelly" class="side-link">Jelly Operator</button></div>
     <div class="side-section-label">Misc</div>
     <div class="side-group"><button id="navBuffs" class="side-link">All Bonuses</button><button id="navCommunitySheets" class="side-link">Community Sheets</button><button id="navShadowCaps" class="side-link">Shadow Caps</button></div>
     <div class="side-footer"><button id="navCredits" class="side-link">Credits &amp; Resources</button><small>All assets belong to LavaFlame2.</small></div>
@@ -289,6 +294,17 @@
   </main>
   </div>
 
+  <aside id="quickNotes" class="quick-notes" aria-label="Personal notes">
+    <div class="quick-notes-head">
+      <label for="quickNotesInput">Notes</label>
+      <button id="quickNotesToggle" class="quick-notes-toggle" type="button" aria-expanded="true" aria-controls="quickNotesBody" title="Collapse notes"><span aria-hidden="true">−</span><span class="sr-only">Collapse notes</span></button>
+    </div>
+    <div id="quickNotesBody" class="quick-notes-body">
+      <textarea id="quickNotesInput" spellcheck="true" placeholder="Write a note…" aria-label="Personal notes"></textarea>
+      <span class="quick-notes-status" aria-live="polite">Saved locally</span>
+    </div>
+  </aside>
+
   <script src="engine.js"></script>
   <script src="stamps-data.js"></script>
   <script src="alchemy-data.js"></script>
@@ -314,9 +330,12 @@
   <script src="equinox-data.js"></script>
   <script src="equinox.js"></script>
   <script src="world6-data.js"></script>
-  <script src="world6.js"></script>
+  <script src="farming-extras.js"></script>
+  <script src="world6.js?v=7"></script>
   <script src="world7-data.js"></script>
-    <script src="world7.js"></script>
+    <script src="world7.js?v=3"></script>
+  <script src="glimbo-page.js"></script>
+  <script src="coral-reef-page.js"></script>
     <script src="gallery-data.js"></script>
     <script src="gallery.js"></script>
     <script src="cards-data.js"></script>
@@ -362,7 +381,7 @@
   <script src="class-exp.js"></script>
   <script src="equipment-data.js"></script>
   <script src="exp-tabs.js"></script>
-  <link rel="stylesheet" href="arcade-pages.css?v=1">
+  <link rel="stylesheet" href="arcade-pages.css?v=9">
   <script src="arcade-page-assets.js?v=1"></script>
   <script src="arcade-page-models.js?v=1"></script>
   <script src="progression-models.js"></script>
@@ -370,11 +389,15 @@
   <script src="endgame-assets.js"></script>
   <script src="endgame-models.js"></script>
   <script src="research-page.js"></script>
-  <link rel="stylesheet" href="endgame.css">
-  <script src="arcade-pages.js?v=1"></script>
+  <link rel="stylesheet" href="endgame.css?v=2">
+  <script src="arcade-pages.js?v=9"></script>
+  <script src="dancing-coral-page.js"></script>
+  <script src="button-page.js?v=4"></script>
+  <script src="clamworks-page.js?v=3"></script>
+
   <link rel="stylesheet" href="account-review.css">
   <script src="account-review.js"></script>
-  <link rel="stylesheet" href="loadouts.css">
+  <link rel="stylesheet" href="loadouts.css?v=2">
   <script src="loadouts-data.js"></script>
   <script src="drop-source-info.js"></script>
   <script src="stat-item-data.js"></script>
@@ -383,12 +406,16 @@
   <script src="drop-rate.js"></script>
   <script src="combat-source-info.js"></script>
   <script src="combat-stat-tabs.js"></script>
-  <script src="loadouts.js"></script>
+  <script src="stamp-calculator.js"></script>
+  <script src="carry-capacity.js"></script>
+  <script src="loadouts.js?v=2"></script>
   <script src="live-reload.js"></script>
   <script src="community-sheet-data.js"></script>
   <script src="community-sheets.js"></script>
   <script src="shadow-caps-data.js"></script>
   <script src="shadow-caps.js"></script>
+  <link rel="stylesheet" href="planner-qol.css">
+  <script src="planner-qol.js"></script>
   <script src="app.js?v=15"></script>
 </body>
 </html>
