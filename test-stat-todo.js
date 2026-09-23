@@ -1,0 +1,41 @@
+'use strict';
+const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
+const c={console,structuredClone};vm.createContext(c);
+for(const f of ['prayer-math-engine.js','stat-todo-model.js','drop-rate-model.js','combat-stat-model.js'])vm.runInContext(fs.readFileSync(f,'utf8'),c);
+const raw=JSON.parse(fs.readFileSync('../example json.txt','utf8')),before=JSON.stringify(raw);
+for(const kind of ['drop','damage','classExp']){
+ const result=kind==='drop'?c.DropRateModel.calculate(raw):c.CombatStatModel.calculate(raw,kind);
+ assert(result.todo.tasks.length>0);assert.equal(result.todo.characters.length,raw.charNames.length);
+ assert.equal(new Set(result.todo.tasks.map(t=>t.id)).size,result.todo.tasks.length);
+ for(const task of result.todo.tasks){assert(task.steps.length&&task.target&&task.location&&task.gate);const app=fs.readFileSync('app.js','utf8');assert(app.includes(task.page+':')||app.includes('SKILL_PAGES.'+task.page+'='),task.page);}
+ if(kind==='drop')assert(!result.todo.tasks.some(t=>t.title.includes('Card Stamp')));
+}
+assert.equal(JSON.stringify(raw),before);
+const parsed={account:{stamps:{combat:[{rawName:'StampA38',displayName:'Golden_Sixes',effect:'Drop_Rate',level:5,maxLevel:5,hasMaterials:false,hasMoney:true,enoughPlayerStorage:false}]},upgradeVault:{upgrades:[]}},characters:[]};
+let plan=c.StatTodoModel.build(parsed,'drop',{});assert.equal(plan.tasks.length,0);assert(plan.unknown.includes('Stamp levels'));
+plan=c.StatTodoModel.build(parsed,'drop',{StampLv:[],StampLvM:[]});assert.equal(plan.tasks[0].section,'Resource upgrades');assert(plan.tasks[0].target.includes('limit'));assert(plan.tasks[0].gate.includes('Carry capacity is short'));
+parsed.account.upgradeVault.upgrades[18]={name:'Drops',level:60,maxLevel:60,unlocked:true};
+plan=c.StatTodoModel.build(parsed,'drop',{UpgVault:[]});assert.equal(plan.tasks.length,0);assert(plan.covered.includes('Drops'));
+parsed.account.upgradeVault.upgrades[18]={name:'Drops',level:0,maxLevel:60,unlocked:false,unlockLevel:100};parsed.account.upgradeVault.totalUpgradeLevels=50;
+plan=c.StatTodoModel.build(parsed,'drop',{UpgVault:[]});assert.equal(plan.tasks[0].section,'Unlocks');assert(plan.tasks[0].reason.includes('50'));
+for(const f of ['drop-rate-worker.js','combat-stat-worker.js'])assert(fs.readFileSync(f,'utf8').includes('stat-todo-model.js'));
+for(const f of ['drop-rate.js','combat-stat-tabs.js'])assert(fs.readFileSync(f,'utf8').includes('StatTodo.mount'));
+console.log('Stat To-do: account plans, destinations, immutable saves, absent-data gates, capped exclusions and blocked stamp/Vault steps pass.');
+const milestone=c.StatTodoModel.bubbleMilestone;
+assert.equal(milestone({level:100,func:'decay',x1:40,x2:70}).target,630);
+assert.equal(milestone({level:630,func:'decay',x1:40,x2:70}).target,1330);
+assert.equal(milestone({level:1330,func:'decay',x1:40,x2:70}).target,6930);
+assert(milestone({level:7974,func:'decay',x1:40,x2:70}).maintenance);
+assert.equal(milestone({level:10217,func:'addDECAY',x1:4,x2:0}).target,15000);
+assert(milestone({level:50000,func:'addDECAY',x1:4,x2:0}).maintenance);
+assert.equal(milestone({level:78595,func:'bigBase',x1:9.7,x2:.3}).target,83000);
+const cardAccount={account:{accountOptions:[],spelunking:{loreBosses:[{},{},{defeated:true}]}},characters:[{playerId:0,name:'Test',cards:{equippedCards:{test:{rawName:'test',displayName:'Test',effect:'Total_Drop_Rate',amount:100,stars:5}}}}]};
+const cardData={Cards0:{test:100},CardEquip_0:[],Rift:[45]};
+assert.equal(c.StatTodoModel.build(cardAccount,'drop',cardData).tasks.filter(t=>t.id==='card:test').length,1);
+cardAccount.account.accountOptions[603]='test';
+assert.equal(c.StatTodoModel.build(cardAccount,'drop',cardData).tasks.filter(t=>t.id==='card:test').length,0);
+cardAccount.account.accountOptions[603]='';cardAccount.characters[0].cards.equippedCards.test.stars=6;
+assert.equal(c.StatTodoModel.build(cardAccount,'drop',cardData).tasks.filter(t=>t.id==='card:test').length,0);
+cardAccount.characters[0].cards.equippedCards.test.stars=4;cardData.Rift=[0];cardAccount.account.spelunking.loreBosses[2].defeated=false;
+assert.equal(c.StatTodoModel.build(cardAccount,'drop',cardData).tasks.filter(t=>t.id==='card:test').length,0);
+console.log('To-do regression: Cardifier exclusions, unlocked star ceilings, decay milestones, damage breakpoint and Grind Time batch target pass.');
