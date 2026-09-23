@@ -552,7 +552,8 @@ SKILL_PAGES.holeFloors={title:'Floors',world:'World 5',copy:'All 18 Hole caverns
     if(name==='arcade'){renderArcade();return;}
     if(name==='prayerOptimizer'){window.PrayerOptimizer.render($('worldContent'),loadedExport||state?.rawRoot||{},addSubtabs);return;}
     if(['bribes','dungeons','vials','sigils','killroy','atomCollider','prayers','saltLick','deathNote','armorSets','petArena','shinyPets','upgradeVault','emperorBonuses','spelunking','sushi','button','clamworks','meritocracy','bigFish','coralKid','coralReef','dancingCoral','zenithMarket','legendTalents','hoops','darts'].includes(name)){window.ArcadePages.render($('worldContent'),name,loadedExport||state?.rawRoot||{},addSubtabs);return;}
-    if(['statues','dungeons','obols','refinery','printer','prayers','hole','holeTrench','holeCove'].includes(name)){window.RemainingWorlds.render($('worldContent'),name,state?.rawData||{},loadedExport||state?.rawRoot||{});addSubtabs();return;}
+    if(name==='refinery'){window.RefineryPlanner.render($('worldContent'),loadedExport||state?.rawRoot||{},addSubtabs);return;}
+    if(['statues','dungeons','obols','printer','prayers','hole','holeTrench','holeCove'].includes(name)){window.RemainingWorlds.render($('worldContent'),name,state?.rawData||{},loadedExport||state?.rawRoot||{});addSubtabs();return;}
     if(name==='construction'){renderConstruction();addSubtabs();return;}
     if(name==='worship'){window.Worship.render($('worldContent'),state?.rawData||{});addSubtabs();return;}
     if(name==='towerDefense'){window.Worship.renderTD($('worldContent'),state?.rawData||{});addSubtabs();return;}
