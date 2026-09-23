@@ -6,3 +6,18 @@
 .worship-bonuses{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px}.worship-bonuses>div{display:flex;flex-direction:column;gap:3px;padding:6px;background:#ffffff05;font-size:.72rem;border-radius:4px}.worship-bonuses strong{color:#efccff;font-size:.85rem}.worship-bonuses small{color:#9fd5ad;font-size:.62rem}.worship-bonuses small:empty{display:none}.worship-bonuses .is-locked{opacity:.5}
 .worship-target{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:7px;font-size:.75rem}.worship-target input{width:85px;padding:6px;background:#100d17;color:#fff;border:1px solid #aa79ce;border-radius:5px}.worship-projected-total{text-align:center;color:#b5a9bc;font-size:.7rem;margin:7px 0}.worship-input-error{color:#ffb5b5;font-size:.75rem;margin:5px 0}.worship-input-error:empty{display:none}.worship-unlocks{font-size:.75rem;margin-top:10px;color:#bcaec6}.worship-unlocks p{margin:6px 0}@media(max-width:650px){.worship-comparison{grid-template-columns:1fr}}
 .worship-wave-inputs label{min-width:0;text-align:center}.worship-wave-inputs input{box-sizing:border-box;width:100%;min-width:0;padding:5px 1px;background:#100d17;border:1px solid #77528b;border-radius:3px;color:#8ed9ff;font-size:.7rem;text-align:center;appearance:textfield}.worship-wave-inputs input::-webkit-inner-spin-button,.worship-wave-inputs input::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}.worship-wave-inputs{gap:2px}
+
+.worship-map-tabs{flex-wrap:wrap}.worship-td-wave{text-align:center;color:#b5a9bc}.worship-td-wave strong{color:#8ed9ff}
+
+.worship-td-guide{padding:12px;border-top:1px solid #70557c;color:#ddd2e3}.worship-td-guide h4{margin:0 0 16px;font-size:1.1rem;color:#efccff}.worship-td-guide h5{margin:0 0 10px;font-size:.9rem;color:#efccff}.worship-td-guide-layout{display:grid;grid-template-columns:minmax(0,552px) minmax(240px,1fr);gap:24px;align-items:start}.worship-td-guide figure{margin:0}.worship-td-guide img{display:block;width:100%;height:auto;image-rendering:pixelated;border-radius:6px}.worship-td-guide figcaption{margin-top:8px;font-size:.75rem;color:#b5a9bc}.worship-td-guide table{width:100%;border-collapse:collapse;font-size:.85rem}.worship-td-guide th,.worship-td-guide td{padding:8px;text-align:left;border-bottom:1px solid #ffffff12}.worship-td-guide td{font-family:monospace;letter-spacing:.12em;color:#8ed9ff}.worship-td-instructions{margin-top:22px;font-size:.9rem;line-height:1.6}.worship-td-instructions li{margin:8px 0}@media(max-width:750px){.worship-td-guide-layout{grid-template-columns:1fr}.worship-td-guide{padding:8px}}
+.worship-td-guide-layout> *{min-width:0}@media(max-width:750px){.worship-td-guide-layout{grid-template-columns:minmax(0,1fr)}}
+
+.worship-td-stats{display:flex;flex-wrap:wrap;gap:12px;margin:16px 0}.worship-td-stats>div{padding:10px 14px;background:#ffffff05;border-radius:6px}.worship-td-stats dt{font-size:.75rem;color:#b5a9bc}.worship-td-stats dd{margin:5px 0 0;color:#8ed9ff;font-weight:700}.worship-td-guide td{overflow-wrap:anywhere}
+
+.worship-td-images{display:grid;gap:16px}
+
+.worship-td-guide h5.worship-td-guide-heading{margin-top:24px}
+
+.worship-td-guide .worship-td-swaps td{font-family:inherit;letter-spacing:normal}
+
+.worship-td-credit{margin:0 0 16px;color:#b5a9bc;font-size:.85rem}
