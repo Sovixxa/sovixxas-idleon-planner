@@ -105,8 +105,8 @@
   function selectSideNav(name){
     if(name!=='jelly'&&practice?.playing)stopPracticePlayback();
     if(name==='jelly'&&state?.hasJelly===false){selectSideNav('classExp');return;}
-    if(!state)$('workspace').classList.toggle('hidden',!['classExp','accountReview','loadouts','shadowCaps'].includes(name));
-    if(!state)$('inputPanel').classList.toggle('hidden',['loadouts','shadowCaps'].includes(name));
+    if(!state)$('workspace').classList.toggle('hidden',!['classExp','accountReview','loadouts','shadowCaps','communitySheets','credits'].includes(name));
+    if(!state)$('inputPanel').classList.toggle('hidden',['loadouts','shadowCaps','communitySheets','credits'].includes(name));
     const selected=SKILL_PAGES[name]?.parent||name;
     for(const id of ['navHome','navJelly',...Object.keys(SKILL_PAGES).map(key=>'nav'+key[0].toUpperCase()+key.slice(1))])$(id)?.classList.toggle('active',id===('nav'+selected[0].toUpperCase()+selected.slice(1)));
     const jelly=name==='jelly';$('operationStatePanel').classList.toggle('hidden',!jelly);$('jellyTabs').classList.toggle('hidden',!jelly);
