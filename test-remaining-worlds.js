@@ -7,3 +7,14 @@ const obols=R.obols({ObolEqO1:['ObolA'],ObolEqMAPz1:{0:{LUK:3,UQ1val:2}}});asser
 const hole=R.hole({Holes:[[2],[5],[10],[],[],[],[],[1]]});assert.equal(hole.villagers[0].level,2);assert(hole.buildings[0].owned);console.log('Remaining world system tests passed.');
 const options=Array(668).fill(0);options[630]=3;options[654]=7;options[665]=2;const cove=R.holeLate({},'holeCove',{data:{Holes:[[18]],OptionsListAccount:options}});assert.equal(cove.shapeRows.length,12);assert.equal(cove.upgrades.length,24);assert.equal(cove.shapeRows[0].count,7);assert.equal(cove.shapeRows[11].count,2);assert.equal(cove.upgrades[0].level,3);assert(cove.available);assert(cove.unlocked);
 const floors=R.holeFloors({}, {data:{Holes:[[14]]}});assert.equal(floors.floors.length,18);assert.equal(floors.floors[0].name,'The Well');assert.equal(floors.floors[13].name,'The Gambit');assert(floors.floors[13].unlocked);assert(!floors.floors[14].unlocked);
+vm.runInNewContext(fs.readFileSync('item-name-data.js','utf8'),box);
+global.ITEM_NAMES=box.window.ITEM_NAMES;
+const print=[0,0,0,0,0,'Copper',100,'OakTree',200,'Blank',0,'Blank',0,'Blank',0,'Copper',300,'OakTree',400];
+const printer=R.printer({Print:JSON.stringify(print),PrinterXtra:['Copper',500,'FutureItem',600]},{charNames:['Miner']});
+assert.deepEqual(printer.characters[0].slots.map(s=>s.name),['Copper Ore','Oak Logs','Copper Ore','Unknown item','Copper Ore','Oak Logs']);
+assert.deepEqual(printer.main.map(s=>s.rate),[300,400]);
+assert.equal(printer.main[0].item,'Copper');assert.equal(printer.main[0].icon,'assets/Copper.png');
+const host={innerHTML:'',querySelector:()=>null,querySelectorAll:()=>[]};
+R.render(host,'printer',{Print:print},{charNames:['Miner']});
+assert(host.innerHTML.includes('<strong>Copper Ore</strong>'));assert(host.innerHTML.includes('<strong>Oak Logs</strong>'));
+console.log('Printer display names: stored, extra and active samples resolve names without changing IDs or rates.');
