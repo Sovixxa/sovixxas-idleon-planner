@@ -36,6 +36,10 @@ for(const kind of ['classExp','damage']){
  assert(context.CombatStatTabs.missingHtml(model.characters,kind,{query:''}).includes('data-stat-source='));
  assert.equal(C.calculate({},kind).characters.length,0);
 }
+assert.equal(context.CombatStatTabs.formatNumber(202622e12),'202622T');
+assert.equal(context.CombatStatTabs.formatNumber(1.25e9),'1.25B');
+assert.equal(context.CombatStatTabs.formatNumber(1.5e18),'1.5Q');
+assert.equal(context.CombatStatTabs.formatNumber(Infinity),'Unavailable');
 assert.equal(JSON.stringify(raw),original,'The stat pages must not mutate imported saves');
 // EXP conditional sources must reconcile even for a low-level character and lowest-level bonuses.
 const p=M.parseData(raw.data,raw.charNames,raw.companion,raw.guildData,raw.serverVars,raw.accountCreateTime,raw.tournament);

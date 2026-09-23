@@ -7,7 +7,7 @@ for(const kind of ['drop','damage','classExp']){
  const result=kind==='drop'?c.DropRateModel.calculate(raw):c.CombatStatModel.calculate(raw,kind);
  assert(result.todo.tasks.length>0);assert.equal(result.todo.characters.length,raw.charNames.length);
  assert.equal(new Set(result.todo.tasks.map(t=>t.id)).size,result.todo.tasks.length);
- for(const task of result.todo.tasks){assert(task.steps.length&&task.target&&task.location&&task.gate);const app=fs.readFileSync('app.js','utf8');assert(app.includes(task.page+':')||app.includes('SKILL_PAGES.'+task.page+'='),task.page);}
+ for(const task of result.todo.tasks){assert(task.bonus?.text);if(task.bonus.available){assert(Number.isFinite(task.bonus.delta));assert.equal(task.bonus.delta,task.bonus.to-task.bonus.from);}assert(task.steps.length&&task.target&&task.location&&task.gate);const app=fs.readFileSync('app.js','utf8');assert(app.includes(task.page+':')||app.includes('SKILL_PAGES.'+task.page+'='),task.page);}
  if(kind==='drop')assert(!result.todo.tasks.some(t=>t.title.includes('Card Stamp')));
 }
 assert.equal(JSON.stringify(raw),before);
@@ -39,3 +39,12 @@ assert.equal(c.StatTodoModel.build(cardAccount,'drop',cardData).tasks.filter(t=>
 cardAccount.characters[0].cards.equippedCards.test.stars=4;cardData.Rift=[0];cardAccount.account.spelunking.loreBosses[2].defeated=false;
 assert.equal(c.StatTodoModel.build(cardAccount,'drop',cardData).tasks.filter(t=>t.id==='card:test').length,0);
 console.log('To-do regression: Cardifier exclusions, unlocked star ceilings, decay milestones, damage breakpoint and Grind Time batch target pass.');
+const bonusAccount={account:{arcade:{shop:[]},alchemy:{bubbles:{yellow:[{rawName:'grind',bubbleName:'GRIND_TIME',level:100,func:'bigBase',x1:9.7,x2:.3}]}}},characters:[]};
+bonusAccount.account.arcade.shop[12]={effect:'+{% Class EXP',level:100,func:'add',x1:2,x2:0};
+const bonusPlan=c.StatTodoModel.build(bonusAccount,'classExp',{ArcadeUpg:[],CauldronInfo:[]});
+const arcadeBonus=bonusPlan.tasks.find(t=>t.id==='arcade:12').bonus;
+assert.equal(arcadeBonus.from,200);assert.equal(arcadeBonus.to,404);assert.equal(arcadeBonus.delta,204);
+const bubbleBonus=bonusPlan.tasks.find(t=>t.id==='bubble:grind').bonus;
+assert.equal(bubbleBonus.from,39.7);assert.equal(bubbleBonus.to,69.7);
+assert.equal(c.StatTodoModel.build(parsed,'drop',{UpgVault:[]}).tasks[0].bonus.available,false);
+console.log('Bonus previews: finite source deltas, milestone targets, Arcade doubling and unlock-only exclusions pass.');

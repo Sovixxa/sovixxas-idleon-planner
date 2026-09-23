@@ -30,6 +30,7 @@ const ui={...catalogs,document:{},console};ui.window=ui;vm.createContext(ui);vm.
 ui.STAMP_CATALOG=[{stamps:[{name:'<script>bad</script>',bonus:'<img onerror=bad>'}]}];
 ui.AccountReview.render(host,{StampLv:[[1]]});assert(host.innerHTML.includes('&lt;script&gt;'));assert(!host.innerHTML.includes('<script>'));
 assert(host.innerHTML.includes('My Plan'));assert(host.innerHTML.includes('Add to plan'));assert(!host.innerHTML.includes('check its coin, material and carry-capacity requirements'));
+assert(host.innerHTML.includes('Foundation before frontier'));assert(host.innerHTML.includes('World-by-world review map'));assert(host.innerHTML.includes('Daily: shop buys'));
 elements.get('[aria-label="Review status"]').value='all';elements.get('[aria-label="Review status"]').onchange();assert(!host.innerHTML.includes('No saved progress'));assert(!host.innerHTML.includes('This value is missing or invalid'));
 ui.AccountReview.render(host,{});assert(host.innerHTML.includes('Start with your account'));
 console.log('Account Review: partial exports, boundaries, fresh saves, seven-system fixture, placeholder exclusion, escaping and filters OK');

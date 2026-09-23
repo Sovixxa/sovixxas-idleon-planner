@@ -84,8 +84,52 @@ function build(parsed,kind,data){
   }
  }
  for(const [id,{card,characters}] of cardTasks)add({id,title:`Improve ${pretty(card.displayName||card.rawName)} card`,current:`${card.stars}-star card · ${fmt(card.amount)} copies`,target:`${card.stars+1} stars`,section:'Background growth',priority:65,page:'cards',characters,location:'Cards → selected card → collection source',reason:'This relevant card is equipped on the listed characters and has not reached the currently unlocked star limit.',steps:['Open the card page and inspect its next-tier requirement and collection source.','Collect additional copies during normal farming; check whether the next tier needs an upgrade item instead of ordinary copies.','Keep the card in the relevant setup, or verify its passive status.'],gate:'Drop time and higher-tier upgrade-item availability are not estimated.'});
+ for(const task of tasks)task.bonus=upgradeBonus(task,a,cardTasks);
  tasks.sort((x,y)=>x.priority-y.priority||x.title.localeCompare(y.title));
  return {tasks,unknown,covered,characters:chars.map(ch=>({id:ch.playerId,name:ch.name}))};
+}
+// Preview the source effect using the same arithmetic as the parser. These are
+// deliberately not presented as final character-stat percentages.
+function upgradeBonus(task,a,cardTasks){
+ const M=root.PrayerMath,[type,key]=task.id.split(':');
+ const unavailable=reason=>({available:false,text:reason});
+ if(type==='food')return unavailable('Choose a stack size and food slot first; the net bonus depends on the food replaced and Beanstalk.');
+ if(task.section==='Maintenance')return unavailable('No purchase target: practical milestone already met.');
+ if(type==='vault'&&task.section==='Unlocks')return unavailable('Unlocking access alone gives no bonus; buy a level afterwards.');
+ if(!M?.growth)return unavailable('Bonus calculator unavailable. Reload the page.');
+ let source,from,to,effect,label='Base upgrade effect';
+ const curve=(s,l)=>M.growth(s.func,l,Number(s.x1),Number(s.x2),false);
+ if(type==='vault'){
+  source=a.upgradeVault.upgrades[Number(key)];
+  const next=a.upgradeVault.upgrades.map((u,i)=>i===Number(key)?{...u,level:Number(u.level)+1}:u);
+  from=M.calcUpgradeVaultBonus(a.upgradeVault.upgrades,Number(key));to=M.calcUpgradeVaultBonus(next,Number(key));
+  effect=source.description;label='Vault effect coefficient';
+ }else if(type==='card'){
+  source=cardTasks.get(task.id)?.card;
+  // Character chip/legend boosts may differ; show the shared card's base effect.
+  from=Number(source?.bonus)*(Number(source?.stars)+1);to=Number(source?.bonus)*(Number(source?.stars)+2);
+  effect=source?.effect;label='Base card effect';
+ }else{
+  source=type==='stamp'?Object.values(a.stamps||{}).flat().find(s=>s.rawName===key)
+   :type==='arcade'?a.arcade?.shop?.[Number(key)]
+   :type==='bubble'?Object.values(a.alchemy?.bubbles||{}).flat().find(b=>b.rawName===key)
+   :type==='vial'?a.alchemy?.vials?.find(v=>v.name===key):null;
+  if(!source)return unavailable('Source formula unavailable.');
+  const level=Number(source.level),target=type==='bubble'?bubbleMilestone(source)?.target:level+1;
+  if(!Number.isFinite(target)||source.x1==null||source.x2==null)return unavailable('Source formula unavailable.');
+  from=curve(source,level);to=curve(source,target);effect=source.effect||source.desc;
+  if(type==='arcade'){
+   // Includes the special doubling at level 101. Companion scaling is omitted
+   // consistently on both sides, including upgrades currently at level zero.
+   from*=level>100?2:1;to*=target>100?2:1;
+  }
+ }
+ if(!Number.isFinite(from)||!Number.isFinite(to))return unavailable('Source formula unavailable.');
+ const percent=/%/.test(effect||'');
+ const number=v=>Number(v.toPrecision(6)).toLocaleString('en-US',{maximumSignificantDigits:6});
+ const delta=to-from,unit=percent?'%':'';
+ return {available:true,from,to,delta,text:`${label}: ${number(from)}${unit} → ${number(to)}${unit} (${delta>=0?'+':''}${number(delta)}${percent?' percentage points':' effect units'})`,
+  note:`${pretty(effect||source.stat||'Upgrade bonus')}. ${type==='vault'?'Uses current Vault scaling; per-kill/card conditions still apply.':'Before character/account scaling; Arcade includes the Lv 101 doubling.'} This is the source bonus, not the percentage gain to final Class EXP, DR or damage.`};
 }
 root.StatTodoModel={build,bubbleMilestone};
 })(typeof window!=='undefined'?window:globalThis);
