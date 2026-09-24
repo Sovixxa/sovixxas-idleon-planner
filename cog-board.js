@@ -32,8 +32,10 @@
   }
   function render(host,data,account){
     const model=decode(data,account),assets=new Set(root.COG_ASSETS||[]);
-    if(!model.available){host.innerHTML='<p class="muted">This export has no cog layout. Load a full account export to see your saved board.</p>';return;}
     host.cogWorker?.terminate();
+    host.cogGodWorker?.terminate();
+    if(!model.available){host.innerHTML='<p class="muted">This export has no cog layout. Load a full account export to see your saved board.</p>';if(root.CogReference)host.append(root.CogReference.create(1));return;}
+    const godPanel=root.CogGodBoard?.create(host,model,data);
     let metric='f',objective='exp',shelfPage=0,busy=false,status='Ready',proposal=optimize(model,'exp',0),runId=0,step=0;
     const sprite=s=>assets.has(s.item+'.png')?s.item+'.png':s.isPlayer&&assets.has('ClassIcons'+s.classId+'.png')?'ClassIcons'+s.classId+'.png':null;
     const title=s=>s.isPlayer?s.name:/^CogZA0[0-3]$/.test(s.item)?'Yin · '+['top left','top right','bottom left','bottom right'][Number(s.item.slice(-1))]:s.item==='CogY'?'Yang Cog':s.empty?(s.locked?'Locked tile':'Empty tile'):/^CogCry\d$/.test(s.item)?['Topaz','Ruby','Amethyst','Garnet','Emerald','Bluegem'][Number(s.item.slice(-1))]+' Cog':s.item.replace(/^Cog/,'Cog ');
@@ -54,6 +56,7 @@
       const current=document.createElement('section');current.className='cog-current';
       current.append(host.querySelector('.cog-toolbar'),host.querySelector('.cog-workbench'));
       comparison.append(current,optimizer);host.prepend(legend,comparison);
+      if(godPanel)host.prepend(godPanel);
       comparison.querySelectorAll('.cog-main-board').forEach(grid=>{
         const tiles=Array.from(grid.children),number=(text,label)=>{const el=document.createElement('span');el.className='cog-coordinate';el.textContent=text;el.setAttribute('aria-label',label);return el;};
         grid.replaceChildren(number('','Grid coordinates'));
