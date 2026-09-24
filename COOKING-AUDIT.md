@@ -75,3 +75,25 @@ Validation: mastery regression tests cover shortlist isolation through 2,000 poi
 Golden food uses the selected character/preset's full golden-food multiplier, replacing only the simulated meal contribution through the existing outer multiplier. All-character edited-export parity is tested. Other supported full impacts include total kitchen speed and Minehead currency/hour. Minehead scales the saved hourly rate by the changed shared Research Grid 147 + 166 + meal bracket, preserving all other account factors. Edited-export tests at 0/1/4/9/20 points match the full parser. Example at four Divorce Cake points: 1,267,474.33095/hr -> 1,528,977.85667/hr (+261,503.52571/hr). Missing full-account data falls back to explicitly labeled meal contributions; locked zero income stays zero.
 
 Impact displays saved/test, absolute change, relative gain, and next-point preview beside the existing meal bonus. Browser checks verify live edits, full comma-separated currency amounts, side-by-side layout, and no overflow at desktop/mobile widths. No imported save is changed.
+
+
+## Full-account mastery previews across meal effects
+
+A dedicated cooking-impact worker reparses cloned exports for the full simulated yellow allocation and each visible next-point preview. Baselines are tied to the selected character and actual saved/secondary preset; response keys prevent an older allocation from overwriting the newest one. Shared meal pools and indirect changes through other meal stats are included. Calculations are cached and run outside the UI thread.
+
+45 of the 48 distinct effects have account outputs: damage/accuracy/defence/critical chance, efficiency/prowess, money, research and Minehead hourly income, jade per successful find, skill EXP bonuses, gaming and essence multipliers, breeding, egg times, lab width/VIP, library checkout times, liquid capacity, sailing capped speed, crop chance, cooking/recipe rates and upgrade costs, refinery cycles, and spelunking power/amber/upgrade cost. Context labels specify the selected character, boat 1, plot 1, or next upgrade where relevant. Tower defence shows the full points multiplier; kill-specific totals need the live wave/enemy. Existing traps cannot be recalculated as if newly placed. Pet damage needs the combat formation and active abilities; the current engine has no Spelunking EXP formula. Those three effects display explicit unavailable reasons instead of claiming a meal percentage is an account total.
+
+Gaming EXP was incorrectly reading BrExp; the local client GamingExpPCT reads GamingExp. Corrected the lookup and added a regression check. Essence uses the client's SummRockEssGen shared SumAllEss chain including summoning, lamp, gambit, gem purchases, charm, fountain, monument, rift, upgrades, bubble/meal/MSA/slab, achievements and ballot. Skill-specific EXP outputs use their native units; cooking returns a multiplier.
+
+Validation: test-cooking-impact.js covers all 45 supported effect types, explicit missing contexts, full export parity for research/currency/efficiency, shared contributions, secondary Blood Marrow, mastery reset, prowess/sailing caps, and immutable input. Browser uses the real worker and verifies research edits, switching to efficiency, no stale output, mobile width and no page errors.
+
+
+## Jade correction
+
+The previous jade helper omitted the selected Sneaking Mastery floor scaling, as well as multiple account modifiers. Local client initialization applies 0.1 * NinjaInfo[10][floor] * NinjaInfo[10][11]^mastery only when selected mastery is nonzero. The client constants for floor 10 and mastery base are 15,000,000 and 60,000,000. The sample uses mastery 7, producing 4.19904e60 base jade rather than 15M.
+
+Replaced the truncated gain chain with the client Ninja("coin") factors: gem shop, combined belt bracket, monument, Treat Sack, Jadevalanche, Gold Coin, Killroy, shared vial/meal/card bracket, equipped charm bracket, slab/stamp, crops, Summoning, MSA/sigil/arcade/vault, star sign, W6 merit, skill mastery, compass, companion, achievements, Malachite, Meritocracy, Snapegrass, and Gold Envelope. Retained the current parser's Sushi modifier. Charm slots include Gold Scroll and symbols before the solo multiplier. Client zero-detection Shiny Smoke factor is 2, not 3.
+
+The UI explicitly reports per-successful-find jade and selected mastery; this is not the optional in-game hourly display, which also uses action speed, detection and knockout time. Imported LumbaJacker yields 1.005359536e96 per find. User reports approximately 1e94 from the live game; exact parity remains unconfirmed without matching character, floor, save and display units. Do not calibrate the formula to that rough number.
+
+Tests: client constant/mastery ratio at 0/6/7, Malachite and Gold Envelope removal, additive belts with individual symbols, isolated meal bracket, immutable save, full mastery integration, and build pass.

@@ -80,7 +80,7 @@
     const model=decode(data,rawRoot),catalog=root.WORLD4_CATALOG.MealINFO;
     let config=settings.get(data);if(!config){config={speed:'',ladleBonus:0,companion:model.companion,cap:model.cap};settings.set(data,config);}
     let tab='Meals',setup=false,mealFilter='all',planSteps=3,query='',rateLoading=!config.rates,rateError='';
-    const masteryState={};
+    const masteryState={raw:rawRoot&&Object.keys(rawRoot).length?rawRoot:{data}};
     const renderToken={};host._cookingRender=renderToken;
     const estimates=()=>catalog.map((r,id)=>estimate({level:model.levels[id]??null,stock:model.stock[id]??null,progress:model.progress[id]??null,requirement:Number(r[1]),discount:model.discount,companion:config.companion,speed:number(config.speed),ladleBonus:config.ladleBonus}));
     function paint(){
