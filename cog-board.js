@@ -23,16 +23,71 @@
   }
   const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const fmt=n=>Number(n).toLocaleString(undefined,{maximumFractionDigits:1,notation:Math.abs(Number(n))>=10000?'compact':'standard'});
+  function optimize(model,objective='exp',time=1200){
+    const engine=root.CogOptimizer||(typeof require==='function'?require('./cog-optimizer-engine'):null);
+    if(!engine)throw new Error('Cog optimizer failed to load. Refresh the page and try again.');
+    return engine.optimize(model,objective,time);
+  }
   function render(host,data,account){
     const model=decode(data,account),assets=new Set(root.COG_ASSETS||[]);
     if(!model.available){host.innerHTML='<p class="muted">This export has no cog layout. Load a full account export to see your saved board.</p>';return;}
-    let metric='d',shelfPage=0;
+    host.cogWorker?.terminate();
+    let metric='d',objective='exp',shelfPage=0,busy=false,status='Ready',proposal=optimize(model,'exp',0),runId=0,step=0;
     const sprite=s=>assets.has(s.item+'.png')?s.item+'.png':s.isPlayer&&assets.has('ClassIcons'+s.classId+'.png')?'ClassIcons'+s.classId+'.png':null;
     const title=s=>s.isPlayer?s.name:s.empty?(s.locked?'Locked tile':'Empty tile'):/^CogCry\d$/.test(s.item)?['Topaz','Ruby','Amethyst','Garnet','Emerald','Bluegem'][Number(s.item.slice(-1))]+' Cog':s.item.replace(/^Cog/,'Cog ');
     const value=s=>s.isPlayer?`Lv ${s.level??'?'}`:s.empty?'':s.stats[metric]!=null?fmt(s.stats[metric])+(percent.has(metric)?'%':''):s.statsKnown?'0'+(percent.has(metric)?'%':''):'?';
-    function tile(s,small=false){const art=sprite(s);return `<button type="button" class="cog-slot ${small?'cog-small':''} ${s.empty?'is-empty':''} ${s.empty&&s.locked?'is-locked':''} ${s.isPlayer?'is-character':''}" data-cog-slot="${s.index}" title="${esc(title(s))} · ${esc(s.zone)} ${s.index<96?`R${Math.floor(s.index/12)+1} C${s.index%12+1}`:''}" aria-label="${esc(title(s))}, ${esc(s.zone)} slot ${s.index+1}">${art&&!s.empty?`<img src="assets/${art}" alt="">`:s.empty&&s.locked?'<span class="cog-lock">×</span>':''}${s.flag?'<span class="cog-flag">⚑</span>':''}${!small?`<small>${esc(value(s))}</small>`:''}</button>`;}
+    function tile(s,small=false){const art=sprite(s);return `<button type="button" class="cog-slot ${small?'cog-small':''} ${s.empty?'is-empty':''} ${s.empty&&s.locked?'is-locked':''} ${s.isPlayer?'is-character':''}" data-cog-slot="${s.index}" title="${esc(title(s))} · ${esc(s.zone)} ${s.index<96?`Row ${'ABCDEFGH'[Math.floor(s.index/12)]} C${s.index%12+1}`:''}" aria-label="${esc(title(s))}, ${esc(s.zone)} slot ${s.index+1}">${art&&!s.empty?`<img src="assets/${art}" alt="">`:s.empty&&s.locked?'<span class="cog-lock">×</span>':''}${s.flag?'<span class="cog-flag">⚑</span>':''}${!small?`<small>${esc(value(s))}</small>`:''}</button>`;}
+    const coordinate=index=>index<96?`${'ABCDEFGH'[Math.floor(index/12)]}${index%12+1}`:`Shelf P${Math.floor((index-108)/15)+1} · slot ${(index-108)%15+1}`;
     function paint(){
-      host.innerHTML=`<div class="cog-toolbar"><div><strong>Current saved layout</strong><small>Loaded JSON · 12 × 8 board · ${model.board.filter(s=>!s.empty).length} occupied · ${model.placed} flags placed</small></div><label>Show <select id="cogMetric"><option value="d">EXP bonus %</option><option value="a">Build / hour</option><option value="c">Flags / hour</option></select></label></div><div class="cog-workbench"><section class="cog-board-wrap" aria-label="Saved cog board"><div class="cog-rail">${model.left.map(s=>tile(s,true)).join('')}</div><div class="cog-main-board">${model.board.map(s=>tile(s)).join('')}</div><div class="cog-rail">${model.right.map(s=>tile(s,true)).join('')}</div></section><p class="cog-hint">Hover or click a cog for its saved stats. Numbers on cogs are their own bonuses; surrounding boosts are shown in details.</p><details class="cog-shelf-panel"><summary>Cog shelf · ${model.shelf.filter(s=>!s.empty).length} stored</summary><div class="cog-shelf-controls"><button id="cogPrev" ${shelfPage===0?'disabled':''}>‹</button><span>Page ${shelfPage+1} / 8</span><button id="cogNext" ${shelfPage===7?'disabled':''}>›</button></div><div class="cog-shelf-grid">${model.shelf.slice(shelfPage*15,shelfPage*15+15).map(s=>tile(s)).join('')}</div></details><details class="cog-production-panel"><summary>Characters making cogs · ${model.production.filter(s=>s.isPlayer).length}</summary><div class="cog-production-grid">${model.production.map(s=>`<div>${tile(s)}<span>${s.isPlayer?esc(s.name):'Empty'}<small>${['Basic','Decent','Superb','Ultimate'][Math.floor((s.index-96)/3)]}</small></span></div>`).join('')}</div></details></div><section id="cogDetail" class="exp-card cog-detail" hidden aria-live="polite"></section>`;
+      const working=model.slots.slice();
+      for(const move of proposal.moves.slice(0,step))[working[move.from],working[move.to]]=[working[move.to],working[move.from]];
+      const active=proposal.moves[step];
+      host.innerHTML=`<div class="cog-toolbar"><div><strong>${step?'Your progress board':'Current saved layout'}</strong><small>${step?`${step} swaps marked done · preview only`:'Loaded JSON · 12 × 8 board'}</small></div><label>Show <select id="cogMetric"><option value="d">EXP bonus %</option><option value="a">Build / hour</option><option value="c">Flags / hour</option></select></label></div><div class="cog-workbench"><section class="cog-board-wrap" aria-label="Saved cog board"><div class="cog-rail">${model.left.map(s=>tile(s,true)).join('')}</div><div class="cog-main-board">${working.slice(0,96).map(s=>tile(s)).join('')}</div><div class="cog-rail">${model.right.map(s=>tile(s,true)).join('')}</div></section><p class="cog-hint">Follow the highlighted swap here. Blue = pick up; amber = drop onto. The board advances when you mark a swap done.</p><details class="cog-shelf-panel"><summary>Cog shelf · ${working.slice(108,228).filter(s=>!s.empty).length} stored</summary><div class="cog-shelf-controls"><button id="cogPrev" ${shelfPage===0?'disabled':''}>‹</button><span>Page ${shelfPage+1} / 8</span><button id="cogNext" ${shelfPage===7?'disabled':''}>›</button></div><div class="cog-shelf-grid">${working.slice(108+shelfPage*15,108+shelfPage*15+15).map(s=>tile(s)).join('')}</div></details><details class="cog-production-panel"><summary>Characters making cogs · ${model.production.filter(s=>s.isPlayer).length}</summary><div class="cog-production-grid">${model.production.map(s=>`<div>${tile(s)}<span>${s.isPlayer?esc(s.name):'Empty'}<small>${['Basic','Decent','Superb','Ultimate'][Math.floor((s.index-96)/3)]}</small></span></div>`).join('')}</div></details></div><section id="cogDetail" class="exp-card cog-detail" hidden aria-live="polite"></section>`;
+      const optimizer=document.createElement('section');optimizer.className='exp-card cog-optimizer';
+      optimizer.innerHTML=`<div class="cog-toolbar"><div><strong>Optimized ${objective==='exp'?'EXP':objective==='flag'?'flaggy rate':'build rate'} layout</strong><small>${esc(status)} · ${proposal.moves.length} suggested swaps</small></div><label>Optimize for <select id="cogObjective" ${step>0?'disabled':''}><option value="exp">EXP</option><option value="flag">Flaggy rate</option><option value="build">Build rate</option></select></label><button type="button" id="cogOptimize" ${busy||step>0?'disabled':''}>${busy?'Optimizing…':'Optimize'}</button></div><div class="cog-workbench cog-optimized-workbench"><section class="cog-board-wrap" aria-label="Suggested cog board"><div class="cog-rail">${model.left.map(s=>tile(s,true)).join('')}</div><div class="cog-main-board cog-preview">${proposal.board.map((s,index)=>tile(s).replace('class="cog-slot ',`class="cog-slot ${s.index!==index?'cog-changed ':''}`).replace('title="',`title="Suggested row ${'ABCDEFGH'[Math.floor(index/12)]}, column ${index%12+1} · `)).join('')}</div><div class="cog-rail">${model.right.map(s=>tile(s,true)).join('')}</div></section><p class="cog-hint">Green outlines mark replacements. Hover or click to inspect the suggested cog.</p></div><div id="cogProposal" aria-live="polite"></div><details class="cog-optimizer-scope"><summary>What this optimizer includes</summary><p>Searches board and shelf cogs, including directional and special cogs. Accounts for surrounding build, flaggy, and player EXP boosts; assembled Excogia squares move together. Production, small cog rails, locked tiles and tiles without usable data stay in place.</p><p>Rates are board estimates from saved stats, before account-wide modifiers. EXP uses saved player EXP rates, or the board EXP bonus when player rates are missing. Flaggy rate excludes local flag-unlock speed. Search finds an improved layout, not a guaranteed global optimum. Follow swaps in order in game, then import a new save.</p></details>`;
+      const comparison=document.createElement('div');comparison.className='cog-comparison';
+      const current=document.createElement('section');current.className='cog-current';
+      current.append(host.querySelector('.cog-toolbar'),host.querySelector('.cog-workbench'));
+      comparison.append(current,optimizer);host.prepend(comparison);
+      comparison.querySelectorAll('.cog-main-board').forEach(grid=>{
+        const tiles=Array.from(grid.children),number=(text,label)=>{const el=document.createElement('span');el.className='cog-coordinate';el.textContent=text;el.setAttribute('aria-label',label);return el;};
+        grid.replaceChildren(number('','Grid coordinates'));
+        for(let column=1;column<=12;column++)grid.append(number(String(column),`Column ${column}`));
+        tiles.forEach((button,index)=>{
+          const row='ABCDEFGH'[Math.floor(index/12)],column=index%12+1;
+          if(column===1)grid.append(number(String(row),`Row ${row}`));
+          button.setAttribute('aria-label',`Row ${row}, column ${column}: ${button.getAttribute('aria-label')}`);
+          grid.append(button);
+        });
+      });
+      if(proposal){
+        const location=index=>index<96?`Row ${'ABCDEFGH'[Math.floor(index/12)]}, column ${index%12+1}`:`Shelf page ${Math.floor((index-108)/15)+1}, slot ${(index-108)%15+1}`;
+        const results=optimizer.querySelector('#cogProposal');
+        results.innerHTML=`<p role="status" id="cogSearchStatus">${esc(status)}</p><table class="cog-totals"><thead><tr><th>Board estimate</th><th>Current</th><th>Suggested</th></tr></thead><tbody>${[['build','Build / hour'],['flag','Flaggy / hour'],[proposal.expKey==='totalExpRate'?'bonus':'exp',proposal.expKey==='totalExpRate'?'EXP bonus %':'Player EXP / hour']].map(([key,label])=>`<tr><th>${label}</th><td>${fmt(proposal.totalsBefore[key])}</td><td>${fmt(proposal.totalsAfter[key])}</td></tr>`).join('')}</tbody></table>${!proposal.moves.length?`<p>${busy?'Searching for improvements…':'No improving swaps found for this objective. Current layout retained.'}</p>`:''}`;
+      }
+      if(proposal.moves.length){
+        const guide=document.createElement('section');guide.className='cog-guide';guide.setAttribute('aria-label','Guided cog swaps');
+        const card=(slot,position,label,kind)=>`<div class="cog-step-card ${kind}"><span class="cog-step-label">${label}</span><strong>${esc(coordinate(position))}</strong><div class="cog-step-item">${sprite(slot)?`<img src="assets/${sprite(slot)}" alt="">`:''}<span>${esc(title(slot))}<small>${fmt(slot.stats.d??0)}% EXP · ${fmt(slot.stats.a??0)} build · ${fmt(slot.stats.c??0)} flags</small></span></div></div>`;
+        guide.innerHTML=`<div class="cog-guide-heading"><strong>${active?`Swap ${step+1} of ${proposal.moves.length}`:'All swaps marked done'}</strong><span>${step} / ${proposal.moves.length} complete</span></div><progress max="${proposal.moves.length}" value="${step}" aria-label="Completed swaps"></progress>${active?`<div class="cog-step-route">${card(working[active.from],active.from,'1 · Pick up','cog-source-card')}<span class="cog-step-arrow" aria-hidden="true">→</span>${card(working[active.to],active.to,'2 · Drop onto','cog-target-card')}</div>`:'<p>Your progress board now matches the suggested layout. Import a fresh save after making these swaps in game.</p>'}<div class="cog-guide-actions"><button type="button" id="cogStepBack" ${step===0?'disabled':''}>Back one swap</button>${active?'<button type="button" id="cogStepNext">Done in game · Next →</button>':''}</div><p class="cog-guide-note">${step?'To go back, undo the last swap in game too. ':'Make this swap in game, then press Done. '}This guide tracks your steps; it does not change your game.${step?' Import a new save before starting another optimization.':''}</p>`;
+        host.insertBefore(guide,comparison);
+        const advance=delta=>{step+=delta;const move=proposal.moves[step];if(move?.from>=108)shelfPage=Math.floor((move.from-108)/15);paint();host.querySelector(delta>0?'#cogStepNext':'#cogStepBack')?.focus({preventScroll:true});};
+        guide.querySelector('#cogStepBack').onclick=()=>advance(-1);
+        if(active)guide.querySelector('#cogStepNext').onclick=()=>advance(1);
+        if(active){
+          const mark=(position,kind,label)=>{
+            let button;
+            if(position<96)button=current.querySelectorAll('.cog-main-board .cog-slot')[position];
+            else{const offset=position-108-shelfPage*15;if(offset>=0&&offset<15)button=current.querySelectorAll('.cog-shelf-grid .cog-slot')[offset];}
+            if(button){button.classList.add(kind);const badge=document.createElement('span');badge.className='cog-step-badge';badge.textContent=label;button.append(badge);button.setAttribute('aria-label',label+': '+coordinate(position)+', '+button.getAttribute('aria-label'));}
+          };
+          mark(active.from,'cog-step-source','1');mark(active.to,'cog-step-target','2');
+          if(active.from>=108)current.querySelector('.cog-shelf-panel').open=true;
+        }
+      }
+      optimizer.querySelector('#cogObjective').value=objective;
+      optimizer.querySelector('#cogObjective').onchange=e=>{objective=e.target.value;metric=objective==='exp'?'d':objective==='flag'?'c':'a';run();};
+      optimizer.querySelector('#cogOptimize').onclick=run;
+
       host.querySelector('#cogMetric').value=metric;
       host.querySelector('#cogMetric').onchange=e=>{metric=e.target.value;paint();};
       host.querySelector('#cogPrev').onclick=()=>{shelfPage--;paint();host.querySelector('.cog-shelf-panel').open=true;};
@@ -44,12 +99,23 @@
         if(s.stats.h)button.title+='\nTargets: '+s.stats.h;
         button.onclick=()=>{
           const panel=host.querySelector('#cogDetail');panel.hidden=false;
-          panel.innerHTML=`<button id="cogClose" class="secondary" aria-label="Close cog details">Close</button><h3>${esc(title(s))}</h3><p class="muted">${s.zone}${s.index<96?` · Row ${Math.floor(s.index/12)+1}, column ${s.index%12+1}`:''}</p>${s.isPlayer?`<p>Construction level: <strong>${s.level??'Unavailable'}</strong></p>`:''}${s.empty?`<p>${s.locked===null?'Unlock status unavailable.':s.locked?'Place a flag here in game to unlock this tile.':'Unlocked and empty.'}</p>`:`${bonuses.length?`<dl>${Object.entries(labels).filter(([key])=>s.stats[key]!=null).map(([key,label])=>`<div><dt>${label}</dt><dd>${fmt(s.stats[key])}${percent.has(key)?'%':''}</dd></div>`).join('')}</dl>`:'<p>Individual stats are not present in this export.</p>'}${s.stats.h?`<p><strong>Boost targets:</strong> ${esc(s.stats.h)}</p>`:''}`}<p class="muted">This is the layout saved in your export. Import a new JSON after changing it in game.</p>`;
+          panel.innerHTML=`<button id="cogClose" class="secondary" aria-label="Close cog details">Close</button><h3>${esc(title(s))}</h3><p class="muted">${s.zone}${s.index<96?` · Row ${'ABCDEFGH'[Math.floor(s.index/12)]}, column ${s.index%12+1}`:''}</p>${s.isPlayer?`<p>Construction level: <strong>${s.level??'Unavailable'}</strong></p>`:''}${s.empty?`<p>${s.locked===null?'Unlock status unavailable.':s.locked?'Place a flag here in game to unlock this tile.':'Unlocked and empty.'}</p>`:`${bonuses.length?`<dl>${Object.entries(labels).filter(([key])=>s.stats[key]!=null).map(([key,label])=>`<div><dt>${label}</dt><dd>${fmt(s.stats[key])}${percent.has(key)?'%':''}</dd></div>`).join('')}</dl>`:'<p>Individual stats are not present in this export.</p>'}${s.stats.h?`<p><strong>Boost targets:</strong> ${esc(s.stats.h)}</p>`:''}`}<p class="muted">This is the layout saved in your export. Import a new JSON after changing it in game.</p>`;
           host.querySelector('#cogClose').onclick=()=>{panel.hidden=true;};
         };
       });
     }
-    paint();
+    function run(){
+      step=0;const id=++runId;host.cogWorker?.terminate();busy=true;status='Optimizing…';proposal=optimize(model,objective,0);paint();
+      const finish=result=>{if(id!==runId)return;host.cogWorker?.terminate();busy=false;proposal=result;if(result.moves[0]?.from>=108)shelfPage=Math.floor((result.moves[0].from-108)/15);status='Optimization complete';paint();};
+      const fail=error=>{if(id!==runId)return;host.cogWorker?.terminate();busy=false;status='Optimization failed: '+error;paint();};
+      try{
+        const worker=new Worker('cog-optimizer-worker.js');host.cogWorker=worker;
+        worker.onmessage=({data})=>{if(id!==runId)return;if(data.result)finish(data.result);else if(data.error)fail(data.error);else if(data.progress){const el=host.querySelector('#cogSearchStatus');if(el)el.textContent='Optimizing… '+Math.min(100,Math.round(100*data.progress.elapsed/data.progress.budget))+'%';}};
+        worker.onerror=()=>fail('Unable to load the search worker. Refresh and retry.');
+        worker.postMessage({model,objective});
+      }catch(error){fail(error.message);}
+    }
+    paint();run();
   }
-  const api={decode,render};if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.CogBoard=api;
+  const api={decode,render,optimize};if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.CogBoard=api;
 })(typeof window!=='undefined'?window:globalThis);

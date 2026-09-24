@@ -1,0 +1,25 @@
+const fs=require('node:fs'),path=require('node:path'),http=require('node:http'),assert=require('node:assert/strict');
+const {chromium}=require(process.env.PLAYWRIGHT_PATH||'C:/Users/Sofia/AppData/Local/npm-cache/_npx/e41f203b7505f1fb/node_modules/playwright');
+(async()=>{const server=http.createServer((req,res)=>{const name=new URL(req.url,'http://localhost').pathname;if(name==='/'){res.setHeader('Content-Type','text/html');res.end('<meta charset="utf-8"><link rel="stylesheet" href="styles.css"><script src="cog-assets.js"></script><div id="constructionContent"></div><link rel="stylesheet" href="cog-board.css"><script src="cog-optimizer-engine.js"></script><script src="cog-board.js"></script>');return;}const file=path.join(__dirname,name);if(!file.startsWith(__dirname+path.sep)||!fs.existsSync(file)){res.statusCode=404;res.end();return;}res.setHeader('Content-Type',name.endsWith('.js')?'text/javascript':name.endsWith('.png')?'image/png':'text/css');res.end(fs.readFileSync(file));});await new Promise(r=>server.listen(0,'127.0.0.1',r));const browser=await chromium.launch({headless:true});try{
+ const page=await browser.newPage({viewport:{width:1489,height:1000}}),errors=[];page.on('pageerror',e=>errors.push(e.message));await page.goto('http://127.0.0.1:'+server.address().port);
+ const raw=JSON.parse(fs.readFileSync('../example json.txt','utf8'));await page.evaluate(raw=>CogBoard.render(document.querySelector('#constructionContent'),raw.data||raw,raw),raw);
+ const done=()=>page.waitForFunction(()=>document.querySelector('#cogSearchStatus')?.textContent==='Optimization complete');await done();assert.equal(await page.locator('.cog-preview .cog-slot').count(),96);assert(await page.locator('.cog-changed').count()>0);
+ const initial=await page.locator('.cog-current .cog-main-board .cog-slot').evaluateAll(els=>els.map(el=>el.dataset.cogSlot));
+ assert.equal(await page.locator('.cog-step-source').count(),1);assert.equal(await page.locator('.cog-step-target').count(),1);
+ const sourceId=await page.locator('.cog-step-source').getAttribute('data-cog-slot'),targetId=await page.locator('.cog-step-target').getAttribute('data-cog-slot');
+ await page.locator('#cogStepNext').click();assert.equal(await page.locator('.cog-guide progress').getAttribute('value'),'1');assert.equal(await page.locator('#cogOptimize').isDisabled(),true);
+ const afterStep=await page.locator('.cog-current .cog-main-board .cog-slot').evaluateAll(els=>els.map(el=>el.dataset.cogSlot));assert.equal(afterStep[initial.indexOf(targetId)],sourceId);
+ await page.locator('#cogMetric').selectOption('a');assert.equal(await page.locator('.cog-guide progress').getAttribute('value'),'1');
+ await page.locator('#cogStepBack').click();assert.deepEqual(await page.locator('.cog-current .cog-main-board .cog-slot').evaluateAll(els=>els.map(el=>el.dataset.cogSlot)),initial);
+ await page.evaluate(()=>{let guard=300;while(document.querySelector('#cogStepNext')&&guard-->0)document.querySelector('#cogStepNext').click();if(guard<=0)throw new Error('Guide did not finish');});
+ assert.match(await page.locator('.cog-guide-heading').innerText(),/All swaps marked done/);
+ assert.deepEqual(await page.locator('.cog-current .cog-main-board .cog-slot').evaluateAll(els=>els.map(el=>el.dataset.cogSlot)),await page.locator('.cog-preview .cog-slot').evaluateAll(els=>els.map(el=>el.dataset.cogSlot)));
+ await page.evaluate(()=>{let guard=300;while(!document.querySelector('#cogStepBack').disabled&&guard-->0)document.querySelector('#cogStepBack').click();});
+ assert.deepEqual(await page.locator('.cog-current .cog-main-board .cog-slot').evaluateAll(els=>els.map(el=>el.dataset.cogSlot)),initial);
+ for(const objective of ['flag','build','exp']){await page.locator('#cogObjective').selectOption(objective);await done();assert.equal(await page.locator('#cogObjective').inputValue(),objective);assert.equal(await page.locator('#cogOptimize').isEnabled(),true);}
+ await page.locator('#cogOptimize').click();assert.equal(await page.locator('#cogOptimize').isDisabled(),true);await done();
+ const left=await page.locator('.cog-current .cog-board-wrap').boundingBox(),right=await page.locator('.cog-optimizer .cog-board-wrap').boundingBox();assert(right.x>=left.x+left.width);
+ await page.locator('.cog-preview .cog-slot').first().click();assert(await page.locator('#cogDetail').isVisible());
+ await page.locator('#cogClose').click();await page.screenshot({path:'../audit/cog-optimizer-three-objectives.png',fullPage:true});await page.setViewportSize({width:390,height:844});assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
+ assert.deepEqual(errors,[]);console.log('Cog browser: guided swaps, replay to target, back to original, progress, objectives, desktop and mobile OK');
+}finally{await browser.close();await new Promise(r=>server.close(r));}})().catch(e=>{console.error(e);process.exitCode=1;});
