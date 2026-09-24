@@ -1,0 +1,25 @@
+'use strict';
+const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
+const c={console:{log(){},warn(){},error(){}},structuredClone};c.window=c;c.self=c;vm.createContext(c);
+c.importScripts=(...files)=>files.forEach(file=>vm.runInContext(fs.readFileSync(file,'utf8'),c,{filename:file}));
+c.importScripts('hat-rack-worker.js','hat-sources-data.js','hat-rack.js');let result;c.postMessage=v=>{result=v;};
+const raw=JSON.parse(fs.readFileSync('../example json.txt','utf8'));
+c.onmessage({data:structuredClone(raw)});assert(!result.error,result.error);
+const m=result.rack;assert.equal(m.bonusMulti,1.96);assert.equal(m.totalHats,70);
+assert(m.allPremiumHelmets.length>=90);
+for(const h of m.allPremiumHelmets)assert(fs.existsSync(`assets/${h.rawName}_x1.png`),h.rawName);
+const hat=m.allPremiumHelmets.find(h=>h.isAcquired&&h.Weapon_Power);
+const bonus=c.HatRack.bonuses(hat,m.bonusMulti).find(b=>b.name==='Weapon_Power');
+assert.equal(bonus.value,hat.Weapon_Power*m.bonusMulti);
+assert(c.HatRack.content(m,'missing').includes('Missing'));
+assert(!c.HatRack.content(m,'missing').includes('class="hr-hat collected'));
+for(const h of m.allPremiumHelmets){assert(c.HAT_SOURCES.records[h.rawName],`Missing guide entry: ${h.rawName}`);assert(c.HatRack.acquisition(h).includes('Premium hat'));}
+const crafted=c.HAT_SOURCES.records.EquipmentHats21.routes.find(r=>r.kind==='Crafting');
+assert.equal(crafted.materials.find(r=>r.name==='Iron Bar').quantity,150);
+const ninja=c.HAT_SOURCES.records.EquipmentHats90.routes.find(r=>r.kind==='Drop');
+assert(ninja.steps.some(s=>s.includes('Mob Cosplay Craze')));assert(ninja.title.includes('Sprout'));
+const recipeHtml=c.HatRack.content(m,'all','EquipmentHats21');assert(recipeHtml.includes('How to get this hat'));assert(recipeHtml.includes('150×'));
+const unknown=c.HatRack.acquisition({rawName:'newHat',Type:'PREMIUM_HELMET'});assert(unknown.includes('not yet verified'));assert(!unknown.includes('Craft at'));
+c.onmessage({data:{data:{}}});assert(result.missing);
+c.onmessage({data:{data:{Spelunk:'invalid'}}});assert(result.error);
+console.log('Hat Rack: sample collection, multiplier, assets, scaled stats, filters, and missing/invalid saves passed.');

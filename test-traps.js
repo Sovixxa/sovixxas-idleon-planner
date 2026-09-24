@@ -1,0 +1,15 @@
+'use strict';
+const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
+const c={console:{log(){},warn(){},error(){}},structuredClone};c.self=c;c.window=c;vm.createContext(c);
+c.importScripts=(...files)=>files.forEach(f=>vm.runInContext(fs.readFileSync(f,'utf8'),c,{filename:f}));
+c.importScripts('traps-worker.js','traps.js');let result;c.postMessage=v=>{result=v;};
+const raw=JSON.parse(fs.readFileSync('../example json.txt','utf8')),before=JSON.stringify(raw);
+c.onmessage({data:raw});assert(!result.error,result.error);const m=result.result;
+assert(m.placed>0);assert.equal(m.roster.length,11);assert.equal(JSON.stringify(raw),before);
+const first=JSON.parse(raw.data.PldTraps_0)[0];assert.equal(m.roster[0].traps[0].remaining,first[6]-first[2]);assert.equal(m.roster[0].traps[0].quantity,first[4]);
+for(const critter of m.totals)assert(fs.existsSync(`assets/${critter.critterName}.png`));
+const fixture={data:{PldTraps_0:JSON.stringify([[16,0,1300,'Critter1',0,0,1200,0],[-1],[16,0,300,'Critter1',25,0,1200,10],[16,0,null,'Critter1',5,0,1200,10]])},charNames:['<test>']};
+const f=c.TrapsModel.build(fixture);assert.equal(f.placed,3);assert.equal(f.ready,1);assert.equal(f.empty,1);assert.equal(f.next,900);assert.equal(f.roster[0].traps[2].remaining,null);assert.equal(f.totals[0].quantity,30);
+const html=c.TrapsPage.content(f,'0','ready');assert(html.includes('&lt;test&gt;'));assert(!html.includes('Slot 3'));assert(html.includes('Saved catch'));assert(html.includes('Ready'));
+assert(c.TrapsModel.build({}).missing);assert.equal(c.TrapsModel.build({PldTraps_0:'[]'}).placed,0);assert.equal(c.TrapsModel.build({PldTraps_0:'bad'}).invalid,1);
+console.log(`Traps passed: ${m.placed} placements, timing, zero rewards, missing/malformed saves, filters, assets, and input preservation.`);

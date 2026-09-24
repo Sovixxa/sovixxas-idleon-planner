@@ -31,8 +31,16 @@ async function main(){
  for(const save of [{},{data:{}}]){w.onmessage({data:save});assert(!result.error);assert.equal(Object.keys(result.groups).length,0);}
  w.onmessage({data:raw});assert(!result.error,result.error);for(const key of ['tome','slab','research'])assert(result.groups[key].length);
  let foodResult;w.postMessage=x=>foodResult=x;vm.runInContext(fs.readFileSync('gold-food-worker.js','utf8'),w);w.onmessage({data:raw});assert(!foodResult.error,foodResult.error);assert(foodResult.values.length>0);
- const direct={console:quiet,localStorage:{getItem(){return null;}}};direct.window=direct;vm.createContext(direct);vm.runInContext(fs.readFileSync('beanstalk-engine.js','utf8'),direct);
- assert.equal(JSON.stringify(foodResult.values),JSON.stringify(direct.BeanValueEngine.calculate(raw)),'Reusing decoded systems must preserve Golden Food calculations');
+ const direct={console:quiet,structuredClone};direct.window=direct;vm.createContext(direct);vm.runInContext(fs.readFileSync('prayer-math-engine.js','utf8'),direct);
+ const copy=structuredClone(raw),parsed=direct.PrayerMath.parseData(copy.data||copy,copy.charNames,copy.companion,copy.guildData,copy.serverVars||{},copy.accountCreateTime,copy.tournament);
+ assert.equal(foodResult.values.length,parsed.characters.length);
+ parsed.characters.forEach((character,id)=>{
+  const expected=direct.PrayerMath.getGoldenFoodMulti(character,parsed.account,parsed.characters).value,actual=foodResult.values[id];
+  assert.equal(actual.name,character.name);
+  assert(Math.abs(actual.multiplier-expected)<1e-9,'Worker must match current Golden Food math, including mastery');
+  assert(Math.abs(actual.percent-Math.max(0,(expected-1)*100))<1e-7);
+  assert(actual.breakdown.sources.length>0,'Worker must deliver the source breakdown');
+ });
  console.log('Runtime integration: browser script order, enriched cache, concurrent saves, retry, quest navigation, all bonus sprites, empty workers OK');
 }
 main().catch(e=>{console.error(e);process.exitCode=1;});

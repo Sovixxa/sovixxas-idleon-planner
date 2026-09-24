@@ -27,3 +27,16 @@ assert.equal(C.decode(serialized).gain,3);assert.equal(C.decode(serialized).cap,
 assert.equal(C.decode({...data,OptionsListAccount:undefined,OptLacc:JSON.stringify(options)}).discount,m.discount);
 assert.equal(C.decode({}).nmlbKnown,false);assert.equal(C.decode({}).capKnown,false);assert.equal(C.decode({}).discountKnown,false);
 console.log('Cooking tests passed: forecast, tie order, cap, paid bonus, cost wall, discounts and estimates.');
+// Multi-level planning: stock is consumed once across the whole path.
+const input={level:1,stock:5,progress:2,requirement:10,discount:1,companion:0,speed:100,ladleBonus:50,cap:30,steps:3};
+const plan=C.targets(input);
+assert.equal(plan.length,3);assert.equal(plan[0].ladles,C.estimate(input).ladles);
+let totalCost=0;for(let i=0;i<plan.length;i++){totalCost+=Math.ceil(C.cost(1+i));assert.equal(plan[i].ladles,Math.ceil(Math.max(0,(totalCost-5)*10-2)/150));}
+assert.equal(C.targets({...input,stock:1000})[2].ladles,0);
+assert.equal(C.targets({...input,cap:2}).length,1);
+assert.deepEqual(C.targets({...input,level:0}),[]);
+assert.deepEqual(C.targets({...input,level:30}),[]);
+assert.equal(C.targets({...input,speed:null})[0].ladles,null);
+assert.equal(C.targets({...input,stock:null})[0].ladles,null);
+assert.deepEqual([{id:1,ladles:null},{id:2,ladles:4},{id:3,ladles:0},{id:4,ladles:4}].sort(C.compareLadles).map(x=>x.id),[3,2,4,1]);
+console.log('Cooking planner: cumulative stock/progress, single rounding, level caps, missing rates and cheapest-first ordering pass.');

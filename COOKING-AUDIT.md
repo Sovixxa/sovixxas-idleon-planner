@@ -10,8 +10,61 @@ Verified against the installed client `../audit/N.js`, 2026-09-20.
 
 ## Estimate limits
 
-Full CookingSPEED has many live and character-dependent multipliers. This page does **not** reconstruct it. The user supplies combined in-game cooking speed for the kitchens they intend to assign to a meal and their active character's Overflowing Ladle bonus. Estimates project that setup onto each individual meal, using current stock/work and fixed speed. They do not assume every listed meal is produced simultaneously, or simulate future speed gains, daily discounts or NMLB upgrades. No made-up default speed is used.
+Cooking speed is calculated in cooking-worker.js from the imported save through the local Toolbox parser. Each character uses their own cooking star sign and farming-level contribution. The default is the character with the highest combined kitchen speed times Overflowing Ladle multiplier; the user can select another character or override speed and ladle bonus manually.
+
+Client references rechecked on 2026-09-24: CookingR("CookingSPEED") includes kitchen upgrades, talents, meals, alchemy, stamps, lab, farming, artifacts, cards, summoning, vault, cavern and Button bonuses. Ladle consumption adds 3600 * (1 + GetTalentNumber(1,148)/100) seconds.
+
+Next-level ladles = ceil(max(0, remaining meals * meal work requirement - saved progress) / combined hourly kitchen speed / (1 + ladle bonus/100)). Remaining meals is max(0, ceil(discounted level cost) - saved stock). All unlocked kitchens are assumed reassigned to each meal independently. Estimates hold speed fixed and exclude future speed gains, free daily levels, and changed character setups. Very large ladle counts are shown without an artificial cap.
 
 Companion data comes from export root companion.l and borrowed companion IDs in OptionsListAccount/OptLacc[606]. Missing companion or discount records are labeled. Incomplete cap/unlock data blocks the NMLB forecast until sufficient data/cap confirmation exists. Estimate inputs stay with the imported save object during navigation and reset on reload/new import.
 
 Validation: test-cooking.js covers serialization, export alias, missing data, forecast order, no save mutation, paid bonus, cap clipping, level-111 wall, stock/progress subtraction and whole-ladle rounding. Browser checked using loaded account: 74 meals, cap160, Giga Chip107→108 next, two meal pages, numeric estimate inputs and compact forecast.
+
+2026-09-24 validation: test-cooking-worker.js checks the sample export, effective ladle talent level, all-character finite speeds, whole-ladle rounding, available stock, missing data, and no save mutation. Browser verified automatic worker results, two-column meal rows, character switching, formula details, search and narrow viewport overflow. Shared engine rebuilt from source.
+
+## Secondary preset and bonus audit (2026-09-24)
+
+The previous giant estimate reflected Blood Marrow level 1 in the active saved preset. SLpre_7 contains level 305. Talent records may be numeric-keyed objects, not only arrays. The worker now simulates switching the full secondary Voidwalker preset, reparses dependent bonuses, and offers both scenarios without mutating the save. It defaults to the scenario with the highest ladle output, with an explicit instruction to switch the named character and preset in-game. No maximum-book-level substitution is used. Sample Turkey estimate is 8 ladles with preset 2 versus 9.657e53 with preset 1.
+
+The CookingSPEED factor list was compared with the installed client. It includes Blood Marrow, Enhancement Eclipse/Super Chow, Crop Depot, event shop, Richelin, ballot, vault, Marshmallow, Diamond Chef with Prisma applied BEFORE exponentiation by diamond meal count, Void Plate Chef, MSA superbit, kitchen speed upgrades, Triagulon, Button, arcade, three cooking vial groups, stamps/Lab jewel, cooking meals, star sign, Summoning rewards, Monument, Schematic, passive card, Lamp, Amethyst, Troll/achievements, and Cabbage. All first-kitchen factors reconcile to the calculated speed. Farm scaling and cooking star sign use the selected ladle character.
+
+The shared Prisma helper omitted JellyOperation RoG_BonusQTY(36): Research[7][9] > 36 gives +1 percentage point to Prisma before its 4x cap. Added it and corrected the upgraded companion breakdown to show its actual contribution. The sample has not unlocked that Jelly reward, so it does not explain the sample's large discrepancy.
+
+Meal speed meal bonuses include mastery, ribbons, Lab, shiny pets, companion and Summoning meal multipliers. The UI exposes all kitchen multipliers, each cooking-related meal contribution, and Prisma sources. Tests independently verify the Blood Marrow and Diamond Chef exponents, Prisma unlock boundary, meal contribution sums, and reductions when Summoning, Crop Depot, Prisma or direct meal speed is removed. Cooking, Golden Food and prayer regression tests and browser preset/8-ladle/mobile checks pass.
+
+## Mastery point planner (2026-09-24)
+
+Cooking Mastery subtab has yellow meal and purple flavor rankings. Yellow defaults to marginal combined kitchen speed; it projects the full amplified meal contribution into Mcook, KitchenEff and zMealFarm pools for every kitchen. An alternate view ranks the relative gain to each meal's own bonus without claiming cross-stat account utility. Unspent-point suggestions greedily recalculate after every point; no save allocations are changed.
+
+Yellow formula BonusMultiCook = 1 + p/(p+5): extra-bonus milestones at 5/20/45/95 points give 50/80/90/95% of its asymptotic extra +100%. Next-point relative own-bonus gains fall below 1% at 12 points and 0.1% at 46. These are explicitly labeled practical soft/shadow thresholds, not game hard caps. Purple EXP categories rank by slope/(1+slope*p); suggestions exclude locked categories and Smoky. Smoky rank chance is 250*b*p/(25+b*p); guaranteed-rank breakpoints at 100% and 200%, asymptote 250%, ribbon maximum 25.
+
+Verified client Summoning2 branches: mastery unlock uses Rift[0] > 58 OR companion 87; displayed rank = saved mastery level + 1; category thresholds 0/1/5/10/25/100 correspond to displayed ranks 1/2/6/11/26/101. EXP growth becomes 12.5x per saved level after 40. PtsLeftCook_P includes Jelly obstruction reward 13 and PtsLeftCook_Y includes reward 5 (+1 each, strict obstruction > index); fixed both omissions in the parser. Unused thresholds 150/250/500 do not unlock additional categories.
+
+Validation: test-cooking-mastery.js checks mathematical boundaries, real-save point budgets, locked flavors, allocation budgets, and independent full-kitchen recalculation parity for yellow point gains. Browser checks cover Mastery tabs, goals, recommendations, responsive overflow and returning to the meal optimizer.
+
+## Interactive Mastery calculator
+
+Added name/effect search, editable yellow and purple point allocations, editable simulation budgets, clear/reset controls, and live saved-versus-test meal bonus, kitchen speed, mastery EXP and ribbon chance previews. Full meal effects are exported by the worker; PxLine is kept independent of mastery to match the existing formula. Point edits are isolated UI state and never change the imported save. Locked purple flavors cannot be edited. Over-budget plans remain visible but are marked explicitly.
+
+The overall-account starting setup reallocates the full yellow budget from zero. It greedily scores weighted log gains to pooled meal-stat contributions; default weights are 3 for golden-food bonus, 2 for cooking-speed stats, and 1 otherwise. These are visible, adjustable priorities, not an assertion of universal account-optimal weights. A zero priority excludes a meal. The recommendation and live meal effects are not a full downstream damage/gold-food simulation. Calculator budgets are limited to 2,000 points for responsive local testing, not as a claimed game cap.
+
+Validation covers exact budget use, Yumi allocation/exclusion, preserved simulated allocations, preview gains and imported-save immutability; browser checks cover search, edits, loading recommendations, weights, resets, over-budget state, purple allocation, empty searches and mobile width.
+
+## Yumi-first and compact mastery revision
+
+The account setup now reserves a deliberate Yumi allocation before distributing the remainder. Default target 20 points gives 1.8x Yumi's meal contribution (80% of the possible extra bonus); alternative targets 5/12/45 are available. For budgets greater than one, at least 20% remains for other meals. The allocator never tops Yumi back up after reaching this target; exclusion is honored. Remaining eligible meals use explicit P1/P2/P3 weights 3/2/1 with gold/purple/blue borders. These are user-adjustable heuristic priorities, not an asserted globally optimal conversion between account stats.
+
+Replaced the long table and expanded explanations with six-row pagination and collapsed help/recommendation panels. Input edits preserve scroll and focus; search resets the page. The top expandable setup summary compares each allocated meal-stat pool against zero yellow mastery and lists the contributing meals and points, for saved/test/recommended allocations. Purple effects are also shown; the recommended-yellow view labels purple as the calculator allocation. Downstream final character stats are not claimed.
+
+Tests cover the sample's 20 Yumi / 18 remaining split, smaller-budget reservations, exclusion, golden-food meal-pool gains, border changes, page navigation, summary mode switching, scroll stability, responsive width, and purple allocation controls.
+
+
+## Overall-account shortlist revision (supersedes earlier priority defaults)
+
+The previous fallback assigned P3 to every unrecognized effect, causing low-value spending. Overall now uses an explicit whitelist: P1 golden food, Research EXP, Minehead currency; P2 skill efficiency; P3 jade. Every other stat defaults to zero, including future unknown stats, library checkout, liquids, sailing, Banana, and essence. Manual opt-in remains possible; opted-in essence stays capped at one. Cooking profile now also uses an explicit cooking-speed shortlist.
+
+Default Yumi target is 10 (1.6667x), adjustable to 5/10/12/15/20/45; the existing budget reservation still applies. Remaining allocation maximizes the stated weighted log meal-pool objective with discrete diminishing marginal gains, not a claimed conversion of unrelated stats into total account power. Locked or zero-contribution meals are excluded. The imported 38-point recommendation: Yumi 10, Giga Chip 9, Divorce Cake 9, Whipped Cocoa 4, Riceball 2, Corn 1, MrLoin Steak 3.
+
+Community guidance checked: https://www.reddit.com/r/idleon/comments/1tzfrtg/priority_list_for_yellow_cm_points/ and https://www.reddit.com/r/idleon/comments/1vng1a9/cooking_mastery_sour_unlock_is_so_freaking_awesome/ support limited Yumi investment, research, efficiency, and Minehead currency. These inform preferences; the local multiplier formula supplies actual gains.
+
+Validation: mastery regression tests cover shortlist isolation through 2,000 points, unknown effects, locked Minehead, manual opt-in, essence cap, full budget use, and save immutability. Headless browser verifies the default target, loading recommendations, search, and zero library/liquid allocation. Cooking and worker tests pass.
