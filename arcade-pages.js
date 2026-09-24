@@ -36,6 +36,7 @@
           return '<article class="advice-fish-upgrade '+(locked?'is-locked':'')+'"><header><img src="'+esc(x.icon||'assets/W7_fish.png')+'" alt=""><div><h3>'+esc(x.name)+'</h3><span>Level '+lv+' · '+(locked?'Locked · Requires':'Unlocked at')+' account level '+Number(x.fishRequired).toLocaleString()+'</span></div></header><div class="advice-fish-values"><div><small>CURRENT BONUS</small><p>'+esc(x.effect)+'</p></div><div><small>NEXT LEVEL</small><p>'+esc(x.fishNext)+'</p></div><div><small>UPGRADE COST</small><p>'+ (root.GameCurrency?root.GameCurrency.html(x.cost):Number(x.cost).toExponential(3)+' coins')+'</p></div></div><div class="advice-fish-progress" role="progressbar" aria-label="'+esc(x.name)+' scaling progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+pct+'"><span style="width:'+pct+'%"></span></div><p class="advice-fish-scaling">'+pct.toFixed(1)+'% of scaling ceiling · Diminishing returns · No finite hard cap</p></article>';
         }).join('')+'</div></section>';afterRender?.();return;
       }
+      if(key==='shinyPets'&&root.ShinyPlanner){root.ShinyPlanner.render(host,rows);afterRender?.();return;}
       if(key==='emperorBonuses'){renderEmperor(host,rows,afterRender);return;}
       if(key==='legendTalents'){renderLegendBoard(host,rows,afterRender);return;}
       selections.set(key,state);

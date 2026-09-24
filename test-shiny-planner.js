@@ -1,0 +1,14 @@
+const assert=require('node:assert/strict'),{plan,tiers}=require('./shiny-planner');
+const group=(id,level,extra={})=>({bonusId:id,pets:[{id:'pet'+id,level,unlocked:true,world:1,order:0,...extra}]});
+assert.equal(plan([group(0,0),group(16,0)]).next.bonusId,16);
+assert.equal(plan([group(0,0),group(16,5)]).next.bonusId,0);
+assert.equal(plan([group(0,2),group(16,5)]).next.target,10);
+assert.equal(plan([group(0,2),group(16,10)]).next.target,5);
+assert.equal(plan([group(0,20),group(16,20)]).next,undefined);
+assert.equal(plan([group(16,null)]).next,undefined);
+assert.equal(plan([group(16,0,{unlocked:false})]).next,undefined);
+assert.equal(plan([group(16,0,{unlocked:null})]).next,undefined);
+assert.equal(plan([group(16,3,{unlocked:null})]).next.target,5);
+assert.equal(new Set(tiers.flatMap(t=>t.ids)).size,26);
+assert.equal(plan([]).next,undefined);
+console.log('Shiny planner: staged milestones, priority, locked/missing records and completed pets pass.');
