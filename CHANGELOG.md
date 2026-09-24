@@ -1,5 +1,19 @@
 # Project changelog
 
+## 2026-09-24 - Fountain upgrade goals and longer roadmaps
+
+- Add 100-purchase roadmaps by default, with up to 500 steps, separate Buy now mode, per-step funding status and total additional currency requirements.
+- Add all-enabled-currency income, marble production, 18 outside Fountain bonus goals and an explicitly labeled balanced outside score.
+- Respect saved ignored currencies; include Water Bender in active marble production; show Minau's true cost reduction.
+- Validate costs, bonuses, eligibility and income deltas through 30,960 direct game-handler comparisons. Add roadmap funding replay and goal-switching browser coverage. See `FOUNTAIN-OPTIMIZER.md` for the audit and model limits.
+
+## 2026-09-24 - Correct misleading bonus displays
+
+- Correct Royal Armory numeric descriptions, shelf unlock requirements and Royal Statue multipliers; preserve unknown values in partial exports.
+- Label regular Statue values as base contributions, add character selection and saved tiers, and use the same qualification in All Bonuses.
+- Include confirmed Arcade companion doubling, explicitly identify the upgraded-pet client/description discrepancy, and align the character-stat parser with the supplied client.
+- Add regression tests including extracted-client comparisons. Full tests, build and local browser checks passed. See `MISLEADING-VALUES-FIXES.md` for remaining calculation limits.
+
 ## 2026-09-23 - Planner quality-of-life tools
 
 - Added favorite pages and keyboard quick search (Ctrl/Cmd+K) for pages and imported bonuses.
