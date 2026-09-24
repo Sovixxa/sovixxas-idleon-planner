@@ -16,6 +16,7 @@ function build(parsed,save){
   return {id:meal.index,name:meal.name||meal.rawName,stat:meal.stat,level:meal.level,bonus:PrayerMath.getMealsBonusByEffectOrStat(isolated,null,meal.stat)};
  });
  const mastery=account.cooking.cookingMastery;
+ const minehead={perHour:account.minehead?.currencyGain,meal:PrayerMath.getMealsBonusByEffectOrStat(account,null,'MineCurr'),grid:PrayerMath.getResearchGridBonus(account,147,0)+PrayerMath.getResearchGridBonus(account,166,0)};
  const nodes=account.cooking.meals.map(m=>({id:m.index,name:m.name||m.rawName,mealLevel:m.level,points:m.cookingMasteryNode?.level||0,stat:m.stat,effect:m.effect,bonus:mealBonuses.find(b=>b.id===m.index)?.bonus||0}));
  const values=parsed.characters.map((character,id)=>{
   const kitchens=PrayerMath.parseKitchens(cooking,atoms,parsed.characters,account,{characterIndex:id});
@@ -29,10 +30,13 @@ function build(parsed,save){
   const product=sources.reduce((v,s)=>v*s.value,1);
   if(Math.abs(product-speeds[0])/speeds[0]>1e-10)throw new Error('Kitchen bonus breakdown does not match speed.');
   const kitchenSources=kitchens.map((k,index)=>({speed:speeds[index],factors:Object.fromEntries(k.mealSpeedBreakdown.categories[0].sources.filter(s=>['Meals (Cooking Speed)','Kitchen Eff (Meal)','Marshmallow (Meal)'].includes(s.name)).map(s=>[s.name,s.value*(s.name==='Marshmallow (Meal)'?farmRatio:1)]))}));
-  return {id,name:character.name,speed,ladleBonus,kitchens:speeds.length,speeds,sources,kitchenSources};
+  const gold=PrayerMath.getGoldenFoodMulti(character,account,parsed.characters);
+  const goldOuter=1+gold.breakdown.categories.find(c=>c.name==='Multiplicative').sources.reduce((sum,s)=>sum+s.value,0)/100;
+  const goldenFood={multiplier:gold.value,meal:PrayerMath.getMealsBonusByEffectOrStat(account,null,'zGoldFood'),outer:goldOuter};
+  return {id,name:character.name,goldenFood,speed,ladleBonus,kitchens:speeds.length,speeds,sources,kitchenSources};
  });
  const rift=read(save.Rift),companion=account.companions?.list?.[87];
- return {mastery:mastery?{...mastery,unlocked:Number(rift?.[0])>58||PrayerMath.isCompanionBonusActive(account,87),nodes,mealBonuses}:null,values,diamond,prisma:prisma.breakdown.categories[0].sources,mealBonuses,blood:parsed.characters.flatMap(c=>c.flatTalents.filter(t=>t.name==='BLOOD_MARROW').map(t=>({name:c.name,level:t.baseLevel,preset:c.selectedTalentPreset+1}))),totalMealLevels:account.cooking.meals.reduce((s,m)=>s+m.level,0)};
+ return {mastery:mastery?{...mastery,unlocked:Number(rift?.[0])>58||PrayerMath.isCompanionBonusActive(account,87),nodes,mealBonuses,minehead}:null,values,diamond,prisma:prisma.breakdown.categories[0].sources,mealBonuses,blood:parsed.characters.flatMap(c=>c.flatTalents.filter(t=>t.name==='BLOOD_MARROW').map(t=>({name:c.name,level:t.baseLevel,preset:c.selectedTalentPreset+1}))),totalMealLevels:account.cooking.meals.reduce((s,m)=>s+m.level,0)};
 }
 self.onmessage=event=>{
  try{

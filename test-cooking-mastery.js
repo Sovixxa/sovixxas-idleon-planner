@@ -65,3 +65,33 @@ assert(M.accountSetup(m,100,{34:1})[34]>0,'Manual opt-in remains available');
 assert(M.accountSetup(m,300,{58:1})[58]<=1,'Opt-in essence stays capped');
 console.log('Overall shortlist, unknown-stat exclusion, locked Minehead, manual opt-in and 2,000-point budget pass.');
 console.log('Overall 38-point plan:',m.nodes.filter(n=>accountPlan[n.id]>0).map(n=>`${n.name}: ${accountPlan[n.id]}`).join(', '));
+
+// Compare golden-food projection against independently reparsing an edited export.
+const active=result.scenarios.find(s=>s.id==='current');
+const editedRaw=structuredClone(raw),cookMaster=JSON.parse(editedRaw.data.CookMaster);
+cookMaster[0][64]+=1;editedRaw.data.CookMaster=JSON.stringify(cookMaster);
+const edited=c.PrayerMath.parseData(structuredClone(editedRaw.data),editedRaw.charNames,editedRaw.companion,editedRaw.guildData,editedRaw.serverVars||{},editedRaw.accountCreateTime,editedRaw.tournament);
+for(const r of active.values){
+ const impact=M.pointImpact(active.mastery,r,{64:38},64);
+ const exact=c.PrayerMath.getGoldenFoodMulti(edited.characters[r.id],edited.account,edited.characters).value;
+ near(impact.test,(exact-1)*100);near(impact.saved,(r.goldenFood.multiplier-1)*100);
+ const unchanged=M.pointImpact(active.mastery,r,{},64);near(unchanged.relative,0);near(unchanged.next,impact.test);
+ assert(impact.relative>0&&impact.relative<M.relative(37),'Account gain must account for other golden food sources');
+}
+const sampleImpact=M.pointImpact(active.mastery,active.values[1],{64:38},64);
+console.log('Golden food projection matches full edited-save recalculation for every character:',JSON.stringify(sampleImpact));
+const pooled=M.pointImpact(m,rate,{6:1,27:2},41);
+near(pooled.test,m.nodes.filter(n=>n.stat==='Seff').reduce((sum,n)=>sum+M.bonusAt(n,({6:1,27:2})[n.id]??n.points),0));
+assert.equal(pooled.kind,'meal');assert(M.pointImpact(m,rate,{},13).nextRelative>0);
+
+// Currency/hour must match a fully reparsed account, preserving the shared grid/meal bracket.
+for(const points of [0,1,4,9,20]){
+ const copy=structuredClone(raw),cm=JSON.parse(copy.data.CookMaster);cm[0][73]=points;copy.data.CookMaster=JSON.stringify(cm);
+ const parsedMine=c.PrayerMath.parseData(structuredClone(copy.data),copy.charNames,copy.companion,copy.guildData,copy.serverVars||{},copy.accountCreateTime,copy.tournament);
+ const impact=M.pointImpact(active.mastery,active.values[1],{73:points},73);
+ assert.equal(impact.kind,'currency');near(impact.test,parsedMine.account.minehead.currencyGain);
+ if(points===4)console.log('Minehead 4 points:',JSON.stringify(impact));
+}
+const noMine={...m,minehead:undefined};assert.equal(M.pointImpact(noMine,rate,{},73).kind,'meal');
+const lockedMine={...m,minehead:{...m.minehead,perHour:0}};assert.equal(M.pointImpact(lockedMine,rate,{73:4},73).test,0);
+console.log('Minehead actual currency/hour: edited-save parity, absent-data fallback and locked income pass.');

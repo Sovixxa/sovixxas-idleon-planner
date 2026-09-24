@@ -68,3 +68,10 @@ Default Yumi target is 10 (1.6667x), adjustable to 5/10/12/15/20/45; the existin
 Community guidance checked: https://www.reddit.com/r/idleon/comments/1tzfrtg/priority_list_for_yellow_cm_points/ and https://www.reddit.com/r/idleon/comments/1vng1a9/cooking_mastery_sour_unlock_is_so_freaking_awesome/ support limited Yumi investment, research, efficiency, and Minehead currency. These inform preferences; the local multiplier formula supplies actual gains.
 
 Validation: mastery regression tests cover shortlist isolation through 2,000 points, unknown effects, locked Minehead, manual opt-in, essence cap, full budget use, and save immutability. Headless browser verifies the default target, loading recommendations, search, and zero library/liquid allocation. Cooking and worker tests pass.
+
+
+## Live account impact beside mastery bonus
+
+Golden food uses the selected character/preset's full golden-food multiplier, replacing only the simulated meal contribution through the existing outer multiplier. All-character edited-export parity is tested. Other supported full impacts include total kitchen speed and Minehead currency/hour. Minehead scales the saved hourly rate by the changed shared Research Grid 147 + 166 + meal bracket, preserving all other account factors. Edited-export tests at 0/1/4/9/20 points match the full parser. Example at four Divorce Cake points: 1,267,474.33095/hr -> 1,528,977.85667/hr (+261,503.52571/hr). Missing full-account data falls back to explicitly labeled meal contributions; locked zero income stays zero.
+
+Impact displays saved/test, absolute change, relative gain, and next-point preview beside the existing meal bonus. Browser checks verify live edits, full comma-separated currency amounts, side-by-side layout, and no overflow at desktop/mobile widths. No imported save is changed.
