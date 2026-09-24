@@ -19,7 +19,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'C:/Users/Sofia/AppData/Lo
  for(const objective of ['flag','build','exp']){await page.locator('#cogObjective').selectOption(objective);await done();assert.equal(await page.locator('#cogObjective').inputValue(),objective);assert.equal(await page.locator('#cogOptimize').isEnabled(),true);}
  await page.locator('#cogOptimize').click();assert.equal(await page.locator('#cogOptimize').isDisabled(),true);await done();
  const left=await page.locator('.cog-current .cog-board-wrap').boundingBox(),right=await page.locator('.cog-optimizer .cog-board-wrap').boundingBox();assert(right.x>=left.x+left.width);
- await page.locator('.cog-preview .cog-slot').first().click();assert(await page.locator('#cogDetail').isVisible());
+ await page.locator('.cog-preview .cog-slot').first().click();assert(await page.locator('#cogDetail').isVisible());assert.match(await page.locator('#cogDetail').innerText(),/Effective rates at A1/);assert.match(await page.locator('#cogDetail').innerText(),/Incoming buffs:/);
  await page.locator('#cogClose').click();await page.screenshot({path:'../audit/cog-optimizer-three-objectives.png',fullPage:true});await page.setViewportSize({width:390,height:844});assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
  assert.deepEqual(errors,[]);console.log('Cog browser: guided swaps, replay to target, back to original, progress, objectives, desktop and mobile OK');
 }finally{await browser.close();await new Promise(r=>server.close(r));}})().catch(e=>{console.error(e);process.exitCode=1;});
