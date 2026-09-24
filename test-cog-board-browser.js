@@ -21,5 +21,26 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'C:/Users/Sofia/AppData/Lo
  const left=await page.locator('.cog-current .cog-board-wrap').boundingBox(),right=await page.locator('.cog-optimizer .cog-board-wrap').boundingBox();assert(right.x>=left.x+left.width);
  await page.locator('.cog-preview .cog-slot').first().click();assert(await page.locator('#cogDetail').isVisible());assert.match(await page.locator('#cogDetail').innerText(),/Effective rates at A1/);assert.match(await page.locator('#cogDetail').innerText(),/Incoming buffs:/);
  await page.locator('#cogClose').click();await page.screenshot({path:'../audit/cog-optimizer-three-objectives.png',fullPage:true});await page.setViewportSize({width:390,height:844});assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
- assert.deepEqual(errors,[]);console.log('Cog browser: guided swaps, replay to target, back to original, progress, objectives, desktop and mobile OK');
+
+ await page.setViewportSize({width:1489,height:1000});
+ await page.evaluate(()=>{const CogO=Array(252).fill('Blank'),CogM={},FlagU=Array(120).fill(-11),GemItemsPurchased=Array(119).fill(0);CogO[13]='Player_Test';CogM[13]={a:100,c:10,b:6000};CogO[12]='Cog3ro';CogM[12]={h:'row',e:100,f:1000,g:20};CogO[1]='Cog3co';CogM[1]={h:'column',e:250,f:500,g:30};CogO[25]='Cog3up';CogM[25]={h:'up',e:50,f:100,j:30};CogBoard.render(document.querySelector('#constructionContent'),{CogO,CogM,FlagU,GemItemsPurchased},{charNames:['Test']});});
+ await done();
+ const target=page.locator('.cog-current [data-cog-position="13"]');
+ assert.equal(await target.locator('small').innerText(),'1.6K%');
+ await page.locator('#cogMetric').selectOption('a');assert.equal(await target.locator('small').innerText(),'500');
+ await page.locator('#cogMetric').selectOption('c');assert.equal(await target.locator('small').innerText(),'15');
+ await page.locator('.cog-current [data-cog-position="12"]').hover();assert.equal(await page.locator('.cog-current .cog-buff-target').count(),11);
+ await page.locator('.cog-current [data-cog-position="1"]').hover();assert.equal(await page.locator('.cog-current .cog-buff-target').count(),7);
+ await page.locator('.cog-current [data-cog-position="25"]').hover();assert.equal(await page.locator('.cog-current .cog-buff-target').count(),6);
+ await target.click();assert.equal(await page.locator('.cog-current .cog-buff-source').count(),3);assert.match(await page.locator('#cogDetail').innerText(),/Receives from 3 cogs/);assert.match(await page.locator('#cogDetail').innerText(),/\+400% build/);assert.match(await page.locator('#cogDetail').innerText(),/\+1,600% player EXP/);
+ await page.locator('#cogClose').click();assert.equal(await page.locator('.cog-buff-selected').count(),0);
+ await page.evaluate(()=>{const CogO=Array(252).fill('Blank'),CogM={};for(let i=0;i<96;i++){CogO[i]='Cog3A0';CogM[i]={a:1,c:1,d:1};}CogO[95]='Player_Test';CogM[95]={a:1e9,c:1e6,b:1e9};for(const group of [[3,20,38,70],[108,109,110,111]])group.forEach((i,p)=>{CogO[i]='CogZA0'+p;CogM[i]={a:1,c:1,d:1};});CogBoard.render(document.querySelector('#constructionContent'),{CogO,CogM,FlagU:Array(120).fill(-11),GemItemsPurchased:Array(119).fill(0)},{charNames:['Test']});});
+ await done();assert.match(await page.locator('.cog-excogia-summary').innerText(),/0 → 2 assembled sets/);assert.equal(await page.locator('.cog-excogia-grid img').count(),8);
+ const positions=await page.locator('.cog-excogia-grid b').allTextContents();
+ for(let n=0;n<positions.length;n++){const coord=positions[n],index=(coord.charCodeAt(0)-65)*12+Number(coord.slice(1))-1;assert.match(await page.locator('.cog-preview [data-cog-position="'+index+'"] img').getAttribute('src'),new RegExp('CogZA0'+n%4));}
+ await page.screenshot({path:'../audit/cog-excogia-assembly.png',fullPage:true});
+ await page.evaluate(()=>{let guard=300;while(document.querySelector('#cogStepNext')&&guard-->0)document.querySelector('#cogStepNext').click();if(guard<=0)throw new Error('Yin guide did not finish');});
+ assert.deepEqual(await page.locator('.cog-current .cog-main-board .cog-slot').evaluateAll(els=>els.map(el=>el.dataset.cogSlot)),await page.locator('.cog-preview .cog-slot').evaluateAll(els=>els.map(el=>el.dataset.cogSlot)));
+ await page.setViewportSize({width:390,height:844});assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
+ assert.deepEqual(errors,[]);console.log('Cog browser: stacked buff labels, directional highlights, source breakdowns, guided swaps, objectives and mobile OK');
 }finally{await browser.close();await new Promise(r=>server.close(r));}})().catch(e=>{console.error(e);process.exitCode=1;});

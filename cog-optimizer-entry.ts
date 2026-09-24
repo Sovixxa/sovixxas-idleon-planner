@@ -31,9 +31,12 @@ function evaluatePrepared(model:any,slots:any[],baseExp:Map<number,number>){
  board.forEach((slot:any)=>{if(slot.cog.name.startsWith('Player_'))slot.cog.stats.b={value:baseExp.get(slot.cog.originalIndex)||0};});
  const result=evaluateBoard(board),flagMultiplier=model.flagMultiplier??1;
  const tinyExp=model.left.concat(model.right).reduce((sum:number,s:any)=>sum+number(s.stats.tinyExp),0);
- const rates=result.board.map((slot:any,index:number)=>({build:slot.cog.stats.a?.value||0,flag:(slot.cog.stats.c?.value||0)*flagMultiplier,exp:slot.cog.name.startsWith('Player_')?slot.cog.stats.b?.value||0:0,boosts:{build:boosts[index]?.e?.value||0,exp:boosts[index]?.f?.value||0,flag:boosts[index]?.g?.value||0,flagSpeed:boosts[index]?.j?.value||0},stats:board[index].cog.stats}));
+ const rates=result.board.map((slot:any,index:number)=>({build:slot.cog.stats.a?.value||0,flag:(slot.cog.stats.c?.value||0)*flagMultiplier,exp:slot.cog.name.startsWith('Player_')?slot.cog.stats.b?.value||0:0,boosts:{build:boosts[index]?.e?.value||0,exp:boosts[index]?.f?.value||0,flag:boosts[index]?.g?.value||0,flagSpeed:boosts[index]?.j?.value||0},stats:board[index].cog.stats,sources:slot.affectedBy||[],targets:slot.affects||[]}));
  const flags=model.slots.filter((s:any)=>s.flag&&(s.index<96||s.index>=228)).map((s:any)=>({index:s.index,rate:result.totalFlaggyRate*flagMultiplier*(1+(s.index<96?rates[s.index].boosts.flagSpeed:0)/100)}));
- return {board,totals:{build:result.totalBuildRate,flag:result.totalFlaggyRate*flagMultiplier,exp:result.totalPlayerExpRate,bonus:result.totalExpRate*(1+tinyExp/100),rawBonus:result.totalExpRate},rates,flags};
+ const sets=[];
+ for(let anchor=0;anchor<84;anchor++)if(anchor%12<11&&[0,1,12,13].every((offset,piece)=>slots[anchor+offset].item==='CogZA0'+piece))sets.push([anchor,anchor+1,anchor+12,anchor+13]);
+ const pieces=[0,1,2,3].map(piece=>slots.filter((s:any)=>s.item==='CogZA0'+piece).length);
+ return {board,totals:{build:result.totalBuildRate,flag:result.totalFlaggyRate*flagMultiplier,exp:result.totalPlayerExpRate,bonus:result.totalExpRate*(1+tinyExp/100),rawBonus:result.totalExpRate},rates,flags,excogia:{sets,pieces,completeSetsOwned:Math.min(...pieces)}};
 }
 export function evaluate(model:any,slots=model.slots){const prepared=prepare(model);return {...evaluatePrepared(model,slots,prepared.baseExp),warnings:prepared.warnings};}
 export function optimize(model:any,objective='exp',time=1200,onProgress?:any){
@@ -47,6 +50,8 @@ export function optimize(model:any,objective='exp',time=1200,onProgress?:any){
  let moves=result.moves.map((m:any)=>{const incoming=layout[m.fromIndex],outgoing=layout[m.to];[layout[m.to],layout[m.fromIndex]]=[incoming,outgoing];return {from:m.fromIndex,to:m.to,incoming,outgoing};});
  let after=evaluatePrepared(model,layout,baseExp);
  const totalKey=objective==='exp'?(expKey==='totalPlayerExpRate'?'exp':'bonus'):objective;
- if(after.totals[totalKey]<=before.totals[totalKey]+Math.max(1,Math.abs(before.totals[totalKey]))*1e-12){layout=model.slots.slice();moves=[];after=before;}
- return {board:layout.slice(0,96),shelf:layout.slice(108,228),moves,before:before.totals[totalKey],after:after.totals[totalKey],gain:after.totals[totalKey]-before.totals[totalKey],objective,expKey,totalsBefore:before.totals,totalsAfter:after.totals,ratesBefore:before.rates,ratesAfter:after.rates,flagsBefore:before.flags,flagsAfter:after.flags,warnings};
+ const tolerance=Math.max(1,Math.abs(before.totals[totalKey]))*1e-12;
+ const gain=after.totals[totalKey]-before.totals[totalKey];
+ if(gain < -tolerance || (gain<=tolerance&&after.excogia.sets.length<=before.excogia.sets.length)){layout=model.slots.slice();moves=[];after=before;}
+ return {board:layout.slice(0,96),shelf:layout.slice(108,228),moves,before:before.totals[totalKey],after:after.totals[totalKey],gain:after.totals[totalKey]-before.totals[totalKey],objective,expKey,totalsBefore:before.totals,totalsAfter:after.totals,ratesBefore:before.rates,ratesAfter:after.rates,flagsBefore:before.flags,flagsAfter:after.flags,excogiaBefore:before.excogia,excogiaAfter:after.excogia,warnings};
 }
