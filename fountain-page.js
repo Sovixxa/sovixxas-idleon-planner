@@ -2,7 +2,7 @@
 const M=root.FountainOptimizer,esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmt=n=>Number.isFinite(n)?(n>=1e15?n.toExponential(2):n.toLocaleString(undefined,{maximumFractionDigits:2,notation:n>=1e6?'compact':'standard'})):'—';
 const pct=n=>`${(n*100).toLocaleString(undefined,{maximumFractionDigits:3})}%`;
-const defaults=()=>({goal:'income',target:'all',mode:'roadmap',active:true,overflow:false,marble:true,steps:100});
+const defaults=()=>({goal:'income',target:'all',mode:'roadmap',active:true,overflow:false,marble:true,marbleLimitMode:'current',marbleLimit:1,marbleUnit:1000000,steps:100});
 let previousRaw,settings=defaults(),water=0,payment='all',compressed=false,compressAll=false,checklistSignature='',completed=[],undoCounts=[];
 const checklistKey='idleon-fountain-completed-v1';
 const stepKey=a=>[a.water,a.index,a.kind,a.from+1].join(':');
@@ -46,12 +46,14 @@ function render(host,raw){
  let cachedPlan,cachedSettings;
  const draw=()=>{
   const settingsKey=JSON.stringify(settings);
-  if(settingsKey!==cachedSettings){cachedPlan=M.plan(saved,settings);cachedSettings=settingsKey;}
+  if(settingsKey!==cachedSettings){cachedPlan=M.plan(saved,{...settings,marbleBudget:settings.marbleLimitMode==='custom'?settings.marbleLimit*settings.marbleUnit:settings.marbleLimitMode});cachedSettings=settingsKey;}
   const result=cachedPlan,remaining=result.steps.filter(a=>!completed.includes(stepKey(a))),steps=remaining.filter(a=>payment==='all'||a.currency===Number(payment)),doneCount=result.steps.length-remaining.length,income=settings.goal==='income',outside=settings.goal==='outside',roadmap=settings.mode==='roadmap';
   const rows=M.recommendationRows(result.steps,{completed,payment,compress:compressAll?'all':compressed});
   const ready=steps.filter(a=>!a.future).length,needs=result.funding.map((n,c)=>({n,c})).filter(x=>x.n>0);
   const summary=settings.goal==='measurement'?`−${pct(1-1/(1+result.gain))} Minau costs`:`+${pct(result.gain)} ${outside?'balanced source score':income?'modeled income':M.goalLabel(settings)+' multiplier'}`;
   const info=income?'Compares coin value × fill speed for the selected currencies. All currencies uses an equal-weight geometric mean of the currency types currently enabled in your save.':outside?'Balances all 18 outside Fountain multipliers with equal weight. The score is their geometric mean; each row shows the actual affected multiplier.':settings.goal==='marbleIncome'?'Compares marble per fill × fill speed. Water Bender speeds up the marble bar while active; Fountain Filling only speeds up coins.':'Compares this Fountain bonus’s multiplier, not your total account stat. Other Fountain effects on the same system are not combined.';
+  // Detach change handlers before replacing a focused input; blur can fire change again.
+  host.querySelectorAll('[name]').forEach(input=>input.onchange=null);
   host.innerHTML=`<section class="fountain-page"><div class="bonus-system-hero"><div><p class="eyebrow">World 5 · The Hole</p><h2>Fountain Upgrade Optimizer</h2><p>${roadmap?'Long-term upgrade order, with purchases to save for.':'Affordable purchases using your imported balances.'}</p></div><strong>${esc(summary)}</strong></div>
    <div class="fountain-wallet">${saved.balances.map((n,c)=>`<span title="${n} ${M.currencies[c]}">${money(n,c)}</span>`).join('')}</div>
    ${root.FountainTimers.html(raw)}
@@ -61,7 +63,10 @@ function render(host,raw){
    <label>Purchases <select name="steps">${[20,50,100,250,500].map(n=>`<option ${n===settings.steps?'selected':''}>${n}</option>`).join('')}</select></label>
    ${(income||settings.goal==='marbleIncome')?`<label><input type="checkbox" name="active" ${settings.active?'checked':''}> Active in Fountain</label>`:''}
    ${income?`<label><input type="checkbox" name="overflow" ${settings.overflow?'checked':''}> At full capacity</label>`:''}
-   <label><input type="checkbox" name="marble" ${settings.marble?'checked':''}> Include marbleization</label></form>
+   <label><input type="checkbox" name="marble" ${settings.marble?'checked':''}> Include marbleization</label>
+   <label>Marble budget <select name="marbleLimitMode" ${settings.marble?'':'disabled'}><option value="current" ${settings.marbleLimitMode==='current'?'selected':''}>Current balance</option><option value="custom" ${settings.marbleLimitMode==='custom'?'selected':''}>Custom maximum</option><option value="unlimited" ${settings.marbleLimitMode==='unlimited'?'selected':''}>Unlimited</option></select></label>
+   ${settings.marbleLimitMode==='custom'?`<label>Maximum <input aria-label="Maximum marble amount" name="marbleLimit" type="number" min="0" step="any" value="${settings.marbleLimit}" style="width:100px" ${settings.marble?'':'disabled'}></label><label>Units <select name="marbleUnit" ${settings.marble?'':'disabled'}>${[[1,'Marbles'],[1000,'Thousand (K)'],[1000000,'Million (M)'],[1000000000,'Billion (B)']].map(([v,label])=>`<option value="${v}" ${settings.marbleUnit===v?'selected':''}>${label}</option>`).join('')}</select></label>`:''}</form>
+   ${settings.marble?`<p class="fountain-note" data-marble-budget>Marble spending in full plan: ${fmt(result.spent[9])}${settings.marbleLimitMode==='unlimited'?' (unlimited)':` / ${fmt(settings.marbleLimitMode==='current'?saved.balances[9]:settings.marbleLimit*settings.marbleUnit)} maximum`}. This caps total spending across all upgrades, including checked-off purchases. Other currencies can still use the long-term roadmap.</p>`:''}
    <div class="fountain-controls"><label>Costs currency <select data-payment-filter><option value="all" ${payment==='all'?'selected':''}>All currencies</option>${M.currencies.map((name,c)=>`<option value="${c}" ${payment===String(c)?'selected':''}>${name}</option>`).join('')}</select></label><span class="fountain-note">Filters the recommendation list and upgrade catalogue by purchase cost.</span></div>
    ${payment!=='all'?'<p class="fountain-note">Filtered view: row numbers keep the full purchase order. Other-currency steps may come first; gains and funding totals cover the full plan.</p>':''}
    <p class="fountain-note">${esc(info)}</p>
@@ -83,7 +88,7 @@ function render(host,raw){
   host.querySelector('[data-compress]').onchange=e=>{compressed=e.target.checked;if(compressed)compressAll=false;draw();};
   host.querySelector('[data-payment-filter]').onchange=e=>{payment=e.target.value;draw();};
   host.querySelector('form').onsubmit=e=>e.preventDefault();
-  host.querySelectorAll('[name]').forEach(input=>input.onchange=()=>{settings[input.name]=input.type==='checkbox'?input.checked:['steps','target'].includes(input.name)&&input.value!=='all'?Number(input.value):input.value;draw();});
+  host.querySelectorAll('[name]').forEach(input=>input.onchange=()=>{if(input.type==='number'&&(!input.checkValidity()||input.value===''||!Number.isFinite(Number(input.value)*settings.marbleUnit))){input.reportValidity();return;}settings[input.name]=input.type==='checkbox'?input.checked:['steps','target','marbleLimit','marbleUnit'].includes(input.name)&&input.value!=='all'?Number(input.value):input.value;draw();});
   host.querySelectorAll('[data-water]').forEach(button=>button.onclick=()=>{water=Number(button.dataset.water);draw();});
   host.querySelectorAll('[data-detail]').forEach(button=>button.onclick=()=>{
    const u=M.catalog[Number(button.dataset.detail)],panel=host.querySelector('.fountain-detail'),p=M.catalog[u.water*20+u.prerequisite];

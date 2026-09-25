@@ -92,4 +92,17 @@ assert.equal(M.recommendationRows(scattered,{compress:'all',payment:'0'}).length
 const withDone=M.recommendationRows(scattered,{compress:'all',completed:['0:2:level:140']});
 assert.equal(withDone[0].keys.length,39);assert(!withDone[0].keys.includes('0:2:level:140'));assert.equal(withDone[0].to-withDone[0].from-withDone[0].keys.length,1);
 assert.equal(M.recommendationRows([row(0),row(0,{kind:'marble'}),row(1)],{compress:'all'}).length,2);
-console.log('Compress all: scattered 120–160 range, exact costs, mixed funding, filters, completed gaps and separate marble tiers pass.');
+console.log('Compress all: scattered 120ï¿½160 range, exact costs, mixed funding, filters, completed gaps and separate marble tiers pass.');
+
+const cappedState=blank();cappedState.levels.forEach(r=>r.fill(20));cappedState.balances.fill(1e12);cappedState.balances[9]=1000;
+for(const mode of ['now','roadmap'])for(const budget of [0,499,500,1000,3500,1000000]){
+ const capped=M.plan(cappedState,{goal:'income',target:'all',mode,steps:100,marbleBudget:budget});
+ assert(capped.spent[9]<=budget);assert(capped.steps.some(a=>a.currency!==9),'Ordinary purchases continue');
+ if(budget<500)assert(!capped.steps.some(a=>a.currency===9));
+ if(mode==='now')assert(capped.spent[9]<=1000);
+}
+const currentCap=M.plan(cappedState,{mode:'roadmap',target:'all',steps:100,marbleBudget:'current'});assert(currentCap.spent[9]<=1000);
+const exactState=JSON.parse(JSON.stringify(cappedState));exactState.balances.fill(0);exactState.balances[9]=500;
+const exactCap=M.plan(exactState,{goal:'damage',mode:'roadmap',steps:100,marbleBudget:500});assert.equal(exactCap.spent[9],500);
+assert.deepEqual(M.plan(cappedState,{mode:'roadmap',steps:100}),M.plan(cappedState,{mode:'roadmap',steps:100,marbleBudget:'unlimited'}));
+console.log('Marble budgets: exact boundary, zero, current wallet, cumulative cap, now/roadmap and unlimited pass.');

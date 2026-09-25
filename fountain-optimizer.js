@@ -99,10 +99,11 @@ function plan(initial,settings={}){
  if(opts.goal==='income'&&opts.target!=='all'&&!targetOpen(state,opts.target))return result('Unlock this currency first. Use the upgrade catalogue to see its prerequisites.');
  if(opts.goal==='income'&&opts.target!=='all'&&!activeCurrencies(state).includes(opts.target))return result('This currency is ignored in your save. Enable it in the Fountain before using its income plan.');
  if(opts.goal==='marbleIncome'&&state.levels[1][10]===0)return result('Unlock Marble Filling first to start marble production.');
+ const marbleBudget=opts.marbleBudget==='current'?initial.balances[9]:opts.marbleBudget==null||opts.marbleBudget==='unlimited'?Infinity:number(opts.marbleBudget);
  const limit=Math.max(1,Math.min(500,Math.floor(number(settings.steps)||100)));
  let future=false;
  for(let i=0;i<limit;i++){
-  const choices=candidates(state,{...opts,referenceBalances:future?initial.balances:undefined}).filter(a=>a.gain>1e-12&&Number.isFinite(a.gain)&&Number.isFinite(spent[a.currency]+a.cost)&&Number.isFinite(funding[a.currency]+Math.max(0,a.cost-state.balances[a.currency])));
+  const choices=candidates(state,{...opts,referenceBalances:future?initial.balances:undefined}).filter(a=>(a.currency!==9||a.cost<=marbleBudget-spent[9])&&a.gain>1e-12&&Number.isFinite(a.gain)&&Number.isFinite(spent[a.currency]+a.cost)&&Number.isFinite(funding[a.currency]+Math.max(0,a.cost-state.balances[a.currency])));
   const next=choices.find(a=>a.affordable)||(opts.mode==='roadmap'?choices[0]:null);
   if(!next)break;
   const shortfall=Math.max(0,next.cost-state.balances[next.currency]);

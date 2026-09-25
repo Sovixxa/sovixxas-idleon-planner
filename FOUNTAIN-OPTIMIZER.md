@@ -104,3 +104,5 @@ The browser test uses the same local Playwright installation as the other
 browser checks and captures desktop/mobile images under `audit/`.
 
 Compress all groups every remaining purchase of the same upgrade across the whole selected plan, including scattered purchases. Each summary shows its starting and target level, remaining purchase count, summed cost, and funded/future counts. Normal levels and marble tiers remain separate. These totals are not purchase order; use the ordered view for buying order and step gains. Checked-off gaps are labeled, and Done all/Undo last track precisely the remaining purchases in the group. Currency filters still apply.
+
+The Marble budget defaults to Current balance in the UI. Custom maximum accepts a nonnegative amount with base/K/M/B units; Unlimited restores uncapped roadmap planning. The limit covers cumulative marble spending across the entire plan (including checked-off steps), not each purchase, and is enforced before choosing recommendations. Other currencies keep their existing funding rules; Buy now never exceeds the imported wallet even with a larger custom cap.
