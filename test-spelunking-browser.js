@@ -31,6 +31,9 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'C:/Users/Sofia/AppData/Lo
  const customOff=Number(await page.locator('.fountain-plan tbody tr').first().locator('td').nth(4).locator('[title]').getAttribute('title').then(x=>x.split(' ')[0]));assert.equal(customOff,priceOff);
  await page.locator('[data-hoard]').check();await page.locator('select[name="hoardMode"]').selectOption('calculated');
  const restored=Number(await page.locator('.fountain-plan tbody tr').first().locator('td').nth(4).locator('[title]').getAttribute('title').then(x=>x.split(' ')[0]));assert.equal(restored,priceOn);
+ assert((await page.locator('[data-cost-status]').innerText()).includes('Automatic account discounts applied'));
+ await page.locator('[data-discount-breakdown] summary').click();assert((await page.locator('[data-discount-breakdown]').innerText()).includes('Jelly Operator: 10%'));
+ await page.locator('[data-discount-breakdown] summary').click();
  assert(await page.locator('.spelunk-amber').count()>0);
  assert((await page.locator('.fountain-plan thead').innerText()).includes('POW gain'));
  assert((await page.locator('.fountain-plan thead').innerText()).includes('Amber gain'));
@@ -52,7 +55,10 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'C:/Users/Sofia/AppData/Lo
  await page.locator('[data-compress]').uncheck();assert.equal(await page.locator('.fountain-plan tbody tr').count(),100-groupCount);
  assert(!(await readRows()).some(row=>row.name===firstName),'Done all checks off the entire group');
  await page.locator('[data-undo]').click();assert.equal(await page.locator('.fountain-plan tbody tr').count(),100);
- await page.locator('select[name="goal"]').selectOption('amber');assert((await page.locator('.fountain-plan-summary').innerText()).includes('Amber amount'));
+ await page.locator('select[name="goal"]').selectOption('amber');assert((await page.locator('.fountain-plan-summary').innerText()).includes('expected Amber'));
+ const scenarioInput=page.locator('[data-scenario][name="delveDepth"]');await scenarioInput.fill('20');await scenarioInput.press('Tab');assert.equal(await scenarioInput.inputValue(),'20');
+ const clearInput=page.locator('[data-scenario][name="clearedDepths"]');await clearInput.fill('10');await clearInput.press('Tab');assert.equal(await clearInput.inputValue(),'10');
+ await scenarioInput.fill('1');await scenarioInput.press('Tab');await clearInput.fill('0');await clearInput.press('Tab');
  await page.locator('select[name="steps"]').selectOption('20');assert.equal(await page.locator('.fountain-plan tbody tr').count(),20);
  await page.locator('[data-compress]').check();assert(await page.locator('.fountain-plan tbody tr').count()<=20);
  await page.getByText('Match your in-game upgrade costs',{exact:true}).click();

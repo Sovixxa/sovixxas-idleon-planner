@@ -25,3 +25,12 @@ assert.throws(()=>O.hoardMultiplier(s,true,100),RangeError);assert.throws(()=>O.
 near(O.calibration(tiny,0,O.cost(tiny,0,.2),true,50),.4);
 const custom=O.plan(s,{steps:1,amberHoard:true,hoardCustomPercent:50});near(custom.steps[0].cost,O.cost(s,custom.steps[0].i,.5));
 assert.equal(O.plan(s,{steps:1,amberHoard:false,hoardCustomPercent:50}).spent,planOff.spent);
+// Client ShopUpgCost: meals stack separately; use the better sushi bonus plus Jelly, capped at 90%.
+const D=c.PrayerMath.calculateSpelunkingDiscounts;
+near(D(100,49,30,50,10).multiplier,.5*.4);near(D(100,50,30,50,10).multiplier,(1/3)*.4);
+near(D(100,500,30,50,60).multiplier,(1/3)*.1);assert.equal(D(0,0,30,50,0).sushiBonus,50);
+near(result.context.discounts.multiplier,0.046868832059591865);assert.equal(result.context.discounts.jellyBonus,10);assert.equal(result.context.discounts.mealFactor,2);
+assert.deepEqual(result.context.warnings,[]);assert(result.context.outsidePools[63]>100);assert(result.context.outsidePools[64]>100);assert.equal(result.context.outsideCurves[50].length,501);assert.equal(result.context.outsideCurves[5].length,151);
+const withContext={...s,...result.context};const automatic=O.plan(withContext,{steps:1,amberHoard:true});near(automatic.spent,O.cost(withContext,automatic.steps[0].i,result.context.discounts.multiplier*s.hoard.multiplier));
+const manual=O.plan(withContext,{steps:1,amberHoard:true,discount:.2});near(manual.spent,O.cost(withContext,manual.steps[0].i,.2*s.hoard.multiplier));
+console.log('Automatic cooking/Sushi/Jelly stacking, 90% cap, account stat pools and calibration override pass.');

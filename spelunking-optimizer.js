@@ -1,25 +1,63 @@
 (function(root){'use strict';
 const n=v=>Number.isFinite(Number(v))?Math.max(0,Number(v)):0,parse=v=>{try{return typeof v==='string'?JSON.parse(v):v;}catch{return null;}},sum=a=>(a||[]).reduce((s,v)=>s+n(v),0);
-function decode(raw,catalog){const d=parse(raw?.data)||raw||{},s=parse(d.Spelunk);if(!Array.isArray(s?.[5]))return null;return {catalog,levels:catalog.map((_,i)=>s[5][i]==null?-1:Math.max(-1,Math.floor(Number(s[5][i])||0))),amber:n(s[4]?.[0]),skill:sum(Object.keys(d).filter(k=>/^Lv0_\d+$/.test(k)).map(k=>parse(d[k])?.[19])),depth:sum(s[1]),discoveries:(s[6]||[]).length,haul:sum((s[2]||[]).map(v=>Math.ceil(Math.log(Math.max(1,n(v)))/2.30259))),grand:sum(s[44]),manic:sum((s[47]||[]).slice(0,s[1]?.length||0)),stack:n(s[4]?.[8]),overstim:n(s[4]?.[1])};}
+function decode(raw,catalog){const d=parse(raw?.data)||raw||{},s=parse(d.Spelunk);if(!Array.isArray(s?.[5]))return null;return {catalog,levels:catalog.map((_,i)=>s[5][i]==null?-1:Math.max(-1,Math.floor(Number(s[5][i])||0))),amber:n(s[4]?.[0]),skill:sum(Object.keys(d).filter(k=>/^Lv0_\d+$/.test(k)).map(k=>parse(d[k])?.[19])),depth:sum(s[1]),discoveries:(s[6]||[]).length,haul:sum((s[2]||[]).map(v=>Math.ceil(Math.log(Math.max(1,n(v)))/2.30259))),grand:sum(s[44]),manic:sum((s[47]||[]).slice(0,s[1]?.length||0)),stack:n(s[4]?.[8]),overstim:n(s[4]?.[1]),tutorialStep:parse(d.OptionsListAccount??d.OptLacc)?.[478]??8};}
 function bonus(s,i){let v=n(s.catalog[i]?.[4])*Math.max(0,s.levels[i]||0);if(i===0)v*=s.skill;if(i===8)v*=1+s.skill/100;if([1,10].includes(i))v*=1+5*s.discoveries/100;if(i===2)v*=2+s.depth/100;if(i===9)v*=1+s.depth/100;if(i===3)v*=1+3*s.haul/100;if([44,45,46].includes(i))v*=s.grand;if([54,55,56].includes(i))v*=1+5*s.manic/100;if([59,60,61].includes(i))v*=s.stack;return v;}
-const powerIds=[0,1,2,3,14,15,16,17,46,54],amberIds=[6,7,8,9,10,20,21,41,44,51,60];
+const powerIds=[0,1,2,3,14,15,16,17,46,54],amberIds=[6,7,8,9,10,20,21,35,41,42,44,51,52,60,67];
 // Outside / utility scores compare direct shop sources, not final account totals.
 const misc=[
  [4,'Stamina per 10 skill levels','flat'],[5,'Stamina regeneration','percent'],[13,'Daily biggest-haul Amber','percent'],
  [19,'Loot retained at toll exit','retained'],[22,'Escape-rope Amber','percent'],[23,'Elixir types','flat'],[24,'Elixir slots','slots'],[25,'Copies of each elixir','slots'],[26,'Elixir refill chance','chance'],
- [29,'Random-junk drop bonus','percent'],[31,'Shadow Strike chance','chance'],[32,'Repeat Shadow Strikes','chance'],[33,'Object damage','percent'],[35,'Amber per cleared depth','percent'],[37,'Boss elixirs','flat'],[38,'Nova hit chance','nova'],[39,'Elixir Nova chance','chance'],[42,'Double-Amber chance','chance'],[43,'Grand Discovery chance','percent'],[45,'Spelunking EXP','percent'],
- [47,'Kattlekruk bubble levels','percent'],[48,'Extra statues on double drops','percent'],[49,'Masterclass resources','percent'],[50,'Drop rate','percent'],[52,'Amber drop chance bonus','chance'],[55,'Grand Discovery chance','percent'],[56,'Spelunking efficiency','percent'],[57,'Memorized elixirs','flat'],[58,'Double memory chance','chance'],[59,'Stamina EXP','percent'],[61,'Max stamina','flat'],[62,'Royal Guardian talent points','flat'],[63,'Research EXP','percent'],[64,'Total damage','percent'],[65,'Priest Purity EXP','percent']
+ [29,'Random-junk drop bonus','percent'],[31,'Shadow Strike chance','chance'],[32,'Repeat Shadow Strikes','chance'],[33,'Object damage','percent'],[35,'Amber per cleared depth','percent'],[37,'Boss elixirs','flat'],[38,'Nova hit chance','nova'],[39,'Elixir Nova chance','chance'],[42,'Expected extra Amber drops','percent'],[43,'Grand Discovery chance','percent'],[45,'Spelunking EXP','percent'],
+ [47,'Kattlekruk bubble levels','percent'],[48,'Statues per double-drop proc','flat'],[49,'Masterclass resources','percent'],[50,'Drop rate','percent'],[52,'Amber drop chance','chance'],[55,'Grand Discovery chance','percent'],[56,'Spelunking efficiency','percent'],[57,'Memorized elixirs','flat'],[58,'Starting memory uses','flat'],[59,'Stamina EXP','percent'],[61,'Max stamina','flat'],[62,'Royal Guardian talent points','flat'],[63,'Research EXP','percent'],[64,'Total damage','percent'],[65,'Priest Purity EXP','percent']
 ].map(([i,label,kind])=>({i,label,kind}));
-function source(s,x){const v=bonus(s,x.i);return x.kind==='retained'?100-Math.max(10,50-v):x.kind==='slots'?1+v:x.kind==='nova'?20+v:v;}
-function sourceMetric(s,x){return 1+source(s,x)/(x.kind==='flat'||x.kind==='slots'?1:100);}
+function source(s,x){const v=bonus(s,x.i);if(x.i===48)return Math.round(2+(v+n(s.statueDoubleBonus))/100);if(x.i===26)return Math.min(60,v+n(s.elixirPreservation));if(x.i===42)return amberChances(s).extra*100;if(x.i===52)return amberChances(s).drop*100;if(x.i===58)return Math.floor(1+v/100);return x.kind==='retained'?100-Math.max(10,50-v):x.kind==='slots'?1+v:x.kind==='nova'?20+v:v;}
+function sourceMetric(s,x){
+ const curve=s.outsideCurves?.[x.i];if(curve){const level=Math.max(0,s.levels[x.i]||0);return curve[Math.min(curve.length-1,level)]/curve[0];}
+ const pool=s.outsidePools?.[x.i];if(Number.isFinite(pool)&&pool>0)return (pool+bonus(s,x.i))/pool;
+ if(x.i===26)return 1/(1-source(s,x)/100);
+ if(x.i===58||x.i===48)return source(s,x);
+ return 1+source(s,x)/(x.kind==='flat'||x.kind==='slots'?1:100);}
 function effects(before,after){return misc.map(x=>({...x,before:source(before,x),after:source(after,x)})).filter(x=>x.after!==x.before);}
 function amberTier(s){const tiers=[[66,'Pink',1e36,'#f58cdb'],[51,'Red',1e21,'#ff7474'],[41,'Green',1e9,'#83e879'],[20,'Blue',1e3,'#75c7ff']];const t=tiers.find(([i])=>s.levels[i]>0)||[-1,'Orange',1,'#ffb255'];return {name:t[1],divisor:t[2],color:t[3]};}
+function amberChances(s){const b=i=>bonus(s,i),swap=b(67),raw=b(7);return {drop:Math.min(.8,(15+45*raw/(250+raw)+b(52))/100/(1+9*swap)),extra:(5+b(42))/100/(1+19*swap)};}
+function amberAmount(s){const b=i=>bonus(s,i),product=ids=>ids.reduce((v,i)=>v*(1+b(i)/100),1);return (1+(b(7)+b(20)+b(41)+b(51))/100)*(1+b(6)*(30+b(6))*s.overstim/100)*product([8,9,10,44,60])*(1+b(21)*Math.max(1,n(s.delveDepth)||1)/150)*(1+b(35)*n(s.clearedDepths)/100)*(1+14*b(67));}
 function metric(s,goal){
  if(goal==='balanced')return Math.sqrt(metric(s,'power'))*Math.sqrt(metric(s,'amber'));
- if(goal==='outside')return Math.exp(misc.reduce((v,x)=>v+Math.log(sourceMetric(s,x)),0)/misc.length);const b=i=>bonus(s,i),product=ids=>ids.reduce((v,i)=>v*(1+b(i)/100),1);if(goal==='amber')return (1+(b(7)+b(20)+b(41)+b(51))/100)*(1+b(6)*(30+b(6))*s.overstim/100)*product([8,9,10,44,60])*(1+b(21)/150);return (1+b(0))*product([1,2,3,46,54])*(1+(b(14)+b(15)+b(16)+b(17))/100);}
+ if(goal==='outside')return Math.exp(misc.reduce((v,x)=>v+Math.log(sourceMetric(s,x)),0)/misc.length);if(goal==='amber'){const chance=amberChances(s);return amberAmount(s)*chance.drop*(1+chance.extra);}if(s.tutorialStep<8)return 2;const b=i=>bonus(s,i),product=ids=>ids.reduce((v,i)=>v*(1+b(i)/100),1);return (1+b(0))*product([1,2,3,46,54])*(1+(b(14)+b(15)+b(16)+b(17))/100);}
 function cost(s,i,discount=1){const x=s.catalog[i],l=s.levels[i];return .25*discount*(10+l)*Number(x[1])*9.5**Number(x[7])*6.3**Number(x[8])*(i>=52?1e7:1)*(i>=66?1e9:1)*Number(x[2])**l+l*l+5*l;}
 function hoardMultiplier(s,enabled,customPercent=null){if(!enabled)return 1;if(customPercent!==null){if(!Number.isFinite(customPercent)||customPercent<0||customPercent>=100)throw new RangeError('Custom Amber Hoard reduction must be between 0% and less than 100%.');return 1-customPercent/100;}return enabled&&Number.isFinite(s.hoard?.multiplier)&&s.hoard.multiplier>0?s.hoard.multiplier:1;}
 function calibration(s,i,price,hoardEnabled=false,customPercent=null){const l=s.levels[i],q=l*l+5*l,base=cost(s,i)-q;return (price-q)/base/hoardMultiplier(s,hoardEnabled,customPercent);}
-function plan(initial,options={}){const s={...initial,levels:[...initial.levels]},steps=[],start=metric(s,options.goal),discount=(options.discount??1)*hoardMultiplier(initial,options.amberHoard,options.hoardCustomPercent??null);let spent=0,funding=0,future=false;const ids=options.goal==='outside'?misc.filter(x=>options.scope==='account'?[47,48,49,50,62,63,64,65].includes(x.i):options.scope==='utility'?![47,48,49,50,62,63,64,65].includes(x.i):true).map(x=>x.i):options.goal==='balanced'?[...powerIds,...amberIds]:options.goal==='amber'?amberIds:powerIds;for(let k=0;k<Math.min(5000,Math.max(0,options.steps??100));k++){const before=metric(s,options.goal),beforePower=metric(s,'power'),beforeAmber=metric(s,'amber'),all=[];for(const i of ids){if(!s.catalog[i]||s.levels[i]<0||s.levels[i]>=Number(s.catalog[i][3]))continue;const price=cost(s,i,discount);if(!Number.isFinite(price)||price<=0)continue;s.levels[i]++;const gain=metric(s,options.goal)/before-1,powerGain=metric(s,'power')/beforePower-1,amberGain=metric(s,'amber')/beforeAmber-1;s.levels[i]--;if(gain>0&&Number.isFinite(gain))all.push({i,cost:price,gain,powerGain,amberGain,score:Math.log(gain)-Math.log(price)});}const affordable=all.filter(a=>a.cost<=s.amber),pool=affordable.length?affordable:options.mode==='now'?[]:all;pool.sort((a,b)=>b.score-a.score||a.i-b.i);const a=pool[0];if(!a)break;const shortfall=Math.max(0,a.cost-s.amber);funding+=shortfall;future ||= shortfall>0;s.amber=Math.max(0,s.amber-a.cost);spent+=a.cost;const previous={...s,levels:[...s.levels]},from=s.levels[a.i]++;a.effects=effects(previous,s);steps.push({...a,from,to:from+1,shortfall,future,key:a.i+':'+(from+1),order:k+1});}return {steps,spent,funding,gain:metric(s,options.goal)/start-1,powerGain:metric(s,'power')/metric(initial,'power')-1,amberGain:metric(s,'amber')/metric(initial,'amber')-1,effects:effects(initial,s),state:s};}
-const api={decode,bonus,metric,cost,calibration,plan,misc,source,effects,amberTier,hoardMultiplier};if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.SpelunkingOptimizer=api;
+function discount(s,options={}){return (options.discount??s.discounts?.multiplier??1)*hoardMultiplier(s,options.amberHoard,options.hoardCustomPercent??null);}
+function plan(initial,options={}){
+ initial={...initial,delveDepth:options.delveDepth??initial.delveDepth??1,clearedDepths:options.clearedDepths??initial.clearedDepths??0};
+ const s={...initial,levels:[...initial.levels]},steps=[],start=metric(s,options.goal),costMultiplier=discount(initial,options),limit=Math.min(5000,Math.max(0,options.steps??100));
+ let spent=0,funding=0,future=false;
+ const accountIds=[47,48,49,50,62,63,64,65];
+ const ids=options.goal==='outside'?misc.filter(x=>options.scope==='account'?accountIds.includes(x.i):options.scope==='utility'?!accountIds.includes(x.i):true).map(x=>x.i):options.goal==='balanced'?[...powerIds,...amberIds]:options.goal==='amber'?amberIds:powerIds;
+ while(steps.length<limit){
+  const before=metric(s,options.goal),all=[];
+  for(const i of ids){
+   if(!s.catalog[i]||s.levels[i]<0||(i!==0&&s.levels[Number(s.catalog[i][6])]<0)||s.levels[i]>=Number(s.catalog[i][3]))continue;
+   const from=s.levels[i],maxBatch=[48,58].includes(i)?Math.min(limit-steps.length,Number(s.catalog[i][3])-from):1;
+   let price=0;
+   // Rounded bonuses buy the next useful breakpoint as a batch; intermediate levels remain in the checklist.
+   for(let count=1;count<=maxBatch;count++){
+    price+=cost(s,i,costMultiplier);s.levels[i]++;
+    if(!Number.isFinite(price)||price<=0)break;
+    const gain=metric(s,options.goal)/before-1;
+    if(gain>0&&Number.isFinite(gain)){all.push({i,cost:price,count,score:Math.log(gain)-Math.log(price)});break;}
+   }
+   s.levels[i]=from;
+  }
+  const affordable=all.filter(a=>a.cost<=s.amber),pool=affordable.length?affordable:options.mode==='now'?[]:all;
+  pool.sort((a,b)=>b.score-a.score||a.i-b.i);const selected=pool[0];if(!selected)break;
+  for(let j=0;j<selected.count;j++){
+   const i=selected.i,price=cost(s,i,costMultiplier),shortfall=Math.max(0,price-s.amber),previous={...s,levels:[...s.levels]};
+   funding+=shortfall;future ||= shortfall>0;s.amber=Math.max(0,s.amber-price);spent+=price;const from=s.levels[i]++;
+   steps.push({i,cost:price,from,to:from+1,shortfall,future,key:i+':'+(from+1),order:steps.length+1,score:selected.score,gain:metric(s,options.goal)/metric(previous,options.goal)-1,powerGain:metric(s,'power')/metric(previous,'power')-1,amberGain:metric(s,'amber')/metric(previous,'amber')-1,effects:effects(previous,s),breakpoint:selected.count>1?from+selected.count-j:null});
+  }
+ }
+ return {steps,spent,funding,gain:metric(s,options.goal)/start-1,powerGain:metric(s,'power')/metric(initial,'power')-1,amberGain:metric(s,'amber')/metric(initial,'amber')-1,effects:effects(initial,s),state:s};
+}
+const api={decode,bonus,metric,cost,calibration,plan,misc,source,effects,amberTier,hoardMultiplier,amberChances,amberAmount,discount};if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.SpelunkingOptimizer=api;
 })(typeof window!=='undefined'?window:globalThis);

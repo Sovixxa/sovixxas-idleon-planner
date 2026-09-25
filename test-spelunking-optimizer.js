@@ -12,3 +12,22 @@ const outside=M.plan(s,{goal:'outside',scope:'account',steps:100});assert(outsid
 for(const [i,name,divisor] of [[-1,'Orange',1],[20,'Blue',1e3],[41,'Green',1e9],[51,'Red',1e21],[66,'Pink',1e36]]){const fixture={...s,levels:catalog.map(()=>0)};if(i>=0)fixture.levels[i]=1;assert.equal(M.amberTier(fixture).name,name);assert.equal(M.amberTier(fixture).divisor,divisor);}
 const long=M.plan(s,{goal:'balanced',steps:5000});assert.equal(long.steps.length,5000);assert.equal(JSON.stringify(s),original);
 console.log('Combined gains, 5,000-step plans, outside/utility filters and client Amber denominations pass.');
+// Amber yield includes the primary capped roll and the expected extra-drop roll.
+const rocks={...s,levels:catalog.map(()=>0),delveDepth:1,clearedDepths:0};
+assert.equal(M.amberChances(rocks).drop,.15);assert.equal(M.amberChances(rocks).extra,.05);
+rocks.levels[7]=10;const rawBonus=25*10;assert.equal(M.amberChances(rocks).drop,(15+45*rawBonus/(250+rawBonus))/100);
+const noSwap=M.metric(rocks,'amber');rocks.levels[67]=1;const expectedSwapRatio=15/10*((1+.05/20)/(1+.05));assert(Math.abs(M.metric(rocks,'amber')/noSwap-expectedSwapRatio)<1e-12);
+rocks.levels[52]=10000;assert.equal(M.amberChances(rocks).drop,.8,'80% cap applies after Supply Swap division');
+rocks.levels[42]=10;assert.equal(M.amberChances(rocks).extra,.15/20);
+const capState={...s,levels:[...s.levels],elixirPreservation:20};capState.levels[26]=40;const refill=M.misc.find(x=>x.i===26),atCap=M.source(capState,refill);capState.levels[26]++;assert.equal(atCap,60);assert.equal(M.source(capState,refill),60);
+const tutorial={...s,tutorialStep:7};assert.equal(M.metric(tutorial,'power'),2);assert.equal(M.plan(tutorial,{goal:'power'}).steps.length,0);
+const deeper={...s,delveDepth:20,clearedDepths:10};assert(M.metric(deeper,'amber')>M.metric({...s,delveDepth:1,clearedDepths:0},'amber'));
+// An otherwise eligible Supply Swap must be evaluated as an Amber purchase.
+const swapOnly={...rocks,levels:catalog.map(x=>Number(x[3])),amber:1e250};swapOnly.levels[67]=0;assert(M.plan(swapOnly,{goal:'amber',steps:1}).steps.some(x=>x.i===67));
+console.log('Expected Amber rolls, Supply Swap, shared preservation cap, run depth and tutorial lock pass.');
+// Plateau upgrades rank the full cost of reaching the next useful breakpoint.
+const milestones={...s,statueDoubleBonus:0,levels:catalog.map(x=>Number(x[3])),amber:0};milestones.levels[48]=140;
+const milestonePlan=M.plan(milestones,{goal:'outside',scope:'account',steps:20});assert.equal(milestonePlan.steps.length,10);assert(milestonePlan.steps.every(x=>x.i===48));assert(milestonePlan.steps.slice(0,-1).every(x=>x.effects.length===0));assert.equal(milestonePlan.steps.at(-1).effects[0].after,4);assert.equal(milestonePlan.spent,milestonePlan.funding);
+assert.equal(M.plan(milestones,{goal:'outside',scope:'account',steps:9}).steps.length,0,'Do not spend on a partial breakpoint');assert.equal(M.plan(milestones,{goal:'outside',scope:'account',mode:'now',steps:20}).steps.length,0);
+const memory={...milestones,levels:catalog.map(x=>Number(x[3]))};memory.levels[58]=90;const memories=M.plan(memory,{goal:'outside',scope:'utility',steps:20});assert.equal(memories.steps.length,10);assert.equal(memories.steps.at(-1).effects[0].after,2);
+console.log('Rounded statue and memorized-elixir breakpoint batches preserve budget and purchase limits.');
