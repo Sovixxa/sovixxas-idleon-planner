@@ -20,6 +20,17 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'C:/Users/Sofia/AppData/Lo
  const priceOff=Number(await page.locator('.fountain-plan tbody tr').first().locator('td').nth(4).locator('[title]').getAttribute('title').then(x=>x.split(' ')[0]));
  assert(priceOff>priceOn,'Turning off Amber Hoard removes its discount');
  await page.locator('[data-hoard]').check();
+ await page.locator('select[name="hoardMode"]').selectOption('custom');
+ const customInput=page.locator('[data-hoard-custom]');await customInput.fill('50');await customInput.press('Tab');
+ assert((await page.locator('[data-hoard-custom-status]').innerText()).includes('50% cost reduction applied'));
+ const customCost=Number(await page.locator('.fountain-plan tbody tr').first().locator('td').nth(4).locator('[title]').getAttribute('title').then(x=>x.split(' ')[0]));assert(customCost<priceOn);
+ await customInput.fill('100');await customInput.press('Tab');assert.equal(await customInput.evaluate(e=>e.checkValidity()),false);
+ assert((await page.locator('[data-hoard-custom-status]').innerText()).includes('50%'),'Invalid input does not change the plan');
+ await customInput.fill('50');await customInput.press('Tab');
+ await page.locator('[data-hoard]').uncheck();assert(await page.locator('[data-hoard-custom]').isDisabled());
+ const customOff=Number(await page.locator('.fountain-plan tbody tr').first().locator('td').nth(4).locator('[title]').getAttribute('title').then(x=>x.split(' ')[0]));assert.equal(customOff,priceOff);
+ await page.locator('[data-hoard]').check();await page.locator('select[name="hoardMode"]').selectOption('calculated');
+ const restored=Number(await page.locator('.fountain-plan tbody tr').first().locator('td').nth(4).locator('[title]').getAttribute('title').then(x=>x.split(' ')[0]));assert.equal(restored,priceOn);
  assert(await page.locator('.spelunk-amber').count()>0);
  assert((await page.locator('.fountain-plan thead').innerText()).includes('POW gain'));
  assert((await page.locator('.fountain-plan thead').innerText()).includes('Amber gain'));

@@ -20,3 +20,8 @@ const noStatues={...s,hoard:{...s.hoard,multiplier:1}};assert.equal(O.plan(noSta
 console.log('Amber Hoard: imported talents, highest guardian, added-level cap, super talents, statue sum, fixed surcharge, calibration and toggle pass.');
 const tiny={catalog:[['Test',.07,1.5,100,1,0,0,0,0]],levels:[10],hoard:{multiplier:.5}};const q=150;
 near(O.cost(tiny,0,.5)-q,(O.cost(tiny,0)-q)*.5);assert(O.cost(tiny,0,.5)>O.cost(tiny,0)*.5,'Fixed surcharge must never receive the Hoard discount');near(O.calibration(tiny,0,O.cost(tiny,0,.2),true),.4);
+near(O.hoardMultiplier(s,true,50),.5);near(O.hoardMultiplier(s,false,50),1);near(O.hoardMultiplier(s,true,0),1);
+assert.throws(()=>O.hoardMultiplier(s,true,100),RangeError);assert.throws(()=>O.hoardMultiplier(s,true,-1),RangeError);assert.throws(()=>O.hoardMultiplier(s,true,NaN),RangeError);
+near(O.calibration(tiny,0,O.cost(tiny,0,.2),true,50),.4);
+const custom=O.plan(s,{steps:1,amberHoard:true,hoardCustomPercent:50});near(custom.steps[0].cost,O.cost(s,custom.steps[0].i,.5));
+assert.equal(O.plan(s,{steps:1,amberHoard:false,hoardCustomPercent:50}).spent,planOff.spent);
