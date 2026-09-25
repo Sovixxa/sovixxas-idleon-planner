@@ -41,7 +41,7 @@ const effectText=e=>`${e.lower?'−':'+'}${pct(e.lower?1-e.before/e.after:e.gain
 function render(host,raw){
  if(raw!==previousRaw){previousRaw=raw;settings=defaults();water=0;payment='all';compressed=false;compressAll=false;}
  let saved;try{saved=M.decode(raw);}catch{}
- if(!saved){host.innerHTML='<section class="bonus-system-empty"><h2>Fountain Upgrade Optimizer</h2><p>Import an IdleOn save with Fountain data to plan upgrades.</p></section>';return;}
+ if(!saved){host.innerHTML='<section class="bonus-system-empty section-head"><h2>Fountain Upgrade Optimizer</h2><p>Import an IdleOn save with Fountain data to plan upgrades.</p></section>';return;}
  loadChecklist(JSON.stringify([raw?.charNames||[],saved]));
  let cachedPlan,cachedSettings;
  const draw=()=>{
@@ -97,6 +97,7 @@ function render(host,raw){
    panel.classList.remove('detail-dismissed');panel.querySelector('button').onclick=()=>panel.classList.add('detail-dismissed');
   });
   currencyPickers(host);
+  host.bonusAfterRender?.();
  };
  draw();
 }
