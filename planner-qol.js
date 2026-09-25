@@ -1,7 +1,7 @@
 (function(root){
   'use strict';
   const KEY='idleon-planner-qol-v1', SNAPSHOT_KEY='idleon-planner-snapshot-v1';
-  const EXTRA_KEYS=['idleon-planner-quick-notes-v1','idleon-planner-quick-notes-collapsed-v1','idleon-planner-quick-notes-position-v1','idleon-account-review-plan-v1'];
+  const EXTRA_KEYS=['idleon-dailies-v1','idleon-planner-quick-notes-v1','idleon-planner-quick-notes-collapsed-v1','idleon-planner-quick-notes-position-v1','idleon-account-review-plan-v1'];
   const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const parse=value=>{try{return typeof value==='string'?JSON.parse(value):value;}catch{return null;}};
   const defaults=()=>({favorites:[],notes:{},goals:[],tasks:[],pages:{},groups:{},lastPage:'home',resetHour:0,resetDay:1});
@@ -162,7 +162,7 @@
     }
     const content=doc.getElementById('worldContent');
     function fieldKey(el){if(el.id)return 'field:#'+el.id;return 'field:'+el.tagName+':'+(el.name||el.getAttribute('aria-label')||el.getAttribute('placeholder')||Array.from(el.attributes).filter(a=>a.name.startsWith('data-')).map(a=>a.name).join('|'));}
-    const controls=()=>[...content.querySelectorAll('select,input[type="search"],input[type="checkbox"]')].filter(el=>el.id||el.name||el.getAttribute('aria-label')||el.getAttribute('placeholder')||Array.from(el.attributes).some(a=>a.name.startsWith('data-')));
+    const controls=()=>[...content.querySelectorAll('select,input[type="search"],input[type="checkbox"]')].filter(el=>!el.closest('.dailies')).filter(el=>el.id||el.name||el.getAttribute('aria-label')||el.getAttribute('placeholder')||Array.from(el.attributes).some(a=>a.name.startsWith('data-')));
     const tabKey=el=>Array.from(el.attributes).find(a=>(/^data-.*(?:tab|page|loadout|preset)$/.test(a.name)||a.name==='data-category')&&!['data-skill-tab','data-hole-group','data-page'].includes(a.name));
     const pref=()=>settings.pages[current]||(settings.pages[current]={});
     content.addEventListener('input',remember,true);content.addEventListener('change',remember,true);

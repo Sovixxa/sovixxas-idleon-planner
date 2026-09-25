@@ -1,5 +1,12 @@
 # Fountain upgrade optimizer
 
+Compress upgrades combines consecutive purchases of the same upgrade and
+purchase type into a from/to level range. Costs and funding shortfalls add;
+gains compound. Groups stop at affordability boundaries, intervening purchases,
+filtered-out steps and checked-off levels, preserving the full plan's order.
+Done all checks off every level in a group; Undo last restores the whole group,
+including after refresh. Switching compression off restores individual rows.
+
 Fill timers show full-bar durations both standing in the Fountain and away,
 plus remaining durations from `Holes[33]` saved progress. Base requirements are
 7,200 / 36,000 / 90,000 for coin / marble / duck bars. Coin speed includes

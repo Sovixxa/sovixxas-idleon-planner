@@ -1,4 +1,5 @@
 'use strict';
+// Dailies uses its checked-in catalog; regeneration is a local maintenance step.
 const fs=require('fs'),path=require('path'),crypto=require('crypto');
 const root=__dirname,out=path.join(root,'dist');
 // The checked-in catalog is the deployable data source. Its generator is a

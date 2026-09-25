@@ -72,3 +72,13 @@ for(const goal of ['income','outside','damage','measurement','marbleIncome']){
 }
 assert.equal(JSON.stringify(decoded),snapshot);
 console.log('Fountain goals and roadmap: 18 outside targets, balanced scoring, Minau reduction, marble speed, ignored currencies, 500 purchases, funding replay and immutable imports pass.');
+
+const row=(from,extra={})=>({water:0,index:2,kind:'level',currency:0,from,cost:10*(from+1),gain:.1,shortfall:0,future:false,effects:[{label:'Example',before:100*1.1**from,after:100*1.1**(from+1),gain:.1}],...extra});
+const sequence=[row(0),row(1),row(2,{future:true,shortfall:30}),row(3,{future:true,shortfall:40})],unchanged=JSON.stringify(sequence);
+const grouped=M.recommendationRows(sequence,{compress:true});assert.equal(grouped.length,2);assert.equal(grouped[0].from,0);assert.equal(grouped[0].to,2);assert.equal(grouped[0].cost,30);near(grouped[0].gain,.21);near(grouped[0].effects[0].gain,.21);assert.equal(grouped[1].shortfall,70);assert.equal(grouped[1].startOrder,3);assert.equal(grouped[1].endOrder,4);
+assert.equal(M.recommendationRows(sequence).length,4);
+assert.equal(M.recommendationRows([row(0),row(1),row(2)],{compress:true,completed:['0:2:level:2']}).length,2,'Do not bridge completed levels');
+assert.equal(M.recommendationRows([row(0),row(0,{index:3,currency:1}),row(1)],{compress:true,payment:'0'}).length,2,'Do not reorder across filtered purchases');
+assert.equal(M.recommendationRows([row(0),row(1,{kind:'marble'})],{compress:true}).length,2,'Keep marble and normal purchases separate');
+assert.equal(JSON.stringify(sequence),unchanged);
+console.log('Fountain compression: level ranges, costs, compounded gains, funding boundaries, filtered/completed gaps and immutable rows pass.');

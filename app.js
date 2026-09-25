@@ -68,6 +68,7 @@
     if(name==='practice'&&initialPracticePending){initialPracticePending=false;refreshPracticeFevers();refreshPracticeCells();runPractice(true,true);}
   }
   const SKILL_PAGES={
+    dailies:{title:'Dailies',world:'Home',copy:'Daily routine, saved availability, and your checklist.'},
     shadowCaps:{title:'Shadow Caps',world:'Misc',copy:''},
     communitySheets:{title:"Community Sheets",world:'Misc',copy:''},
     accountReview:{title:'Account Review',world:'Optimizers',copy:'Review saved progress and plan your next account milestones.'},
@@ -155,7 +156,7 @@ SKILL_PAGES.holeFloors={title:'Floors',world:'World 5',copy:'All 18 Hole caverns
     window.plannerQoL?.onNavigate(name);
     if(name!=='jelly'&&practice?.playing)stopPracticePlayback();
     if(name==='jelly'&&state?.hasJelly===false){selectSideNav('classExp');return;}
-    if(!state)$('workspace').classList.toggle('hidden',!['classExp','accountReview','loadouts','shadowCaps','communitySheets','credits'].includes(name));
+    if(!state)$('workspace').classList.toggle('hidden',!['dailies','classExp','accountReview','loadouts','shadowCaps','communitySheets','credits'].includes(name));
     if(!state)$('inputPanel').classList.toggle('hidden',['loadouts','shadowCaps','communitySheets','credits'].includes(name));
     const selected=SKILL_PAGES[name]?.parent||name;
     for(const id of ['navHome','navJelly',...Object.keys(SKILL_PAGES).map(key=>'nav'+key[0].toUpperCase()+key.slice(1))])$(id)?.classList.toggle('active',id===('nav'+selected[0].toUpperCase()+selected.slice(1)));
@@ -533,6 +534,7 @@ SKILL_PAGES.holeFloors={title:'Floors',world:'World 5',copy:'All 18 Hole caverns
     if(state){$('expMode').value=expMode;$('expSession').value=expSession;$('expMode').onchange=e=>{expMode=e.target.value;renderClassExp();};$('expSession').onchange=e=>{expSession=e.target.value;renderClassExp();};}
   }
   function renderWorldPage(name){
+    if(name==='dailies'){$('worldContent').dataset.page=name;window.Dailies.render($('worldContent'),loadedExport||state?.rawRoot||{});return;}
     const page=SKILL_PAGES[name];if(!page)return;
     $('worldContent').dataset.page=name;
     const decodeRequest={};$('worldContent').decodeRequest=decodeRequest;

@@ -1,0 +1,11 @@
+'use strict';
+const fs=require('node:fs'),path=require('node:path');
+const vials=JSON.parse(fs.readFileSync(path.join(__dirname,'vendor/idleon-toolbox/data/website-data/vials.json'),'utf8'));
+const vialIds=Object.entries(vials).filter(([,entry])=>entry.name&&!/^(filler|some[_ ])/i.test(entry.name)).map(([id])=>Number(id));
+if(!vialIds.length||vialIds.some(id=>!Number.isInteger(id)||id<0))throw Error('Invalid live vial catalog');
+const shared=JSON.parse(fs.readFileSync(path.join(__dirname,'vendor/idleon-toolbox/data/website-data/shared-data.json'),'utf8'));
+const upgrades=JSON.parse(fs.readFileSync(path.join(__dirname,'vendor/idleon-toolbox/data/website-data/summoningUpgrades.json'),'utf8'));
+const guildTasks=shared.guildTasks.map(({task,requirement})=>({task,requirement}));
+const familiarMax=upgrades[2].maxLvl;
+const source=`/* Generated from bundled game catalogs by build-dailies-data.js. */\n(function(root){const data=${JSON.stringify({vialIds,guildTasks,familiarMax})};if(typeof module!=='undefined'&&module.exports)module.exports=data;else root.DailiesData=data;})(typeof window==='undefined'?globalThis:window);\n`;
+fs.writeFileSync(path.join(__dirname,'dailies-data.js'),source);

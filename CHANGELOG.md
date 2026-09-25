@@ -1,5 +1,28 @@
 # Project changelog
 
+## 2026-09-25 - Save-aware routine filtering and compact cards
+
+- Show confirmed-ready tasks by default; move uncertain reminders to Needs checking and expose every exclusion reason in Filtered.
+- Hide research rolls when all observations eligible at the account's current Research level are found, even with unused rolls. Refresh eligibility after each import.
+- Filter spent Lore/Cog pulls, done registrations and weekly activities, exhausted counters, locked worlds/islands, below-target minibosses, and personal checkmarks.
+- Read Post Office orders, Summoning attempts, Shimmer completion, and saved companion claim availability. Preserve unknowns on partial exports.
+- Replace tall cards with compact rows and expandable details. Validate the workspace JSON, automatic filtering, undo/restore, account isolation, and desktop/mobile layouts.
+
+## 2026-09-25 - Expanded routines, weeklies, and relevant tasks
+
+- Expand Dailies to 58 activities across daily, weekly, and timer views, with readiness filters and configurable weekly checklist resets.
+- Read all four stacking miniboss counters, highlight two or more spawns, and show logged-in daily resets until two. Confirm spawn formulas against the installed client.
+- Automatically hide vial attempts when all catalogued vials are unlocked; add per-account Hide/Restore and a reviewable Hidden view. Use the checked-in vial catalog for deployment; regenerate it locally when catalogs change.
+- Add saved weekly-battle, Killroy, tournament, Minehead, and other verified counters; preserve unknown availability and distinguish manual cooldown reminders.
+- See `DAILIES-AUDIT.md` for sources, field mappings, coverage limits, and tests. Run `npm run test:dailies` for model and browser validation.
+
+## 2026-09-25 - Dailies under Home
+
+- Add a Dailies sidebar page with saved vial attempts, Daily Lore reads used, research rolls, and an eleven-item routine checklist.
+- Save checks per named account with a configurable local daily reset, an unchecked filter, and links to relevant pages. Missing counters remain unknown; manual checks never imply game completion.
+- Include Dailies in planner backups and exclude its controls from generic preference replay so checks reset correctly and remain isolated between accounts.
+- Validate counters, reset boundaries, persistence, navigation, account isolation, and mobile layout with `node test-dailies.js`.
+
 ## 2026-09-24 - Fountain upgrade goals and longer roadmaps
 
 - Add 100-purchase roadmaps by default, with up to 500 steps, separate Buy now mode, per-step funding status and total additional currency requirements.

@@ -83,6 +83,17 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'C:/Users/Sofia/AppData/Lo
  await page.locator('.fountain-plan [data-detail]').first().click();assert(await page.locator('.fountain-detail').isVisible());
  await page.setViewportSize({width:1440,height:1000});await page.getByRole('button',{name:'Close Fountain details'}).click();await page.screenshot({path:'../audit/fountain-plan.png',fullPage:true});
  await page.locator('.fountain-controls [name=steps]').selectOption('20');
+ await page.locator('[data-compress]').check();
+ const compressedCount=await page.locator('.fountain-plan tbody tr').count();assert(compressedCount<20);
+ const batch=page.getByRole('button',{name:/Mark .* through .* done/}).first();
+ const range=(await batch.getAttribute('aria-label')).match(/(?:level|marble tier) (\d+) through (\d+) done/);
+ assert(range);const batchSize=Number(range[2])-Number(range[1])+1;assert(batchSize>1);
+ await batch.click();
+ await page.locator('[data-compress]').uncheck();assert.equal(await page.locator('.fountain-plan tbody tr').count(),20-batchSize);
+ await page.locator('[data-undo-done]').click();assert.equal(await page.locator('.fountain-plan tbody tr').count(),20);
+ await page.locator('[data-compress]').check();assert.equal(await page.locator('.fountain-plan tbody tr').count(),compressedCount);
+ await page.screenshot({path:'../audit/fountain-compressed.png',fullPage:true});
+ await page.locator('[data-compress]').uncheck();
  for(let i=0;i<20;i++)await page.locator('[data-done]').first().click();
  assert.equal(await page.locator('.fountain-plan tbody tr').count(),0);
  assert((await page.locator('.fountain-plan').innerText()).includes('All purchases'));
