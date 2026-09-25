@@ -2,7 +2,7 @@
 const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),M=require('./spelunking-optimizer');
 const box={window:{}};vm.runInNewContext(fs.readFileSync('world7-data.js','utf8'),box);const catalog=box.window.WORLD7_CATALOG.SpelunkUpg,raw=JSON.parse(fs.readFileSync('../example json.txt','utf8')),s=M.decode(raw,catalog),original=JSON.stringify(s);
 assert(s&&s.skill>0);for(const goal of ['power','amber']){const p=M.plan(s,{goal,steps:100});assert.equal(p.steps.length,100);assert(p.gain>0);assert(Math.abs(p.steps.reduce((a,b)=>a+b.cost,0)-p.spent)<1);let state={...s,levels:[...s.levels]};for(const a of p.steps){assert.equal(a.from,state.levels[a.i]);assert.equal(a.cost,M.cost(state,a.i));state.levels[a.i]++;assert(a.to<=Number(catalog[a.i][3]));}assert.equal(JSON.stringify(s),original);}
-const poor={...s,amber:0};assert.equal(M.plan(poor,{mode:'now'}).steps.length,0);const road=M.plan(poor,{steps:20});assert.equal(road.funding,road.spent);assert(road.steps.every(a=>a.future));const locked={...s,levels:catalog.map(()=>-1)};assert.equal(M.plan(locked).steps.length,0);const capped={...s,levels:catalog.map(x=>Number(x[3]))};assert.equal(M.plan(capped).steps.length,0);
+const poor={...s,amber:0};assert.equal(M.plan(poor,{mode:'now'}).steps.length,0);const road=M.plan(poor,{steps:20});assert.equal(road.funding,road.spent);assert(road.steps.every(a=>a.future));const locked={...s,levels:catalog.map(()=>-1)};assert(M.plan(locked).steps.some(x=>x.from===-1),'Visible unlocks lead to useful upgrades');const capped={...s,levels:catalog.map(x=>Number(x[3]))};assert.equal(M.plan(capped).steps.length,0);
 const i=0,price=M.cost(s,i,.25);assert(Math.abs(M.calibration(s,i,price)-.25)<1e-10);const now=M.plan(s,{mode:'now',steps:500});assert(now.spent<=s.amber*(1+1e-12));assert.equal(now.funding,0);assert.equal(M.decode({},catalog),null);
 console.log('Spelunking planner: sequential costs, goals, caps, locks, budgets, calibration and save immutability pass.');
 // Combined scoring must measure proportional improvements to both goals.
@@ -31,3 +31,16 @@ const milestonePlan=M.plan(milestones,{goal:'outside',scope:'account',steps:20})
 assert.equal(M.plan(milestones,{goal:'outside',scope:'account',steps:9}).steps.length,0,'Do not spend on a partial breakpoint');assert.equal(M.plan(milestones,{goal:'outside',scope:'account',mode:'now',steps:20}).steps.length,0);
 const memory={...milestones,levels:catalog.map(x=>Number(x[3]))};memory.levels[58]=90;const memories=M.plan(memory,{goal:'outside',scope:'utility',steps:20});assert.equal(memories.steps.length,10);assert.equal(memories.steps.at(-1).effects[0].after,2);
 console.log('Rounded statue and memorized-elixir breakpoint batches preserve budget and purchase limits.');
+
+const budget=M.plan(s,{goal:'balanced',steps:'budget'});assert.equal(budget.funding,0);assert(budget.spent<=s.amber);assert.equal(budget.stopReason,'unaffordable');assert(budget.nextPurchase.cost>budget.remainingAmber);
+const limited=M.plan(s,{goal:'balanced',steps:1,mode:'now'});assert.equal(limited.stopReason,'purchase-limit');
+const unlockPlan=M.plan({...locked,amber:1e100},{goal:'balanced',steps:20});let unlockState={...locked,levels:[...locked.levels]};for(const step of unlockPlan.steps){assert(step.i===0||unlockState.levels[Number(catalog[step.i][6])]>=0);assert.equal(step.cost,M.cost(unlockState,step.i));unlockState.levels[step.i]++;}assert(unlockPlan.gain>0);
+console.log('Budget exhaustion, stop reasons and ordered prerequisite unlocks pass.');
+
+// A useful batch that does not fit the remaining slots is a purchase-limit stop,
+// even when the checklist has fewer rows than the selected limit.
+const shortBatch=M.plan({...milestones,amber:1e250},{goal:'outside',scope:'account',steps:9,mode:'now'});
+assert.equal(shortBatch.steps.length,0);assert.equal(shortBatch.stopReason,'purchase-limit');assert(shortBatch.nextPurchase.cost<shortBatch.remainingAmber);
+assert.equal(M.plan(milestones,{goal:'outside',scope:'account',steps:9,mode:'now'}).stopReason,'unaffordable');
+assert.equal(M.plan(milestones,{goal:'outside',scope:'account',steps:9}).stopReason,'purchase-limit');
+console.log('Purchase limits distinguish blocked breakpoint batches from insufficient Amber.');

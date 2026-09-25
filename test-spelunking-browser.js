@@ -11,6 +11,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'C:/Users/Sofia/AppData/Lo
  await page.evaluate(()=>window.dispatchEvent(new CustomEvent('idleon:navigate',{detail:'spelunking'})));
  await page.locator('[data-category="Upgrades"]').click({timeout:60000});
  await page.getByText('Spelunking upgrade optimizer',{exact:true}).waitFor();
+ assert.equal(await page.locator('select[name=steps]').inputValue(),'budget');assert(await page.locator('[data-stop-reason]').isVisible());await page.locator('select[name=mode]').selectOption('roadmap');
  assert.equal(await page.locator('.fountain-plan tbody tr').count(),100);
  assert.equal(await page.locator('select[name="goal"]').inputValue(),'balanced');
  assert(await page.locator('[data-hoard]').isChecked());
@@ -20,9 +21,10 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'C:/Users/Sofia/AppData/Lo
  const priceOff=Number(await page.locator('.fountain-plan tbody tr').first().locator('td').nth(4).locator('[title]').getAttribute('title').then(x=>x.split(' ')[0]));
  assert(priceOff>priceOn,'Turning off Amber Hoard removes its discount');
  await page.locator('[data-hoard]').check();
- await page.locator('select[name="hoardMode"]').selectOption('custom');
+ assert(await page.locator('[data-hoard-custom]').isVisible(),'Percentage is visible in calculated mode');
+ assert(await page.locator('#spelunk-depth-help').isVisible());assert(await page.locator('#spelunk-cleared-help').isVisible());assert(await page.locator('#spelunk-hoard-help').isVisible());
  const customInput=page.locator('[data-hoard-custom]');await customInput.fill('50');await customInput.press('Tab');
- assert((await page.locator('[data-hoard-custom-status]').innerText()).includes('50% cost reduction applied'));
+ assert((await page.locator('[data-hoard-custom-status]').innerText()).includes('50% cost reduction applied'));assert.equal(await page.locator('select[name="hoardMode"]').inputValue(),'custom','Editing the visible percentage selects custom mode');
  const customCost=Number(await page.locator('.fountain-plan tbody tr').first().locator('td').nth(4).locator('[title]').getAttribute('title').then(x=>x.split(' ')[0]));assert(customCost<priceOn);
  await customInput.fill('100');await customInput.press('Tab');assert.equal(await customInput.evaluate(e=>e.checkValidity()),false);
  assert((await page.locator('[data-hoard-custom-status]').innerText()).includes('50%'),'Invalid input does not change the plan');
@@ -69,6 +71,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'C:/Users/Sofia/AppData/Lo
  await page.locator('[data-hoard]').uncheck();
  const calibratedOff=Number(await page.locator('.fountain-plan tbody tr').first().locator('td').nth(4).locator('[title]').getAttribute('title').then(x=>x.split(' ')[0]));
  assert(calibratedOff>calibratedOn,'Calibration retains the independent Hoard toggle');
+ await page.getByText('Match your in-game upgrade costs',{exact:true}).click();await page.locator('[data-base]').click();assert((await page.locator('[data-cost-status]').innerText()).includes('Automatic account discounts applied.'));
  await page.locator('[data-hoard]').check();
  await page.locator('select[name="goal"]').selectOption('outside');
  await page.locator('select[name="scope"]').selectOption('account');
