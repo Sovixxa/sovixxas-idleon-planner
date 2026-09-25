@@ -12,6 +12,10 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'C:/Users/Sofia/AppData/Lo
  await page.locator('#jsonInput').fill(JSON.stringify(raw));await page.locator('#parseBtn').click();
  await page.evaluate(()=>window.dispatchEvent(new CustomEvent('idleon:navigate',{detail:'holeFountain'})));
  await page.locator('.fountain-wallet').waitFor({timeout:60000});
+ assert.equal(await page.locator('[data-timer]').count(),3);
+ assert.equal(await page.locator('[data-timer-active]').count(),3);
+ assert.equal(await page.locator('[data-timer="1"] [data-timer-away]').innerText(),'10h');
+ assert((await page.locator('.fountain-timers').innerText()).includes('Standing in Fountain'));
  assert.equal(await page.locator('.fountain-grid button').count(),20);
  assert.equal(await page.locator('.fountain-plan tbody tr').count(),100);
  const firstDone=await page.locator('[data-done]').first().getAttribute('data-done');

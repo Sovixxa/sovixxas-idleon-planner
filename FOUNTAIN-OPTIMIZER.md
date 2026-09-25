@@ -1,5 +1,13 @@
 # Fountain upgrade optimizer
 
+Fill timers show full-bar durations both standing in the Fountain and away,
+plus remaining durations from `Holes[33]` saved progress. Base requirements are
+7,200 / 36,000 / 90,000 for coin / marble / duck bars. Coin speed includes
+Fountain Filling and Arcade upgrade 68, using the shared audited Arcade model
+for level 101 and companion bonuses. Water Bender applies to all active bars.
+Missing timing inputs display Unknown; locked bars name their unlock upgrade.
+These are imported-save estimates, not ticking live countdowns.
+
 The Costs currency dropdown filters recommendations and the current water's
 upgrade catalogue by payment currency, including Marble for marbleization.
 All currencies restores the full list. This is a display filter: original

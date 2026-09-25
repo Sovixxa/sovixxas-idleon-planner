@@ -1,0 +1,18 @@
+'use strict';
+const assert=require('node:assert/strict'),fs=require('node:fs'),T=require('./fountain-timers');
+const near=(a,b)=>assert(Math.abs(a-b)<=1e-10*Math.max(1,Math.abs(b)),`${a} != ${b}`);
+const holes=Array.from({length:34},()=>[]);holes[9]=Array(39).fill(0);holes[31]=Array.from({length:3},()=>Array(20).fill(0));holes[32]=Array.from({length:3},()=>Array(20).fill(0));holes[33]=[3600,18000,45000];
+const raw={data:{Holes:holes,ArcadeUpg:Array(73).fill(0),OptionsListAccount:[]},companion:{l:[]}};raw.data.OptionsListAccount[606]=-1;
+let timers=T.calculate(raw);near(timers.rows[0].away,7200);near(timers.rows[0].active,7200);near(timers.rows[0].remainingAway,3600);assert.equal(timers.rows[1].unlocked,false);assert.equal(timers.rows[2].unlocked,false);
+holes[31][0][9]=50;holes[31][0][12]=10;holes[31][1][10]=1;holes[31][2][12]=1;raw.data.ArcadeUpg[68]=100;
+timers=T.calculate(raw);near(timers.arcade,15);near(timers.active,6);near(timers.rows[0].away,7200/(2*1.15));near(timers.rows[0].active,7200/(2*1.15*6));near(timers.rows[1].away,36000);near(timers.rows[1].active,6000);near(timers.rows[2].away,90000);near(timers.rows[2].active,15000);
+raw.data.ArcadeUpg[68]=101;raw.companion.l=['27,0,0,0,0'];timers=T.calculate(raw);near(timers.arcade,30*101/201*4);
+holes[32][0][9]=1;holes[32][0][12]=1;timers=T.calculate(raw);near(timers.active,7);near(timers.rows[0].away,7200/(3*(1+timers.arcade/100)));
+holes[33][0]=9000;assert.equal(T.calculate(raw).rows[0].remainingActive,0);assert.equal(T.duration(0),'Ready');
+delete raw.data.ArcadeUpg;timers=T.calculate(raw);assert.equal(timers.rows[0].away,null);assert.equal(timers.rows[0].active,null);near(timers.rows[1].active,36000/7);
+delete holes[33][1];assert.equal(T.calculate(raw).rows[1].remainingAway,null);
+delete holes[32][0][12];timers=T.calculate(raw);assert(timers.rows.every(r=>r.active===null));
+assert.equal(T.calculate({}),null);assert.equal(T.duration(null),'Unknown');assert.equal(T.duration(90000),'1d 1h');assert.equal(T.duration(0.001),'<0.1s');
+const saved=JSON.parse(fs.readFileSync('../example json.txt')),snapshot=JSON.stringify(saved),decoded=T.calculate(saved);
+assert(decoded.rows.every(r=>r.active<r.away));assert.equal(JSON.stringify(saved),snapshot);assert.equal(T.html(saved).includes('live countdown'),true);
+console.log('Fountain timers: full/remaining bars, all active multipliers, Arcade super/companion, marble tiers, locks, missing data and immutable save pass.');
