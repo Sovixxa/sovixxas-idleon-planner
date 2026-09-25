@@ -82,3 +82,14 @@ assert.equal(M.recommendationRows([row(0),row(0,{index:3,currency:1}),row(1)],{c
 assert.equal(M.recommendationRows([row(0),row(1,{kind:'marble'})],{compress:true}).length,2,'Keep marble and normal purchases separate');
 assert.equal(JSON.stringify(sequence),unchanged);
 console.log('Fountain compression: level ranges, costs, compounded gains, funding boundaries, filtered/completed gaps and immutable rows pass.');
+
+const scattered=Array.from({length:40},(_,i)=>[row(120+i,{future:i>=10,shortfall:i>=10?5:0}),row(i,{index:3,currency:1})]).flat();
+const allRows=M.recommendationRows(scattered,{compress:'all'});
+assert.equal(allRows.length,2);assert.equal(allRows[0].from,120);assert.equal(allRows[0].to,160);assert.equal(allRows[0].keys.length,40);
+assert.equal(allRows[0].cost,scattered.filter(s=>s.index===2).reduce((n,s)=>n+s.cost,0));
+assert.equal(allRows[0].readyCount,10);assert.equal(allRows[0].futureCount,30);assert.equal(allRows[0].shortfall,150);
+assert.equal(M.recommendationRows(scattered,{compress:'all',payment:'0'}).length,1);
+const withDone=M.recommendationRows(scattered,{compress:'all',completed:['0:2:level:140']});
+assert.equal(withDone[0].keys.length,39);assert(!withDone[0].keys.includes('0:2:level:140'));assert.equal(withDone[0].to-withDone[0].from-withDone[0].keys.length,1);
+assert.equal(M.recommendationRows([row(0),row(0,{kind:'marble'}),row(1)],{compress:'all'}).length,2);
+console.log('Compress all: scattered 120–160 range, exact costs, mixed funding, filters, completed gaps and separate marble tiers pass.');

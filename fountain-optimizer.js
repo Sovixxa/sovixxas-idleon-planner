@@ -113,16 +113,17 @@ function plan(initial,settings={}){
  return result(steps.length?'':opts.mode==='roadmap'?'No available upgrade directly improves this goal. Check the catalogue for prerequisites.':'No affordable upgrade directly improves this goal. Switch to the long-term roadmap to see what to save for.');
 }
 function recommendationRows(steps,{completed=[],payment='all',compress=false}={}){
- const hidden=new Set(completed),rows=[];
+ const hidden=new Set(completed),rows=[],groups=new Map();
  steps.forEach((step,index)=>{
   const key=[step.water,step.index,step.kind,step.from+1].join(':');
   if(hidden.has(key)||(payment!=='all'&&step.currency!==Number(payment)))return;
-  const last=rows[rows.length-1];
-  if(compress&&last&&last.endOrder===index&&last.water===step.water&&last.index===step.index&&last.kind===step.kind&&last.currency===step.currency&&last.future===step.future&&last.to===step.from){
-   last.keys.push(key);last.to=step.from+1;last.endOrder=index+1;last.cost+=step.cost;last.shortfall+=step.shortfall||0;
+  const groupKey=[step.water,step.index,step.kind,step.currency].join(':');
+  const last=compress==='all'?groups.get(groupKey):rows[rows.length-1];
+  if(last&&(compress==='all'||(compress&&last.endOrder===index&&last.water===step.water&&last.index===step.index&&last.kind===step.kind&&last.currency===step.currency&&last.future===step.future&&last.to===step.from))){
+   last.keys.push(key);last.to=step.from+1;last.endOrder=index+1;last.cost+=step.cost;last.shortfall+=step.shortfall||0;last.readyCount+=step.future?0:1;last.futureCount+=step.future?1:0;last.future=last.future||step.future;
    last.gain=(1+last.gain)*(1+step.gain)-1;
    for(const effect of step.effects||[]){const previous=last.effects.find(e=>e.label===effect.label);if(previous){previous.after=effect.after;previous.gain=previous.after/previous.before-1;}else last.effects.push({...effect});}
-  }else rows.push({...step,to:step.from+1,startOrder:index+1,endOrder:index+1,keys:[key],effects:(step.effects||[]).map(e=>({...e})),shortfall:step.shortfall||0});
+  }else {const row={...step,readyCount:step.future?0:1,futureCount:step.future?1:0,to:step.from+1,startOrder:index+1,endOrder:index+1,keys:[key],effects:(step.effects||[]).map(e=>({...e})),shortfall:step.shortfall||0};rows.push(row);groups.set(groupKey,row);}
  });
  return rows;
 }

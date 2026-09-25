@@ -102,3 +102,5 @@ Run `npm run test:fountain`, `npm run test:fountain-client`,
 `npm run test:fountain-browser`, and `npm run build`.
 The browser test uses the same local Playwright installation as the other
 browser checks and captures desktop/mobile images under `audit/`.
+
+Compress all groups every remaining purchase of the same upgrade across the whole selected plan, including scattered purchases. Each summary shows its starting and target level, remaining purchase count, summed cost, and funded/future counts. Normal levels and marble tiers remain separate. These totals are not purchase order; use the ordered view for buying order and step gains. Checked-off gaps are labeled, and Done all/Undo last track precisely the remaining purchases in the group. Currency filters still apply.
