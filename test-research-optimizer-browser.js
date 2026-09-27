@@ -1,0 +1,30 @@
+'use strict';
+const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
+const {chromium}=require(process.env.PLAYWRIGHT_PATH||'C:/Users/Sofia/AppData/Local/npm-cache/_npx/e41f203b7505f1fb/node_modules/playwright');
+(async()=>{const browser=await chromium.launch({headless:true});try{
+ const page=await browser.newPage({viewport:{width:1440,height:1000}}),errors=[];page.on('pageerror',e=>errors.push(e.message));
+ await page.route('http://localhost:7332/**',async route=>{const pathname=decodeURIComponent(new URL(route.request().url()).pathname);if(pathname.startsWith('/__'))return route.fulfill({contentType:'application/json',body:'{}'});const file=path.resolve(__dirname,'.'+(pathname==='/'?'/index.html':pathname));if(!file.startsWith(__dirname+path.sep)||!fs.existsSync(file)||fs.statSync(file).isDirectory())return route.fulfill({status:404,body:''});return route.fulfill({contentType:({'.js':'text/javascript','.css':'text/css','.html':'text/html','.png':'image/png'})[path.extname(file)]||'application/octet-stream',body:fs.readFileSync(file)});});
+
+ await page.goto('http://localhost:7332/');await page.locator('#quickNotesToggle').click();
+ const raw=JSON.parse(fs.readFileSync('../example json.txt'));
+ await page.locator('#jsonInput').fill(JSON.stringify(raw));await page.locator('#parseBtn').click();
+ await page.evaluate(()=>window.dispatchEvent(new CustomEvent('idleon:navigate',{detail:'research'})));
+ await page.locator('[data-research-tab="optimizer"]').click({timeout:90000});
+ await page.locator('[data-ro-run]').waitFor({timeout:90000});
+ await page.locator('[data-ro-run]').click();
+ await page.getByText('Your upgrade order',{exact:true}).waitFor();
+ await page.locator('[data-ro-goal]').selectOption('target');assert(await page.locator('[data-ro-target]').isVisible());
+ await page.locator('[data-ro-mode="lenses"]').click();
+ await page.locator('[data-ro-goal]').selectOption('exp');await page.locator('[data-ro-run]').click();
+ await page.getByText('Suggested observation layout',{exact:true}).waitFor({timeout:90000});
+ assert(await page.locator('.ro-observation-grid button.assigned').count()>0);
+ await page.locator('.ro-observation-grid button.assigned').first().click();assert((await page.locator('[data-ro-detail]').innerText()).includes('Row'));
+ await page.waitForFunction(()=>Array.from(document.querySelectorAll('.ro-result img')).every(i=>i.complete&&i.naturalWidth>0));
+ await page.locator('.ro-page').screenshot({path:'../audit/research-optimizer-desktop.png'});
+ await page.setViewportSize({width:390,height:844});
+ assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'mobile overflow');
+ await page.locator('.ro-page').screenshot({path:'../audit/research-optimizer-mobile.png'});
+ await page.locator('[data-ro-goal]').selectOption('insight');assert((await page.locator('[data-ro-result]').innerText()).includes('Settings changed'));
+ await page.locator('[data-research-back]').click();assert(await page.locator('[data-research-tab="optimizer"]').isVisible());
+ assert.deepEqual(errors,[]);console.log('Research browser: real save, grid and lens controls, placement details, navigation and mobile layout pass.');
+ }finally{await browser.close();}})().catch(e=>{console.error(e);process.exitCode=1;});

@@ -105,3 +105,7 @@ export function getSpelunkingPlannerContext(parsed: any, researchCatalog: any[])
 }
 
 export {getOptimizedLandRankUpgrades,LAND_RANK_GOALS} from './vendor/idleon-toolbox/parsers/world-6/farming';
+
+export {getKillroySchedule} from './vendor/idleon-toolbox/parsers/misc';
+
+export {getResearchPlanningState} from './vendor/idleon-toolbox/parsers/world-7/research';

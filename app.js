@@ -557,6 +557,7 @@ SKILL_PAGES.holeFloors={title:'Floors',world:'World 5',copy:'All 18 Hole caverns
     if(name==='arcade'){renderArcade();return;}
     if(name==='prayerOptimizer'){window.PrayerOptimizer.render($('worldContent'),loadedExport||state?.rawRoot||{},addSubtabs);return;}
     if(['arenaTeams','spiceTeams'].includes(name)){window.BreedingTeams.render($('worldContent'),name,loadedExport||state?.rawRoot||{},addSubtabs);return;}
+    if(name==='killroy'){window.KillroyPage.render($('worldContent'),loadedExport||state?.rawRoot||{},addSubtabs);return;}
     if(['bribes','dungeons','vials','sigils','killroy','atomCollider','prayers','saltLick','deathNote','armorSets','petArena','shinyPets','upgradeVault','emperorBonuses','spelunking','sushi','button','clamworks','meritocracy','bigFish','coralKid','coralReef','dancingCoral','zenithMarket','legendTalents','hoops','darts'].includes(name)){window.ArcadePages.render($('worldContent'),name,loadedExport||state?.rawRoot||{},addSubtabs);return;}
     if(name==='refinery'){window.RefineryPlanner.render($('worldContent'),loadedExport||state?.rawRoot||{},addSubtabs);return;}
     if(name==='holeCove'&&window.CovePage){window.CovePage.render($('worldContent'),loadedExport||state?.rawRoot||state?.rawData||{},addSubtabs);return;}

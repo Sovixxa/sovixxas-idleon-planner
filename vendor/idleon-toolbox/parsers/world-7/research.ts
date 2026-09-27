@@ -91,7 +91,7 @@ export const getResearch = (idleonData: any, account: any, characters: any) => {
   // game: W7 merit 3 ("+{ Research PTS."), 1 per level.
   const meritBonus = account?.tasks?.[2]?.[6]?.[3] ?? 0;
   const gridPTSearned = Math.floor(
-    researchLevel + (10 * companion153 + companion153Lvl2Bonus + Math.floor(researchLevel / 10) * Math.round(1 + (Math.min(1, Math.floor(researchLevel / 60)) + gridBonus50Lv)) + getSushiBonus(account, 3) + getSushiBonus(account, 13) + Math.min(10, Math.round(fangAcquired)) + meritBonus)
+    researchLevel + (10 * companion153 + companion153Lvl2Bonus + Math.floor(researchLevel / 10) * Math.round(1 + (Math.min(1, Math.floor(researchLevel / 60)) + gridBonus50Lv)) + getSushiBonus(account, 3) + getSushiBonus(account, 13) + Math.min(10, Math.round(fangAcquired)) + meritBonus + ([4, 57].reduce((sum, index) => sum + (research.jellyObstruction > index ? Number(researchData[47]?.[index]) || 0 : 0), 0)))
   );
   const gridPTSavailable = Math.round(gridPTSearned - gridPTSpent);
 
@@ -688,3 +688,24 @@ function getResearchEXPmulti(account: any, research: any) {
   return { value, breakdown };
 }
 
+
+
+// Planning adapter keeps candidate grid and observation math on the same source functions.
+export const getResearchPlanningState = (raw: any, account: any, characters: any) => {
+  const result = getResearch({ Research: raw } as any, account, characters);
+  const context: any = {
+    gridLevels: raw[0] || [], gridObservationIndex: raw[1] || [],
+    observationInsight: raw[4] || [], shapePlacements: [], researchKalMap: {},
+    kingRatCrowns: raw[11] || [], totalOccurrencesFound: result.totalOccurrencesFound,
+    totalObsLVs: (raw[4] || []).slice(0,result.occurrencesToBeFound).reduce((s:any,v:any)=>s+Math.max(0,Number(v)||0),0),
+    optionsListAccount: account.accountOptions || []
+  };
+  const observations = result.observations.map((o:any) => {
+    context.shapePlacements = [0,0,o.index,0];
+    const exp = getResearchEXPrateObj(account,context,o.index) * result.researchEXPmulti;
+    context.shapePlacements = [0,0,o.index,1];
+    const insight = getObservationInsightExpRate(account,context,o.index);
+    return {...o,unitExp:exp,unitInsight:insight};
+  });
+  return {...result, canUpgradeGrid: Number(account.accountOptions?.[512] || 0) >= 2, observations, kaleiBase:getKaleiMultiBase(account,context)};
+};
