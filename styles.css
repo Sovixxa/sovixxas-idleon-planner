@@ -113,3 +113,5 @@ body .compact-upgrades{grid-template-columns:repeat(6,minmax(0,1fr));gap:6px;pad
 .side-icon{display:block;flex:0 0 20px;width:20px;height:20px;object-fit:contain;image-rendering:pixelated}
 .side-icon-line{fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;image-rendering:auto}
 .side-link-label{min-width:0;line-height:1.35}
+
+.side-footer .footer-privacy{display:inline-block;margin-left:4px;color:#929baa;font-size:11px;font-weight:400;text-decoration:none}.side-footer .footer-privacy:hover{text-decoration:underline;color:#c2cad5}.side-footer .footer-privacy:focus-visible{outline:2px solid #c2cad5;outline-offset:3px}
