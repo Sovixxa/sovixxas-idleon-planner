@@ -34,3 +34,31 @@ assert(host.innerHTML.includes('Foundation before frontier'));assert(host.innerH
 elements.get('[aria-label="Review status"]').value='all';elements.get('[aria-label="Review status"]').onchange();assert(!host.innerHTML.includes('No saved progress'));assert(!host.innerHTML.includes('This value is missing or invalid'));
 ui.AccountReview.render(host,{});assert(host.innerHTML.includes('Start with your account'));
 console.log('Account Review: partial exports, boundaries, fresh saves, seven-system fixture, placeholder exclusion, escaping and filters OK');
+
+// Account priorities must reflect actionable opportunities, not generic counters.
+const decoded=new Map([
+  ['construction',{buildings:[{level:1,finishedUpgrade:true}]}],
+  ['stamps',[[{level:10,canUpgradeWithCoins:true,canUpgradeWithMats:true,cantCarry:false}]]],
+  ['breeding',{eggsUnclaimed:2}],
+  ['lab',{bonuses:[{unlocked:true,active:false}]}],
+  ['storage',{storageChestsUsed:{a:true}}]
+]);
+const actionable=review.model(raw,{...catalogs,BeanValueEngine:{systems:()=>decoded}});
+assert.deepEqual(actionable.priorities.slice(0,3).map(x=>x.page),['construction','stamps','breeding']);
+assert.equal(actionable.priorities[0].state,'Do now');assert.equal(actionable.priorities[1].state,'Check requirements');assert.equal(actionable.priorities[2].state,'Do now');
+assert(!actionable.priorities.some(x=>x.sectionId==='storageReview'));
+assert.equal(actionable.priorities.find(x=>x.page==='lab').state,'Check requirements');
+assert(actionable.priorities.every(x=>x.reason&&x.blocker));
+assert.equal(new Set(actionable.priorities.map(x=>x.id)).size,actionable.priorities.length);
+assert.equal(review.model({},catalogs).priorities.length,0);
+const growthCatalog={STAMP_CATALOG:[{stamps:[{name:'Combat',bonus:'Base damage'},{name:'Production',bonus:'Skill efficiency'}]}]};
+assert.equal(review.model({StampLv:[[9,9]]},growthCatalog).priorities[0].name,'Production');
+assert.equal(review.model({StampLv:[[0,null]]},growthCatalog).priorities.length,0);
+assert.deepEqual(review.model(raw,catalogs).priorities,review.model(raw,catalogs).priorities);
+ui.AccountReview.render(host,{StampLv:[[1]]});
+assert(host.innerHTML.indexOf('Your next account steps')<host.innerHTML.indexOf('My Plan'));
+assert(host.innerHTML.includes('Check requirements'));
+assert(host.innerHTML.includes('data-review-priority'));
+console.log('Account priorities: readiness, growth weighting, diversity, uncertainty, deterministic order and placement OK');
+
+assert.equal(review.model({StampLv:[[100]]},growthCatalog).priorities[0].target,101,'Stamp advice continues past arbitrary review benchmarks');

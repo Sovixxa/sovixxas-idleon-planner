@@ -24,7 +24,7 @@ export {getMeritocracyBonus} from './vendor/idleon-toolbox/parsers/world-2/voteB
 export {isRiftBonusUnlocked} from './vendor/idleon-toolbox/parsers/world-4/rift';
 export {getShinyBonus} from './vendor/idleon-toolbox/parsers/world-4/breeding';
 
-export {evaluateStamp} from './vendor/idleon-toolbox/parsers/world-1/stamps';
+export {getStampBonus,evaluateStamp} from './vendor/idleon-toolbox/parsers/world-1/stamps';
 
 export {getPowerPerCycle,getPowerCap,calcCost,getRefineryCycleTimes,getSaltsBalance,getSaltMatsTimeLeft} from './vendor/idleon-toolbox/parsers/world-3/refinery';
 
@@ -109,3 +109,5 @@ export {getOptimizedLandRankUpgrades,LAND_RANK_GOALS} from './vendor/idleon-tool
 export {getKillroySchedule} from './vendor/idleon-toolbox/parsers/misc';
 
 export {getResearchPlanningState} from './vendor/idleon-toolbox/parsers/world-7/research';
+
+export {items as stampItemCatalog} from './vendor/idleon-toolbox/data/website-data';

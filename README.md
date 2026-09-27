@@ -10,11 +10,16 @@ No npm install is needed. Edit the files in this folder; source changes hot relo
 
 Optimizers → Account Review reads the current local export and reviews stamps,
 alchemy bubbles, construction build status, worship wave records, cooking meals,
-Rift rewards and character levels. It offers milestone targets, a three-system
-shortlist, search, status filters and links to the relevant pages. Its tiers are
-planner benchmarks, not game caps. Missing data and zero progress
-are separate from upgrade suggestions. Costs, companion effects and other systems
-are not yet rated. Importing a new export refreshes the review.
+Rift rewards and character levels. It puts an ordered account action list first, favoring
+confirmed claims and affordable stamp opportunities, then permanent unlocks and
+production bonuses. The first three favor different systems. Each action explains
+its benefit and any unverified requirements and can be added to a local checklist.
+Ranking is a planning heuristic, not measured return per hour. Discovery counts do
+not drive priorities; stamp, bubble and meal advice continues past review benchmarks.
+Missing data and zero progress stay separate from upgrade suggestions. Importing a
+new export refreshes the review. Run `node test-account-review.js` and
+`node test-account-review-browser.js` for ranking and browser checks.
+
 
 Paste a fresh full export, then choose an objective and search quality. Max clear
 chance is the default. The solver compares unlocked Fevers and Stronkroid timing,
@@ -82,3 +87,30 @@ lookahead. They do not estimate farming time or guarantee a global optimum.
 Drop-rate comparisons hold imported shape digits and kill counts fixed. Run
 `npm run test:cove`, `npm run test:cove-client` (local audit/N.js required), and
 `npm run test:cove-browser` for the model, client parity and browser checks.
+
+Alchemy opens the cap-aware Bubble Upgrade Optimizer. It covers all 133 non-placeholder
+bubbles, using the installed client growth curves and audited shadow-cap evidence.
+Choose a 90%, 95% or 99% soft target and the matching-class context. The worker
+calculates the saved Prisma multiplier; colour multiplier bubbles are applied where
+relevant, with the Carpenter exception. Undeveloped Costs includes the decoded
+Barley Brew contribution. Unresolved character-dependent shared pools require a
+check and do not become automatic upgrade targets. The original collection is
+available from Bubble collection.
+
+The upgrade list prioritizes account growth and the gap to the selected checkpoint;
+it does not optimize material spending. “Capped” describes the named effect in the
+selected context, not all possible benefits of total bubble levels. Soft ceilings
+are not hard caps. Planned marks are local and do not modify game data.
+Run `npm run test:bubbles` and `npm run test:bubbles-browser` for formula boundaries,
+installed-client curve parity, real-save Prisma decoding and browser interaction.
+
+Stamps now opens an upgrade optimizer with adjustable soft targets, audited Arcade
+shadow caps, shared sample-rate warnings and a ranked next-action list. Material
+payments require one character to carry the whole amount. Capacity uses actual
+empty inventory slots and matching stacks at the W1 vendor, with an optional
+reserve of extra free slots. It distinguishes clearing inventory from exceeding
+the best empty inventory, and treats equipment as one item per slot. Coin levels
+are checked separately and do not require material capacity. Material gates are
+not permanent level caps. Costs cover only the next action, using the saved
+reducer without assuming Gilded Stamps. Run `npm run test:stamps` and
+`npm run test:stamps-browser` for model, real-save and browser validation.

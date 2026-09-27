@@ -10,7 +10,7 @@ const outsideGoals=[
  ['wisdom','Wisdom Monument',2,13],['measurement','Minau cost efficiency',2,14],['jars','Jar enchant multiplier',2,15],
  ['research','Research EXP',2,16],['cooking','Cooking Mastery EXP',2,17],['bubba','Bubba meat',2,18]
 ].map(([id,label,water,index])=>({id,label,water,index}));
-const goals=[{id:'income',label:'Fountain currency income'},{id:'outside',label:'Outside bonuses · balanced'},...outsideGoals,{id:'marbleIncome',label:'Marble production'}];
+const goals=[{id:'income',label:'Fountain currency income'},{id:'fillTime',label:'Reduce Fountain fill time'},{id:'outside',label:'Outside bonuses · balanced'},...outsideGoals,{id:'marbleIncome',label:'Marble production'}];
 const number=v=>Number.isFinite(Number(v))?Math.max(0,Number(v)):0;
 const parse=v=>typeof v==='string'?JSON.parse(v):v;
 function decode(raw={}){
@@ -59,6 +59,7 @@ function metric(s,settings={}){
  const opts=prepare(s,settings),source=outsideGoals.find(g=>g.id===opts.goal);
  if(source)return 1+bonus(s,source.water,source.index)/100;
  if(opts.goal==='outside')return Math.exp(outsideGoals.reduce((sum,g)=>sum+Math.log1p(bonus(s,g.water,g.index)/100),0)/outsideGoals.length);
+ if(opts.goal==='fillTime')return (1+bonus(s,0,9)/100)*(opts.active?1+Math.min(4,4*bonus(s,0,12))+bonus(s,0,12)/100:1);
  if(opts.goal==='marbleIncome')return (1+bonus(s,1,10)/100)*(opts.active?1+Math.min(4,4*bonus(s,0,12))+bonus(s,0,12)/100:1);
  return Math.exp(opts.incomeTargets.reduce((sum,c)=>sum+Math.log(incomeFactor(s,c,opts)),0)/opts.incomeTargets.length);
 }

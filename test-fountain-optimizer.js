@@ -106,3 +106,10 @@ const exactState=JSON.parse(JSON.stringify(cappedState));exactState.balances.fil
 const exactCap=M.plan(exactState,{goal:'damage',mode:'roadmap',steps:100,marbleBudget:500});assert.equal(exactCap.spent[9],500);
 assert.deepEqual(M.plan(cappedState,{mode:'roadmap',steps:100}),M.plan(cappedState,{mode:'roadmap',steps:100,marbleBudget:'unlimited'}));
 console.log('Marble budgets: exact boundary, zero, current wallet, cumulative cap, now/roadmap and unlimited pass.');
+
+const timerState=blank();timerState.levels[0][2]=10;timerState.balances.fill(1e12);
+const timerBase=M.metric(timerState,{goal:'fillTime'});timerState.levels[0][2]++;near(M.metric(timerState,{goal:'fillTime'}),timerBase);
+assert(M.candidates(timerState,{goal:'fillTime',active:false}).filter(a=>a.gain>0).every(a=>a.water===0&&a.index===9));
+assert(M.candidates(timerState,{goal:'fillTime',active:true}).some(a=>a.index===12&&a.gain>0));
+timerState.levels[0][9]++;assert(M.metric(timerState,{goal:'fillTime'})>timerBase);
+console.log('Fountain fill-time goal: speed-only ranking and active Water Bender pass.');
