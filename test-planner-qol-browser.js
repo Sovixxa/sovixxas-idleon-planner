@@ -47,6 +47,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'C:/Users/Sofia/AppData/Lo
  await page.setViewportSize({width:1440,height:1000});await page.locator('#jsonInput').fill(JSON.stringify(updated));await page.locator('#parseBtn').click();
  await page.waitForFunction(()=>/^(Save age|Imported):/.test(document.getElementById('qolFreshness').textContent),{},{timeout:60000});
  await page.evaluate(()=>window.dispatchEvent(new CustomEvent('idleon:navigate',{detail:'characters'})));await page.waitForFunction(()=>document.getElementById('talentCharacter')?.value==='2');
+ if(await page.locator('#quickNotes').evaluate(el=>!el.classList.contains('collapsed')))await page.locator('.quick-notes-toggle').click();
  await page.locator('[data-talent-loadout="1"]').click();await page.evaluate(()=>window.dispatchEvent(new CustomEvent('idleon:navigate',{detail:'home'})));
  await page.evaluate(()=>window.dispatchEvent(new CustomEvent('idleon:navigate',{detail:'characters'})));assert(await page.locator('[data-talent-loadout="1"]').evaluate(el=>el.classList.contains('active')));
  assert.deepEqual(errors,[]);console.log('Planner QoL browser: search, favorites, notes, goals, resettable tasks, preferences, hide completed, backup/restore, import diff, persistence and mobile OK');

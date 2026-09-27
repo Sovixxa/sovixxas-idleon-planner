@@ -1,0 +1,1 @@
+{"compilerOptions":{"baseUrl":".","paths":{"@parsers/*":["parsers/*"],"@utility/*":["utility/*"],"@website-data":["data/website-data/index.js"]}}}

@@ -1,28 +1,27 @@
 # Sovixxa’s Idleon Planner
 
-This has grown into an account planner: Home reads character activity from a full
-local export, while Jelly Operator remains the currently audited simulator. The left
-navigation organizes planned skill modules by world; unavailable items are not yet
-modeled or simulated.
-
-Home is account-only. Each world has one page that groups its connected skills; for
-example, World 1 combines Mining, Smithing, and Chopping for a future shared loadout
-and gains optimizer. Jelly Operator remains separate under World 7.
-
-The sidebar keeps every skill on its respective individual world page. Mining,
-Chopping, and Fishing also appear in the Misc Loadout Optimizer, a separate
-cross-skill comparison surface. The map includes the previously omitted Trapping page
-in World 3.
+A local account planner with compact pages for world systems, account bonuses,
+characters, quests and collections. Load a full export on Home, then select a
+system from the sidebar. Related systems use internal tabs. Jelly Operator in
+World 7 includes the audited combat simulator and layout optimizer.
 
 Run `npm start` here, or double-click `start.bat`. Open http://localhost:3000.
 No npm install is needed. Edit the files in this folder; source changes hot reload.
+
+Optimizers → Account Review reads the current local export and reviews stamps,
+alchemy bubbles, construction build status, worship wave records, cooking meals,
+Rift rewards and character levels. It offers milestone targets, a three-system
+shortlist, search, status filters and links to the relevant pages. Its tiers are
+planner benchmarks, not game caps. Missing data and zero progress
+are separate from upgrade suggestions. Costs, companion effects and other systems
+are not yet rated. Importing a new export refreshes the review.
 
 Paste a fresh full export, then choose an objective and search quality. Max clear
 chance is the default. The solver compares unlocked Fevers and Stronkroid timing,
 uses independent final-evaluation seeds, and includes partial and defensive boards.
 After it discovers a strong cell mix, it also performs bounded legal local placement
 refinement so adjacency, infection and Proximity arrangements are deliberately tested.
-Quick/Normal/Deep use 32/96/256 runs per finalist. This is a bounded heuristic search,
+Quick/Normal/Deep use 32/128/384 runs per finalist. This is a bounded heuristic search,
 not a proof of the globally best layout. Failed attempts are ranked by remaining
 boss HP at the END of Critical, not just damage at the normal timer.
 
@@ -74,3 +73,12 @@ the web app.
 `npm test` runs engine, search, UI wiring, and combat regressions. If ../audit/N.js is
 present, it also compares the extracted Jelly formula function with this engine.
 See AUDIT.md for findings, evidence locations, and remaining uncertainties.
+
+Crystal Cove includes a save-backed upgrade optimizer under The Hole. Choose a
+goal and either Buy now or Long-term roadmap; filter by shape, compress adjacent
+purchases, and track purchases with a persistent checklist. Rankings use marginal
+goal gain per fraction of imported shape balances, with two-purchase discount
+lookahead. They do not estimate farming time or guarantee a global optimum.
+Drop-rate comparisons hold imported shape digits and kill counts fixed. Run
+`npm run test:cove`, `npm run test:cove-client` (local audit/N.js required), and
+`npm run test:cove-browser` for the model, client parity and browser checks.

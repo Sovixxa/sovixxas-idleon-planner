@@ -1,0 +1,42 @@
+'use strict';
+const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
+const {chromium}=require(process.env.PLAYWRIGHT_PATH||'C:/Users/Sofia/AppData/Local/npm-cache/_npx/e41f203b7505f1fb/node_modules/playwright');
+(async()=>{const browser=await chromium.launch({headless:true});try{
+ const page=await browser.newPage({viewport:{width:1440,height:1000}}),errors=[];page.on('pageerror',e=>errors.push(e.message));
+ await page.route('http://localhost:7332/**',async route=>{const pathname=decodeURIComponent(new URL(route.request().url()).pathname);if(pathname.startsWith('/__'))return route.fulfill({contentType:'application/json',body:'{}'});const file=path.resolve(__dirname,'.'+(pathname==='/'?'/index.html':pathname));if(!file.startsWith(__dirname+path.sep)||!fs.existsSync(file)||fs.statSync(file).isDirectory())return route.fulfill({status:404,body:''});return route.fulfill({contentType:({'.js':'text/javascript','.css':'text/css','.html':'text/html','.png':'image/png'})[path.extname(file)]||'application/octet-stream',body:fs.readFileSync(file)});});
+
+ await page.goto('http://localhost:7332/');await page.locator('#quickNotesToggle').click();
+ const raw=JSON.parse(fs.readFileSync('../example json.txt'));
+ await page.locator('#jsonInput').fill(JSON.stringify(raw));await page.locator('#parseBtn').click();
+ await page.evaluate(()=>window.dispatchEvent(new CustomEvent('idleon:navigate',{detail:'farming'})));
+ await page.locator('[data-w6-tab="ranks"]').click({timeout:60000});
+ await page.waitForFunction(()=>document.querySelector('[data-land-result]')?.textContent.includes('points planned'),{},{timeout:90000});
+ await page.locator('[data-land-preset]').selectOption('farmingExp');
+ await page.waitForFunction(()=>document.querySelector('[data-land-result]')?.textContent.includes('points planned'),{},{timeout:90000});
+ assert.equal(await page.locator('[data-land-weight="farmingExp"]').inputValue(),'1');
+ assert.equal(await page.locator('[data-land-weight="rankExp"]').inputValue(),'0');
+ await page.locator('[data-land-weight="farmingExp"]').fill('0');
+ await page.locator('[data-land-weight="farmingExp"]').press('Tab');
+ await page.waitForFunction(()=>document.querySelector('[data-land-result]')?.textContent.includes('points planned'),{},{timeout:90000});
+ assert((await page.locator('[data-land-result]').innerText()).replace(/\s+/g,' ').includes('0 points planned'));
+ const boardBounds=await page.locator('.land-game-board').boundingBox(),settingsBounds=await page.locator('.land-settings').boundingBox();
+ assert(boardBounds.x+boardBounds.width<=settingsBounds.x,'database must be left of settings');
+ assert(Math.abs(boardBounds.y-settingsBounds.y)<2,'columns must start together');
+ assert.equal(await page.locator('[data-land-tile]').count(),20);
+ await page.locator('.land-plot-ranks summary').click();
+ assert.equal(await page.locator('.land-plot-cell').count(),36);
+ assert((await page.locator('.land-plot-cell').nth(1).innerText()).includes('Rank 233'));
+ assert(!(await page.locator('.land-plot-grid').innerText()).includes('Locked'));
+ assert((await page.locator('.land-plot-grid').boundingBox()).height<260);
+ await page.locator('.land-plot-ranks').screenshot({path:'../audit/land-plot-ranks-compact.png'});
+
+ await page.locator('[data-land-tile="16"]').click();
+ assert((await page.locator('[data-land-detail]').innerText()).includes('Row 4, column 2'));
+ assert(await page.locator('[data-land-dismiss]').isVisible());
+ await page.locator('.land-workspace').screenshot({path:'../audit/land-rank-grid-desktop.png'});
+ await page.setViewportSize({width:390,height:844});
+ assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'mobile overflow');
+ await page.locator('.land-game-board').screenshot({path:'../audit/land-rank-grid-mobile.png'});
+ assert(await page.locator('[data-land-tile] img').evaluateAll(images=>images.every(i=>i.complete&&i.naturalWidth>0)));
+ assert.deepEqual(errors,[]);console.log('Land rank browser: real save, presets, custom weights, mobile layout and no page errors pass.');
+ }finally{await browser.close();}})().catch(e=>{console.error(e);process.exitCode=1;});

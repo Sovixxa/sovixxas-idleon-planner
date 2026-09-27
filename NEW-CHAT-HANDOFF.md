@@ -1,4 +1,5 @@
 # IdleOn Planner — New Chat Handoff
+Latest audit repairs and verified remaining gaps: see `FIXES-AND-GAME-COVERAGE-2026-09-22.md`. Its findings supersede older coverage statements below.
 Updated: 2026-09-20. This replaces the old Prisma-only handoff.
 
 ## Start here

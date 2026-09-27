@@ -1,8 +1,31 @@
-.qol-bar{border:1px solid #334155;border-radius:12px;background:#101a2c;padding:12px 16px;margin-bottom:16px;color:#dce6f4}
+/* Planner command bar */
+.qol-bar{border:1px solid #343249;border-radius:14px;background:linear-gradient(115deg,#1b1b2d,#111b2b 70%);padding:14px 16px;margin-bottom:20px;color:#dce6f4;box-shadow:0 4px 18px #0002}
 .qol-actions,.qol-meta,.qol-fields,.qol-section-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.qol-actions button{font-size:12px;padding:8px 11px}.qol-actions kbd{font-size:10px;color:#9daecc;margin-left:8px}
-.qol-meta{margin-top:10px;font-size:12px;color:#9daecc}.qol-meta label{display:flex;align-items:center;gap:6px}.qol-meta input,.qol-task input{width:auto}
-#qolPageName{color:#e7eefb;font-weight:700}#qolStatus:empty{display:none}#qolStatus{font-size:12px;color:#facc78;margin-bottom:0}.qol-stale{color:#facc78}
+.qol-actions{gap:6px}
+.qol-actions button{font-size:12px;font-weight:650;padding:9px 12px;min-height:42px;background:transparent;border-color:transparent;color:#b6c1d4;transition:background .15s,border-color .15s,color .15s}
+.qol-actions button:hover{background:#ffffff08;border-color:#455069;color:#f3edff}
+.qol-actions button:focus-visible,.qol-meta input:focus-visible{outline:2px solid #c49aef;outline-offset:3px}
+.qol-actions #qolSearchOpen{display:flex;align-items:center;gap:11px;flex:1 1 280px;max-width:480px;min-width:0;margin-right:10px;padding:10px 13px;text-align:left;background:#0c1220;border:1px solid #4e4263;color:#c7bdd9;box-shadow:inset 0 1px 3px #0003}
+.qol-actions #qolSearchOpen:hover{background:#151b2c;border-color:#b58ada;color:#f0e4ff}
+#qolSearchOpen svg{width:18px;height:18px;flex-shrink:0;color:#c79ded}
+#qolSearchOpen span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.qol-actions kbd{flex-shrink:0;font:10px/1.5 ui-monospace,monospace;color:#a69cb9;border:1px solid #39354c;border-radius:5px;background:#201e30;padding:2px 6px}
+.qol-actions #qolFavorite[aria-pressed="true"]{color:#eed091;background:#e9be6510;border-color:#e9be6530}
+.qol-meta{margin-top:12px;padding-top:11px;border-top:1px solid #ffffff0b;font-size:12px;color:#95a3bb;gap:12px}
+.qol-meta label{display:flex;align-items:center;gap:8px;cursor:pointer}
+.qol-meta .qol-completion-filter{margin-left:auto}
+.qol-meta input,.qol-task input{width:auto}
+.qol-meta input{width:15px;height:15px;margin:0;accent-color:#bb8ce8;cursor:pointer}
+#qolPageName{color:#e7def3;font-weight:650}
+#qolFreshness{display:inline-flex;align-items:center;gap:8px}
+#qolFreshness::before{content:"";width:3px;height:3px;background:#69758c;border-radius:50%}
+#qolHiddenCount:empty{display:none}
+#qolStatus:empty{display:none}
+#qolStatus{font-size:12px;color:#facc78;margin-bottom:0}
+.qol-stale{color:#facc78}
+@media(max-width:1100px){.qol-actions #qolSearchOpen{flex-basis:100%;max-width:none;margin:0 0 4px}}
+@media(max-width:600px){.qol-meta .qol-completion-filter{margin-left:0;flex-basis:100%}.qol-actions button{flex-grow:1}.qol-meta{gap:9px}}
+@media(prefers-reduced-motion:reduce){.qol-actions button{transition:none}}
 .qol-favorites{border-bottom:1px solid #334155;padding:6px 0 12px;margin-bottom:10px}.qol-favorites .side-link{color:#e9cc8b}
 .qol-home-goals{margin-bottom:22px}.qol-home-goals[hidden]{display:none}.qol-home-goals .qol-section-head{justify-content:space-between;margin-bottom:12px}.qol-home-goals .qol-goal{text-align:left;color:#e7eefb}
 .qol-dialog{color:#e7eefb;background:#111c30;border:1px solid #425777;border-radius:16px;width:min(740px,calc(100vw - 24px));max-width:calc(100vw - 24px);max-height:85vh;padding:0;box-shadow:0 24px 80px #0008}
@@ -11,3 +34,7 @@
 .qol-help{color:#a7b7cf;font-size:12px}.qol-result,.qol-change,.qol-task{display:flex;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid #27364c}.qol-result>button:first-child{flex:1;text-align:left;min-width:0}.qol-result strong,.qol-result small{display:block;overflow-wrap:anywhere}.qol-result small{font-size:11px;color:#a7b7cf;margin-top:4px}.qol-change{flex-wrap:wrap;font-size:12px}.qol-change strong{flex:1;min-width:130px}.qol-tag{color:#80d9b4;min-width:80px}.qol-fields>label{flex:1;min-width:130px}.qol-fields>button{margin-bottom:14px}.qol-goals{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(260px,100%),1fr));gap:12px}.qol-goal{border:1px solid #334155;border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:10px;min-width:0}.qol-goal strong{overflow-wrap:anywhere}.qol-goal progress{width:100%;accent-color:#69cbb2}.qol-goal small{color:#a7b7cf}.qol-goal button{font-size:11px;margin:2px}.qol-task label{flex:1;display:block;margin:0;overflow-wrap:anywhere}.qol-task small{color:#9daecc}.qol-import{margin-top:22px}.qol-completed-hidden{display:none!important}
 @media(max-width:600px){.qol-bar{padding:10px}.qol-meta label{margin-left:0}.qol-dialog-body{padding:15px}.qol-dialog>header{padding:15px}.qol-actions{gap:6px}.qol-actions button{padding:7px 8px}.qol-result>button{font-size:12px}}
 @media(max-width:600px){.quick-notes:not([style*="left"]){top:auto;bottom:12px}}
+
+/* Keep the default floating notepad clear of the command bar. */
+.quick-notes:not([style*="left"]){top:auto;bottom:18px}
+
