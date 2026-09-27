@@ -16,3 +16,11 @@ assert.equal(T.calculate({}),null);assert.equal(T.duration(null),'Unknown');asse
 const saved=JSON.parse(fs.readFileSync('../example json.txt')),snapshot=JSON.stringify(saved),decoded=T.calculate(saved);
 assert(decoded.rows.every(r=>r.active<r.away));assert.equal(JSON.stringify(saved),snapshot);assert.equal(T.html(saved).includes('live countdown'),true);
 console.log('Fountain timers: full/remaining bars, all active multipliers, Arcade super/companion, marble tiers, locks, missing data and immutable save pass.');
+
+for(const tier of [0,1,2])for(const active of [true,false]){const result=T.targetLevels(saved,{tier,active,seconds:1});assert(!result.error);for(const r of result.rows){if(r.extra>0){assert(r.seconds<=1);assert(r.previousSeconds>1,'Must find the minimum required integer level');}}}
+assert(T.targetLevels(saved,{seconds:0}).error);assert(T.targetLevels(saved,{seconds:NaN}).error);
+assert(T.targetLevels(saved,{tier:1,active:false,seconds:1}).rows.every(r=>r.target===null));
+assert(T.targetLevels(saved,{seconds:1e9}).rows.every(r=>r.extra===0));assert.equal(JSON.stringify(saved),snapshot);
+console.log('Fountain target time: minimum integer levels, all bars, active/away exclusions, invalid targets, already met and immutable save pass.');
+
+assert.equal(T.targetLevels(saved,{tier:2,active:false,seconds:.01}).rows.length,0);assert.equal(T.targetLevels(saved,{tier:2,active:true,seconds:.01}).rows.length,1);assert.equal(T.targetLevels(saved,{tier:2,active:true,seconds:.01}).rows[0].name,'Water Bender');assert.equal(T.targetLevels(saved,{tier:2}).barUpgrade.name,'Rubber Ducky');

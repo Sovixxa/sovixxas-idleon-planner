@@ -43,8 +43,9 @@ function render(host,raw){
  let saved;try{saved=M.decode(raw);}catch{}
  if(!saved){host.innerHTML='<section class="bonus-system-empty section-head"><h2>Fountain Upgrade Optimizer</h2><p>Import an IdleOn save with Fountain data to plan upgrades.</p></section>';return;}
  loadChecklist(JSON.stringify([raw?.charNames||[],saved]));
- let cachedPlan,cachedSettings;
+ let cachedPlan,cachedSettings;const expanded={};
  const draw=()=>{
+  host.querySelectorAll('[data-fountain-collapse]').forEach(el=>expanded[el.dataset.fountainCollapse]=el.open);
   const settingsKey=JSON.stringify(settings);
   if(settingsKey!==cachedSettings){cachedPlan=M.plan(saved,{...settings,marbleBudget:settings.marbleLimitMode==='custom'?settings.marbleLimit*settings.marbleUnit:settings.marbleLimitMode});cachedSettings=settingsKey;}
   const result=cachedPlan,remaining=result.steps.filter(a=>!completed.includes(stepKey(a))),steps=remaining.filter(a=>payment==='all'||a.currency===Number(payment)),doneCount=result.steps.length-remaining.length,income=settings.goal==='income',outside=settings.goal==='outside',roadmap=settings.mode==='roadmap';
@@ -55,7 +56,7 @@ function render(host,raw){
   // Detach change handlers before replacing a focused input; blur can fire change again.
   host.querySelectorAll('[name]').forEach(input=>input.onchange=null);
   host.innerHTML=`<section class="fountain-page"><div class="bonus-system-hero"><div><p class="eyebrow">World 5 · The Hole</p><h2>Fountain Upgrade Optimizer</h2><p>${roadmap?'Long-term upgrade order, with purchases to save for.':'Affordable purchases using your imported balances.'}</p></div><strong>${esc(summary)}</strong></div>
-   <div class="fountain-wallet">${saved.balances.map((n,c)=>`<span title="${n} ${M.currencies[c]}">${money(n,c)}</span>`).join('')}</div>
+   <details data-fountain-collapse="wallet" class="fountain-fold"><summary>Currency balances</summary><div class="fountain-wallet">${saved.balances.map((n,c)=>`<span title="${n} ${M.currencies[c]}">${money(n,c)}</span>`).join('')}</div></details>
    ${root.FountainTimers.html(raw)}
    <form class="fountain-controls"><label>Goal <select name="goal">${M.goals.map(g=>`<option value="${g.id}" ${settings.goal===g.id?'selected':''}>${esc(g.label)}</option>`).join('')}</select></label>
    ${income?`<label>Currency <select name="target"><option value="all" ${settings.target==='all'?'selected':''}>All enabled currencies</option>${M.currencies.slice(0,9).map((n,i)=>`<option value="${i}" ${i===settings.target?'selected':''}>${n}${!M.targetOpen(saved,i)?' · locked':!M.activeCurrencies(saved).includes(i)?' · ignored':''}</option>`).join('')}</select></label>`:''}
@@ -77,9 +78,9 @@ function render(host,raw){
    ${needs.length?`<div class="fountain-funding"><strong>Additional currency needed for the full roadmap${doneCount?' (including checked-off steps)':''}</strong><p>${needs.map(({n,c})=>money(n,c)).join(' · ')}</p><small>Not in your current balance. No earning rate or completion time is assumed.</small></div>`:''}
    ${result.effects.length?`<details class="fountain-effects"><summary>Outside bonus changes (${result.effects.length})</summary><div class="fountain-effect-grid">${result.effects.map(e=>`<p><strong>${esc(effectText(e))}</strong><span>${fmt(e.before)}× → ${fmt(e.after)}× Fountain multiplier</span></p>`).join('')}</div></details>`:''}
    <details class="fountain-assumptions"><summary>Accuracy and planning method</summary><p>Costs, prerequisite levels, rounded bonuses, marbleization and currency formulas are checked against the supplied game client. Each purchase is recalculated at its projected level. Minau shows the actual cost reduction, not the larger efficiency percentage.</p><p>The order is a greedy recommendation: gain divided by the share of the payment currency budget spent. Currency budgets stay separate. Affordable purchases come first. After additional funding is required, ranking uses the original wallet as its budget reference (minimum 1 unit), and every required top-up is recorded. This is not a globally optimal plan or a time-to-goal estimate.</p><p>Income comparisons hold enabled currency types, saved desire, lucky coins and duck stacks constant. They exclude future lucky/duck rolls, royal-stack randomness, storage capacity and indirect account changes. Outside goals show direct Fountain multipliers; unlocks, caps, monument interactions and other account bonuses can change the final account result. Prerequisites with no immediate benefit are not automatically purchased. Your save is never changed.</p></details>
-   <div class="fountain-catalog-head"><h3>All upgrades</h3><div class="skill-tabs">${M.waters.map((name,i)=>`<button type="button" class="skill-tab ${water===i?'active':''}" data-water="${i}">${name}${M.waterOpen(saved,i)?'':' · locked'}</button>`).join('')}</div></div>
+   <details data-fountain-collapse="catalog" class="fountain-fold"><summary>All upgrades · browse catalogue</summary><div class="fountain-catalog-head"><h3>All upgrades</h3><div class="skill-tabs">${M.waters.map((name,i)=>`<button type="button" class="skill-tab ${water===i?'active':''}" data-water="${i}">${name}${M.waterOpen(saved,i)?'':' · locked'}</button>`).join('')}</div></div>
    <div class="fountain-grid compact-upgrades">${M.catalog.filter(u=>u.water===water&&(payment==='all'||(payment==='9'?u.marbleEligible:u.currency===Number(payment)))).map(u=>`<button type="button" class="arcade-tile ${M.unlocked(saved,u)?'':'arcade-zero'}" data-detail="${u.water*20+u.index}"><img class="arcade-icon" src="${icon(u)}" alt=""><span class="arcade-name">${esc(u.name)}</span><strong>Lv ${saved.levels[u.water][u.index]} · M${saved.marbles[u.water][u.index]}</strong><small>${M.unlocked(saved,u)?(payment==='9'?'Marbleize · '+money(M.cost(saved,u,'marble'),9):money(M.cost(saved,u),u.currency)):'Locked'}</small><span class="upgrade-tip"><strong>${esc(u.name)}</strong><span>${esc(description(saved,u))}</span></span></button>`).join('')||'<p class="fountain-note">No upgrades in this water tier use this currency. Choose another water tier or All currencies.</p>'}</div>
-   <section class="exp-card upgrade-detail detail-dismissed fountain-detail" aria-live="polite"></section></section>`;
+   </details><section class="exp-card upgrade-detail detail-dismissed fountain-detail" aria-live="polite"></section></section>`;
   const redrawChecklist=()=>{const box=host.querySelector('.fountain-plan'),top=box?.scrollTop||0,left=box?.scrollLeft||0;draw();const next=host.querySelector('.fountain-plan');next.scrollTop=top;next.scrollLeft=left;};
   host.querySelectorAll('[data-done]').forEach(button=>button.onclick=()=>{const keys=rows[Number(button.dataset.doneRow)].keys.filter(key=>!completed.includes(key));if(keys.length){completed.push(...keys);undoCounts.push(keys.length);persistChecklist();redrawChecklist();host.querySelector('[data-done], [data-undo-done]')?.focus({preventScroll:true});}});
   host.querySelector('[data-undo-done]').onclick=()=>{completed.splice(-undoCounts.pop());persistChecklist();redrawChecklist();};
@@ -97,6 +98,8 @@ function render(host,raw){
    panel.classList.remove('detail-dismissed');panel.querySelector('button').onclick=()=>panel.classList.add('detail-dismissed');
   });
   currencyPickers(host);
+  root.FountainTimers.bindTarget(host,raw);
+  host.querySelectorAll('[data-fountain-collapse]').forEach(el=>{if(el.dataset.fountainCollapse in expanded)el.open=expanded[el.dataset.fountainCollapse];});
   host.bonusAfterRender?.();
  };
  draw();
