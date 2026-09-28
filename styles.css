@@ -115,3 +115,34 @@ body .compact-upgrades{grid-template-columns:repeat(6,minmax(0,1fr));gap:6px;pad
 .side-link-label{min-width:0;line-height:1.35}
 
 .side-footer .footer-privacy{display:inline-block;margin-left:4px;color:#929baa;font-size:11px;font-weight:400;text-decoration:none}.side-footer .footer-privacy:hover{text-decoration:underline;color:#c2cad5}.side-footer .footer-privacy:focus-visible{outline:2px solid #c2cad5;outline-offset:3px}
+/* Alchemy collection: readable tiles and a viewport-bounded bonus preview. */
+body .alchemy-catalog.alchemy-board{grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;padding:0;border:0;background:none;margin-top:18px}
+body .alchemy-board .alchemy-cauldron{padding:14px;background:#161422;border-color:#3e354e}
+body .alchemy-board .alchemy-grid{grid-template-columns:repeat(7,minmax(0,1fr));gap:8px}
+body .alchemy-board .alchemy-bubble{min-height:78px;padding:10px 3px 6px;border-color:#4d425e;background:#201b2d;cursor:pointer;transform:none}
+body .alchemy-board .alchemy-bubble img{width:36px;height:36px;image-rendering:pixelated}
+body .alchemy-board .alchemy-bubble>span{font-size:.64rem;letter-spacing:0}
+body .alchemy-board .alchemy-bubble.prismad{border:1px solid #d8b552;background:#332b22;box-shadow:inset 0 0 0 1px #d8b55235}
+body .alchemy-board .alchemy-bubble.prismad::after{display:none}
+body .alchemy-board .alchemy-bubble i{top:2px;right:50%;transform:translateX(50%);padding:1px 3px;font-size:.43rem;box-shadow:none}
+body .alchemy-board .alchemy-bubble:hover,body .alchemy-board .alchemy-bubble:focus-visible{border-color:#dbbaff;background:#362b48;outline:2px solid #ba8ad5;outline-offset:2px}
+.alchemy-heading{margin-top:16px}.alchemy-board-note{font-size:.8rem;color:#a7abc0;line-height:1.6;max-width:900px}
+.alchemy-hover-card{position:fixed;z-index:200;width:330px;max-width:calc(100vw - 20px);max-height:calc(100vh - 20px);box-sizing:border-box;overflow:auto;padding:18px;border:1px solid #9473b1;border-radius:14px;background:#191625;box-shadow:0 16px 50px #0009;text-align:left;color:#eae5f3;font-size:13px;line-height:1.5}
+.alchemy-hover-card[hidden]{display:none}
+.alchemy-bonus-title{display:flex;align-items:center;gap:12px;margin-bottom:16px}.alchemy-bonus-title img{object-fit:contain;image-rendering:pixelated;flex-shrink:0}.alchemy-bonus-title h3{font-size:14px;line-height:1.4;margin:0!important}.alchemy-bonus-title p{font-size:11px;color:#b7a4ce;margin:4px 0 0!important}
+.alchemy-bonus-label{font-size:11px;letter-spacing:.04em;color:#c0b3d0;margin:0!important}.alchemy-bonus-value{font-size:21px;font-weight:750;color:#f0defe;line-height:1.4!important;margin:5px 0 12px!important;overflow-wrap:anywhere}
+.alchemy-bonus-meter{height:7px;border-radius:10px;background:#383044;overflow:hidden}.alchemy-bonus-meter>span{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,#a983d5,#e9c976)}.alchemy-bonus-percent{font-size:11px;color:#cbb4e2;margin:6px 0 14px!important}.alchemy-bonus-effect{padding-top:12px;border-top:1px solid #3c324c;color:#f1ecf7;margin:12px 0!important}.alchemy-bonus-scope,.alchemy-bonus-note{font-size:11px!important;line-height:1.55!important;color:#ada2bc;margin:8px 0 0!important}
+@media(min-width:1720px){body .alchemy-catalog.alchemy-board{grid-template-columns:repeat(4,minmax(0,1fr))}body .alchemy-board .alchemy-grid{grid-template-columns:repeat(6,minmax(0,1fr))}}
+@media(max-width:1000px){body .alchemy-catalog.alchemy-board{grid-template-columns:1fr}}
+@media(max-width:520px){body .alchemy-board .alchemy-grid{grid-template-columns:repeat(5,minmax(0,1fr));gap:7px}body .alchemy-board .alchemy-cauldron{padding:10px}body .alchemy-board .alchemy-bubble{min-height:73px}body .alchemy-board .alchemy-bubble>span{font-size:.58rem}}
+@media(prefers-reduced-motion:reduce){body .alchemy-board .alchemy-bubble{transition:none}}
+#alchemyDetail{z-index:210;max-height:calc(100vh - 36px);overflow:auto}
+@media(max-width:600px){#alchemyDetail{top:50%;left:50%;right:auto;bottom:auto;transform:translate(-50%,-50%);width:calc(100vw - 32px);max-height:calc(100vh - 48px);box-sizing:border-box}}
+/* Keep every tile centered and reserve enough width for full six-digit levels. */
+body .alchemy-board .alchemy-grid{display:flex;flex-wrap:wrap;justify-content:center;align-items:stretch;gap:8px}
+body .alchemy-board .alchemy-bubble{box-sizing:border-box;flex:0 0 66px;width:66px;min-width:66px;min-height:86px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;padding:15px 3px 6px;text-align:center}
+body .alchemy-board .alchemy-bubble img{display:block;flex:0 0 36px;margin:0 auto}
+body .alchemy-board .alchemy-bubble>span{display:block;width:100%;min-width:0;text-align:center;white-space:normal;font-size:10px;line-height:1.25;overflow-wrap:normal}
+@media(max-width:520px){body .alchemy-board .alchemy-grid{gap:7px}body .alchemy-board .alchemy-bubble{flex-basis:60px;width:60px;min-width:60px}}
+.alchemy-threshold{display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;margin:18px 0;padding:16px;border:1px solid #40354f;border-radius:12px;background:#181522}.alchemy-threshold strong{font-size:13px;color:#e9dcf6}.alchemy-threshold-buttons{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}.alchemy-threshold-buttons button{min-height:40px;padding:8px 14px}.alchemy-threshold-buttons button[aria-pressed="true"]{background:#4b3262;border-color:#c096e8;color:#fff}.alchemy-threshold-buttons button:focus-visible{outline:2px solid #dab4fa;outline-offset:3px}#alchemyThresholdStatus{max-width:510px;margin:0;font-size:12px;line-height:1.6;color:#b6a8c7}body .alchemy-board .alchemy-bubble.threshold-met{opacity:.24;filter:grayscale(.85)}body .alchemy-board .alchemy-bubble.threshold-met:hover,body .alchemy-board .alchemy-bubble.threshold-met:focus-visible,body .alchemy-board .alchemy-bubble.threshold-met.selected{opacity:1;filter:none}
+.alchemy-bonus-target{padding:10px 12px;border:1px solid #655137;border-radius:8px;background:#332b20;color:#f1d99e;font-size:12px!important;line-height:1.6!important;margin:12px 0!important}

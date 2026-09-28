@@ -74,9 +74,9 @@
     const bar=doc.createElement('section');bar.className='qol-bar';bar.setAttribute('aria-label','Planner shortcuts');
     bar.innerHTML='<div class="qol-actions"><button id="qolSearchOpen" class="secondary" aria-label="Search pages and bonuses" aria-haspopup="dialog" aria-keyshortcuts="Control+K Meta+K"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4.5 4.5"/></svg><span>Search pages & bonuses…</span><kbd>Ctrl K</kbd></button><button id="qolFavorite" class="secondary" aria-pressed="false">☆ Favorite</button><button id="qolNotesOpen" class="secondary">Page notes</button><button id="qolPlanOpen" class="secondary">Goals & checklist</button><button id="qolChangesOpen" class="secondary">Changes</button><button id="qolBackupOpen" class="secondary">Backup</button></div><div class="qol-meta"><span id="qolPageName">Home</span><span id="qolFreshness">No save loaded</span><label class="qol-completion-filter"><input id="qolHideDone" type="checkbox"> Hide maxed / completed</label><span id="qolHiddenCount"></span></div><p id="qolStatus" role="status"></p>';
     shell.prepend(bar);
-    const favorites=doc.createElement('nav');favorites.className='qol-favorites';favorites.setAttribute('aria-label','Favorite pages');doc.getElementById('navHome').after(favorites);
     const dialog=doc.createElement('dialog');dialog.className='qol-dialog';dialog.setAttribute('aria-labelledby','qolDialogTitle');doc.body.append(dialog);
     const homeGoals=doc.createElement('section');homeGoals.className='qol-home-goals';homeGoals.setAttribute('aria-label','Pinned goals');doc.getElementById('characterDashboard')?.before(homeGoals);
+    const homeFavorites=doc.createElement('section');homeFavorites.className='qol-home-favorites';homeFavorites.setAttribute('aria-labelledby','qolHomeFavoritesTitle');doc.getElementById('panelHome')?.prepend(homeFavorites);
     const button=(id,fn)=>doc.getElementById(id).addEventListener('click',fn);
     function openDialog(heading,html){
       dialog.innerHTML=`<header><h2 id="qolDialogTitle">${esc(heading)}</h2><button class="secondary" data-close aria-label="Close dialog">Close</button></header><div class="qol-dialog-body">${html}</div>`;
@@ -84,8 +84,10 @@
     }
     dialog.addEventListener('click',e=>{if(e.target===dialog)dialog.close();});
     function paintFavorites(){
-      favorites.innerHTML=settings.favorites.filter(k=>registry[k]).map(k=>`<button class="side-link${k===current?' active':''}" data-go="${esc(k)}">★ ${esc(title(k))}</button>`).join('');
-      favorites.hidden=!favorites.children.length;favorites.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>go(b.dataset.go));
+      const saved=settings.favorites.filter(k=>registry[k]);
+      homeFavorites.hidden=current!=='home';
+      homeFavorites.innerHTML=`<div class="qol-section-head"><h3 id="qolHomeFavoritesTitle"><span aria-hidden="true">★</span> Favorites</h3><span class="qol-help">${saved.length} saved ${saved.length===1?'page':'pages'}</span></div>${saved.length?`<nav class="qol-home-favorites-grid" aria-label="Your favorite pages">${saved.map(k=>`<button class="secondary qol-home-favorite" data-go="${esc(k)}"><span>${esc(title(k))}</span><span aria-hidden="true">→</span></button>`).join('')}</nav>`:'<p class="qol-help">Keep your go-to pages close. Open a page and select ☆ Favorite to add it here.</p>'}`;
+      homeFavorites.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>go(b.dataset.go));
       doc.getElementById('qolFavorite').textContent=settings.favorites.includes(current)?'★ Favorited':'☆ Favorite';doc.getElementById('qolFavorite').setAttribute('aria-pressed',String(settings.favorites.includes(current)));
     }
     button('qolFavorite',()=>{settings.favorites=settings.favorites.includes(current)?settings.favorites.filter(k=>k!==current):[...settings.favorites,current];save();paintFavorites();});

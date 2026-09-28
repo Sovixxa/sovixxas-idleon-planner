@@ -1,0 +1,17 @@
+'use strict';
+const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),B=require('./bubble-bonuses');
+const box={window:{}};vm.runInNewContext(fs.readFileSync('alchemy-data.js','utf8'),box);const catalog=box.window.ALCHEMY_CATALOG;
+const options=[];options[384]='';const raw={CauldronInfo:catalog.map(g=>g.bubbles.map(()=>10)),OptLacc:options};
+let report=B.model(raw,catalog,{prismaMulti:2});const ids=Object.values(B.CATEGORIES).flatMap(s=>s.split(' '));
+assert.equal(report.entries.length,133);assert.equal(new Set(ids).size,133);assert.equal(ids.length,133);
+assert(report.entries.every(e=>ids.includes(e.id)&&e.label&&fs.existsSync(e.icon)));
+assert.equal(report.groups.reduce((n,g)=>n+g.entries.length,0),133);
+const row=id=>report.entries.find(e=>e.id===id);
+assert.equal(row('O5').value,'Character-dependent');assert.equal(row('Y7').value,'Character-dependent');
+assert.match(row('O24').qualifier,/250 STR/);assert.match(row('G2').badges.join(' '),/activation/);
+assert.equal(row('O10').category,'combat');assert.equal(row('Y17').category,'production');assert.match(row('Y17').value,/×/);
+const plain=row('O0').effective;report=B.model(raw,catalog,{prismaMulti:2},true);assert(report.entries.find(e=>e.id==='O0').effective>plain);
+raw.CauldronInfo[0][0]=0;assert.equal(B.model(raw,catalog).entries.find(e=>e.id==='O0').value,'Locked');
+assert(B.model({},catalog).entries.every(e=>e.value==='Unknown'));
+const snapshot=JSON.stringify(raw);B.model(raw,catalog);assert.equal(JSON.stringify(raw),snapshot);
+console.log('Bubble bonuses: all 133 sources categorized once, units, scaling qualifiers, activation, class context, unknown/locked values and purity pass.');

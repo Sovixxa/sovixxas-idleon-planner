@@ -26,7 +26,11 @@
 @media(max-width:1100px){.qol-actions #qolSearchOpen{flex-basis:100%;max-width:none;margin:0 0 4px}}
 @media(max-width:600px){.qol-meta .qol-completion-filter{margin-left:0;flex-basis:100%}.qol-actions button{flex-grow:1}.qol-meta{gap:9px}}
 @media(prefers-reduced-motion:reduce){.qol-actions button{transition:none}}
-.qol-favorites{border-bottom:1px solid #334155;padding:6px 0 12px;margin-bottom:10px}.qol-favorites .side-link{color:#e9cc8b}
+.qol-home-favorites[hidden]{display:none}
+.qol-home-favorites{margin-bottom:22px;padding:18px;border:1px solid #343249;border-radius:14px;background:linear-gradient(115deg,#1b1b2d,#111b2b 70%)}
+.qol-home-favorites .qol-section-head{justify-content:space-between;margin-bottom:12px}.qol-home-favorites h3{margin:0;font-size:16px;color:#e7eefb}.qol-home-favorites h3 span{color:#e9cc8b;margin-right:6px}.qol-home-favorites p{margin:0;line-height:1.6}
+.qol-home-favorites-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(220px,100%),1fr));gap:10px}
+.qol-home-favorites .qol-home-favorite{display:flex;align-items:center;justify-content:space-between;gap:12px;min-width:0;min-height:48px;padding:12px 14px;text-align:left;color:#e7eefb;background:#0c1424;border:1px solid #38445b;border-radius:9px}.qol-home-favorite span:first-child{overflow-wrap:anywhere}.qol-home-favorite span:last-child{color:#e9cc8b}.qol-home-favorites .qol-home-favorite:hover{background:#20283b;border-color:#b58ada}.qol-home-favorite:focus-visible{outline:2px solid #c49aef;outline-offset:3px}
 .qol-home-goals{margin-bottom:22px}.qol-home-goals[hidden]{display:none}.qol-home-goals .qol-section-head{justify-content:space-between;margin-bottom:12px}.qol-home-goals .qol-goal{text-align:left;color:#e7eefb}
 .qol-dialog{color:#e7eefb;background:#111c30;border:1px solid #425777;border-radius:16px;width:min(740px,calc(100vw - 24px));max-width:calc(100vw - 24px);max-height:85vh;padding:0;box-shadow:0 24px 80px #0008}
 .qol-dialog::backdrop{background:#030815bb}.qol-dialog>header{position:sticky;top:0;z-index:1;background:#111c30;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:18px 22px;border-bottom:1px solid #334155}.qol-dialog h2{margin:0;font-size:20px}.qol-dialog-body{padding:20px 22px}.qol-dialog h3{font-size:16px;margin:20px 0 12px}.qol-dialog p{line-height:1.6}

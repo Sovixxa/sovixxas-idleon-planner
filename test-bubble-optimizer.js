@@ -35,3 +35,47 @@ assert.equal(row(B.model(raw,catalog,{prismaMulti:2,shared:{Y6:100}}),'Y6').gain
 
 assert.equal(row(B.model(raw,catalog,{prismaMulti:2},{goal:.9}),'Y9').softLevel,900);
 assert.equal(row(B.model(raw,catalog,{prismaMulti:2}),'Y11').gain,null);
+// Spending plans respect the installed 100M threshold, per-click repricing, and separate budgets.
+const reqs=[{rawName:'Critter1',name:'Froge',baseCost:10},{rawName:'Liquid2',name:'Liquid2',baseCost:3}];
+const spendingContext={spending:{discounts:Array.from({length:4},()=>({all:1,matching:.05})),larry:425,liquids:[1e6,1e6,1e6,1e6],particles:1e9,boron:true,remainingAtomClicks:3}};
+const planRow={id:'O10',state:'Underleveled',level:1000,target:1100};
+let plan=B.spendingPlan(planRow,reqs,spendingContext,{clicks:25});
+assert.equal(plan.method,'Atoms');assert.equal(plan.clicks,3);assert.equal(plan.target,1015);assert.equal(plan.gain,5);
+assert.equal(plan.particles,3*Math.floor(11*Math.pow(1.04,10)*100));
+assert.equal(plan.totals.Liquid2,159);assert(!('Critter1' in plan.totals));
+assert.equal(B.spendingPlan(planRow,reqs,spendingContext,{atomClicks:0}).clicks,0);
+assert.equal(B.spendingPlan(planRow,reqs,{spending:{...spendingContext.spending,particles:0}}).clicks,0);
+assert.equal(B.spendingPlan(planRow,reqs,{spending:{...spendingContext.spending,liquids:[0,52,0,0]}}).clicks,0);
+assert.equal(B.spendingPlan({...planRow,state:'Capped'},reqs,spendingContext).method,'Hold');
+assert.equal(B.spendingPlan({...planRow,level:1},reqs,spendingContext).method,'Materials / other');
+const candyReq=[{rawName:'Copper',name:'Copper Ore',baseCost:1},reqs[1]];
+plan=B.spendingPlan(planRow,candyReq,spendingContext,{clicks:2});assert.equal(plan.method,'Candy / materials');assert.equal(plan.totals.Copper,2e9);assert.equal(plan.particles,0);
+assert.equal(B.materialCost({rawName:'W6item8',baseCost:1},27,1000,1),null);
+assert.equal(B.materialCost({rawName:'Bits',baseCost:1},20,1000,1),null);
+assert.equal(B.materialCost({rawName:'Liquid1',baseCost:2},0,39,1),3);
+assert.equal(B.materialCost({rawName:'Liquid1',baseCost:2},0,40,1),4);
+assert.equal(B.materialCost(candyReq[0],0,100000,1),1e9);
+assert.equal(B.materialCost(candyReq[0],0,1,null),null);
+assert.equal(B.candyMaterial('Refinery2'),false);assert.equal(B.candyMaterial('Soul1'),false);assert.equal(B.candyMaterial('OakTree'),true);
+assert(real.rows.every(r=>fs.existsSync(r.icon)),'Every bubble has a local picture');
+assert(Number.isFinite(result.spending.remainingAtomClicks),'Save supplies remaining atom clicks');
+console.log('Bubble spending: atom eligibility, session limits, particles, liquids, candy materials, missing data, special resources and local icons pass.');
+// Collection tooltips distinguish usable hard caps from theoretical ceilings.
+let summary=B.bonusSummary({effective:42,base:21,ceiling:50,cap:{limit:35},conditional:null}, {bonus:'+{ % chance to keep points.'});
+assert.equal(summary.headline,'35% of 35%');assert.equal(summary.ratio,1);assert.equal(summary.effect,'+35 % chance to keep points.');
+summary=B.bonusSummary({effective:3,base:1.5,ceiling:4,cap:null}, {bonus:'Gain { x more resources.'});assert.equal(summary.headline,'3× of 4×');assert.equal(summary.label,'theoretical maximum');
+summary=B.bonusSummary({effective:50,base:50,ceiling:null,cap:null}, {bonus:'+{ Total STR.'});assert.equal(summary.maximum,null);assert.match(summary.headline,/no fixed maximum/);
+summary=B.bonusSummary({effective:null,base:10,ceiling:40,cap:{limit:35}}, {bonus:'+{ % chance.'});assert.match(summary.scope,/Base bonus/);assert.equal(summary.maximum,40);
+summary=B.bonusSummary({effective:30,base:30,ceiling:40,cap:{limit:35,shared:true}}, {bonus:'+{ % chance.'});assert.equal(summary.maximum,40);assert.match(summary.note,/shares a cap/);
+console.log('Collection bonus summaries: caps, theoretical limits, units, shared pools and missing multipliers pass.');
+const cappedTarget=B.bonusLevelTarget({cap:{limit:35},capLevel:420,effective:10,level:100},catalog[3].bubbles[23]);assert.equal(cappedTarget.level,420);assert.match(cappedTarget.text,/320 levels to go/);
+for(const threshold of [80,90,95,99]){
+ const bubble=catalog[0].bubbles[1],target=B.bonusLevelTarget({cap:null,level:1},bubble,threshold);
+ assert(B.value(bubble,target.level)>=3*threshold/100);
+ assert(B.value(bubble,target.level-1)<3*threshold/100);
+ assert.match(target.text,/No finite level/);
+}
+assert.equal(B.bonusLevelTarget({cap:{shared:true},shared:null},catalog[3].bubbles[11]).level,null);
+assert.equal(B.bonusLevelTarget({cap:null},catalog[0].bubbles[11]).level,null);
+assert.equal(B.bonusLevelTarget({cap:{limit:35},effective:null},catalog[3].bubbles[23]).level,null);
+console.log('Hover level targets: exact caps, selected checkpoints, unbounded bonuses and missing context pass.');

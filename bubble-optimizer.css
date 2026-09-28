@@ -2,3 +2,4 @@
 
 .bubble-optimizer{width:100%;min-width:0}.bubble-table-wrap{max-width:100%;width:100%;min-width:0}.bubble-todo article{min-width:0}
 .bubble-table-wrap{contain:inline-size}
+.bubble-name{display:flex;align-items:center;gap:10px;min-width:0}.bubble-name img{flex:0 0 40px;object-fit:contain;image-rendering:pixelated}.bubble-todo .bubble-name{font-size:1rem;color:var(--text)}.bubble-name strong{overflow-wrap:anywhere}.bubble-route{color:#dab8ff;font-weight:650}.bubble-costs{padding-left:20px;font-size:.85rem;line-height:1.7}.bubble-candy-input{display:grid;gap:6px;font-size:.8rem;color:var(--muted)}.bubble-candy-input input{width:100%;min-width:0;box-sizing:border-box;padding:9px;border:1px solid var(--line);border-radius:7px;background:var(--panel);color:var(--text)}
