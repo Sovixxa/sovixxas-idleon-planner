@@ -20,9 +20,10 @@ onmessage=event=>{try{
   const group={combat:0,skills:1,misc:2}[s.category],index=account.stamps[s.category].indexOf(stamp),lv=parse(parse(data.StampLv??data.StampLevel)?.[group])?.[index],max=parse(parse(data.StampLvM??data.StampLevelMAX)?.[group])?.[index];
   return {name:s.displayName.replaceAll('_',' '),id:s.rawName,category:s.category,level:s.level,maxLevel:s.maxLevel,known:lv!==null&&lv!==undefined&&max!==null&&max!==undefined&&typeof lv!=='boolean'&&typeof max!=='boolean'&&Number.isFinite(Number(lv))&&Number(lv)>=0&&Number.isFinite(Number(max))&&Number(max)>=0,
    goldCost:s.goldCost,materialCost:s.materialCost,item:s.itemReq?.name?.replaceAll('_',' '),itemId:s.itemReq?.rawName,owned:s.ownedMats,crafted:item?.itemType==='Equip',carriers,
-   func:s.func,x1:s.x1,x2:s.x2,stat:s.stat,description:s.effect?.replaceAll('_',' '),interval:s.reqItemMultiplicationLevel,
+   func:s.func,x1:s.x1,x2:s.x2,stat:s.stat,skillIndex:s.skillIndex,description:s.effect?.replaceAll('_',' '),interval:s.reqItemMultiplicationLevel,
+   characterEffects:characters.map(c=>{const value=PrayerMath.getStampBonus(account,s.category,s.rawName,c);return Number.isFinite(value)?value:null;}),
    // Exact effect thresholds are used only for misc stamps, which have no skill-level penalty.
    effect:Number.isFinite(effect)?effect:null,effectMultiplier:s.category==='misc'&&base>0&&Number.isFinite(effect)?effect/base:null};
  });
- postMessage({result:{rows,money:account.currencies.rawMoney}});
+ postMessage({result:{rows,money:account.currencies.rawMoney,characters:characters.map(c=>({name:c.name,id:c.playerId}))}});
 }catch(error){postMessage({error:error.message});}};

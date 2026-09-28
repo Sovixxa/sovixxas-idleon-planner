@@ -8,6 +8,35 @@ World 7 includes the audited combat simulator and layout optimizer.
 Run `npm start` here, or double-click `start.bat`. Open http://localhost:3000.
 No npm install is needed. Edit the files in this folder; source changes hot reload.
 
+All Account Bonuses shows compact purple, searchable stat tiles for the selected character
+and account. The example export has 103 totals: combat stats, skill EXP, activity
+AFK gains, food effects, per-slot capacities, construction and world-system rates.
+Calculation workers are reused for the same imported save; stat categories appear
+together after loading. Popup breakdowns are built on demand, and source filters
+reuse the character catalogue rather than recalculating it.
+Click a tile or catalogue bonus for an Arcade-style lower-right popup; Close or
+Escape returns focus. Full ledgers preserve source pools and calculation rules.
+Calculated totals include source pools or expandable calculation steps showing
+input values, multipliers, caps and intermediate dependencies. Breakdowns use
+collapsible calculation pools with numeric values sorted highest to lowest inside
+each pool; original stages, units and calculation dependencies remain intact.
+When a source list is present, the full trace is collapsed separately. Explicit
+operations take precedence over stage labels; mixed expressions stay intermediate
+calculations rather than being guessed as independent multipliers. STR/AGI/WIS/LUK
+show an independent reconstruction of equipment, obols, flat sources, percentage
+pools and post-multiplier additions alongside the exact saved number. Differences
+remain explicitly unreconciled; no residual is invented as a bonus. Stat snapshot
+levels can differ from the character levels elsewhere in the same export.
+Cooking uses saved active presets; capacities use the saved map; sample rate is
+capped at 90%. Underneath, all decoded source systems remain collapsible, with
+calculated stamp and bubble values. Related-benefit grouping matches descriptions
+and is a browsing aid, not an exact dependency graph or a combined stat sum.
+Run `npm run test:connected-bonuses` for calculation and browser checks.
+After changing traced parser formulas, regenerate the separate worker engine with
+`node build-connected-trace.js`. The builder uses esbuild and Playwright's bundled
+Babel parser (`PLAYWRIGHT_PATH` can override the local Playwright package path).
+The generated engine is checked in; normal builds do not require regeneration.
+
 Use **Connect account** for Steam or Idleon email/password sign-in. Steam opens
 the official Steam sign-in page; copy the resulting Idleon `/steamsso/` address
 back into the connection dialog without pressing the blue button on that page.

@@ -26,3 +26,11 @@ for(const name of ['drop-rate-worker','combat-stat-worker']){
  new vm.Script(script);
 }
 console.log('Public navigation and versioned page/worker dependency graph pass.');
+
+for(const file of fs.readdirSync('dist').filter(name=>name.endsWith('.js'))){
+ const text=fs.readFileSync('dist/'+file,'utf8');
+ for(const match of text.matchAll(/new\s+(?:[\w$]+\.)*Worker\(\s*['"]([^'"]+\.js(?:\?[^'"]*)?)['"]/g))assert(match[1].endsWith('?v='+release),file+': unversioned worker '+match[1]);
+}
+assert(fs.readFileSync('dist/privacy.html','utf8').includes('privacy.js?v='+release));
+assert(fs.readFileSync('dist/privacy.html','utf8').includes('styles.css?v='+release));
+console.log('All qualified Worker constructors and auxiliary HTML assets use the same release version.');

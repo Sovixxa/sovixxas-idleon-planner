@@ -15,3 +15,11 @@ raw.CauldronInfo[0][0]=0;assert.equal(B.model(raw,catalog).entries.find(e=>e.id=
 assert(B.model({},catalog).entries.every(e=>e.value==='Unknown'));
 const snapshot=JSON.stringify(raw);B.model(raw,catalog);assert.equal(JSON.stringify(raw),snapshot);
 console.log('Bubble bonuses: all 133 sources categorized once, units, scaling qualifiers, activation, class context, unknown/locked values and purity pass.');
+for(const target of [80,90,95,99,99.9]){
+ const entries=B.model(raw,catalog,{prismaMulti:2},false,target).entries;
+ const damage=entries.find(e=>e.id==='O10');
+ assert(Math.abs(damage.target-damage.ceiling*target/100)<1e-9);
+ assert.equal(damage.targetLabel,target+'% target');
+ assert.match(damage.summary.target.text,new RegExp(String(target).replace('.','\\.')+'% checkpoint'));
+}
+console.log('Bubble bonus dropdown targets: 80, 90, 95, 99 and 99.9 percent pass.');

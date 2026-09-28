@@ -11,10 +11,10 @@ const num=v=>{
  return `<span title="${v.toLocaleString('en-US',{maximumFractionDigits:20})}">${label}</span>`;
 };
 const cache=new WeakMap();
-function load(raw){if(cache.has(raw))return cache.get(raw);const p=new Promise((resolve,reject)=>{const w=new Worker('stamp-calculator-worker.js');const end=(error,result)=>{clearTimeout(timer);w.terminate();error?reject(Error(error)):resolve(result);};const timer=setTimeout(()=>end('Calculation timed out. Please reimport your save.'),90000);w.onmessage=e=>end(e.data.error,e.data.result);w.onerror=e=>end(e.message);w.postMessage(raw);});cache.set(raw,p);p.catch(()=>cache.delete(raw));return p;}
+function load(raw){if(cache.has(raw))return cache.get(raw);const p=new Promise((resolve,reject)=>{const w=new Worker('stamp-calculator-worker.js');const end=(error,result)=>{clearTimeout(timer);w.terminate();error?reject(Error(error)):resolve(result);};const timer=setTimeout(()=>end('Calculation timed out. Please reimport your save.'),90000);w.onmessage=e=>end(e.data.error,e.data.result);w.onerror=e=>end(e.message||'Stamp calculation could not load. Reopen this page to retry.');try{w.postMessage(raw);}catch(error){end(error.message||'Stamp calculation could not start.');}});cache.set(raw,p);p.catch(()=>cache.delete(raw));return p;}
 async function render(host,raw,collection){
- host.innerHTML='<section class="stamp-calculator"><h2>Stamps</h2><nav class="skill-tabs"><button class="skill-tab active">Upgrade calculator</button><button class="skill-tab" id="stampCollection">Collection</button></nav><div id="stampCalcBody"><p>Calculating stamp costs and W1 carry capacity…</p></div></section>';
- host.querySelector('#stampCollection').onclick=collection;const body=host.querySelector('#stampCalcBody');let model;
+ host.innerHTML='<section class="stamp-calculator"><h2>Stamps</h2><nav class="skill-tabs"><button class="skill-tab active">Upgrade calculator</button><button class="skill-tab" id="stampCollection">Collection</button><button class="skill-tab" id="stampOpenBonuses">Stamp Bonuses</button></nav><div id="stampCalcBody"><p>Calculating stamp costs and W1 carry capacity…</p></div></section>';
+ host.querySelector('#stampCollection').onclick=collection;host.querySelector('#stampOpenBonuses').onclick=()=>root.dispatchEvent(new CustomEvent('idleon:navigate',{detail:'stampBonuses'}));const body=host.querySelector('#stampCalcBody');let model;
  try{model=await load(raw);}catch(error){if(body.isConnected)body.innerHTML='<p>'+esc(error.message)+'</p>';return;}if(!body.isConnected)return;
 
  const statuses=['All','Upgradeable now','Clear inventory','Carry blocked','Need coins','Need materials','Crafting required','Capped','Soft target met','Check shared cap','Not acquired','Unknown'];
@@ -36,5 +36,5 @@ async function render(host,raw,collection){
  };draw();
 
 }
-root.StampCalculator={render};
+root.StampCalculator={render,load};
 })(globalThis);

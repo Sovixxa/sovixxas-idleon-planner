@@ -100,5 +100,5 @@ async function render(host,raw,navigate){
  }
  paint();
 }
-root.DropRate={render,characterHtml,missingHtml};
+root.DropRate={calculate,render,characterHtml,missingHtml};
 })(typeof window!=='undefined'?window:globalThis);

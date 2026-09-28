@@ -1,0 +1,62 @@
+'use strict';
+const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
+const {chromium}=require(process.env.PLAYWRIGHT_PATH||'C:/Users/Sofia/AppData/Local/npm-cache/_npx/e41f203b7505f1fb/node_modules/playwright');
+(async()=>{
+ const browser=await chromium.launch({headless:true});
+ try{
+ const page=await browser.newPage({viewport:{width:1440,height:1000}}),errors=[];page.on('pageerror',e=>errors.push(e.message));
+ await page.route('http://localhost:7331/**',async route=>{
+  const pathname=decodeURIComponent(new URL(route.request().url()).pathname);
+  if(pathname.startsWith('/__'))return route.fulfill({contentType:'application/json',body:'{}'});
+  const file=path.resolve(__dirname,'.'+(pathname==='/'?'/index.html':pathname));
+  if(!file.startsWith(__dirname+path.sep)||!fs.existsSync(file)||fs.statSync(file).isDirectory())return route.fulfill({status:404,body:''});
+  const type={'.js':'text/javascript','.css':'text/css','.html':'text/html','.png':'image/png','.json':'application/json','.svg':'image/svg+xml'}[path.extname(file)]||'application/octet-stream';
+  return route.fulfill({contentType:type,body:fs.readFileSync(file)});
+ });
+ await page.goto('http://localhost:7331/');
+
+ const raw=JSON.parse(fs.readFileSync('../example json.txt','utf8'));
+ await page.locator('#jsonInput').fill(JSON.stringify(raw));await page.locator('#parseBtn').click();
+ await page.waitForFunction(()=>/^(Save age|Imported):/.test(document.getElementById('qolFreshness').textContent),{},{timeout:60000});
+ await page.evaluate(()=>{window.connectedSourceLookups=0;for(const source of [window.CombatSourceInfo,window.DropSourceInfo]){const get=source.get;source.get=function(...args){window.connectedSourceLookups++;return get.apply(this,args);};}});
+ await page.locator('.side-group > span').filter({hasText:/^Bonuses$/}).click();
+ await page.locator('#navConnectedBonuses').click();
+ await page.locator('[data-total="bits"]').waitFor({state:'attached',timeout:180000});
+ await page.locator('#connectedSearch').waitFor({timeout:120000});
+ console.log('Interaction benchmark (ms):',await page.evaluate(()=>{const input=document.querySelector('#connectedStatSearch'),searchStart=performance.now();for(const text of ['damage','capacity','exp','agi','']){input.value=text;input.dispatchEvent(new Event('input',{bubbles:true}));}const search=performance.now()-searchStart;const filter=document.querySelector('#connectedSearch'),catalogueStart=performance.now();for(const text of ['damage','cooking','stamp','']){filter.value=text;filter.dispatchEvent(new Event('input',{bubbles:true}));}return {fiveStatSearches:Math.round(search),fourCatalogueSearches:Math.round(performance.now()-catalogueStart)};}));
+ assert.equal(await page.evaluate(()=>window.connectedSourceLookups),0,'Closed popup source descriptions must not be constructed on load or search');
+ assert(await page.locator('[data-total]').count()>90);
+ assert.equal(await page.locator('.connected-stat-group[open]').count(),0);
+ await page.locator('.connected-stat-group > summary').first().click();assert.equal(await page.locator('.connected-stat-group[open]').count(),1);await page.locator('.connected-stat-group > summary').first().click();assert.equal(await page.locator('.connected-stat-group[open]').count(),0);
+ await page.evaluate(()=>document.querySelectorAll('.connected-stat-group').forEach(g=>g.open=true));
+ const emptyLedgers=await page.evaluate(()=>{const failures=[];for(const tile of document.querySelectorAll('[data-total]')){tile.click();const popup=document.querySelector('#connectedPopup');if(!popup.querySelector('.connected-factor,.connected-pool,.connected-trace-step'))failures.push(tile.dataset.total);if([...popup.childNodes].some(n=>n.nodeType===3&&n.textContent.trim()==='}'))failures.push(tile.dataset.total+' stray brace');if(!popup.querySelector('[data-calculation-pool]'))failures.push(tile.dataset.total+' no pools');if(/not available for this stat/.test(popup.textContent))failures.push(tile.dataset.total+' fallback');for(const pool of popup.querySelectorAll('[data-calculation-pool]')){if(pool.open)failures.push(tile.dataset.total+' expanded pool');const values=[...pool.querySelectorAll(':scope > .connected-ranked-row')].map(r=>r.dataset.sourceValue).filter(v=>v!=='').map(Number);if(values.some((v,i)=>i&&v>values[i-1]))failures.push(tile.dataset.total+' unsorted pool');}}return failures;});assert.deepEqual(emptyLedgers,[]);await page.keyboard.press('Escape');
+ await page.locator('[data-total="maxHp"]').click();assert.match(await page.locator('#connectedPopup').innerText(),/Calculation steps/);assert(await page.locator('#connectedPopup .connected-trace-step').count()>20);await page.screenshot({path:'../audit/connected-hp-ledger.png'});await page.keyboard.press('Escape');
+ await page.locator('[data-total="maxHp"]').click();
+ const pool=page.locator('#connectedPopup [data-calculation-pool]').first();await pool.locator(':scope > summary').click();assert(await pool.evaluate(el=>el.open));await pool.locator(':scope > summary').click();assert(!(await pool.evaluate(el=>el.open)));await page.keyboard.press('Escape');
+ await page.mouse.move(0,0);await page.locator('#connectedStatSearch').focus();
+ const tileStyle=await page.locator('[data-total="maxHp"]').evaluate(el=>({height:el.getBoundingClientRect().height,background:getComputedStyle(el).backgroundImage}));assert(tileStyle.height<85);assert(tileStyle.background.includes('48, 32, 63'),'Purple tile gradient');
+ await page.locator('[data-total="agility"]').click();assert.match(await page.locator('#connectedPopup').innerText(),/31,166,367/);assert.match(await page.locator('#connectedPopup').innerText(),/Not reconciled/);assert.match(await page.locator('#connectedPopup').textContent(),/SWIFT STEPPIN/);assert.match(await page.locator('#connectedPopup').textContent(),/Golden Grilled Cheese Nomwich/);await page.screenshot({path:'../audit/connected-agi-reconstruction.png'});await page.locator('#connectedPopup [data-calculation-pool]').filter({hasText:'All-stat % pool'}).locator(':scope > summary').click();await page.locator('#connectedPopup [data-stat-open="goldFood"]').click();assert.match(await page.locator('#connectedPopupTitle').innerText(),/Golden food effect/);await page.keyboard.press('Escape');
+ const count=await page.locator('.connected-group').count();assert(count>40);
+ assert.equal(await page.locator('.connected-group[open]').count(),0);
+ await page.locator('[data-total="damage"]').click();assert(await page.locator('#connectedPopup .connected-factor').count()>30);
+ await page.locator('[data-total="cooking"]').click();assert.match(await page.locator('#connectedPopup').textContent(),/Diamond Chef/);
+ await page.keyboard.press('Escape');assert(await page.locator('#connectedPopup').isHidden());
+ await page.locator('[data-total="defence"]').click();assert.match(await page.locator('#connectedPopup').innerText(),/Calculation sources/);await page.keyboard.press('Escape');
+ await page.locator('#connectedStatSearch').fill('capacity');assert(await page.locator('[data-total]').count()>=8);await page.locator('#connectedStatSearch').fill('');
+ await page.locator('#connectedBenefit').selectOption('cooking');assert(await page.locator('.connected-group').count()>2);
+ await page.locator('#connectedSource').selectOption('Stamps');assert.equal(await page.locator('.connected-group').count(),1);
+ await page.locator('.connected-group>summary').click();assert(await page.locator('.connected-entry').count()>0);await page.locator('.connected-entry').first().click();assert(await page.locator('#connectedPopup').isVisible());await page.keyboard.press('Escape');
+ await page.locator('#connectedSource').selectOption('');await page.locator('#connectedBenefit').selectOption('');
+ const before=await page.locator('[data-total="damage"] strong').innerText();await page.locator('#connectedTotalCharacter').selectOption('1');const after=await page.locator('[data-total="damage"] strong').innerText();assert.notEqual(before,after);
+ await page.locator('#connectedSearch').fill('zzzz-no-bonus');assert.match(await page.locator('#connectedCount').innerText(),/^0 unique/);await page.locator('#connectedSearch').fill('');
+ if(await page.locator('#quickNotes').evaluate(el=>!el.classList.contains('collapsed')))await page.locator('.quick-notes-toggle').click();
+ await page.evaluate(()=>window.scrollTo(0,0));await page.screenshot({path:'../audit/connected-bonuses-desktop.png'});
+ await page.locator('[data-total="cooking"]').click();await page.screenshot({path:'../audit/connected-bonuses-popup.png'});await page.keyboard.press('Escape');
+ await page.setViewportSize({width:390,height:844});assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'Mobile overflow');await page.locator('[data-total="damage"]').click();assert(await page.locator('#connectedPopup').isVisible());await page.keyboard.press('Escape');await page.evaluate(()=>window.scrollTo(0,0));await page.screenshot({path:'../audit/connected-bonuses-mobile.png'});
+ await page.locator('[data-total="damage"]').click();await page.locator('#connectedPopup [data-connected-destination="damage"]').click();await page.locator('[data-stat-tab="damage"].active').waitFor({timeout:15000}).catch(async error=>{console.log(await page.locator('#worldContent').innerText());console.log(errors);throw error;});
+ await page.evaluate(()=>window.dispatchEvent(new CustomEvent('idleon:navigate',{detail:'connectedBonuses'})));await page.locator('[data-total="cooking"]').waitFor({state:'attached',timeout:15000}).catch(async error=>{console.log((await page.locator('#worldContent').innerText()).slice(0,3000));console.log(errors);throw error;});
+ await page.evaluate(()=>{window.ConnectedBonuses.render(document.getElementById('worldContent'),{},{});});assert.match(await page.locator('#worldContent').innerText(),/Load your account save/);
+ assert.deepEqual(errors,[]);console.log('Connected bonuses: 100+ compact stat totals and Arcade-style popups, source breakdowns, collapsed system catalogue, filters, character switch and mobile pass.');
+ }finally{await browser.close();}
+})().catch(e=>{console.error(e);process.exitCode=1;});
+

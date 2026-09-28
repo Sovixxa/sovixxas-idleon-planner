@@ -86,5 +86,5 @@ async function render(host,raw,kind,navigate){
  }
  paint();
 }
-root.CombatStatTabs={render,characterHtml,missingHtml,formatNumber:num};
+root.CombatStatTabs={calculate,render,characterHtml,missingHtml,formatNumber:num};
 })(typeof window!=='undefined'?window:globalThis);

@@ -16,7 +16,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'C:/Users/Sofia/AppData/Lo
  await page.goto('http://localhost:7331/');await page.locator('#qolSearchOpen').waitFor();
  await page.keyboard.press('Control+k');await page.locator('#qolQuery').fill('printer');await page.keyboard.press('Enter');
  assert.equal(await page.locator('#qolPageName').innerText(),'3D Printer');
- await page.locator('#qolFavorite').click();assert.equal(await page.locator('.qol-favorites button').count(),1);
+ await page.locator('#qolFavorite').click();assert.equal(await page.locator('.qol-home-favorites button').count(),1);
  await page.locator('#qolNotesOpen').click();await page.locator('#qolPageNote').fill('Remember to resample <safe text>');await page.locator('[data-close]').click();
  await page.locator('#quickNotesInput').fill('Global note');
  await page.locator('#qolPlanOpen').click();await page.locator('#qolTaskForm [name=name]').fill('Daily salts');await page.locator('#qolTaskForm button').click();await page.locator('[data-task]').check();
@@ -43,8 +43,8 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'C:/Users/Sofia/AppData/Lo
  await page.locator('#qolPlanOpen').click();const progress=await page.locator('.qol-goal').last().innerText();assert.match(progress,/Complete/);await page.locator('[data-close]').click();
  await page.screenshot({path:'../audit/planner-qol-desktop.png'});
  await page.setViewportSize({width:390,height:844});await page.locator('#qolPlanOpen').click();await page.screenshot({path:'../audit/planner-qol-mobile.png'});assert(await page.locator('.qol-dialog').evaluate(el=>el.scrollWidth<=el.clientWidth+1),'Dialog must not overflow on mobile');await page.locator('[data-close]').click();
- await page.reload();await page.locator('.qol-favorites button').click();await page.locator('#qolNotesOpen').click();assert.equal(await page.locator('#qolPageNote').inputValue(),'Remember to resample <safe text>');await page.locator('[data-close]').click();
- await page.setViewportSize({width:1440,height:1000});await page.locator('#jsonInput').fill(JSON.stringify(updated));await page.locator('#parseBtn').click();
+ await page.reload();await page.locator('#jsonInput').fill(JSON.stringify(updated));await page.locator('#parseBtn').click();await page.waitForFunction(()=>/^(Save age|Imported):/.test(document.getElementById('qolFreshness').textContent),{},{timeout:60000});await page.evaluate(()=>window.dispatchEvent(new CustomEvent('idleon:navigate',{detail:'home'})));await page.locator('.qol-home-favorites button').click();await page.locator('#qolNotesOpen').click();assert.equal(await page.locator('#qolPageNote').inputValue(),'Remember to resample <safe text>');await page.locator('[data-close]').click();
+ await page.setViewportSize({width:1440,height:1000});
  await page.waitForFunction(()=>/^(Save age|Imported):/.test(document.getElementById('qolFreshness').textContent),{},{timeout:60000});
  await page.evaluate(()=>window.dispatchEvent(new CustomEvent('idleon:navigate',{detail:'characters'})));await page.waitForFunction(()=>document.getElementById('talentCharacter')?.value==='2');
  if(await page.locator('#quickNotes').evaluate(el=>!el.classList.contains('collapsed')))await page.locator('.quick-notes-toggle').click();

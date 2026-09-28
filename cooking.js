@@ -74,7 +74,9 @@
       try{worker=new Worker('cooking-worker.js');worker.onmessage=e=>finish(e.data);worker.onerror=()=>finish({error:'Cooking calculation unavailable.'});timeout=setTimeout(()=>finish({error:'Cooking calculation timed out.'}),60000);worker.postMessage(raw&&Object.keys(raw).length?raw:{data});}
       catch{finish({error:'Cooking calculation unavailable.'});}
     });
-    calculations.set(data,job);return job;
+    calculations.set(data,job);
+    job.then(result=>{if(result?.error&&calculations.get(data)===job)calculations.delete(data);});
+    return job;
   }
   function render(host,data,rawRoot={}){
     const model=decode(data,rawRoot),catalog=root.WORLD4_CATALOG.MealINFO;
@@ -130,5 +132,5 @@
       if(host._cookingRender===renderToken&&host.querySelector('[data-cook-tab]'))paint();
     });
   }
-  const api={decode,cost,forecast,estimate,targets,compareLadles,duration,render};if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.Cooking=api;
+  const api={calculate,decode,cost,forecast,estimate,targets,compareLadles,duration,render};if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.Cooking=api;
 })(typeof window!=='undefined'?window:globalThis);

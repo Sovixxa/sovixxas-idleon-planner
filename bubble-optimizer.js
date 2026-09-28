@@ -119,11 +119,22 @@ function model(raw={},catalog=root.ALCHEMY_CATALOG||[],context={},settings={}){
  return {rows,todo,goal,matching,prismaMulti:prismaValue,warning:context.warning||null};
 }
 const jobs=new WeakMap();
-function prepare(raw){if(jobs.has(raw))return jobs.get(raw);const promise=new Promise(resolve=>{
- const worker=new root.Worker('bubble-optimizer-worker.js');const timer=setTimeout(()=>done({warning:'Account multiplier decoding timed out. Base targets remain available.'}),45000);
- function done(context){clearTimeout(timer);worker.terminate();resolve(context);}
- worker.onmessage=e=>done(e.data);worker.onerror=()=>done({warning:'Account multipliers unavailable. Import a full export to verify cap levels.'});worker.postMessage(raw);
-});jobs.set(raw,promise);return promise;}
+function prepare(raw){
+ if(jobs.has(raw))return jobs.get(raw);
+ const promise=new Promise(resolve=>{
+  let worker,timer;
+  function done(context){clearTimeout(timer);worker?.terminate();resolve(context);}
+  const failed=()=>done({warning:'Account multipliers unavailable. Reopen this page to retry, or import a full export to verify cap levels.'});
+  try{
+   worker=new root.Worker('bubble-optimizer-worker.js');
+   timer=setTimeout(()=>done({warning:'Account multiplier decoding timed out. Base targets remain available.'}),45000);
+   worker.onmessage=e=>done(e.data);worker.onerror=failed;worker.postMessage(raw);
+  }catch{failed();}
+ });
+ jobs.set(raw,promise);
+ promise.then(context=>{if(context?.warning&&jobs.get(raw)===promise)jobs.delete(raw);});
+ return promise;
+}
 function render(host,raw,afterRender){
  let settings={goal:.95,matching:false,clicks:25,atomClicks:null},method='All',yields={},query='',filter='All',group='All',showAll=false,context={},done=new Set(),token={},marker;host.bubbleToken=token;
  try{done=new Set(JSON.parse(localStorage.getItem('idleon-bubble-todo-v1')||'[]'));}catch{}
@@ -159,7 +170,7 @@ function render(host,raw,afterRender){
  paint();prepare(raw).then(result=>{if(host.bubbleToken!==token||host.firstElementChild!==marker)return;context=result;paint();});
 }
 function bonusLevelTarget(row,bubble,threshold=99){
- const goal=[80,90,95,99].includes(threshold)?threshold:99;
+ const goal=[80,90,95,99,99.9].includes(threshold)?threshold:99;
  if(row.conditional||row.cap?.shared&&row.shared==null)return {level:null,text:'Max-benefit level depends on your character or other shared bonuses. Check the combined effect before spending.'};
  if(row.cap&&row.effective===null)return {level:null,text:'Max-benefit level needs account multipliers. Import a complete save to calculate it.'};
  if(row.cap&&Number.isFinite(row.capLevel)){

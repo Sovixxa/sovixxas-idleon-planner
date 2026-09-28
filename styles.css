@@ -146,3 +146,9 @@ body .alchemy-board .alchemy-bubble>span{display:block;width:100%;min-width:0;te
 @media(max-width:520px){body .alchemy-board .alchemy-grid{gap:7px}body .alchemy-board .alchemy-bubble{flex-basis:60px;width:60px;min-width:60px}}
 .alchemy-threshold{display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;margin:18px 0;padding:16px;border:1px solid #40354f;border-radius:12px;background:#181522}.alchemy-threshold strong{font-size:13px;color:#e9dcf6}.alchemy-threshold-buttons{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}.alchemy-threshold-buttons button{min-height:40px;padding:8px 14px}.alchemy-threshold-buttons button[aria-pressed="true"]{background:#4b3262;border-color:#c096e8;color:#fff}.alchemy-threshold-buttons button:focus-visible{outline:2px solid #dab4fa;outline-offset:3px}#alchemyThresholdStatus{max-width:510px;margin:0;font-size:12px;line-height:1.6;color:#b6a8c7}body .alchemy-board .alchemy-bubble.threshold-met{opacity:.24;filter:grayscale(.85)}body .alchemy-board .alchemy-bubble.threshold-met:hover,body .alchemy-board .alchemy-bubble.threshold-met:focus-visible,body .alchemy-board .alchemy-bubble.threshold-met.selected{opacity:1;filter:none}
 .alchemy-bonus-target{padding:10px 12px;border:1px solid #655137;border-radius:8px;background:#332b20;color:#f1d99e;font-size:12px!important;line-height:1.6!important;margin:12px 0!important}
+
+/* Keep wide tables and talent boards inside their own scroll containers. */
+#panelWorld{grid-template-columns:minmax(0,1fr)}
+.world-panel,#worldContent{min-width:0}
+.legend-board{width:min(850px,100%)}
+@media(max-width:600px){body .compact-upgrades .arcade-tile .upgrade-tip{position:fixed;top:auto;bottom:16px;left:16px;right:auto;width:min(320px,calc(100vw - 32px));max-height:45vh;overflow:auto;box-sizing:border-box}}

@@ -1,0 +1,14 @@
+'use strict';
+const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),B=require('./stamp-bonuses');
+const row={id:'StampA4',name:'Tomahawk Stamp',known:true,level:40,maxLevel:40,category:'combat',stat:'PctDmg',description:'+{% Total Damage',func:'decay',x1:6,x2:40,skillIndex:0,effect:3,effectMultiplier:null,characterEffects:[3,6],carriers:[]};
+const report=(r={},character=0)=>B.model({rows:[{...row,...r}],money:0},character).entries[0];
+assert.equal(report().target,5.9399999999999995);assert.equal(report().value,'3%');assert.equal(report({},1).targetValue,'11.88%');assert.equal(report().maxed,false);
+assert.equal(report({skillIndex:1}).target,null);assert.match(report({skillIndex:1}).targetText,/skill level/);
+assert.equal(report({func:'add'}).target,null);assert.match(report({func:'add'}).targetLabel,/no finite/);
+assert.equal(report({id:'StampB30'}).target,null);assert.equal(report({known:false}).value,'Unknown');
+assert.equal(report({level:0}).value,'Not acquired');
+const capped=report({id:'StampC8',category:'misc',stat:'ArcadeTimeMax',description:'+{hr Arcade Ball claim max time',x1:12,x2:30,level:150,effect:10,effectMultiplier:1,characterEffects:[10]});assert.equal(capped.target,10);assert(capped.maxed);assert.match(capped.targetText,/150/);
+const c={console:{log(){},warn(){},error(){}},structuredClone};c.self=c;c.window=c;vm.createContext(c);c.importScripts=(...files)=>files.forEach(f=>vm.runInContext(fs.readFileSync(f,'utf8'),c));let out;c.postMessage=x=>out=structuredClone(x);c.importScripts('stamp-calculator-worker.js');c.onmessage({data:JSON.parse(fs.readFileSync('../example json.txt','utf8'))});assert(!out.error,out.error);
+const real=B.model(out.result);assert(real.entries.length>100);assert.equal(real.groups.reduce((n,g)=>n+g.entries.length,0),real.entries.length);assert(real.entries.every(e=>fs.existsSync('assets/'+e.id+'.png')));assert(out.result.characters.length>1);assert(out.result.rows.every(s=>s.characterEffects.length===out.result.characters.length));
+assert(report({level:10000,characterEffects:[6*10000/10040]}).maxed);assert(real.entries.some(s=>s.target!==null));assert(real.entries.some(s=>s.target===null));
+console.log('Stamp bonuses: '+real.entries.length+' stamps, character effects, 99% targets, exact caps, shared caps, unknown data, growing formulas and assets pass.');

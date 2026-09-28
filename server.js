@@ -20,6 +20,8 @@ function sendJson(res,status,obj){const b=Buffer.from(JSON.stringify(obj));res.w
 function broadcast(type='reload',data='changed'){for(const res of clients){try{res.write(`event: ${type}\ndata: ${data}\n\n`);}catch(_){clients.delete(res);}}}
 function safePath(urlPath){
   const clean=decodeURIComponent((urlPath.split('?')[0]||'/')).replace(/\\/g,'/');
+  if(/[\x00-\x1f\x7f]/.test(clean))throw new URIError('Invalid path');
+  if(clean.split('/').some(part=>part.startsWith('.')&&part!=='.'&&part!=='..'))return null;
   const rel=clean==='/'?'index.html':clean.replace(/^\/+/, '');
   const full=path.resolve(ROOT,rel);
   return full.startsWith(path.resolve(ROOT)+path.sep)||full===path.resolve(ROOT)?full:null;
@@ -41,21 +43,29 @@ function gitPull(done){
   });
 }
 const server=http.createServer((req,res)=>{
+  const allowedHosts=new Set([`${HOST}:${PORT}`,`localhost:${PORT}`]);
+  if(!allowedHosts.has(req.headers?.host))return sendJson(res,403,{error:'Forbidden host'});
+  res.setHeader('X-Content-Type-Options','nosniff');
+  res.setHeader('Referrer-Policy','no-referrer');
   if(req.url==='/__events'){
     res.writeHead(200,{'Content-Type':'text/event-stream','Cache-Control':'no-cache, no-store','Connection':'keep-alive','Access-Control-Allow-Origin':'http://127.0.0.1:'+PORT});
     res.write('retry: 1000\n\nevent: hello\ndata: live\n\n');clients.add(res);req.on('close',()=>clients.delete(res));return;
   }
   if(req.url==='/__status')return sendJson(res,200,{ok:true,gitRepo:fs.existsSync(path.join(ROOT,'.git')),autoPull:AUTO_PULL,port:PORT});
   if(req.url==='/__pull'&&req.method==='POST'){
+    if(req.headers['sec-fetch-site']==='cross-site'||(req.headers.origin&&!['http://'+HOST+':'+PORT,'http://localhost:'+PORT].includes(req.headers.origin)))return sendJson(res,403,{error:'Forbidden origin'});
     gitPull((err,output)=>{if(err)return sendJson(res,500,{ok:false,error:err.message});sendJson(res,200,{ok:true,output});});return;
   }
+  if(!['GET','HEAD'].includes(req.method))return sendJson(res,405,{error:'Method not allowed'});
   let full;
   try{full=safePath(req.url||'/');}catch(error){if(error instanceof URIError)return sendJson(res,400,{error:'Malformed URL'});throw error;}
   if(!full)return sendJson(res,403,{error:'Forbidden'});
   fs.stat(full,(err,st)=>{
     if(err||!st.isFile())return sendJson(res,404,{error:'Not found'});
     const ext=path.extname(full).toLowerCase(),headers={'Content-Type':MIME[ext]||'application/octet-stream','Cache-Control':'no-store'};
-    res.writeHead(200,headers);fs.createReadStream(full).pipe(res);
+    res.writeHead(200,headers);
+    if(req.method==='HEAD'){res.end();return;}
+    fs.createReadStream(full).on('error',()=>res.destroy()).pipe(res);
   });
 });
 

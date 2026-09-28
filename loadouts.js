@@ -26,8 +26,9 @@ function renderDrop(host,raw){
 async function renderCarry(host,raw){
  const token={};host._carryToken=token;
  host.innerHTML='<p class="loadout-note">Calculating carry capacity and active bonuses…</p>';
+ const loading=host.firstElementChild;
  let m;try{m=await root.CarryCapacity.load(raw);}catch(error){m={players:[],error};}
- if(host._carryToken!==token||activeTab!=='carry'||!host.isConnected)return;
+ if(host._carryToken!==token||host.firstElementChild!==loading||activeTab!=='carry'||!host.isConnected)return;
  const players=m.players;
  if(!players.length){host.innerHTML=`<section class="loadouts-page"><div class="section-head compact loadout-heading"><div><p class="eyebrow">Optimizers</p><h2>Carry Capacity</h2><p>Load a complete IdleOn export to calculate each character’s bags, slot capacity, and missing upgrades.</p></div></div><nav class="skill-tabs loadout-groups" aria-label="Loadout sections"><button type="button" class="skill-tab" data-loadout-tab="builds">Build loadouts</button><button type="button" class="skill-tab active" data-loadout-tab="carry" aria-current="page">Carry Capacity</button><button type="button" class="skill-tab" data-loadout-tab="drop">Drop Rate</button><button type="button" class="skill-tab" data-loadout-tab="damage">Damage</button><button type="button" class="skill-tab" data-loadout-tab="classExp">Class EXP</button></nav><section class="carry-empty"><h3>No character capacity data yet</h3><p>${m.error?'The save could not be decoded. Try importing a fresh full export.':'Import your save from Home, then return here.'}</p></section></section>`;host.querySelectorAll('[data-loadout-tab]').forEach(button=>button.onclick=()=>{activeTab=button.dataset.loadoutTab;render(host,raw);});return;
  }
@@ -82,6 +83,6 @@ function fishTable(rows,items){
  const cell=id=>id&&items[id]?`<button type="button" class="loadout-fish-item" data-fishing-item="${esc(id)}"><img src="assets/${esc(id)}.png" alt=""><span>${esc(items[id].name)}</span></button>`:'—';
  return `<details class="loadout-fishing"><summary>Fishing spots, bait &amp; lines</summary><div class="loadout-table-scroll"><table><thead><tr><th>Fish</th><th>Bait</th><th>Line</th><th>Ring</th><th>Location</th></tr></thead><tbody>${rows.map(row=>'<tr>'+row.items.map(cell).map(html=>'<td>'+html+'</td>').join('')+'<td>'+esc(row.location||'See reference sheet')+'</td></tr>').join('')}</tbody></table></div><p>Equinox Valley: sample multiple times. The reference notes that Zeus can outperform Platinum for Bloach, Kraken and Caulifish near an efficiency breakpoint.</p></details>`;
 }
-const api={SHEET_URL,model,grouped,render};
+const api={SHEET_URL,model,grouped,render,selectTab(tab){if(['builds','carry','drop','damage','classExp'].includes(tab))activeTab=tab;}};
 if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.Loadouts=api;
 })(typeof window!=='undefined'?window:globalThis);

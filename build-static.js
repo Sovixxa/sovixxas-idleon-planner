@@ -21,14 +21,20 @@ if(missing.length)throw new Error(`Static build is missing: ${missing.join(', ')
 // Pages can cache unversioned files across releases, mixing incompatible modules.
 const scripts=fs.readdirSync(out).filter(name=>/\.(js|css)$/.test(name)).sort();
 const hash=crypto.createHash('sha256');
+// The build recipe changes emitted worker URLs too; include it so cached scripts
+// cannot survive a change to the release-rewriting rules.
+hash.update(fs.readFileSync(__filename));
+for(const name of fs.readdirSync(out).filter(name=>name.endsWith('.html')).sort())hash.update(name).update(fs.readFileSync(path.join(out,name)));
 for(const name of scripts)hash.update(name).update(fs.readFileSync(path.join(out,name)));
 const version=hash.digest('hex').slice(0,12);
 const versionRefs=text=>text.replace(/(["'])([\w./-]+\.(?:js|css))(?:\?[^"']*)?\1/g,(match,quote,file)=>
  fs.existsSync(path.join(out,file))?`${quote}${file}?v=${version}${quote}`:match);
-fs.writeFileSync(path.join(out,'index.html'),versionRefs(html));
+for(const name of fs.readdirSync(out).filter(name=>name.endsWith('.html'))){
+ const file=path.join(out,name);fs.writeFileSync(file,versionRefs(fs.readFileSync(file,'utf8')));
+}
 for(const name of scripts.filter(name=>name.endsWith('.js'))){
  const file=path.join(out,name),source=fs.readFileSync(file,'utf8');
- const revised=source.replace(/\b(?:new\s+Worker|importScripts|fetch)\s*\([^)]*\)/g,versionRefs);
+ const revised=source.replace(/\b(?:new\s+(?:[\w$]+\.)*Worker|importScripts|fetch)\s*\([^)]*\)/g,versionRefs);
  if(revised!==source)fs.writeFileSync(file,revised);
 }
 console.log(`Static site built at ${out} (release ${version})`);

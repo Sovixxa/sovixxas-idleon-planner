@@ -111,3 +111,8 @@ export {getKillroySchedule} from './vendor/idleon-toolbox/parsers/misc';
 export {getResearchPlanningState} from './vendor/idleon-toolbox/parsers/world-7/research';
 
 export {items as stampItemCatalog} from './vendor/idleon-toolbox/data/website-data';
+
+export {getRespawnRate,getPlayerSpeedBonus,getPlayerFoodBonus} from './vendor/idleon-toolbox/parsers/character';
+export {getCookingEff} from './vendor/idleon-toolbox/parsers/world-4/cooking';
+export {getLabEfficiency} from './vendor/idleon-toolbox/parsers/world-4/lab';
+export {getSpelunkingEfficiency} from './vendor/idleon-toolbox/parsers/world-7/spelunking';

@@ -26,6 +26,14 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'C:/Users/Sofia/AppData/Lo
  await page.waitForFunction(()=>document.querySelector('.bubble-bonus-status')?.textContent.includes('Account calculations loaded'),{},{timeout:60000});
  assert.equal(await page.locator('.bubble-bonus-entry').count(),133);assert.equal(await page.locator('.bubble-benefit-group').count(),7);
  assert.equal(await page.locator('[data-skill-tab="bubbleBonuses"][aria-selected="true"]').count(),1);
+ let previousCount=0;
+ await page.locator('#bubbleBonusHideMaxed').click();
+ for(const target of ['80','90','95','99','99.9']){
+  await page.locator('#bubbleBonusTarget').selectOption(target);
+  const currentCount=await page.locator('.bubble-bonus-entry').count();assert(currentCount>=previousCount);previousCount=currentCount;
+  assert.match(await page.locator('.bubble-bonus-explainer').innerText(),new RegExp(target.replace('.','\\.')+'% target'));
+ }
+ await page.locator('#bubbleBonusHideMaxed').click();await page.locator('#bubbleBonusTarget').selectOption('99');
  await page.locator('#bubbleBonusHideMaxed').click();
  assert.equal(await page.locator('#bubbleBonusHideMaxed').getAttribute('aria-pressed'),'true');
  assert(await page.locator('.bubble-bonus-entry').count()<133);
