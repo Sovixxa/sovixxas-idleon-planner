@@ -114,3 +114,21 @@ are checked separately and do not require material capacity. Material gates are
 not permanent level caps. Costs cover only the next action, using the saved
 reducer without assuming Gilded Stamps. Run `npm run test:stamps` and
 `npm run test:stamps-browser` for model, real-save and browser validation.
+
+The September 27 bonus refresh checks the public game client, adds the Jelly
+Tome metric, corrects Tome unlocks and late-game progress, and updates all 178
+companion records. Set `IDLEON_CLIENT_PATH` to a freshly downloaded audit client
+and run `npm run test:live-bonuses` to repeat the catalog and formula checks.
+See [BONUS-FRESHNESS-2026-09-27.md](BONUS-FRESHNESS-2026-09-27.md) for sources,
+regeneration commands, validation scope and remaining limits.
+
+The [September 28 follow-up](BONUS-FRESHNESS-2026-09-28.md) fixes empty borrowed
+pet fields granting Doot, aligns shared Arcade calculations with Reindeer's
+actual client behavior, and adds the Bloodcell entry to that calculation engine.
+After rebuilding the bundle, reapply `node build-companion-math.js <client-path>`;
+the full test suite and live-bonus checks include its regression coverage.
+
+The [third bonus audit](BONUS-FRESHNESS-2026-09-28-THIRD.md) corrects five
+Divinity gods' major/minor link mappings while preserving blessing and cost
+rows. `test-divinity-client.js` checks the actual client handler and tooltip
+lookup; `node test-divinity-browser.js` checks the rendered god details.

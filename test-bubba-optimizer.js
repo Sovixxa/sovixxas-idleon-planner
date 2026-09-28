@@ -33,3 +33,5 @@ const reserved=M.plan(r,{mode:'roadmap',goal:'production',steps:500,reserve:r.wa
 assert(reserved.steps.every(x=>x.wallet>=r.wallet*.5*(1-1e-12)));
 assert.equal(JSON.stringify(r),before);
 console.log('Roadmap: 500 buys, future unlocks, cumulative funding, reserve, and immutable save pass.');
+
+const late=M.clone(r);late.paid[8]=18;late.paid[0]=10;late.paid[2]=10;late.paid[21]=0;assert(M.plan(late,{mode:"roadmap",goal:"production",holdCheap:true,steps:100}).steps.every(x=>![0,2].includes(x.id)));

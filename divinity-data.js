@@ -14,7 +14,10 @@
     ['Bagur','No link bonus has been implemented for this god yet.','Nothing yet',1,20,1.18,'+{% Sailing Speed',5]
   ];
   const currency=['Gaming bits','Sailing treasure','Gaming bits','Coins','Gaming bits','Atoms','Coins','Atoms','Gaming bits','Atoms'];
-  const gods=rawGods.map((g,id)=>({id,name:g[0],major:clean(g[1]),minor:clean(g[2]),minorBase:g[3],costBase:g[4],costScale:g[5],blessing:clean(g[6]),blessingPerLevel:g[7],currency:currency[id],icon:`assets/DivGod${id}.png`}));
+  // GodsInfo column 13 maps each named god to its link effects. Blessings and
+  // upgrade costs remain on the named god's original row.
+  const linkIndices=[0,2,7,3,5,4,6,1,8,9];
+  const gods=rawGods.map((g,id)=>{const linkIndex=linkIndices[id],link=rawGods[linkIndex];return {id,linkIndex,name:g[0],major:clean(link[1]),minor:clean(link[2]),minorBase:link[3],costBase:g[4],costScale:g[5],blessing:clean(g[6]),blessingPerLevel:g[7],currency:currency[id],icon:`assets/DivGod${id}.png`};});
   const styles=[
     ['Kinesis',1,1,'Gives 1 Divinity and 1 EXP per hour'],['Chakra',2,2,'Gives 2 Divinity and 2 EXP per hour'],['Focus',4,1,'Gives 4 Divinity and 1 EXP per hour'],['Mantra',0,1,'Gives 1 EXP to every character per hour'],['Vitalic',2,7,'Gives 2 Divinity and 7 EXP per hour'],['TranQi',0,3,'Gives 3 EXP per hour even when not meditating'],['Zen',8,8,'Gives 8 Divinity and 8 EXP per hour'],['Mindful',15,10,'Gives 15 Divinity and 10 EXP per hour']
   ].map((s,id)=>({id,name:s[0],divinity:s[1],exp:s[2],description:s[3],levelRequired:Math.round(5*id+5*Math.floor(id/4)+10*Math.floor(id/5)+Math.max(0,15*(id-5)))}));

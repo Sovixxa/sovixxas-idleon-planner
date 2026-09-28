@@ -6,10 +6,11 @@ function companion(raw={}){
  for(const source of sources){const comp=parse(source.companion??source.Companion),rows=parse(comp?.l??(Array.isArray(comp)?comp:null));if(Array.isArray(rows))list=rows;const opt=parse(source.OptionsListAccount??source.OptLacc);if(opt&&typeof opt==='object')options=opt;}
  const borrowed=options?.[606]??options?.h?.[606],borrowKnown=borrowed!=null;
  if(borrowKnown&&String(borrowed).split(',').some(x=>x.trim()!==''&&Number(x)===27))return{multiplier:2,note:'Borrowed Spirit Reindeer: 2× Arcade bonuses.'};
- let owned=false,upgraded=false,invalid=false;
- for(const row of list||[]){const parts=Array.isArray(row)?row:String(row).split(',');if(Number(parts[0])!==27)continue;owned=true;const level=known(parts[4]);if(level==null)invalid=true;else if(level>=1)upgraded=true;}
+ let owned=false,highestLevel=0,invalid=false;
+ for(const row of list||[]){const parts=Array.isArray(row)?row:String(row).split(',');if(Number(parts[0])!==27)continue;owned=true;const level=known(parts[4]);if(level==null)invalid=true;else highestLevel=Math.max(highestLevel,level);}
+ const upgraded=highestLevel===1;
  if(owned&&!upgraded&&!invalid)return{multiplier:2,note:'Spirit Reindeer: 2× Arcade bonuses.'};
- if(owned&&upgraded&&borrowKnown)return{multiplier:1,note:'Upgraded Spirit Reindeer: this client checks for the base pet bonus exactly and does not apply doubling. Its 2.5× pet description disagrees; verify in game.',discrepancy:true};
+ if(owned&&upgraded&&!invalid&&borrowKnown)return{multiplier:1,note:'Upgraded Spirit Reindeer: this client checks for the base pet bonus exactly and does not apply doubling. Its 2.5× pet description disagrees; verify in game.',discrepancy:true};
  if(list!==null&&borrowKnown&&!owned)return{multiplier:1,note:'No Spirit Reindeer bonus recorded.'};
  return{multiplier:null,note:'Companion bonus unknown: ownership, upgrade or borrowed-bonus data is missing.'};
 }

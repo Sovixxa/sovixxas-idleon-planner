@@ -4,6 +4,7 @@ for(const file of ['pets-data.js','pets.js'])vm.runInContext(fs.readFileSync(fil
 const raw={companion:{l:['48,0,0,0,1','48,0,0,0,0','174,0,0,0,1']},data:{OptLacc:[]}};
 raw.data.OptLacc[606]='174';
 const m=c.PetsPage.model(raw.data,raw);
+assert.equal(m.all.length,178);assert.equal(m.all[109].description,'10x Farming Sticker find chance');assert.equal(m.all[148].baseBonus,20);assert.equal(m.all[148].upgradedBonus,35);assert.equal(m.all[177].name,'Gold Champion Earl');
 assert(m.available);assert.equal(m.owned.length,2);assert.equal(m.upgraded.length,2);
 assert.equal(m.all.find(x=>x.id===48).copies,2);
 assert.equal(m.all.find(x=>x.id===48).effectiveBonus,7);

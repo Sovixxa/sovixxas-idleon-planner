@@ -2,7 +2,7 @@
 // Independent oracle: execute the installed game's handler, not a second copy
 // of optimizer formulas. N.js remains local and is never shipped in the app.
 const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict'),crypto=require('node:crypto'),M=require('./cove-optimizer');
-const source=fs.readFileSync('../audit/N.js','utf8');
+const source=fs.readFileSync(process.env.IDLEON_CLIENT_PATH||'../audit/N.js','utf8');
 function extract(marker){const start=source.indexOf(marker)+marker.length;assert(start>=marker.length,'Missing '+marker);let depth=0,quote='',escape=false;for(let i=start;i<source.length;i++){const ch=source[i];if(quote){if(escape)escape=false;else if(ch==='\\')escape=true;else if(ch===quote)quote='';continue;}if(ch==='"'||ch==="'")quote=ch;else if(ch==='{')depth++;else if(ch==='}'&&--depth===0)return source.slice(start,i+1);}throw Error('Unclosed handler');}
 
 const handler=extract('_customBlock_Holes2='),lists=vm.runInNewContext('('+extract('RandoListo2=')+')()');

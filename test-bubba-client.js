@@ -1,7 +1,7 @@
 'use strict';
 // Optional local audit: compare against the actual installed client handler.
 const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict'),M=require('./bubba-optimizer');
-const source=fs.readFileSync('../audit/N.js','utf8');
+const source=fs.readFileSync(process.env.IDLEON_CLIENT_PATH||'../audit/N.js','utf8');
 function extract(marker){const at=source.indexOf(marker);assert(at>=0,marker);const start=at+marker.length;let depth=0,q='',escaped=false;for(let i=source.indexOf('{',start);i<source.length;i++){const ch=source[i];if(q){if(escaped)escaped=false;else if(ch==='\\')escaped=true;else if(ch===q)q='';}else if(ch==='"'||ch==="'")q=ch;else if(ch==='{')depth++;else if(ch==='}'&&--depth===0)return source.slice(start,i+1);}throw Error(marker);}
 const handler=extract('_customBlock_Bubbastuff='),catalog=name=>vm.runInNewContext('('+extract(name+'=')+')()');
 // Catalog identifiers that also occur as save assignments need the function marker.

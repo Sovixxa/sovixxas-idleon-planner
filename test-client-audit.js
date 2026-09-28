@@ -2,14 +2,19 @@
 // Optional audit against the user's locally extracted client. Never load the full game.
 const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),assert=require('node:assert/strict');
 const E=require('./engine');
-const sourcePath=path.resolve(__dirname,'../audit/N.js');
-if(!fs.existsSync(sourcePath)){console.log('SKIP client audit: extract local N.js first');process.exit(0);}
+const sourcePath=path.resolve(__dirname,process.env.IDLEON_CLIENT_PATH||'../audit/N.js');
+if(!fs.existsSync(sourcePath)){if(process.env.IDLEON_CLIENT_PATH)throw Error('Requested client is unavailable: '+sourcePath);console.log('SKIP client audit: extract local N.js first');process.exit(0);}
 const source=fs.readFileSync(sourcePath,'utf8');
-const start=source.indexOf('q._customBlock_JellyOperation=function')+'q._customBlock_JellyOperation='.length;
-const end=source.indexOf(',q.__super__=ta',start);
-const rowStart=source.indexOf('db.JellyUPG=function(){return')+'db.JellyUPG=function(){return'.length;
-const rowEnd=source.indexOf('},',rowStart);
-const rows=vm.runInNewContext(source.slice(rowStart,rowEnd),{}, {timeout:1000});
+function handler(name){
+ const match=new RegExp('\\.'+name+'\\s*=\\s*(function\\s*\\()').exec(source);assert(match,'Missing '+name);
+ const start=match.index+match[0].length-match[1].length;let depth=0,quote='',escape=false;
+ for(let i=source.indexOf('{',start);i<source.length;i++){
+  const ch=source[i];if(quote){if(escape)escape=false;else if(ch==='\\')escape=true;else if(ch===quote)quote='';continue;}
+  if(ch==='"'||ch==="'")quote=ch;else if(ch==='{')depth++;else if(ch==='}'&&--depth===0)return source.slice(start,i+1);
+ }
+ throw Error('Unclosed '+name);
+}
+const rows=vm.runInNewContext('('+handler('JellyUPG')+')()',{}, {timeout:1000});
 for(let i=0;i<40;i++){const m=E.UPGRADE_META[i];assert.deepEqual([m.max,m.growth,m.perLevel,m.baseCost],Array.from(rows[i].slice(1,5),Number),'Upgrade '+i);}
 const research=Array.from({length:19},()=>[]);research[7]=Array(20).fill(0);research[14]=Array(180).fill(-1);research[15]=Array(9).fill(0);research[16]=Array(9).fill(25);research[17]=Array(100).fill(0);research[18]=[];
 const state=E.makeState(research);state.upgrades.fill(1,0,8);state.upgrades[14]=1;state.upgrades[16]=6;state.upgrades[17]=3;state.upgrades[18]=114;state.upgrades[19]=57;state.upgrades[32]=3;
@@ -26,7 +31,7 @@ const context={a:{engine:{getGameAttribute:k=>attrs[k]}},c:{asNumber:Number},n:{
  _customBlock_ResearchStuff:()=>E.gridCellDamageBonus(state).value,
  _customBlock_SushiStuff:()=>E.sushiRogBonus(state,63)
 }};
-context.q._customBlock_JellyOperation=vm.runInNewContext('('+source.slice(start,end)+')',context,{timeout:1000});
+context.q._customBlock_JellyOperation=vm.runInNewContext('('+handler('_customBlock_JellyOperation')+')',context,{timeout:1000});
 const game=context.q._customBlock_JellyOperation;
 function close(a,b,label){assert.ok(Math.abs(a-b)<=1e-9*Math.max(1,Math.abs(a)),label+': '+a+' / '+b);}
 for(let n=0;n<72;n++){close(game('BossHP',n,0),E.bossHP(n),'HP '+n);close(game('BossTime',n,0),E.bossTime(n),'time '+n);close(game('BossAtkCD',n,0),E.bossAtkCD(n),'CD '+n);}
