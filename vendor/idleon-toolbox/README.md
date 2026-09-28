@@ -1,5 +1,7 @@
 # Prayer calculation sources
 
+The activity dashboard also uses these GPL-3.0-only parsers and the pure account/character alert calculations in `utility/dashboard`. Its interface, settings integration, worker adapter, and timer presentation are local implementations. Rebuild `dashboard-math.js` with `npm run build:dashboard-math`; its entry, build script, defaults, and this source directory are included in the static distribution. Local dashboard adaptations (2026-09-28) replace date-fns helpers with native date arithmetic and correct the Wraith Form active-buff membership check. Dashboard calculations are anchored to the imported save timestamp and run locally in a separate worker.
+
 The prayer-math-engine.js calculation bundle derives from [Idleon Toolbox](https://github.com/Morta1/IdleonToolbox), licensed GPL-3.0-only. The original license is included as LICENSE. This directory contains the calculation sources and data used to build the bundle; prayer-math-entry.ts and build-prayer-math.js are included alongside the published bundle.
 
 Local changes (2026-09-23):

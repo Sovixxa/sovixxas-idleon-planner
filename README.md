@@ -27,6 +27,15 @@ Google's CDN only on connection or session resume; cloud data and sign-in go
 directly to Idleon's services. Manual JSON import requires no Firebase connection.
 See `CLOUD-SYNC.md` for integration details and verification limits.
 
+Dailies is a save-driven activity dashboard: world groups show available claims,
+attempts and collections, with a separate miniboss spawn watch. Search and world
+filters narrow the view. Needs checking separates unverified readiness from
+confirmed actions; Finished / unavailable explains exhausted counters and locks.
+There are no manual completion ticks or assumed reset countdowns. Applying a newer
+save refreshes the dashboard. Hidden activities remain account-specific; old
+checklist marks are preserved in storage but no longer suppress ready activities.
+Run `npm run test:dailies` for save rules and desktop/mobile browser checks.
+
 Optimizers → Account Review reads the current local export and reviews stamps,
 alchemy bubbles, construction build status, worship wave records, cooking meals,
 Rift rewards and character levels. It puts an ordered account action list first, favoring
@@ -151,3 +160,15 @@ The [third bonus audit](BONUS-FRESHNESS-2026-09-28-THIRD.md) corrects five
 Divinity gods' major/minor link mappings while preserving blessing and cost
 rows. `test-divinity-client.js` checks the actual client handler and tooltip
 lookup; `node test-divinity-browser.js` checks the rendered god details.
+
+The activity dashboard supports all 97 groups in the supplied dashboard config:
+45 account groups, 16 character groups (expanded per character), and 36 timers.
+All groups are enabled initially; the supplied alert options and thresholds are
+retained. Customize trackers includes every option, item selection, material
+targets, and settings import/export. Preferences are local to each account.
+Calculations run in a local worker, anchored to the save timestamp. An elapsed
+countdown asks for a fresh save instead of inventing a new claim or reset.
+Missing data is shown explicitly. Run `npm run test:dashboard` for coverage,
+real-save calculations and browser checks, and `npm run build:dashboard-math`
+to regenerate the calculation bundle. GPL calculation-source attribution and
+local modifications are documented in `vendor/idleon-toolbox/README.md`.

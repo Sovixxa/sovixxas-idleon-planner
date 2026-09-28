@@ -1,7 +1,10 @@
-.live-connection{padding:16px 20px;margin-bottom:16px}
-.live-connection-row{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
-.live-connection p{margin:5px 0;font-size:.9rem}
-.live-connection small,.cloud-privacy{color:var(--muted,#adb6c6)}
+.hero[hidden]{display:none!important}
+.live-connection{display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap;padding:0 0 0 12px;margin:0;border-left:1px solid #394154;position:relative}
+.live-connection button{font-size:12px;line-height:1.3;padding:6px 9px;min-height:28px;border-radius:6px;white-space:nowrap}
+#cloudSummary{font-size:12px;color:var(--muted,#adb6c6)}
+#cloudSummary:empty{display:none}
+.cloud-visually-hidden{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip-path:inset(50%)!important;white-space:nowrap!important;border:0!important}
+.cloud-privacy{color:var(--muted,#adb6c6)}
 .live-connection [hidden]{display:none!important}
 .cloud-dialog{box-sizing:border-box;width:min(580px,calc(100vw - 24px));max-height:90vh;overflow:auto;border:1px solid #47516a;border-radius:14px;background:#151b29;color:#e8edf5;padding:24px}
 .cloud-dialog::backdrop{background:#0009}
@@ -15,4 +18,4 @@
 .cloud-dialog a{color:#b9d9ff}
 .cloud-dialog .file-button{display:inline-block;text-decoration:none}
 .cloud-privacy{font-size:.8rem}
-#cloudPending{display:block;margin-top:9px}
+@media(max-width:600px){.live-connection{padding-left:0;border-left:0;justify-content:flex-end;margin-left:auto}}

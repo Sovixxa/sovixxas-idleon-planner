@@ -69,7 +69,7 @@
     if(name==='practice'&&initialPracticePending){initialPracticePending=false;refreshPracticeFevers();refreshPracticeCells();runPractice(true,true);}
   }
   const SKILL_PAGES={
-    dailies:{title:'Dailies',world:'Home',copy:'Daily routine, saved availability, and your checklist.'},
+    dailies:{title:'Activity dashboard',world:'Home',copy:'Account alerts, character readiness, and collection timers.'},
     shadowCaps:{title:'Shadow Caps',world:'Misc',copy:''},
     communitySheets:{title:"Community Sheets",world:'Misc',copy:''},
     accountReview:{title:'Account Review',world:'Optimizers',copy:'Review saved progress and plan your next account milestones.'},
@@ -153,6 +153,7 @@ SKILL_PAGES.holeFloors={title:'Floors',world:'World 5',copy:'All 18 Hole caverns
   ];
   const HOLE_VILLAGER_ICONS={hole:0,holeSchematics:1,holeMajik:2,holeMeasurements:3,holeStudies:4};
   function selectSideNav(name){
+    window.Dashboard?.dispose();
     if(name==='coral')name='coralReef';
     window.plannerQoL?.onNavigate(name);
     if(name!=='jelly'&&practice?.playing)stopPracticePlayback();
@@ -536,7 +537,7 @@ SKILL_PAGES.holeFloors={title:'Floors',world:'World 5',copy:'All 18 Hole caverns
     if(state){$('expMode').value=expMode;$('expSession').value=expSession;$('expMode').onchange=e=>{expMode=e.target.value;renderClassExp();};$('expSession').onchange=e=>{expSession=e.target.value;renderClassExp();};}
   }
   function renderWorldPage(name){
-    if(name==='dailies'){$('worldContent').dataset.page=name;window.Dailies.render($('worldContent'),loadedExport||state?.rawRoot||{});return;}
+    if(name==='dailies'){$('worldContent').dataset.page=name;window.Dashboard.render($('worldContent'),loadedExport||state?.rawRoot||{});return;}
     const page=SKILL_PAGES[name];if(!page)return;
     $('worldContent').dataset.page=name;
     const decodeRequest={};$('worldContent').decodeRequest=decodeRequest;

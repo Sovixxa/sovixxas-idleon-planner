@@ -2,6 +2,7 @@
   'use strict';
   const $=id=>document.getElementById(id),api=window.IdleonLive,bridge=window.PlannerLiveBridge;
   if(!api||!bridge)return;
+  document.querySelector('.qol-meta')?.append($('liveConnection'));
   const SESSION='idleon-planner-cloud-session',dialog=$('cloudDialog');
   let paused=false,resume=false;
   try{resume=sessionStorage.getItem(SESSION)==='1';}catch{}
@@ -10,6 +11,8 @@
     $('cloudStatus').textContent=navigator.onLine===false&&status.connected?'Offline · showing the last loaded save':status.message;
     $('cloudLoginStatus').textContent=status.message;
     $('cloudTimes').textContent=[status.lastReceived?'Received '+new Date(status.lastReceived).toLocaleTimeString():'',status.lastApplied?'Applied '+new Date(status.lastApplied).toLocaleTimeString():''].filter(Boolean).join(' · ');
+    $('cloudSummary').textContent=status.busy?'Connecting…':status.phase==='error'?'Sync error':status.connected?(navigator.onLine===false?'Offline':status.phase==='reconnecting'?'Reconnecting…':status.pending?'':'Synced'):'';
+    $('liveConnection').title=[$('cloudStatus').textContent,$('cloudTimes').textContent].filter(Boolean).join(' · ');
     $('cloudConnect').hidden=status.connected||status.busy;
     $('cloudDisconnect').hidden=!status.connected&&!status.busy&&status.phase!=='error';
     $('cloudApply').hidden=!status.pending;$('cloudPending').hidden=!status.pending;

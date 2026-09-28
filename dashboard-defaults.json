@@ -1,0 +1,1747 @@
+{
+  "account": {
+    "General": {
+      "tasks": {
+        "checked": false,
+        "options": [
+          {
+            "name": "tasks",
+            "type": "array",
+            "category": "Worlds",
+            "props": {
+              "value": {
+                "1": false,
+                "2": false,
+                "3": false,
+                "4": false
+              }
+            },
+            "checked": false
+          }
+        ]
+      },
+      "materialTracker": {
+        "checked": false,
+        "options": []
+      },
+      "guild": {
+        "checked": false,
+        "options": [
+          {
+            "name": "daily",
+            "checked": false
+          },
+          {
+            "name": "weekly",
+            "checked": false
+          }
+        ]
+      },
+      "shops": {
+        "checked": true,
+        "options": [
+          {
+            "name": "shops",
+            "type": "array",
+            "props": {
+              "value": {
+                "CraftMat3": true,
+                "OilBarrel1": true,
+                "EquipmentStatues1": false,
+                "SmithingHammerChisel": false,
+                "StampA3": false,
+                "Quest104": false,
+                "FoodHealth5": true,
+                "Quest37": true,
+                "InvBag105": true,
+                "ResetFrag": false,
+                "FoodHealth6": false,
+                "FoodHealth7": false,
+                "FoodHealth4": true,
+                "Quest19": true,
+                "BobJoePickle": true,
+                "StoneW2": false,
+                "StoneA2": false,
+                "StoneT2": false,
+                "FoodPotOr2": false,
+                "FoodPotGr2": false,
+                "FoodPotRe2": false,
+                "rtt0": false,
+                "FoodHealth10": true,
+                "FoodHealth9": true,
+                "FoodHealth11": true,
+                "FoodPotOr3": false,
+                "FoodPotGr3": false,
+                "FoodPotRe3": false,
+                "Whetstone": false,
+                "FoodHealth13": false,
+                "FoodHealth12": false,
+                "DNAgun0": false,
+                "FoodPotOr4": false,
+                "FoodPotGr4": false,
+                "FoodPotRe4": false,
+                "FoodPotYe4": false,
+                "FoodHealth14": false,
+                "FoodHealth15": false,
+                "OilBarrel6": true,
+                "StoneW5": true,
+                "StoneA5": true,
+                "StoneT5": true,
+                "BoneJoePickle": true,
+                "Quest80": true,
+                "FoodHealth16": false,
+                "FoodHealth17": false,
+                "OilBarrel7": true,
+                "StoneW8": true,
+                "StoneA7": true,
+                "StoneT7": true,
+                "FoodHealth18": false,
+                "FoodHealth19": false,
+                "StoneW9": true,
+                "StoneA8": true,
+                "StoneT8": true
+              },
+              "type": "img"
+            },
+            "checked": true
+          }
+        ]
+      },
+      "etc": {
+        "checked": true,
+        "options": [
+          {
+            "name": "dungeonTraits",
+            "checked": true
+          },
+          {
+            "name": "randomEvents",
+            "checked": true
+          },
+          {
+            "name": "keys",
+            "checked": true
+          },
+          {
+            "name": "miniBosses",
+            "type": "input",
+            "props": {
+              "label": "Bosses threshold",
+              "value": 2,
+              "minValue": 2
+            },
+            "checked": true
+          },
+          {
+            "name": "newCharacters",
+            "checked": true
+          },
+          {
+            "name": "gemsFromBosses",
+            "checked": false
+          },
+          {
+            "name": "familyObols",
+            "checked": true
+          },
+          {
+            "name": "freeCompanion",
+            "checked": false
+          },
+          {
+            "name": "petMartGems",
+            "checked": true
+          },
+          {
+            "name": "dailyCrystals",
+            "checked": true,
+            "helperText": "Alert when daily guaranteed crystal kills remain"
+          },
+          {
+            "name": "tournamentRegister",
+            "checked": true
+          },
+          {
+            "name": "glimmerwickCandle",
+            "checked": true,
+            "helperText": "Alert when you own a Glimmerwick Candle and haven't wished on it today"
+          },
+          {
+            "name": "arcanistDailyDrops",
+            "checked": false,
+            "helperText": "Alert when Arcanist weapon or ring drops remain for today"
+          },
+          {
+            "name": "topOfTheMornin",
+            "checked": false,
+            "helperText": "Alert when Top of the Mornin' kills remain for today"
+          },
+          {
+            "name": "raidRegister",
+            "checked": true
+          }
+        ]
+      }
+    },
+    "World 1": {
+      "stamps": {
+        "checked": true,
+        "options": [
+          {
+            "name": "gildedStamps",
+            "checked": true
+          },
+          {
+            "name": "showGildedWhenNoAtomDiscount",
+            "checked": false
+          },
+          {
+            "name": "affordableStampLevels",
+            "type": "input",
+            "checked": true,
+            "helperText": "Stamps you can level with your account coins",
+            "props": {
+              "label": "Max coin spend",
+              "value": 25,
+              "minValue": 1,
+              "maxValue": 100,
+              "endAdornment": "%",
+              "helperText": ""
+            }
+          }
+        ]
+      },
+      "owl": {
+        "checked": true,
+        "options": [
+          {
+            "name": "featherRestart",
+            "checked": true
+          },
+          {
+            "name": "megaFeatherRestart",
+            "checked": true
+          }
+        ]
+      },
+      "forge": {
+        "checked": false,
+        "options": [
+          {
+            "name": "emptySlots",
+            "checked": false
+          }
+        ]
+      }
+    },
+    "World 2": {
+      "alchemy": {
+        "checked": true,
+        "options": [
+          {
+            "name": "bargainTag",
+            "checked": false,
+            "category": "liquidShop"
+          },
+          {
+            "name": "gems",
+            "checked": false
+          },
+          {
+            "name": "sigils",
+            "checked": true,
+            "category": "sigils"
+          },
+          {
+            "name": "liquids",
+            "category": "liquids",
+            "type": "input",
+            "props": {
+              "label": "Liquid percent",
+              "value": 90,
+              "maxValue": 100,
+              "minValue": 0
+            },
+            "checked": true
+          },
+          {
+            "name": "vials",
+            "category": "vials",
+            "checked": true
+          },
+          {
+            "name": "vialsAttempts",
+            "checked": true
+          },
+          {
+            "name": "subtractGreenStacks",
+            "checked": true
+          },
+          {
+            "name": "alternateParticles",
+            "checked": true
+          },
+          {
+            "name": "p2wUpgrades",
+            "checked": true,
+            "helperText": "Cauldron and liquid p2w upgrades you can level with your account coins"
+          }
+        ]
+      },
+      "islands": {
+        "checked": true,
+        "options": [
+          {
+            "name": "unclaimedDays",
+            "type": "input",
+            "props": {
+              "label": "Threshold",
+              "value": "5",
+              "minValue": 1
+            },
+            "checked": true
+          },
+          {
+            "name": "shimmerIsland",
+            "checked": true
+          },
+          {
+            "name": "garbageUpgrade",
+            "checked": true
+          },
+          {
+            "name": "collectibleGarbage",
+            "type": "input",
+            "props": {
+              "label": "Threshold",
+              "value": 80,
+              "minValue": 1,
+              "maxValue": 100
+            },
+            "checked": true,
+            "helperText": "A single collection is capped at 100 garbage, anything above it is lost"
+          }
+        ]
+      },
+      "postOffice": {
+        "checked": false,
+        "options": [
+          {
+            "name": "dailyShipments",
+            "type": "array",
+            "category": "dailyShipments",
+            "checked": false,
+            "props": {
+              "value": {
+                "1": false,
+                "2": false,
+                "3": false,
+                "4": false,
+                "5": false,
+                "6": false
+              }
+            }
+          },
+          {
+            "name": "showAlertOnlyWhen0Shields",
+            "checked": false,
+            "helperText": "Daily shipments alert"
+          }
+        ]
+      },
+      "arcade": {
+        "checked": true,
+        "options": [
+          {
+            "name": "balls",
+            "checked": true
+          },
+          {
+            "name": "unmaxedRotation",
+            "checked": true
+          },
+          {
+            "name": "includeSuper",
+            "checked": true
+          }
+        ]
+      },
+      "weeklyBosses": {
+        "checked": true,
+        "options": [
+          {
+            "name": "daily",
+            "checked": true,
+            "helperText": "Alert when you haven't reset the W2 boss raid today (bonus class exp and damage)"
+          },
+          {
+            "name": "trophy",
+            "checked": true,
+            "helperText": "Alert until you've beaten 5 skulls this week, the point where trophies stop dropping"
+          }
+        ]
+      },
+      "killRoy": {
+        "checked": true,
+        "options": [
+          {
+            "name": "general",
+            "checked": true,
+            "helperText": "Alert when Killroy is available"
+          },
+          {
+            "name": "underHundredKills",
+            "checked": true,
+            "helperText": "Alert when current Killroy has monsters below 100 kills (for equinox)"
+          },
+          {
+            "name": "skulls",
+            "checked": true,
+            "helperText": "Alert when you have unspent killroy skulls"
+          }
+        ]
+      },
+      "kangaroo": {
+        "checked": true,
+        "options": [
+          {
+            "name": "shinyThreshold",
+            "type": "input",
+            "props": {
+              "label": "Shiny Catch %",
+              "value": 100,
+              "minValue": 100
+            },
+            "checked": true
+          },
+          {
+            "name": "fisherooReset",
+            "checked": true
+          },
+          {
+            "name": "greatestCatch",
+            "checked": true
+          }
+        ]
+      }
+    },
+    "World 3": {
+      "printer": {
+        "checked": false,
+        "options": [
+          {
+            "name": "includeResource",
+            "type": "array",
+            "props": {
+              "value": {
+                "Copper": false,
+                "OakTree": false,
+                "Grasslands1": false,
+                "Bug1": false,
+                "Fish1": false,
+                "Forest3": true,
+                "ForestTree": true,
+                "DesertA1": true,
+                "SnowA1": true,
+                "Soul2": true,
+                "Critter3": true,
+                "SnowB4": true,
+                "Fish4": true,
+                "Bug3": true,
+                "Critter4": true,
+                "SnowC4": true,
+                "Tree7": true,
+                "Bug6": true,
+                "Soul4": true,
+                "SpiB2": true,
+                "Soul7": true,
+                "Critter11": true,
+                "w7A1": true,
+                "Fish12": true,
+                "Bug15": true,
+                "w7B10": true,
+                "Soul8": true
+              },
+              "type": "img"
+            },
+            "checked": false,
+            "category": "atoms",
+            "helperText": "Exclude"
+          },
+          {
+            "name": "showAlertWhenFull",
+            "checked": false
+          }
+        ]
+      },
+      "library": {
+        "checked": false,
+        "options": [
+          {
+            "name": "books",
+            "type": "input",
+            "props": {
+              "label": "Book threshold",
+              "value": 20,
+              "minValue": 1
+            },
+            "checked": false
+          }
+        ]
+      },
+      "construction": {
+        "checked": true,
+        "options": [
+          {
+            "name": "flags",
+            "checked": true
+          },
+          {
+            "name": "buildings",
+            "checked": true
+          },
+          {
+            "name": "materials",
+            "type": "array",
+            "props": {
+              "value": {
+                "Refinery1": true,
+                "Refinery2": true,
+                "Refinery3": true,
+                "Refinery4": true,
+                "Refinery5": true,
+                "Refinery6": true,
+                "Refinery7": true,
+                "Refinery8": true,
+                "Refinery9": true
+              },
+              "type": "img"
+            },
+            "checked": true,
+            "category": "Materials"
+          },
+          {
+            "name": "matsThreshold",
+            "type": "input",
+            "props": {
+              "label": "Materials lead time",
+              "value": 0,
+              "minValue": 0,
+              "endAdornment": "h"
+            },
+            "checked": true,
+            "helperText": "Alert this many hours before a salt runs out of materials (0 alerts only once they are gone)"
+          },
+          {
+            "name": "rankUp",
+            "type": "array",
+            "props": {
+              "value": {
+                "Refinery1": true,
+                "Refinery2": true,
+                "Refinery3": true,
+                "Refinery4": true,
+                "Refinery5": true,
+                "Refinery6": true,
+                "Refinery7": true,
+                "Refinery8": true,
+                "Refinery9": true
+              },
+              "type": "img"
+            },
+            "checked": true,
+            "category": "Refinery Rank up"
+          },
+          {
+            "name": "saltBalance",
+            "type": "array",
+            "props": {
+              "value": {
+                "Refinery1": true,
+                "Refinery2": true,
+                "Refinery3": true,
+                "Refinery4": true,
+                "Refinery5": true,
+                "Refinery6": true,
+                "Refinery7": true,
+                "Refinery8": true,
+                "Refinery9": true
+              },
+              "type": "img"
+            },
+            "checked": true,
+            "category": "Refinery salt balance"
+          },
+          {
+            "name": "saltBalanceDirection",
+            "type": "array",
+            "category": "Alert when a salt is",
+            "props": {
+              "value": {
+                "At or past its limit": true,
+                "Below its limit": false
+              }
+            },
+            "checked": true,
+            "helperText": "The limit is the highest rank the previous salt can keep fuelled"
+          }
+        ]
+      },
+      "hatRack": {
+        "checked": true,
+        "options": [
+          {
+            "name": "hatsMissing",
+            "checked": true
+          }
+        ]
+      },
+      "equinox": {
+        "checked": true,
+        "options": [
+          {
+            "name": "bar",
+            "checked": true
+          },
+          {
+            "name": "challenges",
+            "checked": true
+          },
+          {
+            "name": "foodLust",
+            "checked": true,
+            "type": "input",
+            "props": {
+              "label": "Stacks threshold",
+              "value": 14,
+              "minValue": 1,
+              "maxValue": 14
+            },
+            "helperText": "Alerts once you hold this many stacks, capped at your Food Lust level, so the default only alerts when Food Lust is maxed"
+          }
+        ]
+      },
+      "atomCollider": {
+        "checked": true,
+        "options": [
+          {
+            "name": "stampReducer",
+            "type": "input",
+            "props": {
+              "label": "Threshold",
+              "value": 90,
+              "maxValue": 90,
+              "minValue": 0,
+              "endAdornment": "%"
+            },
+            "checked": true
+          }
+        ]
+      },
+      "traps": {
+        "checked": false,
+        "options": [
+          {
+            "name": "trapsOverdue",
+            "checked": false
+          }
+        ]
+      }
+    },
+    "World 4": {
+      "breeding": {
+        "checked": false,
+        "options": [
+          {
+            "name": "eggs",
+            "checked": false
+          },
+          {
+            "name": "eggsRarity",
+            "type": "input",
+            "props": {
+              "label": "Eggs rarity",
+              "value": 1,
+              "minValue": 1,
+              "helperText": "1=Base, 2=Copper, 3=Iron"
+            },
+            "checked": false
+          },
+          {
+            "name": "shinies",
+            "type": "input",
+            "props": {
+              "label": "Level threshold",
+              "value": 5
+            },
+            "checked": false
+          },
+          {
+            "name": "breedability",
+            "type": "input",
+            "props": {
+              "label": "Level threshold",
+              "value": 5
+            },
+            "checked": false
+          }
+        ]
+      },
+      "cooking": {
+        "checked": true,
+        "options": [
+          {
+            "name": "spices",
+            "checked": false
+          },
+          {
+            "name": "ribbons",
+            "type": "input",
+            "props": {
+              "label": "Ribbons threshold",
+              "value": 0,
+              "maxValue": 28,
+              "minValue": 0,
+              "helperText": "Empty ribbon slots"
+            },
+            "checked": true
+          },
+          {
+            "name": "meals",
+            "checked": true,
+            "category": "meals"
+          },
+          {
+            "name": "alertOnlyCookedMeal",
+            "checked": false
+          },
+          {
+            "name": "cookingMastery",
+            "checked": true
+          }
+        ]
+      },
+      "laboratory": {
+        "checked": true,
+        "options": [
+          {
+            "name": "chipsRotation",
+            "checked": true
+          },
+          {
+            "name": "jewelsRotation",
+            "checked": true
+          }
+        ]
+      },
+      "tome": {
+        "checked": true,
+        "options": [
+          {
+            "name": "nametagClaim",
+            "checked": true,
+            "helperText": "Alert when Tome ranking nametags are available to claim"
+          }
+        ]
+      }
+    },
+    "World 5": {
+      "gaming": {
+        "checked": true,
+        "options": [
+          {
+            "name": "sprouts",
+            "checked": false
+          },
+          {
+            "name": "squirrel",
+            "type": "input",
+            "props": {
+              "label": "Hours threshold",
+              "value": 1,
+              "minValue": 1
+            },
+            "checked": false
+          },
+          {
+            "name": "shovel",
+            "type": "input",
+            "props": {
+              "label": "Hours threshold",
+              "value": 1,
+              "minValue": 1
+            },
+            "checked": false
+          }
+        ]
+      },
+      "sailing": {
+        "checked": true,
+        "options": [
+          {
+            "name": "captains",
+            "checked": true
+          },
+          {
+            "name": "chests",
+            "checked": false
+          }
+        ]
+      },
+      "hole": {
+        "checked": true,
+        "options": [
+          {
+            "name": "buckets",
+            "type": "input",
+            "props": {
+              "label": "Sediment threshold",
+              "value": 1000,
+              "minValue": 1,
+              "helperText": "Set 0 for max"
+            },
+            "checked": false
+          },
+          {
+            "name": "motherlode",
+            "checked": true
+          },
+          {
+            "name": "evertree",
+            "checked": true
+          },
+          {
+            "name": "bottomlessTrench",
+            "checked": true
+          },
+          {
+            "name": "bravery",
+            "checked": false,
+            "type": "input",
+            "props": {
+              "label": "Reward multi threshold",
+              "value": 1,
+              "minValue": 1,
+              "helperText": ""
+            }
+          },
+          {
+            "name": "theWell",
+            "checked": true
+          },
+          {
+            "name": "theHarp",
+            "checked": false,
+            "type": "input",
+            "props": {
+              "label": "Power threshold",
+              "value": 100,
+              "minValue": 1,
+              "helperText": "%"
+            }
+          },
+          {
+            "name": "theHive",
+            "checked": true
+          },
+          {
+            "name": "grotto",
+            "checked": true
+          },
+          {
+            "name": "justice",
+            "checked": false,
+            "type": "input",
+            "props": {
+              "label": "Reward multi threshold",
+              "value": 1,
+              "minValue": 1,
+              "helperText": ""
+            }
+          },
+          {
+            "name": "villagersLevelUp",
+            "checked": false
+          },
+          {
+            "name": "wisdom",
+            "checked": false,
+            "type": "input",
+            "props": {
+              "label": "Reward multi threshold",
+              "value": 1,
+              "minValue": 1,
+              "helperText": ""
+            }
+          },
+          {
+            "name": "jars",
+            "checked": false,
+            "type": "input",
+            "props": {
+              "label": "Jars threshold",
+              "value": 120,
+              "minValue": 1,
+              "maxValue": 120,
+              "helperText": "Max of 120 jars"
+            }
+          },
+          {
+            "name": "studyLevelUp",
+            "checked": true
+          },
+          {
+            "name": "jarsFull",
+            "checked": true
+          },
+          {
+            "name": "lanterns",
+            "checked": false,
+            "type": "input",
+            "props": {
+              "label": "Remaining lanterns threshold",
+              "value": 1,
+              "minValue": 1,
+              "maxValue": 12,
+              "helperText": "Daily cap is 12"
+            }
+          }
+        ]
+      }
+    },
+    "World 6": {
+      "sneaking": {
+        "checked": false,
+        "options": [
+          {
+            "name": "lastLooted",
+            "type": "input",
+            "props": {
+              "label": "Last looted",
+              "value": 120,
+              "minValue": 0,
+              "helperText": "in minutes"
+            },
+            "checked": false
+          },
+          {
+            "name": "remainingPristineRolls",
+            "checked": false
+          },
+          {
+            "name": "remainingSymbolRolls",
+            "checked": false
+          }
+        ]
+      },
+      "beanstalk": {
+        "checked": true,
+        "options": [
+          {
+            "name": "readyToPlant",
+            "checked": true,
+            "helperText": "Alert when you own enough of a golden food to rank it up on the beanstalk"
+          }
+        ]
+      },
+      "farming": {
+        "checked": true,
+        "options": [
+          {
+            "name": "plots",
+            "type": "input",
+            "props": {
+              "label": "OG Threshold",
+              "value": "25",
+              "minValue": 0,
+              "helperText": "1=x2, 2=x4, 3=x8, 4=x16"
+            },
+            "checked": true
+          },
+          {
+            "name": "totalCrops",
+            "type": "input",
+            "props": {
+              "label": "Crop Threshold",
+              "value": 1,
+              "minValue": 1,
+              "helperText": ""
+            },
+            "checked": false
+          },
+          {
+            "name": "missingPlots",
+            "checked": true
+          },
+          {
+            "name": "beanTrade",
+            "type": "input",
+            "props": {
+              "label": "Bean trade value",
+              "value": 1,
+              "minValue": 1,
+              "helperText": ""
+            },
+            "checked": false
+          },
+          {
+            "name": "exoticPurchases",
+            "checked": true
+          },
+          {
+            "name": "finishedPlots",
+            "type": "input",
+            "checked": false,
+            "helperText": "How long you'll wait for a plot to double. Plots slower than this get flagged - collect them to start the doubling over",
+            "props": {
+              "label": "Hours",
+              "value": 168,
+              "minValue": 1,
+              "maxValue": 8760,
+              "helperText": ""
+            }
+          }
+        ]
+      },
+      "summoning": {
+        "checked": true,
+        "options": [
+          {
+            "name": "familiar",
+            "checked": true,
+            "type": "input",
+            "props": {
+              "label": "Threshold",
+              "value": 10,
+              "minValue": 0,
+              "helperText": ""
+            }
+          },
+          {
+            "name": "battleAttempts",
+            "checked": false
+          }
+        ]
+      },
+      "etc": {
+        "checked": true,
+        "options": [
+          {
+            "name": "emperor",
+            "type": "input",
+            "props": {
+              "label": "Attempts",
+              "value": 20
+            },
+            "checked": true,
+            "helperText": "Alerts at this number, or at your attempt cap if it's lower"
+          }
+        ]
+      }
+    },
+    "World 7": {
+      "royalGuardian": {
+        "checked": true,
+        "options": [
+          {
+            "name": "idleOutposts",
+            "checked": true,
+            "helperText": "Alert when an outpost is connected to an empty resource and another in range still has some"
+          },
+          {
+            "name": "unwiredOutposts",
+            "checked": true,
+            "helperText": "Alert when an outpost has no resource connected, and one is in range"
+          },
+          {
+            "name": "idleSupportCamps",
+            "checked": true,
+            "helperText": "Alert when a support camp isn't boosting any outpost"
+          },
+          {
+            "name": "unspentPts",
+            "type": "input",
+            "props": {
+              "label": "Unspent PTS per outpost",
+              "value": 12,
+              "minValue": 1
+            },
+            "checked": true,
+            "helperText": "Alert when a single outpost holds this many unspent PTS or more"
+          },
+          {
+            "name": "claimableMaps",
+            "checked": true,
+            "helperText": "Alert when a map has met its kill requirement and an outpost can be claimed"
+          },
+          {
+            "name": "idleUnits",
+            "checked": false,
+            "helperText": "Alert when units are clearing a map you have already claimed, or aren't assigned anywhere, while their world still has a map left to clear"
+          },
+          {
+            "name": "overkillWorkers",
+            "type": "input",
+            "props": {
+              "label": "Hours to empty within",
+              "value": 24,
+              "minValue": 1
+            },
+            "checked": true,
+            "helperText": "Alert when an outpost has more Workers than it needs to empty its resource within this many hours. Workers only add collection rate, so the spare ones could be Traders and earn Trade rank EXP instead"
+          },
+          {
+            "name": "overkillBeforeReset",
+            "checked": true,
+            "helperText": "Measure that alert against the time left until the daily reset instead of the hours above. A resource only restocks and gains a level if it is already empty when the reset lands, so this is the deadline that actually matters. Falls back to the hours above if your save is older than the reset"
+          },
+          {
+            "name": "strandedWorkers",
+            "checked": true,
+            "helperText": "Alert when an outpost's resources are all empty and nothing better is in range, while Workers are still assigned to it. They add collection rate to a resource that has none left, so Traders would earn Trade rank EXP instead"
+          },
+          {
+            "name": "sharedNodes",
+            "type": "input",
+            "props": {
+              "label": "Hours to empty within",
+              "value": 24,
+              "minValue": 1
+            },
+            "checked": true,
+            "helperText": "Alert when two outposts are wired to the same resource and one of them empties it within this many hours on its own, so the other is spending a connection slot for nothing"
+          },
+          {
+            "name": "restockLocked",
+            "checked": true,
+            "helperText": "Alert until you buy Resource Replenish in the armory, the one-time upgrade that refills empty resources every day. It goes away once bought"
+          }
+        ]
+      },
+      "gallery": {
+        "checked": true,
+        "options": [
+          {
+            "name": "trophiesMissing",
+            "checked": true
+          },
+          {
+            "name": "nametagsMissing",
+            "checked": true
+          }
+        ]
+      },
+      "spelunking": {
+        "checked": true,
+        "options": [
+          {
+            "name": "pageReads",
+            "checked": true
+          },
+          {
+            "name": "fullStaminaCharacters",
+            "type": "input",
+            "props": {
+              "label": "Characters threshold",
+              "value": 1,
+              "minValue": 1
+            },
+            "checked": false
+          },
+          {
+            "name": "overstimLevel",
+            "type": "input",
+            "props": {
+              "label": "Overstim level threshold",
+              "value": "25",
+              "minValue": 1
+            },
+            "checked": true
+          }
+        ]
+      },
+      "legendTalents": {
+        "checked": true,
+        "options": [
+          {
+            "name": "pointsLeftToSpend",
+            "checked": true
+          },
+          {
+            "name": "cheaperMasterclassUpgrades",
+            "checked": true
+          }
+        ]
+      },
+      "zenithMarket": {
+        "checked": true,
+        "options": [
+          {
+            "name": "doubleCluster",
+            "checked": true
+          },
+          {
+            "name": "clusterFarming",
+            "type": "array",
+            "category": "Alert when Cluster Farming is",
+            "props": {
+              "value": {
+                "Off": true,
+                "On": false
+              }
+            },
+            "checked": true
+          }
+        ]
+      },
+      "construction": {
+        "checked": true,
+        "options": [
+          {
+            "name": "jeweledCogs",
+            "checked": true
+          }
+        ]
+      },
+      "minehead": {
+        "checked": true,
+        "options": [
+          {
+            "name": "dailyTries",
+            "checked": true
+          },
+          {
+            "name": "currencyUpgrades",
+            "type": "array",
+            "category": "Alert when you can afford these mine currency upgrades",
+            "props": {
+              "value": {
+                "MineUpg5": true,
+                "MineUpg22": true,
+                "MineUpg28": true
+              },
+              "type": "img"
+            },
+            "checked": true
+          }
+        ]
+      },
+      "research": {
+        "checked": true,
+        "options": [
+          {
+            "name": "insightLevel",
+            "type": "input",
+            "props": {
+              "label": "Insight level threshold",
+              "value": 3,
+              "minValue": 1
+            },
+            "checked": true
+          },
+          {
+            "name": "observationRollsLeft",
+            "checked": true
+          }
+        ]
+      },
+      "sushiStation": {
+        "checked": false,
+        "options": [
+          {
+            "name": "fuelFull",
+            "checked": false
+          },
+          {
+            "name": "shakerUses",
+            "type": "array",
+            "props": {
+              "value": {
+                "SushiUpg17": false,
+                "SushiUpg18": false,
+                "SushiUpg19": false
+              },
+              "type": "img"
+            },
+            "checked": false
+          },
+          {
+            "name": "knowledgeLevelUp",
+            "checked": false
+          }
+        ]
+      },
+      "clamWork": {
+        "checked": true,
+        "options": [
+          {
+            "name": "promotionAffordable",
+            "checked": true,
+            "helperText": "Pearls are spent even when the promotion fails, and a successful one resets your pearls and every clam upgrade"
+          }
+        ]
+      },
+      "theButton": {
+        "checked": true,
+        "options": [
+          {
+            "name": "instaSkipAvailable",
+            "checked": true
+          },
+          {
+            "name": "taskReady",
+            "checked": true
+          }
+        ]
+      }
+    }
+  },
+  "characters": {
+    "cards": {
+      "checked": true,
+      "options": [
+        {
+          "name": "cardSet",
+          "checked": true
+        }
+      ]
+    },
+    "anvil": {
+      "checked": false,
+      "options": [
+        {
+          "name": "unspentPoints",
+          "type": "input",
+          "props": {
+            "label": "Points Threshold",
+            "value": 1,
+            "minValue": 1,
+            "helperText": ""
+          },
+          "checked": false
+        },
+        {
+          "name": "missingHammers",
+          "checked": false
+        },
+        {
+          "name": "anvilOverdue",
+          "type": "input",
+          "props": {
+            "label": "Minutes",
+            "value": 30,
+            "minValue": 1,
+            "helperText": "alert X minutes before"
+          },
+          "checked": false
+        }
+      ]
+    },
+    "worship": {
+      "checked": true,
+      "options": [
+        {
+          "name": "unendingEnergy",
+          "checked": true
+        },
+        {
+          "name": "chargeOverdue",
+          "checked": true
+        }
+      ]
+    },
+    "traps": {
+      "checked": true,
+      "options": [
+        {
+          "name": "missingTraps",
+          "checked": true
+        },
+        {
+          "name": "trapsOverdue",
+          "checked": true
+        }
+      ]
+    },
+    "quests": {
+      "checked": true,
+      "options": [
+        {
+          "name": "picnicDaily",
+          "checked": false,
+          "helperText": "Alert when a character hasn't completed any of the Picnic Stowaway daily quests today"
+        }
+      ]
+    },
+    "alchemy": {
+      "checked": true,
+      "options": [
+        {
+          "name": "missingBubbles",
+          "checked": true
+        }
+      ]
+    },
+    "obols": {
+      "checked": true,
+      "options": [
+        {
+          "name": "missingObols",
+          "checked": true
+        }
+      ]
+    },
+    "postOffice": {
+      "checked": true,
+      "options": [
+        {
+          "name": "unspentPoints",
+          "checked": true,
+          "type": "input",
+          "props": {
+            "label": "Number of boxes",
+            "value": "5000"
+          }
+        }
+      ]
+    },
+    "starSigns": {
+      "checked": true,
+      "options": [
+        {
+          "name": "missingStarSigns",
+          "checked": true
+        }
+      ]
+    },
+    "crystalCountdown": {
+      "checked": true,
+      "options": [
+        {
+          "name": "showMaxed",
+          "checked": true
+        },
+        {
+          "name": "showNonMaxed",
+          "checked": true
+        },
+        {
+          "category": "skills",
+          "name": "skills",
+          "type": "array",
+          "props": {
+            "value": {
+              "ClassIcons42": true,
+              "ClassIcons43": true,
+              "ClassIcons44": true,
+              "ClassIcons45": true,
+              "ClassIcons46": true,
+              "ClassIcons47": true,
+              "ClassIcons48": true,
+              "ClassIcons49": true,
+              "ClassIcons50": true
+            },
+            "type": "img"
+          },
+          "checked": true
+        }
+      ]
+    },
+    "tools": {
+      "checked": true,
+      "options": []
+    },
+    "divinityStyle": {
+      "checked": true,
+      "options": []
+    },
+    "talents": {
+      "checked": true,
+      "options": [
+        {
+          "name": "talents",
+          "type": "array",
+          "category": "cooldowns",
+          "checked": true,
+          "props": {
+            "value": {
+              "printerGoBrrr": true,
+              "refineryThrottle": true,
+              "craniumCooking": true,
+              "itsYourBirthday!": true,
+              "voidTrialRerun": true,
+              "arenaSpirit": true,
+              "tasteTest": true
+            }
+          }
+        },
+        {
+          "category": "Misc",
+          "name": "alwaysShowTalents",
+          "checked": false
+        },
+        {
+          "name": "superTalentLeftToSpend",
+          "checked": true
+        },
+        {
+          "name": "unmaxedTalents",
+          "checked": true,
+          "helperText": "Alert when a class talent still has talent points left to spend before its max level"
+        },
+        {
+          "name": "libraryUpgradableTalents",
+          "checked": false,
+          "helperText": "Alert when a maxed class talent could still be raised by a Talent Book Library book"
+        }
+      ]
+    },
+    "equipment": {
+      "checked": true,
+      "options": [
+        {
+          "name": "availableUpgradesSlots",
+          "checked": true
+        }
+      ]
+    },
+    "bags": {
+      "checked": true,
+      "options": [
+        {
+          "name": "unmaxedBags",
+          "checked": true,
+          "helperText": "Alert when a carry capacity bag isn't at its max tier"
+        }
+      ]
+    },
+    "classSpecific": {
+      "checked": true,
+      "options": [
+        {
+          "name": "wrongItems",
+          "checked": true,
+          "helperText": "Alert when using class-specific form items while outside form"
+        },
+        {
+          "name": "betterWeapon",
+          "checked": true,
+          "helperText": "Alert when there's a better form class-specific weapon in your inventory"
+        },
+        {
+          "name": "betterRing",
+          "checked": true,
+          "type": "array",
+          "category": "betterRing",
+          "helperText": "Alert when there's a better form class-specific ring (same type) in your inventory. Only the checked stats count towards \"better\" - Wind Walker rings roll a single stat and are always compared on it",
+          "props": {
+            "value": {
+              "arcanistAccuracy": true,
+              "extraTachyons": true
+            }
+          }
+        }
+      ]
+    }
+  },
+  "timers": {
+    "General": {
+      "daily": {
+        "checked": true,
+        "options": []
+      },
+      "weekly": {
+        "checked": true,
+        "options": []
+      },
+      "companions": {
+        "checked": true,
+        "options": []
+      },
+      "syphonCharge": {
+        "checked": true,
+        "options": []
+      },
+      "closestFullWorship": {
+        "checked": true,
+        "options": []
+      },
+      "dungeonHappyHour": {
+        "checked": true,
+        "options": []
+      },
+      "randomEvents": {
+        "checked": true,
+        "options": []
+      },
+      "sailingTrades": {
+        "checked": true,
+        "options": []
+      },
+      "serverWeekly": {
+        "checked": true,
+        "options": []
+      }
+    },
+    "Etc": {
+      "library": {
+        "checked": true,
+        "options": []
+      },
+      "minibosses": {
+        "checked": true,
+        "options": []
+      },
+      "bonusTimeLeft": {
+        "checked": true,
+        "options": []
+      },
+      "meritocracyTimeLeft": {
+        "checked": true,
+        "options": []
+      }
+    },
+    "Clickers": {
+      "featherRestart": {
+        "checked": true,
+        "options": [],
+        "category": "Orion"
+      },
+      "megaFeatherRestart": {
+        "checked": true,
+        "options": []
+      },
+      "fisherooReset": {
+        "checked": true,
+        "options": [],
+        "category": "Poppy"
+      },
+      "greatestCatch": {
+        "checked": true,
+        "options": []
+      },
+      "megaFleshRestart": {
+        "checked": true,
+        "options": [],
+        "category": "Bubba"
+      }
+    },
+    "World 3": {
+      "printer": {
+        "checked": true,
+        "options": []
+      },
+      "closestTrap": {
+        "checked": true,
+        "options": []
+      },
+      "closestFlag": {
+        "checked": true,
+        "options": []
+      },
+      "closestBuilding": {
+        "checked": true,
+        "options": []
+      },
+      "closestSalt": {
+        "checked": true,
+        "options": [
+          {
+            "name": "salts",
+            "type": "array",
+            "props": {
+              "value": {
+                "Refinery1": true,
+                "Refinery2": true,
+                "Refinery3": true,
+                "Refinery4": true,
+                "Refinery5": true,
+                "Refinery6": true,
+                "Refinery7": true,
+                "Refinery8": true,
+                "Refinery9": true
+              },
+              "type": "img"
+            },
+            "checked": true,
+            "helperText": "Only the selected salts are considered when picking the closest one"
+          }
+        ]
+      },
+      "equinox": {
+        "checked": true,
+        "options": []
+      }
+    },
+    "World 5": {
+      "bravery": {
+        "checked": true,
+        "options": []
+      },
+      "justice": {
+        "checked": true,
+        "options": []
+      },
+      "wisdom": {
+        "checked": true,
+        "options": []
+      },
+      "villagers": {
+        "checked": true,
+        "options": [
+          {
+            "name": "villagers",
+            "type": "array",
+            "props": {
+              "value": {
+                "explore": true,
+                "engineer": true,
+                "bonuses": true,
+                "measure": true,
+                "studies": true
+              }
+            },
+            "checked": true
+          }
+        ]
+      },
+      "coinFill": {
+        "checked": true,
+        "options": []
+      },
+      "marbleFill": {
+        "checked": true,
+        "options": []
+      }
+    },
+    "World 6": {
+      "cropsReady": {
+        "checked": true,
+        "options": []
+      }
+    },
+    "World 7": {
+      "researchLevelUp": {
+        "checked": true,
+        "options": []
+      },
+      "sushiFuelFull": {
+        "checked": true,
+        "options": []
+      },
+      "observationInsight": {
+        "checked": true,
+        "options": []
+      },
+      "royalNodeCap": {
+        "checked": true,
+        "options": []
+      },
+      "overstim": {
+        "checked": true,
+        "options": []
+      }
+    }
+  },
+  "version": 76
+}

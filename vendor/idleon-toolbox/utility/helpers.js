@@ -670,6 +670,17 @@ export const worlds = {
   6: 'World 7'
 };
 
+// Native duration helpers keep the calculation bundle independent of UI/date libraries.
+const isValid = value => Number.isFinite(new Date(value).getTime());
+const intervalToDuration = ({start,end}) => {
+  let seconds = Math.floor(Math.abs(new Date(end).getTime()-new Date(start).getTime())/1000);
+  const days=Math.floor(seconds/86400); seconds%=86400;
+  const hours=Math.floor(seconds/3600); seconds%=3600;
+  const minutes=Math.floor(seconds/60); seconds%=60;
+  return {years:0,months:0,days,hours,minutes,seconds};
+};
+const getDaysInYear = date => new Date(date.getFullYear(),1,29).getMonth()===1?366:365;
+const getDaysInMonth = date => new Date(date.getFullYear(),date.getMonth()+1,0).getDate();
 const maxTimeValue = 9.007199254740992e+15;
 export const getDuration = (start, end) => {
   if (!isValid(start) || !isValid(end)) {
