@@ -711,21 +711,29 @@ SKILL_PAGES.holeFloors={title:'Floors',world:'World 5',copy:'All 18 Hole caverns
     $('calibrationNote').textContent=calibrationText(calibration);
   }
 
-  function loadText(text,restored=false){
+  function loadText(text,restored=false,live=false){
     clearFail();
     try{
       const nextState=E.parseInput(text),nextExport=nextState.rawRoot;
+      if(!restored&&!live)window.PlannerLiveConnection?.disconnect();
       const returnPage=typeof window!=='undefined'?window.plannerQoL?.lastPage():null;
-      state=nextState;loadedExport=nextExport;$('workspace').classList.remove('hidden');persistInput();$('jsonInput').value='';$('inputPanel').classList.add('hidden');$('changeJsonBtn').classList.remove('hidden');selectSideNav('home');renderHome();
+      state=nextState;loadedExport=nextExport;$('workspace').classList.remove('hidden');$('jsonInput').value='';persistInput();$('inputPanel').classList.add('hidden');$('changeJsonBtn').classList.remove('hidden');selectSideNav('home');renderHome();
       $('navJelly').disabled=state.hasJelly===false;$('navJelly').title=state.hasJelly===false?'Jelly Operator data is not available in this export. Other account pages still work.':'';
-      $('workspace').scrollIntoView({behavior:'smooth',block:'start'});
+      if(!live)$('workspace').scrollIntoView({behavior:'smooth',block:'start'});
       if(typeof window!=='undefined'){window.plannerQoL?.onImport(nextExport);if(returnPage&&returnPage!=='home')selectSideNav(returnPage);}
       if(!restored)window.PlannerAnalytics?.event('save_import_succeeded');
-    }catch(e){if(!restored)window.PlannerAnalytics?.event('save_import_failed');fail(e?.message||String(e));}
+      return true;
+    }catch(e){if(!restored)window.PlannerAnalytics?.event('save_import_failed');fail(e?.message||String(e));return false;}
   }
 
+  window.PlannerLiveBridge={
+    canApply:()=>!$('parseBtn').disabled,
+    canAutoApply:()=>!$('parseBtn').disabled&&(!state||window.plannerQoL?.lastPage()==='home')&&!document.hidden&&!document.querySelector('dialog[open]')&&!/^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement?.tagName||'')&&!$('jsonInput').value.trim(),
+    apply:raw=>loadText(JSON.stringify(raw),true,true)
+  };
+
   $('parseBtn').addEventListener('click',()=>loadText($('jsonInput').value));
-  $('clearBtn').addEventListener('click',()=>{state=null;loadedExport=null;lastResult=null;currentArrangement=null;$('jsonInput').value='';$('workspace').classList.add('hidden');$('inputPanel').classList.remove('hidden');$('changeJsonBtn').classList.add('hidden');clearFail();try{sessionStorage.removeItem(SESSION_KEY);}catch(_){}});
+  $('clearBtn').addEventListener('click',()=>{window.PlannerLiveConnection?.disconnect();state=null;loadedExport=null;lastResult=null;currentArrangement=null;$('jsonInput').value='';$('workspace').classList.add('hidden');$('inputPanel').classList.remove('hidden');$('changeJsonBtn').classList.add('hidden');clearFail();try{sessionStorage.removeItem(SESSION_KEY);}catch(_){}});
   $('changeJsonBtn').addEventListener('click',()=>{$('inputPanel').classList.remove('hidden');$('changeJsonBtn').classList.add('hidden');$('jsonInput').focus();});
   $('rememberTab').addEventListener('change',persistInput);
   $('jsonInput').addEventListener('input',()=>{if($('rememberTab').checked)persistInput();});

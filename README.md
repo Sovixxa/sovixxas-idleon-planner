@@ -8,6 +8,25 @@ World 7 includes the audited combat simulator and layout optimizer.
 Run `npm start` here, or double-click `start.bat`. Open http://localhost:3000.
 No npm install is needed. Edit the files in this folder; source changes hot reload.
 
+Use **Connect account** for Steam or Idleon email/password sign-in. Steam opens
+the official Steam sign-in page; copy the resulting Idleon `/steamsso/` address
+back into the connection dialog without pressing the blue button on that page.
+The planner exchanges it with Idleon's sign-in service and listens for cloud-save
+changes. Updates are available only when the game saves to the cloud.
+
+Home refreshes automatically when you are not editing. Other pages queue the
+latest save behind **Apply update**, preserving your open planner until you choose
+to refresh. Applying waits for the Jelly optimizer to finish. Notes, goals and
+checklists stay in local storage. The connection bar shows receive/apply times,
+errors, retry, and disconnect. Importing valid JSON or clearing a save disconnects
+cloud sync. Disconnect keeps the displayed save available locally.
+
+Sign-in tokens last for the current browser tab, including reloads. Passwords and
+Steam redirect URLs are not stored by the planner. The Firebase SDK is loaded from
+Google's CDN only on connection or session resume; cloud data and sign-in go
+directly to Idleon's services. Manual JSON import requires no Firebase connection.
+See `CLOUD-SYNC.md` for integration details and verification limits.
+
 Optimizers → Account Review reads the current local export and reviews stamps,
 alchemy bubbles, construction build status, worship wave records, cooking meals,
 Rift rewards and character levels. It puts an ordered account action list first, favoring

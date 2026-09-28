@@ -3,6 +3,8 @@
   "version": "0.9.9",
   "private": true,
   "scripts": {
+    "pretest": "node test-live-sync.js",
+    "test:cloud-sync": "node test-live-sync.js && node test-live-sync-browser.js",
     "test:dailies": "node test-dailies-model.js && node test-dailies.js",
     "test:qol-browser": "node test-planner-qol-browser.js",
     "test:shadow-caps": "node test-shadow-caps.js",

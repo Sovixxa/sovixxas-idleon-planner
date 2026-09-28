@@ -1,0 +1,140 @@
+(function(root){
+  'use strict';
+  const STEAM_RETURN='https://www.legendsofidleon.com/steamsso/';
+  const STEAM_LOGIN='https://steamcommunity.com/openid/login?'+new URLSearchParams({
+    'openid.ns':'http://specs.openid.net/auth/2.0',
+    'openid.claimed_id':'http://specs.openid.net/auth/2.0/identifier_select',
+    'openid.identity':'http://specs.openid.net/auth/2.0/identifier_select',
+    'openid.return_to':STEAM_RETURN,'openid.realm':STEAM_RETURN,'openid.mode':'checkid_setup'
+  });
+  function steamPayload(value){
+    let url;try{url=new URL(value.trim());}catch{throw Error('Paste the complete Idleon redirect URL from the Steam sign-in tab.');}
+    if(url.origin!=='https://www.legendsofidleon.com'||url.pathname!=='/steamsso/'||url.username||url.password||url.hash)
+      throw Error('Use the redirect URL at https://www.legendsofidleon.com/steamsso/.');
+    const p=url.searchParams;
+    for(const key of p.keys())if(p.getAll(key).length!==1)throw Error('The redirect URL contains duplicate fields. Sign in again.');
+    const claimed=p.get('openid.claimed_id')||'',id=claimed.match(/^https:\/\/steamcommunity\.com\/openid\/id\/(\d{17})$/)?.[1];
+    if(!id||p.get('openid.identity')!==claimed||p.get('openid.mode')!=='id_res'||p.get('openid.ns')!=='http://specs.openid.net/auth/2.0'||p.get('openid.return_to')!==STEAM_RETURN)
+      throw Error('This is not a completed Steam sign-in. Sign in again and copy the resulting URL.');
+    const data={claimedId:id,nonce:p.get('openid.response_nonce'),assocHandle:p.get('openid.assoc_handle'),sig:p.get('openid.sig'),signed:p.get('openid.signed')};
+    if(Object.values(data).some(v=>!v||v.length>4096))throw Error('The Steam redirect URL is incomplete. Copy the entire address.');
+    return {data};
+  }
+  function safeError(error){
+    const code=String(error?.code||'');
+    if(/invalid-credential|wrong-password|user-not-found|invalid-email/.test(code))return 'Sign-in failed. Check your Idleon email and password.';
+    if(/too-many-requests/.test(code))return 'Too many sign-in attempts. Please wait before trying again.';
+    if(/network|unavailable|timeout/.test(code))return 'Cannot reach Idleon. Check your connection and retry.';
+    if(/permission-denied|unauthenticated|token-expired|user-disabled/.test(code))return 'Idleon denied access or your session expired. Disconnect and sign in again.';
+    if(/invalid-custom-token|custom-token-mismatch/.test(code))return 'The Steam sign-in expired or was rejected. Start Steam sign-in again.';
+    // Never render SDK/server error text: it may contain credentials or URLs.
+    return 'Could not connect or read this account. Retry, or disconnect and sign in again. Manual JSON import is still available.';
+  }
+  function createController({loadAdapter,apply,canApply=()=>true,onStatus=()=>{}}){
+    let adapterPromise,adapter,unsubscribe,epoch=0,busy=false,pending=null,lastSignature='',connected=false,logoutTask=Promise.resolve();
+    let status={phase:'disconnected',pending:false,lastReceived:null,lastApplied:null,message:'Not connected'};
+    const publish=patch=>{status={...status,...patch,pending:!!pending,connected,busy};onStatus({...status});};
+    const stop=()=>{if(unsubscribe)unsubscribe();unsubscribe=null;pending=null;lastSignature='';};
+    async function getAdapter(){
+      if(!adapterPromise)adapterPromise=Promise.resolve().then(loadAdapter).catch(e=>{adapterPromise=null;throw e;});
+      adapter=await adapterPromise;return adapter;
+    }
+    function applyPending(){
+      if(!pending)return false;
+      const item=pending;
+      try{
+        if(apply(item.raw)===false)throw Error('Invalid save');
+        lastSignature=item.signature;pending=null;
+        publish({lastApplied:Date.now(),message:item.warning||'Cloud save applied',phase:'connected'});return true;
+      }catch{publish({phase:'error',message:'Could not load the new cloud save. Your previous save is still available; retry or use a JSON export.'});return false;}
+    }
+    function listen(user,token){
+      stop();connected=true;publish({phase:'connecting',message:'Waiting for the account’s cloud save…'});
+      unsubscribe=adapter.subscribe(user,packet=>{
+        if(token!==epoch)return;
+        if(packet.waiting){publish({phase:'reconnecting',message:'Waiting for the server. The displayed save may be out of date.'});return;}
+        const signature=JSON.stringify(packet.raw);
+        if(signature===lastSignature){pending=null;publish({phase:'connected',message:packet.warning||'Connected · save unchanged'});return;}
+        pending={raw:packet.raw,signature,warning:packet.warning};
+        publish({phase:'connected',lastReceived:Date.now(),message:packet.warning||'New cloud save received'});
+        if(canApply())applyPending();
+      },error=>{if(token===epoch)publish({phase:'error',message:safeError(error)});});
+    }
+    async function connect(method,credentials){
+      if(busy)return;
+      const token=++epoch;stop();connected=false;busy=true;
+      publish({phase:'connecting',lastReceived:null,lastApplied:null,message:'Connecting to Idleon…'});
+      try{
+        await logoutTask;if(token!==epoch)return;
+        const service=await getAdapter();if(token!==epoch)return;
+        const user=method==='resume'?await service.currentUser():await service.login(method,credentials);
+        if(token!==epoch){await service.logout();return;}
+        if(!user){publish({phase:'disconnected',message:'Sign in to connect your account.'});return;}
+        listen(user,token);
+      }catch(error){if(token===epoch)publish({phase:'error',message:safeError(error)});}
+      finally{busy=false;publish({});}
+    }
+    async function disconnect(){
+      const token=++epoch;stop();connected=false;publish({phase:'disconnected',lastReceived:null,lastApplied:null,message:'Disconnected · displayed save kept locally'});
+      logoutTask=logoutTask.then(()=>adapter?.logout()).catch(()=>{if(token===epoch)publish({phase:'error',message:'Updates stopped, but sign-out failed. Close this tab to end the session.'});});
+      await logoutTask;
+    }
+    return {connect,disconnect,applyPending,getStatus:()=>({...status}),retry:()=>connect('resume')};
+  }
+  async function createFirebaseAdapter(modules){
+    // Load only after the user connects, or resumes an explicitly connected tab.
+    const [appSdk,authSdk,fsSdk,dbSdk]=modules||await Promise.all([
+      import('https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js'),
+      import('https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js'),
+      import('https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js'),
+      import('https://www.gstatic.com/firebasejs/12.19.0/firebase-database.js')
+    ]);
+    const app=appSdk.getApps().find(app=>app.name==='planner-live')||appSdk.initializeApp({apiKey:'AIzaSyAU62kOE6xhSrFqoXQPv6_WHxYilmoUxDk',authDomain:'idlemmo.firebaseapp.com',databaseURL:'https://idlemmo.firebaseio.com',projectId:'idlemmo'},'planner-live');
+    const auth=authSdk.initializeAuth(app,{persistence:authSdk.browserSessionPersistence});
+    const firestore=fsSdk.getFirestore(app),database=dbSdk.getDatabase(app);
+    const read=async path=>(await dbSdk.get(dbSdk.ref(database,path))).val();
+    const readDoc=async (collection,id)=>{const snap=await fsSdk.getDoc(fsSdk.doc(firestore,collection,id));return snap.exists()?snap.data():null;};
+    return {
+      async currentUser(){await auth.authStateReady();return auth.currentUser;},
+      async login(method,credentials){
+        if(method==='email')return (await authSdk.signInWithEmailAndPassword(auth,credentials.email,credentials.password)).user;
+        if(method!=='steam')throw Error('Unsupported sign-in');
+        const response=await fetch('https://us-central1-idlemmo.cloudfunctions.net/asil',{
+          method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(credentials),
+          credentials:'omit',referrerPolicy:'no-referrer',signal:AbortSignal.timeout(30000)
+        });
+        if(!response.ok)throw Error('Steam exchange failed');
+        const result=await response.json();
+        if(typeof result.result!=='string'||!result.result)throw Error('Steam exchange rejected');
+        return (await authSdk.signInWithCustomToken(auth,result.result)).user;
+      },
+      logout:()=>authSdk.signOut(auth),
+      subscribe(user,next,error){
+        let stopped=false,sequence=0;
+        const unsubscribe=fsSdk.onSnapshot(fsSdk.doc(firestore,'_data',user.uid),{includeMetadataChanges:true},snapshot=>{
+          const current=++sequence;
+          if(snapshot.metadata.fromCache){next({waiting:true});return;}
+          if(!snapshot.exists()){error({code:'missing-save'});return;}
+          (async()=>{
+            const data=snapshot.data();
+            const results=await Promise.allSettled([
+              read('_uid/'+user.uid),read('_comp/'+user.uid),readDoc('_vars','_vars'),
+              (async()=>{const id=await read('_usgu/'+user.uid+'/g');if(!id)return null;const guild=await read('_guild/'+id);let stats=data.Guild;try{if(typeof stats==='string')stats=JSON.parse(stats);}catch{stats=null;}return {id,stats,members:Object.values(guild?.m||{}),points:guild?.p};})()
+            ]);
+            if(stopped||current!==sequence)return;
+            if(results[0].status==='rejected')throw results[0].reason;
+            const names=results[0].value;
+            if(!names||typeof names!=='object'||!Object.keys(names).length)throw Error('No characters');
+            const raw={data,charNames:Array.isArray(names)?names:Object.keys(names).sort((a,b)=>Number(a)-Number(b)).map(key=>names[key])};
+            const fields=['charNames','companion','serverVars','guildData'],missing=[];
+            for(let i=1;i<results.length;i++){if(results[i].status==='fulfilled')raw[fields[i]]=results[i].value;else missing.push(fields[i]);}
+            next({raw,warning:missing.length?'Cloud save received; some companion, guild, or server details are unavailable. Retry to refresh them.':''});
+          })().catch(e=>{if(!stopped&&current===sequence)error(e);});
+        },error);
+        return ()=>{stopped=true;++sequence;unsubscribe();};
+      }
+    };
+  }
+  const api={STEAM_LOGIN,steamPayload,safeError,createController,createFirebaseAdapter};
+  if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.IdleonLive=api;
+})(typeof window!=='undefined'?window:globalThis);

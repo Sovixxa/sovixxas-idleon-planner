@@ -1,0 +1,63 @@
+'use strict';
+const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
+const {chromium}=require(process.env.PLAYWRIGHT_PATH||'C:/Users/Sofia/AppData/Local/npm-cache/_npx/e41f203b7505f1fb/node_modules/playwright');
+(async()=>{
+  const browser=await chromium.launch({headless:true});
+  try{
+    const page=await browser.newPage({viewport:{width:1440,height:1000}}),errors=[],external=[];
+    page.on('pageerror',e=>errors.push(e.message));
+    await page.route('**/*',async route=>{
+      const url=new URL(route.request().url());
+      if(url.origin!=='http://localhost:7331'){external.push(url.origin);return route.abort();}
+      if(url.pathname.startsWith('/__'))return route.fulfill({contentType:'application/json',body:'{}'});
+      const file=path.resolve(__dirname,'.'+(url.pathname==='/'?'/index.html':decodeURIComponent(url.pathname)));
+      if(!file.startsWith(__dirname+path.sep)||!fs.existsSync(file)||fs.statSync(file).isDirectory())return route.fulfill({status:404,body:''});
+      let body=fs.readFileSync(file);
+      if(path.basename(file)==='live-sync.js')body=body.toString()+`\nwindow.__liveTest={logouts:0,loads:0};window.IdleonLive.createFirebaseAdapter=async()=>{window.__liveTest.loads++;return{login:async()=>({uid:'test'}),currentUser:async()=>({uid:'test'}),logout:async()=>{window.__liveTest.logouts++;},subscribe:(user,next,error)=>{window.__liveTest.next=next;window.__liveTest.error=error;return()=>{window.__liveTest.stopped=true;};}};};`;
+      return route.fulfill({contentType:({'.js':'text/javascript','.css':'text/css','.html':'text/html','.png':'image/png','.svg':'image/svg+xml','.json':'application/json'})[path.extname(file)]||'application/octet-stream',body});
+    });
+    await page.goto('http://localhost:7331/');await page.locator('#qolSearchOpen').waitFor();
+    assert.equal(await page.evaluate(()=>window.__liveTest.loads),0,'Manual import must not load Firebase');
+    await page.locator('#cloudConnect').click();
+    assert.equal(new URL(await page.locator('#cloudSteamLink').getAttribute('href')).hostname,'steamcommunity.com');
+    await page.locator('#cloudSteamUrl').fill('https://example.invalid/not-steam');await page.locator('#cloudSteamForm button').click();
+    assert.match(await page.locator('#cloudLoginStatus').innerText(),/redirect URL/);
+    await page.setViewportSize({width:390,height:844});
+    assert(await page.locator('#cloudDialog').evaluate(el=>el.scrollWidth<=el.clientWidth+1),'Login must fit mobile');
+    await page.screenshot({path:'../audit/cloud-login-mobile.png'});
+    await page.setViewportSize({width:1440,height:1000});
+    await page.locator('#cloudEmailForm').locator('..').locator('summary').click();
+    await page.locator('#cloudEmail').fill('example@test.invalid');await page.locator('#cloudPassword').fill('test-password');
+    await page.locator('#cloudEmailForm button').click();await page.waitForFunction(()=>window.__liveTest.next);
+    assert.equal(await page.locator('#cloudPassword').inputValue(),'');
+    assert.equal(await page.locator('#cloudSteamUrl').inputValue(),'');
+    const raw=JSON.parse(fs.readFileSync('../example json.txt','utf8'));
+    await page.evaluate(raw=>{window.__liveTest.raw=raw;window.__liveTest.next({raw});},raw);
+    await page.waitForFunction(()=>document.getElementById('cloudTimes').textContent.includes('Applied'));
+    await page.waitForFunction(()=>/^(Save age|Imported):/.test(document.getElementById('qolFreshness').textContent),{},{timeout:60000});
+    await page.locator('#quickNotesInput').fill('Keep this plan');
+    await page.evaluate(()=>window.dispatchEvent(new CustomEvent('idleon:navigate',{detail:'characters'})));
+    await page.locator('#talentCharacter').selectOption('2');
+    await page.evaluate(()=>{const raw=structuredClone(window.__liveTest.raw);raw.charNames[0]='Updated Hero';window.__liveTest.next({raw});});
+    await page.locator('#cloudApply').waitFor();assert.equal(await page.locator('#qolPageName').innerText(),'Characters & Talents');assert.equal(await page.locator('#talentCharacter').inputValue(),'2');
+    await page.locator('#cloudApply').click();assert.equal(await page.locator('#qolPageName').innerText(),'Characters & Talents');assert.equal(await page.locator('#talentCharacter').inputValue(),'2');assert.equal(await page.locator('#quickNotesInput').inputValue(),'Keep this plan');
+    await page.evaluate(()=>window.__liveTest.error({code:'permission-denied',message:'secret-token'}));
+    assert.match(await page.locator('#cloudStatus').innerText(),/denied/);assert(!(await page.locator('#cloudStatus').innerText()).includes('secret-token'));
+    await page.locator('#cloudRetry').click();await page.waitForFunction(()=>document.getElementById('cloudStatus').textContent.includes('Waiting'));
+    await page.evaluate(()=>window.dispatchEvent(new CustomEvent('idleon:navigate',{detail:'home'})));
+    await page.locator('#changeJsonBtn').click();await page.locator('#jsonInput').fill(JSON.stringify(raw));await page.locator('#parseBtn').click();
+    assert.match(await page.locator('#cloudStatus').innerText(),/Disconnected/);assert.equal(await page.evaluate(()=>sessionStorage.getItem('idleon-planner-cloud-session')),null);
+    // Late callbacks cannot replace a manual import.
+    await page.evaluate(()=>window.__liveTest.next({raw:{data:{StampLv:[[999]]},charNames:['Stale']}}));assert.equal(await page.locator('#cloudApply').isVisible(),false);
+    await page.locator('#cloudConnect').click();await page.screenshot({path:'../audit/cloud-login-desktop.png'});
+    const steam=new URL('https://www.legendsofidleon.com/steamsso/');
+    for(const [key,value] of Object.entries({ns:'http://specs.openid.net/auth/2.0',mode:'id_res',claimed_id:'https://steamcommunity.com/openid/id/76561198000000000',identity:'https://steamcommunity.com/openid/id/76561198000000000',return_to:'https://www.legendsofidleon.com/steamsso/',response_nonce:'test-nonce',assoc_handle:'test-handle',sig:'test-signature',signed:'signed,claimed_id,identity,return_to,response_nonce,assoc_handle'}))steam.searchParams.set('openid.'+key,value);
+    await page.locator('#cloudSteamUrl').fill(steam.href);await page.locator('#cloudSteamForm button').click();
+    await page.waitForFunction(()=>sessionStorage.getItem('idleon-planner-cloud-session')==='1');
+    assert.equal(await page.locator('#cloudSteamUrl').inputValue(),'');
+    await page.reload();await page.waitForFunction(()=>window.__liveTest?.next);assert.equal(await page.evaluate(()=>window.__liveTest.loads),1,'Connected tab should resume on reload');
+    await page.locator('#cloudDisconnect').click();await page.reload();await page.locator('#qolSearchOpen').waitFor();assert.equal(await page.evaluate(()=>window.__liveTest.loads),0,'Disconnected tab must not resume');
+    assert.deepEqual(external,[]);assert.deepEqual(errors,[]);
+    console.log('Cloud sync browser: lazy loading, login validation, cleared secrets, mobile layout, live import, queued updates, selection/notes preservation, retry and manual disconnect passed.');
+  }finally{await browser.close();}
+})().catch(error=>{console.error(error);process.exitCode=1;});

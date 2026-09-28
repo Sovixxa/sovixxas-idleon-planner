@@ -1,0 +1,18 @@
+.live-connection{padding:16px 20px;margin-bottom:16px}
+.live-connection-row{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.live-connection p{margin:5px 0;font-size:.9rem}
+.live-connection small,.cloud-privacy{color:var(--muted,#adb6c6)}
+.live-connection [hidden]{display:none!important}
+.cloud-dialog{box-sizing:border-box;width:min(580px,calc(100vw - 24px));max-height:90vh;overflow:auto;border:1px solid #47516a;border-radius:14px;background:#151b29;color:#e8edf5;padding:24px}
+.cloud-dialog::backdrop{background:#0009}
+.cloud-dialog h2{font-size:1.2rem;margin:0}
+.cloud-dialog p{line-height:1.55}
+.cloud-dialog details{border-top:1px solid #394154;padding:16px 0}
+.cloud-dialog summary{cursor:pointer;font-weight:700}
+.cloud-dialog form{display:grid;gap:9px;margin-top:16px}
+.cloud-dialog input{box-sizing:border-box;width:100%;min-width:0;background:#0d1320;color:#e8edf5;border:1px solid #536079;border-radius:7px;padding:10px;font:inherit}
+.cloud-dialog button:disabled{opacity:.55;cursor:wait}
+.cloud-dialog a{color:#b9d9ff}
+.cloud-dialog .file-button{display:inline-block;text-decoration:none}
+.cloud-privacy{font-size:.8rem}
+#cloudPending{display:block;margin-top:9px}

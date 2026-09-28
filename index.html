@@ -92,11 +92,46 @@
       </div>
     </header>
 
+    <section id="liveConnection" class="panel live-connection" aria-label="Idleon account connection">
+      <div class="live-connection-row">
+        <div><strong>Idleon cloud sync</strong><p id="cloudStatus" role="status" aria-live="polite">Not connected</p><small id="cloudTimes"></small></div>
+        <div class="button-row">
+          <button id="cloudConnect" class="primary" type="button">Connect account</button>
+          <button id="cloudApply" class="primary" type="button" hidden>Apply update</button>
+          <button id="cloudRetry" class="secondary" type="button" hidden>Retry connection</button>
+          <button id="cloudDisconnect" class="secondary" type="button" hidden>Disconnect</button>
+        </div>
+      </div>
+      <small id="cloudPending" hidden>A new save is ready. Apply it when you have finished editing or running an optimizer.</small>
+    </section>
+    <dialog id="cloudDialog" class="cloud-dialog" aria-labelledby="cloudTitle">
+      <div class="section-head"><h2 id="cloudTitle">Connect your Idleon account</h2><button id="cloudClose" class="secondary" type="button" aria-label="Close account connection">Close</button></div>
+      <p>Updates arrive when Idleon uploads a cloud save. Home refreshes automatically; other pages keep your work open until you apply the update.</p>
+      <details open><summary>Steam</summary>
+        <p>Sign in on Steam’s website. On the resulting Idleon page, copy the entire address back here. Do not click the blue button on that page.</p>
+        <a id="cloudSteamLink" class="file-button" target="_blank" rel="noopener noreferrer">Sign in through Steam ↗</a>
+        <form id="cloudSteamForm">
+          <label for="cloudSteamUrl">Idleon redirect URL</label><input id="cloudSteamUrl" type="url" required autocomplete="off" spellcheck="false" placeholder="https://www.legendsofidleon.com/steamsso/…">
+          <button class="primary" type="submit">Connect Steam account</button>
+        </form>
+      </details>
+      <details><summary>Email and password</summary>
+        <p>Use your Idleon account’s email sign-in. Accounts created through Steam should use Steam above.</p>
+        <form id="cloudEmailForm">
+          <label for="cloudEmail">Idleon email</label><input id="cloudEmail" type="email" autocomplete="username" required>
+          <label for="cloudPassword">Password</label><input id="cloudPassword" type="password" autocomplete="current-password" required>
+          <button class="primary" type="submit">Connect email account</button>
+        </form>
+      </details>
+      <p id="cloudLoginStatus" role="status" aria-live="polite"></p>
+      <p class="cloud-privacy">Your sign-in session lasts for this browser tab, including reloads. Disconnect to sign out. Passwords and Steam redirect URLs are cleared after submission. Save data is processed in your browser. <a href="privacy.html">Privacy details</a></p>
+    </dialog>
+
     <section id="inputPanel" class="panel input-panel">
       <div class="section-head">
         <div>
           <h2>1. Load your current JSON</h2>
-          <p>The full IdleOn export or the data-only export both work. For large exports, use Open JSON/TXT with the original file to avoid truncated pastes. It never leaves localhost.</p>
+          <p>The full IdleOn export or the data-only export both work. For large exports, use Open JSON/TXT with the original file to avoid truncated pastes. Imports are processed in your browser. Importing a file or clearing the save disconnects cloud sync.</p>
         </div>
         <label class="file-button">Open JSON/TXT<input id="fileInput" type="file" accept=".json,.txt,application/json,text/plain"></label>
       </div>
@@ -133,7 +168,7 @@
         <section class="panel home-panel">
           <div class="home-hero"><div><p class="eyebrow">Your account at a glance</p><h2>Character Roster</h2><p>Every character, activity and saved AFK timer on one screen.</p></div><div id="homeRosterSummary" class="home-roster-summary"></div></div>
           <div id="characterDashboard" class="character-dashboard"></div>
-          <p class="home-save-note">Times come from the imported save and do not tick live. Update your save to refresh this page.</p>
+          <p class="home-save-note">Times come from the loaded save and do not tick live. Connect cloud sync or import a newer save to refresh them.</p>
         </section>
       </div>
 
@@ -315,6 +350,9 @@
     </div>
   </aside>
 
+  <link rel="stylesheet" href="live-sync.css">
+  <script defer src="live-sync.js"></script>
+  <script defer src="live-sync-ui.js"></script>
   <script src="engine.js"></script>
   <script src="stamps-data.js"></script>
   <script src="alchemy-data.js"></script>
