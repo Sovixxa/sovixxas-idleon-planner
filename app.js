@@ -556,6 +556,7 @@ SKILL_PAGES.holeFloors={title:'Floors',world:'World 5',copy:'All 18 Hole caverns
     if(name==='minigames'){ $('worldContent').innerHTML='<div class="section-head compact"><div><h2>Minigames</h2><p>Select Hoops or Darts to see your saved scores and bonuses.</p></div></div>';addSubtabs();return;}
     if(['orion','poppy','bubba'].includes(name)){afterDecode(()=>{window.BonusSystems.render($('worldContent'),name,loadedExport||state?.rawRoot||{});addSubtabs();});return;}
     if(name==='classExp'){afterDecode(renderClassExp);return;}
+    if(['masterclasses','grimoire','compass','tesseract','royalArmory'].includes(name)){window.MasterclassPages.render($('worldContent'),name,loadedExport||state?.rawRoot||{});addSubtabs();return;}
     if(name==='royalArmory'){window.RoyalArmory.render($('worldContent'),loadedExport||state?.rawRoot||{});return;}
     if(name==='arcade'){renderArcade();return;}
     if(name==='prayerOptimizer'){window.PrayerOptimizer.render($('worldContent'),loadedExport||state?.rawRoot||{},addSubtabs);return;}
