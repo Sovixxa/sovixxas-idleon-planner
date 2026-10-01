@@ -32,3 +32,14 @@ assert.equal(m.points(d,{budget:8,goal:'balanced',spawn:false}).steps.map(x=>x.i
 const diluted={...d,otherPools:{15:9,18:100}};assert(m.value(18,1,diluted)/m.value(18,0,diluted)<m.value(18,1)/m.value(18,0));
 console.log('Killroy audit: applied percent factors, asymptotes, Billroy gate, additive dilution and balanced points pass.');
 
+
+const crop=m.impact(13,86,720,d);
+assert(Math.abs(crop.from-(1+9*86/386))<1e-12);
+assert(Math.abs(crop.gainPercent-100*((1+9*720/1020)/(1+9*86/386)-1))<1e-10);
+const coral=m.impact(18,86,720,diluted);
+assert(coral.gainPercent<m.impact(18,86,720,d).gainPercent);
+const inactive={...d,inactiveBonuses:{11:'All artifacts complete'}};
+assert(m.skulls(inactive,{budget:300,weights:{11:100}}).rows.every(r=>r.id!==11));
+assert.equal(m.skulls(inactive,{budget:9,target:11,quantity:1,remainder:false}).rows[0].id,11);
+assert.equal(m.impact(11,0,1,inactive).inactive,'All artifacts complete');
+console.log('Killroy impact: level 86 to 720, additive dilution and inactive automatic exclusions pass.');

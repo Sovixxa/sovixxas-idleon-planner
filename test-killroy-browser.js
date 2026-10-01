@@ -20,6 +20,9 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'C:/Users/Sofia/AppData/Lo
  await page.locator('[data-kr-tab="shop"]').click();
  await page.locator('[data-kr-skulls]').fill('200');await page.locator('[data-kr-skulls]').press('Tab');
  assert(await page.locator('.kr-purchase').count()>0);
+ assert(await page.locator('.kr-impact').count()>0);
+ assert.match(await page.locator('[data-kr-shop-plan]').innerText(), /% improvement/);
+ assert.match(await page.locator('.kr-impact').first().innerText(), /× → .*×/);
  await page.locator('.kr-page').screenshot({path:'../audit/killroy-shop-desktop.png'});
  await page.setViewportSize({width:390,height:844});
  assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'mobile overflow');

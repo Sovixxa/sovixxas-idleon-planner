@@ -3,3 +3,5 @@
 @media(min-width:601px) and (max-width:1050px){.kr-schedule{grid-template-columns:repeat(2,minmax(0,1fr))}}
 
 .kr-audit ul{padding-left:18px;color:#bbaecb;font-size:11px;line-height:1.7}.kr-audit li{margin:8px 0}
+
+.kr-impact{margin-top:9px;line-height:1.6}.kr-impact>b{display:block;color:#e0c9ff;font-size:12px}.kr-impact>strong{display:block;color:#b8d6a7;margin-top:3px}.kr-purchase>div{min-width:0}

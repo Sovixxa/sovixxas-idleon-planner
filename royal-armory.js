@@ -6,16 +6,27 @@ const clean=v=>String(v??'').replaceAll('_',' ').replaceAll('千','x').replaceAl
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 // Client tokens: { = amount, } = 1 + amount/100; $ has a bespoke formula for each upgrade.
 const apply=(text,bonus,dollar=null)=>clean(String(text??'').replaceAll('{',bonus==null?'—':fmt(bonus)).replaceAll('}',bonus==null?'—':fmt(1+bonus/100)).replaceAll('$',dollar==null?'—':String(dollar)));
-function model(rawRoot={}){
+function parchmentChance(unlock,surplus,orblet,companion=0,jelly=0){
+ if(unlock==null)return null;
+ if(unlock<1)return .001;
+ if(surplus==null||orblet==null)return null;
+ return Math.min(1,.001*(1+(surplus+orblet+Math.max(0,companion)+Math.max(0,jelly))/100));
+}
+function model(rawRoot={},extras={}){
  const data=parse(rawRoot?.data)||rawRoot||{},catalog=root.ROYAL_ARMORY_CATALOG||{},royal=parse(data.RoyalG)||[],maps=parse(data.RoyalMaps)||[],levels=parse(royal[2])||[],entries=catalog.upgrades||[],slotMap=(catalog.slotToId||[]).map(Number);
  const values=entries.map(x=>known(levels[x.index])),total=values.every(x=>x!=null)?values.reduce((a,b)=>a+b,0):null;
  const thresholds=entries.map(x=>Number(x.unlockTotalLevels)).sort((a,b)=>a-b);
  const bonusAt=id=>{const value=known(levels[id]),entry=entries.find(x=>x.index===id);return value==null||!entry?null:value*Number(entry.bonusPerLevel);};
+ const marketLevel=known((parse(royal[23])||[])[9]),marketEntry=(catalog.orbletMarket||[]).find(x=>x.index===9);
+ const marketBonus=marketLevel==null||!marketEntry?null:Math.floor(marketLevel*Number(marketEntry.bonusPerLevel));
+ const chance=parchmentChance(bonusAt(37),bonusAt(38),marketBonus,extras.companion??0,extras.jelly??0);
+ const subtotal=extras.companion==null||extras.jelly==null;
  function dollar(id){
   const value=bonusAt(id);
   if(id===0)return '25';
   if(id===1)return value==null?null:fmt(3+value/100);
   if(id===19||id===21)return value==null?null:fmt((id===19?50:25)+value);
+  if(id===37)return chance==null?null:fmt(1/chance);
   if(id===39)return value==null?null:fmt(value);
   if(id===40)return value==null?null:fmt(Math.min(75,value));
   if(id===42){const b=bonusAt(43);return b==null?null:`${fmt(1+2*(1+b/100))}x EXP & ${fmt(1+2*(1+b/100))}x Collection Rate!`;}
@@ -25,7 +36,7 @@ function model(rawRoot={}){
  }
  const upgrades=entries.map(x=>{
   const level=known(levels[x.index]),bonus=bonusAt(x.index),slot=slotMap.indexOf(x.index),required=slot<0?null:thresholds[slot],unlocked=slot<0?false:total==null?null:total>=required,dollarValue=dollar(x.index),contextMissing=String(x.description).includes('$')&&dollarValue==null;
-  return{id:x.index,slot,level,max:Number(x.maxLevel),bonus,name:clean(x.name),required,unlocked,contextMissing,description:apply(x.description,bonus,dollarValue)+(contextMissing?' Context-dependent value unavailable.':'')};
+  return{id:x.index,slot,level,max:Number(x.maxLevel),bonus,name:clean(x.name),required,unlocked,contextMissing,description:apply(x.description,bonus,dollarValue)+(contextMissing?' Context-dependent value unavailable.':x.index===37&&subtotal?' Subtotal: companion and Jelly bonuses not included.':'')};
  });
  const outposts=Array.isArray(maps)?maps.map((x,id)=>({id,data:parse(x)})).filter(x=>Array.isArray(x.data)&&x.data.length>=3).map(x=>({id:x.id,barracks:known(x.data[0]),logistics:known(x.data[1]),education:known(x.data[2]),tradeExp:known(x.data[3]),intelExp:known(x.data[4]),commandExp:known(x.data[5]),militaryExp:known(x.data[6]),purityExp:known(x.data[7]),connection1:known(x.data[8]),connection2:known(x.data[9]),mode:known(x.data[10]),units:x.data[11]==null?null:String(x.data[11]),boosted:known(x.data[12])==null?null:Number(x.data[12])>0})):[];
  const resourceStorage=parse(royal[1])||[],nodeLevels=parse(royal[5])||[];
@@ -39,6 +50,17 @@ function model(rawRoot={}){
  const orbletLevels=parse(royal[23])||[];
  const orblets=(catalog.orbletMarket||[]).map(x=>{const level=known(orbletLevels[x.index]),bonus=level==null?null:Math.floor(level*Number(x.bonusPerLevel));return{id:x.index,name:clean(x.name),level,max:Number(x.maxLevel),bonus,description:apply(x.description,bonus)};});
  return{available:Array.isArray(royal)&&royal.length>0,total,upgrades,outposts,resources,statues,orblets};
+}
+// Verified against the local client RoyalG and castle damage handlers (map 43).
+function verminous(m,companion=0,jelly=0){
+ const b=id=>m.upgrades.find(x=>x.id===id)?.bonus??null, o=m.orblets.find(x=>x.id===9)?.bonus??null;
+ const all=(ids,fn)=>ids.every(id=>b(id)!=null)?fn():null;
+ return {
+  damage:all([35,36],()=>(10+b(35))*(1+b(36)/100)),
+  respawn:all([33,34],()=>Math.max(5,60/(1+(b(33)+b(34))/100))),
+  chance:parchmentChance(b(37),b(38),o,companion,jelly),
+  double:b(39),recycle:b(40)==null?null:Math.min(75,b(40))
+ };
 }
 const status=x=>x.level==null?'unknown':x.level>0?'active':'missing';
 const levelText=x=>x.level==null?'Saved level unknown':`Lv ${fmt(x.level)}${x.max!=null?' / '+fmt(x.max):''}`;
@@ -60,5 +82,5 @@ function render(host,rawRoot={}){
  host.innerHTML=`<div class="bonus-system-hero"><div><p class="eyebrow">Masterclasses · Royal Guardian</p><h2>Royal Armory</h2><p>Saved upgrades, outposts, resources, Royal Statues and Orblet Market. Unknown means this export is missing the required values.</p></div><strong>${m.total==null?'Total Armory levels unknown':fmt(m.total)+' total Armory levels'}</strong></div><nav class="skill-tabs">${tabs.map(([id,label])=>`<button class="skill-tab${selected===id?' active':''}" data-royal-tab="${id}">${label}</button>`).join('')}</nav>${!m.available?'<p>No Royal Guardian data was found in this export.</p>':`<div class="bonus-system-grid">${body||'<p>No saved entries were found for this section.</p>'}</div>`}`;
  host.querySelectorAll('[data-royal-tab]').forEach(b=>b.onclick=()=>{selected=b.dataset.royalTab;render(host,rawRoot);});
 }
-const api={model,bonusRows,render};if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.RoyalArmory=api;
+const api={model,bonusRows,render,verminous};if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.RoyalArmory=api;
 })(typeof window!=='undefined'?window:globalThis);
