@@ -1,0 +1,39 @@
+'use strict';
+const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
+const c={console:{log(){},warn(){},error(){}},structuredClone};c.self=c;c.window=c;vm.createContext(c);
+c.importScripts=(...names)=>names.forEach(n=>vm.runInContext(fs.readFileSync(n,'utf8'),c,{filename:n}));
+c.importScripts('shiny-optimizer-worker.js','shiny-optimizer.js');let output;c.postMessage=v=>output=v;
+const raw=JSON.parse(fs.readFileSync('../example json.txt','utf8')),original=JSON.stringify(raw);c.onmessage({data:raw});
+assert(!output.error,output.error);assert.equal(JSON.stringify(raw),original);
+const data=output.result,M=c.ShinyOptimizerModel;
+assert(data.roster.length>0);assert(data.candidates.length>0);assert(data.candidates.some(v=>v.food));
+for(const critter of data.catalog.critters){
+ const m=M.compare(data,data.catalog,{critter:critter.critterName,visits:3,food:false});
+ assert(m.realistic.chance<=100&&m.realistic.chance>=0);assert(!m.realistic.food);
+ assert(m.chanceBest.rawChance>=m.realistic.rawChance-1e-8);assert(m.realistic.daily>=m.chanceBest.daily||m.chanceBest.food);
+ assert(m.missing.every(x=>x.name&&x.status&&x.detail));
+}
+const e=M.evaluate(20,{open:2,divisor:4,bundle:10},36000,3);
+assert.equal(e.chance,10);assert.equal(e.rounds,1.5);assert.equal(e.daily,1.5,'A 10h trap collected every 8h yields once per 16h, not once per visit');
+assert.equal(M.evaluate(1000,{open:1,divisor:1,bundle:25},1200,72).daily,1800,'Overflow never produces multiple successful rolls');
+const snapshots=M.savedTraps({PldTraps_0:[[16,0,100,'Critter1',1,0,1200,0,2],[16,0,100,'Critter1',1,0,1200,0]]});
+assert.equal(snapshots.rows[0].snapshot,2);assert.equal(snapshots.rows[1].snapshot,null);
+const source={stampBonus:0,taskBonus:0,bubbleMulti:1,vialsBonus:0,talentBonus:1,minigameBonus:0,arcadeBonus:0};
+const fixture={roster:[{id:0,name:'<unsafe>',placement:1,tool:{tier:0,name:'Cardboard'},slots:1,sources:source,current:{open:1,divisor:1,bundle:1}}],candidates:[{id:0,name:'<unsafe>',open:1,divisor:1,bundle:25,food:false,prayer:'Passive',actions:[],sources:source},{id:0,name:'<unsafe>',open:1,divisor:90,bundle:119,food:false,prayer:'Active',actions:[],sources:source},{id:0,name:'<unsafe>',open:100,divisor:1,bundle:25,food:true,prayer:'Food',actions:[],sources:source}],cards:[],chips:[],star:{owned:false},foodStock:1,saved:snapshots,incomplete:[],catalog:{critters:[{critterName:'Critter1',name:'Froge',shinyName:'Poison',shinyChance:100}],traps:[[{trapTime:1200,trapType:0,exp:1}]]}};
+assert.equal(M.compare(fixture,fixture.catalog,{visits:3}).realistic.prayer,'Passive','Passive yield wins against an excessively reduced active prayer');
+assert.equal(M.compare(fixture,fixture.catalog,{visits:3}).chanceBest.prayer,'Food');
+assert.equal(M.compare(fixture,fixture.catalog,{visits:3}).currentUnknown,1);
+assert(M.compare(fixture,fixture.catalog,{visits:0}).error);
+const html=c.ShinyOptimizer.content(fixture,{visits:3,critter:'Critter1',food:false});assert(html.includes('&lt;unsafe&gt;'));assert(!html.includes('><unsafe>'));
+assert(c.ShinyOptimizer.content({missing:true}).includes('Import your account'));
+// An ownership-limited account cannot borrow hypothetical food/cards/chips for its optimum.
+const parsed=c.PrayerMath.parseData(structuredClone(raw.data),raw.charNames,raw.companion,raw.guildData,raw.serverVars||{},raw.accountCreateTime,raw.tournament);
+parsed.account.storage.list=parsed.account.storage.list.filter(i=>i.rawName!=='FoodTrapping1');
+for(const ch of parsed.characters)for(const key of ['food','inventory'])ch[key]=ch[key].filter(i=>i.rawName!=='FoodTrapping1');
+for(const card of Object.values(parsed.account.cards))card.amount=0;
+parsed.account.lab.chips=[];parsed.account.lab.playersChips=parsed.characters.map(()=>[]);
+const before=JSON.stringify(parsed),limited=c.PrayerMath.getShinyLoadoutData(parsed);
+assert.equal(JSON.stringify(parsed),before,'Scenario swaps must not mutate decoded account data');
+assert.equal(limited.foodStock,0);assert(limited.candidates.every(x=>!x.food));assert(limited.cards.every(x=>!x.owned));
+assert(limited.candidates.every(x=>!x.actions.some(a=>a.startsWith('Chip:')||a.startsWith('Card slot'))));
+console.log('Shiny optimizer: real save, immutable scenarios, ownership limits, stored snapshots, chance cap, prayer choice, schedule throughput, missing sources and escaping pass.');

@@ -1,0 +1,25 @@
+'use strict';
+const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
+const source=fs.readFileSync('../audit/N.js','utf8');
+const shared=JSON.parse(fs.readFileSync('vendor/idleon-toolbox/data/website-data/shared-data.json','utf8'));
+function extract(name,next){const start=source.indexOf(name+'=function');assert(start>=0);const end=source.indexOf(next,start);assert(end>start);return source.slice(start+name.length+1,end);}
+const gen=[];gen[25]=0;gen[33]=6;gen[78]=-1;
+const attrs={DNSM:{h:{AlchBubbles:{h:{CritShiny:1}},AlchVials:{h:{Shiny1:0,Shiny2:0}}}},CurrentMap:16,Lv0:[0,0,0,0,0,0,0,100],Tasks:[[],[[],[],[0,0,0,0,0,0]]],OptionsListAccount:Array(500).fill(0),PrayersActive:[3],PrayersUnlocked:[0,0,0,50],CustomLists:{h:{TrappingInfo:[[16,1,'Critter1',35,2,0,5]],RANDOlist:{59:[5,5,15,5,10,15]},PrayerInfo:{3:['Shiny_Snitch','','',20,15]},TrapBoxInfo:vm.runInNewContext('('+extract('db.TrapBoxInfo',',db.RefineryInfo')+')()')}},PixelHelperActor:Array(8).fill({behaviors:{getBehavior:()=>({_GenINFO:gen})}})};
+let talent=2,food=0,cards=0,arcade=0,merit=0,passive=0;
+const p={},context={p,a:{engine:{getGameAttribute:k=>attrs[k]}},c:{asNumber:Number},n:{__cast:v=>v},la:null,k:{_customBlock_GetTalentNumber:()=>talent,_customBlock_StampBonusOfTypeX:()=>0},q:{_customBlock_TotalFoodBonuses:()=>food},w:{_customBlock_CardBonusREAL:()=>cards},m:{_customBlock_Summoning2:()=>merit,_customBlock_GamingStatType:(_,id)=>id===9?passive:0}};
+vm.createContext(context);
+p._customBlock_TrappingStuffs=vm.runInContext('('+extract('p._customBlock_TrappingStuffs',',p._customBlock_Refinery')+')',context);
+p._customBlock_prayersReal=vm.runInContext('('+extract('p._customBlock_prayersReal','},p.')+'})',context);
+p._customBlock_ArcadeBonus=()=>arcade;
+const trap=(name)=>p._customBlock_TrappingStuffs(name,0);
+const royal=trap('TotalRareChance');assert.equal(royal,5*4*2**11);
+attrs.Lv0[7]=120;assert.equal(trap('TotalRareChance')/royal,4,'Two level milestones multiply the snapshot by talent squared');
+gen[33]=1;assert.equal(trap('TrapRareBonus'),2);gen[33]=6;assert.equal(trap('TrapRareBonus'),4);
+attrs.PrayersActive=[3];assert.equal(p._customBlock_prayersReal(3,0),118);assert.equal(p._customBlock_prayersReal(3,1),89);
+const saved=trap('TotalRareChance');attrs.PrayersActive=[];assert.equal(trap('TotalRareChance'),saved,'Prayer is not baked into the snapshot');
+attrs.DNSM.h.PrayNonEq=1;passive=1;assert.equal(p._customBlock_prayersReal(3,0),24);assert.equal(p._customBlock_prayersReal(3,1),0);
+food=25;cards=60;arcade=10;attrs.OptionsListAccount[99]=150;assert.equal(trap('RareBonusOnOpen'),125);
+merit=400;assert.equal(trap('RareBonusOnOpenMULTI'),5);
+const bundle=Math.round((1+118)*trap('RareBonusOnOpenMULTI'));assert.equal(bundle,595);
+assert.equal(shared.ninjaExtraInfo[41][13],'400');
+console.log('Local client: placement snapshots, exponential talent scaling, Royal/Silkskin multipliers, prayer/passive values, collection bonuses and Meritocracy bundle pass.');

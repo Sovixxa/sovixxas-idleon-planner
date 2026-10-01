@@ -1,4 +1,5 @@
 import './vendor/idleon-toolbox/polyfills';
+export {getShinyLoadoutData} from './shiny-loadout-math';
 export {growth} from './vendor/idleon-toolbox/utility/helpers';
 export {calcUpgradeVaultBonus} from './vendor/idleon-toolbox/parsers/misc/upgradeVault';
 import {parseData} from './vendor/idleon-toolbox/parsers/index';

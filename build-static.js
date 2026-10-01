@@ -14,7 +14,7 @@ for(const entry of fs.readdirSync(root,{withFileTypes:true})){
  if(!entry.isFile()||excluded.test(entry.name)||!allowed.has(path.extname(entry.name).toLowerCase()))continue;
  fs.copyFileSync(path.join(root,entry.name),path.join(out,entry.name));
 }
-for(const name of ['PRAYER-MATH-AUDIT.md','prayer-math-entry.ts','build-prayer-math.js','dashboard-math-entry.ts','build-dashboard-math.js','dashboard-defaults.json','package.json','_headers','_redirects','manifest.webmanifest'])if(fs.existsSync(path.join(root,name)))fs.copyFileSync(path.join(root,name),path.join(out,name));
+for(const name of ['PRAYER-MATH-AUDIT.md','prayer-math-entry.ts','shiny-loadout-math.ts','build-prayer-math.js','dashboard-math-entry.ts','build-dashboard-math.js','dashboard-defaults.json','package.json','_headers','_redirects','manifest.webmanifest'])if(fs.existsSync(path.join(root,name)))fs.copyFileSync(path.join(root,name),path.join(out,name));
 const html=fs.readFileSync(path.join(out,'index.html'),'utf8'),refs=[...html.matchAll(/(?:src|href)="([^"#?]+)(?:[?#][^"]*)?"/g)].map(x=>x[1]).filter(x=>!x.includes('://')),missing=refs.filter(x=>!fs.existsSync(path.join(out,x)));
 if(missing.length)throw new Error(`Static build is missing: ${missing.join(', ')}`);
 // Version the whole script graph together, including worker imports. GitHub
