@@ -152,3 +152,5 @@ body .alchemy-board .alchemy-bubble>span{display:block;width:100%;min-width:0;te
 .world-panel,#worldContent{min-width:0}
 .legend-board{width:min(850px,100%)}
 @media(max-width:600px){body .compact-upgrades .arcade-tile .upgrade-tip{position:fixed;top:auto;bottom:16px;left:16px;right:auto;width:min(320px,calc(100vw - 32px));max-height:45vh;overflow:auto;box-sizing:border-box}}
+
+#panelUpgrades,.upgrade-panel,#jellyUpgradePlan{min-width:0;max-width:100%}#panelUpgrades>section{min-width:0}#jellyUpgradePlan td img{vertical-align:middle;object-fit:contain;image-rendering:pixelated}.upgrade-panel>details{margin-top:14px}.upgrade-panel>details>summary{cursor:pointer;font-size:.85rem;color:var(--muted)}

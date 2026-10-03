@@ -936,7 +936,7 @@ const VERSION='0.9.9-alchemy-bubbles';
   function upgradeCandidates(state,arr,options={}){
     const damageScale=asNum(options.damageScale,1),seed=0x5150;
     const reviveDelaySeconds=Math.max(0,asNum(options.reviveDelaySeconds,0));
-    const baseStats=simulateMany(state,arr,{runs:12,damageScale,seed,useSteroid:true,reviveDelaySeconds});
+    const baseStats=options.skipSimulation?null:simulateMany(state,arr,{runs:12,damageScale,seed,useSteroid:true,reviveDelaySeconds});
     const out=[];
     for(let oi=0;oi<Math.min(40,UPGRADE_ORDER.length);oi++){
       const id=UPGRADE_ORDER[oi],m=UPGRADE_META[id];if(!m)continue;const lv=asNum(state.upgrades[id]);
@@ -944,7 +944,7 @@ const VERSION='0.9.9-alchemy-bubbles';
       const cost=upgradeCost(state,oi),affordable=state.bloodcells>=cost,st=cloneState(state);st.upgrades[id]=lv+1;
       const boardChanging=BOARD_PROGRESS_UPGRADES.has(id),directCombat=DIRECT_COMBAT_UPGRADES.has(id);
       let timed=null;
-      if(directCombat&&!boardChanging)timed=simulateMany(st,arr,{runs:12,damageScale,seed,useSteroid:true,reviveDelaySeconds});
+      if(!options.skipSimulation&&directCombat&&!boardChanging)timed=simulateMany(st,arr,{runs:12,damageScale,seed,useSteroid:true,reviveDelaySeconds});
       const clearDelta=timed?timed.clearRate-baseStats.clearRate:0,timeSaved=timed&&timed.medianClearTime!=null&&baseStats.medianClearTime!=null?baseStats.medianClearTime-timed.medianClearTime:null;
       const impact=timed?(clearDelta*1000+(timeSaved||0)):0;
       const category=boardChanging?'board':directCombat?'combat':([23,24,25,26,27,33,34,38,39].includes(id)?'economy':'progression');
@@ -973,6 +973,18 @@ const VERSION='0.9.9-alchemy-bubbles';
       const gain=(damageRatio-1)*100+(currencyRatio-1)*65+(u.boardChanging?8:0)+(oneOff?3:0);
       return {...u,damageRatio,currencyRatio,oneOff,note,mathScore:gain/Math.max(1,u.cost),gain};
     }).sort((a,b)=>{if(a.affordable!==b.affordable)return a.affordable?-1:1;return b.mathScore-a.mathScore||b.gain-a.gain||a.cost-b.cost;});
+  }
+  function planUpgradePurchases(state,arr,options={}){
+    const projected=cloneState(state),budget=Math.max(0,state.bloodcells)*(1-Math.max(0,Math.min(75,asNum(options.reserve)))/100);
+    const limit=Math.max(1,Math.min(1000,Math.floor(asNum(options.count,100)))),steps=[];
+    let spent=0;
+    for(let i=0;i<limit;i++){
+      const candidates=upgradeRoadmap(projected,arr,{skipSimulation:true}).map(u=>({...u,score:options.goal==='bloodcells'?(u.currencyRatio-1)/u.cost:(u.damageRatio-1)/u.cost})).filter(u=>Number.isFinite(u.cost)&&u.cost>0&&u.score>0&&(options.mode==='future'||u.cost<=budget-spent)).sort((a,b)=>b.score-a.score||a.cost-b.cost);
+      const next=candidates[0];if(!next)break;
+      spent+=next.cost;projected.upgrades[next.id]++;projected.bloodcells=Math.max(0,budget-spent);
+      steps.push({...next,endLevel:next.level+1,spent,remaining:Math.max(0,budget-spent),shortfall:Math.max(0,spent-budget)});
+    }
+    return {steps,budget,spent,remaining:Math.max(0,budget-spent),shortfall:Math.max(0,spent-budget)};
   }
   function findUpgradeTarget(state,arr,options={}){
     // Greedy marginal damage-per-cost progression, validated by the timed model.
@@ -1030,5 +1042,5 @@ const VERSION='0.9.9-alchemy-bubbles';
   return {VERSION,bonusAudit,bloodcellBonuses,arcadeBloodcellBonus,dpsBloodcellMultiplier,researchGridBonus,cellDetails,CELL_PASSIVES,CELL_ABILITIES,FEVER_NAMES,optimizeOperation,clearConfidence,COLS,ROWS,BOARD_SIZE,FPS,UNIT_NAMES,UNIT_IMG_DIMS,UNIT_VISUAL_OFFSET,UPGRADE_META,UPGRADE_ORDER,PLOTS,SHAPE_OFFSETS,SHAPE_COORDS,BULLET_LAUNCH,PROXIMITY_CORES,BLOCKED_CENTER,SUSHI_ROG_BONUS,
     parseInput,makeState,cloneState,upgradeQty,unitsOwned,virusLimit,feverUnlocked,critUnlocked,steroidUnlocked,reviveCount,bossHP,bossTime,bossAtkCD,cellExpReq,cellExpMultiplier,canLevelCells,obstructionTier,bundleFlag,slotPurchasesLeft,plotCells,plotLabel,
     unlockedSlots,footprint,placementsForState,arrangementFromBoard,rawCounts,effectiveCounts,rawArray,paletteCellDamageBonus,companionGridBonus,dreamCloudBonus,gridAllMultiplier,gridCellDamageBonus,externalDamageStatus,sushiUniqueCount,sushiRogBonus,organelleSpeedMultiplier,organelleBoosted,infectedSlots,combatModel,jellyDamageMultiplier,layoutScore,backInEase,projectileLaunchPosition,projectileHitDelayFrames,simulateOne,simulateMany,autoDamageScale,calibrateToObservedClearTime,steroidStartCandidates,optimizeSteroidStart,optimizeTimed,
-    upgradeCost,upgradeLevelReq,upgradeCandidates,upgradeRoadmap,findUpgradeTarget,recommendNextPlot,arrangementGrid,formatNumber,formatTime,arrangementKey,isLegalLayout,relocateLayout,localImproveLayout,generateLayout,generateRoleAwareLayout,generateSupportLayout,enumerateMixes,buildPlacementIndex,tileMix,timedObjective,seededRng};
+    upgradeCost,upgradeLevelReq,upgradeCandidates,upgradeRoadmap,planUpgradePurchases,findUpgradeTarget,recommendNextPlot,arrangementGrid,formatNumber,formatTime,arrangementKey,isLegalLayout,relocateLayout,localImproveLayout,generateLayout,generateRoleAwareLayout,generateSupportLayout,enumerateMixes,buildPlacementIndex,tileMix,timedObjective,seededRng};
 });

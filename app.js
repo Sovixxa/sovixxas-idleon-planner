@@ -748,8 +748,9 @@ SKILL_PAGES.holeFloors={title:'Floors',world:'World 5',copy:'All 18 Hole caverns
     return '<span class="neutral">tiny/no timed gain here</span>';
   }
   function renderUpgrades(arr,stats,damageScale){
+    renderUpgradePlan(arr);
     let list=[];
-    try{list=E.upgradeRoadmap(state,arr,{baseStats:stats,damageScale,reviveDelaySeconds:currentReviveDelay()}).slice(0,18);}catch(e){console.warn('Upgrade simulation failed',e);}
+    try{list=E.upgradeRoadmap(state,arr,{skipSimulation:true});}catch(e){console.warn('Upgrade simulation failed',e);}
     $('upgrades').classList.add('jelly-roadmap-grid');
     $('upgrades').innerHTML=list.map(u=>`<details class="upgrade ${u.affordable?'':'unaffordable'}">
       <summary><img class="upgrade-icon" src="assets/JellyUpg${u.id}.png" alt=""><strong>${esc(u.name)}</strong><span>Lv ${u.level} · ${E.formatNumber(u.cost)} Bloodcells</span></summary>
@@ -761,6 +762,26 @@ SKILL_PAGES.holeFloors={title:'Floors',world:'World 5',copy:'All 18 Hole caverns
       <div class="upgrade-impact">${impactText(u)}${u.damageRatio!==1?`<div class="good">${(u.damageRatio-1)*100>=0?'+':''}${((u.damageRatio-1)*100).toFixed(2)}% board DMG</div>`:''}${u.currencyRatio!==1?`<div class="good">${(u.currencyRatio-1)*100>=0?'+':''}${((u.currencyRatio-1)*100).toFixed(2)}% Bloodcells</div>`:''}<div class="cost">${E.formatNumber(u.cost)}</div></div>
     </details>`).join('')||'<p class="subtitle">No reachable upgrade candidates in the decoded tree.</p>';
   }
+
+  function renderUpgradePlan(arr){
+    if(!state||!arr)return;
+    const plan=E.planUpgradePurchases(state,arr,{mode:$('jellyUpgradeMode').value,goal:$('jellyUpgradeGoal').value,reserve:Number($('jellyUpgradeReserve').value),count:Number($('jellyUpgradeCount').value)});
+    const fmt=E.formatNumber;
+    $('jellyUpgradeWallet').innerHTML=`<span>Saved Bloodcells <strong>${fmt(state.bloodcells)}</strong></span><span>Budget <strong>${fmt(plan.budget)}</strong></span><span>${plan.steps.length} purchases · ${fmt(plan.spent)} cost</span><span>${plan.shortfall?'Additional Bloodcells':'Budget remaining'} <strong>${fmt(plan.shortfall||plan.remaining)}</strong></span>`;
+    const goalLabel=$('jellyUpgradeGoal').value==='bloodcells'?'Bloodcell gain':'Board damage';
+    const ratioKey=$('jellyUpgradeGoal').value==='bloodcells'?'currencyRatio':'damageRatio';
+    const percent=ratio=>{const value=(ratio-1)*100;return value>0&&value<0.01?'+<0.01%':`${value>=0?'+':''}${value.toLocaleString(undefined,{maximumFractionDigits:2})}%`;};
+    const rows=[];let totalRatio=1;
+    for(const [index,step] of plan.steps.entries()){
+      totalRatio*=step[ratioKey];
+      const previous=rows[rows.length-1];
+      if($('jellyUpgradeCompress').checked&&previous?.id===step.id){previous.endLevel=step.endLevel;previous.cost+=step.cost;previous.remaining=step.remaining;previous.shortfall=step.shortfall;previous.end=index+1;previous.gainRatio*=step[ratioKey];previous.totalRatio=totalRatio;}
+      else rows.push({...step,start:index+1,end:index+1,gainRatio:step[ratioKey],totalRatio});
+    }
+    $('jellyUpgradeWallet').insertAdjacentHTML('beforeend',`<span>Projected ${goalLabel.toLowerCase()} <strong>${percent(totalRatio)}</strong></span>`);
+    $('jellyUpgradePlan').innerHTML=rows.length?`<p class="fountain-note">${goalLabel}: row gain compares against the previous step; total gain compares against the start of this plan. Compressed rows compound all included purchases.</p><div class="fountain-plan"><table><thead><tr><th>Step</th><th>Upgrade</th><th>Level</th><th>${goalLabel} gain</th><th>Total gain</th><th>Cost</th><th>Budget left</th><th>Extra needed</th></tr></thead><tbody>${rows.map(u=>`<tr><td>${u.start===u.end?u.start:`${u.start}–${u.end}`}</td><td><img src="assets/JellyUpg${u.id}.png" width="24" height="24" alt=""> ${esc(u.name)}</td><td>${u.level} → ${u.endLevel}</td><td>${percent(u.gainRatio)}</td><td>${percent(u.totalRatio)}</td><td>${fmt(u.cost)}</td><td>${fmt(u.remaining)}</td><td>${u.shortfall?fmt(u.shortfall):'—'}</td></tr>`).join('')}</tbody></table></div>`:'<p class="fountain-note">No qualifying purchases for this goal and budget. Try Plan ahead, reduce your reserve, or review the unlock alternatives below.</p>';
+  }
+  $('jellyUpgradeControls').addEventListener('change',()=>renderUpgradePlan(lastResult?.arrangement||currentArrangement));
 
   function renderInitial(){
     if(state.hasJelly===false){currentArrangement=null;currentStats=null;lastResult=null;renderHome();return;}

@@ -320,13 +320,25 @@
       <section class="panel upgrade-panel">
         <div class="section-head compact">
           <div>
-            <h2>What to buy next</h2>
-            <p>Ranks reachable upgrades by marginal board damage, Bloodcell gain and cost. Use the compact recommendation to decide the next action, then compare the full ranked list below.</p>
+            <p class="eyebrow">Jelly Operator · Imported save</p><h2>Jelly Upgrade Optimizer</h2>
+            <p>Buy now or plan ahead using your saved Bloodcells. Re-import after purchasing to refresh the plan.</p>
           </div>
         </div>
-        <button id="planBtn" class="secondary" disabled>Plan next purchase</button>
+        <div id="jellyUpgradeWallet" class="fountain-wallet"></div>
+        <div id="jellyUpgradeControls" class="fountain-controls">
+          <label>Plan <select id="jellyUpgradeMode"><option value="now">Buy now</option><option value="future">Plan ahead</option></select></label>
+          <label>Goal <select id="jellyUpgradeGoal"><option value="damage">Board damage</option><option value="bloodcells">Bloodcell gain</option></select></label>
+          <label>Reserve <select id="jellyUpgradeReserve"><option value="0">0%</option><option value="25">25%</option><option value="50">50%</option><option value="75">75%</option></select></label>
+          <label>Purchases <select id="jellyUpgradeCount"><option value="25">25</option><option value="100" selected>100</option><option value="250">250</option><option value="1000">1,000</option></select></label>
+          <label><input id="jellyUpgradeCompress" type="checkbox"> Compress rows</label>
+        </div>
+        <div id="jellyUpgradePlan" aria-live="polite"></div>
+        <p class="fountain-note">Ranks each level by marginal gain per Bloodcell and recalculates after every purchase. Uses the current board (or your last optimized board), with no future income or research levels assumed. Unlocks and upgrades without a measurable gain for this goal remain in the alternatives below. This greedy plan does not predict clear chance or rearrange cells.</p>
+        <details><summary>Timed clear purchase comparison</summary>
+        <button id="planBtn" class="secondary" disabled>Compare timed purchases</button>
         <div id="nextMove" class="next-move"></div>
-        <div id="upgrades" class="upgrades"></div>
+        </details>
+        <details><summary>All reachable upgrade alternatives</summary><div id="upgrades" class="upgrades"></div></details>
       </section>
 
       <section class="panel model-panel">
