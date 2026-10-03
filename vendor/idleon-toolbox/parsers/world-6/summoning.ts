@@ -241,7 +241,7 @@ const getEndlessModifier = (endlessLevel: any, t: any, i: any): any => {
     : summoningEndless.difficulties[Math.round(endlessLevel - 40 * Math.floor(endlessLevel / 40))]
 }
 
-const getLocalWinnerBonus = (rawWinnerBonuses: any, account: any, index: any): any => {
+export const getLocalWinnerBonus = (rawWinnerBonuses: any, account: any, index: any): any => {
   const rawValue = rawWinnerBonuses?.[index] || 0;
   const charmBonus = getCharmBonus(account, 'Crystal_Comb');
   const artifactBonus = isArtifactAcquired(account?.sailing?.artifacts, 'The_Winz_Lantern')?.bonus ?? 0;
@@ -250,7 +250,7 @@ const getLocalWinnerBonus = (rawWinnerBonuses: any, account: any, index: any): a
   const secondAchievement = getAchievementStatus(account?.achievements, 379);
   const emperorBonus = getEmperorBonus(account, 8);
   const armorSetBonus = getArmorSetBonus(account, 'GODSHARD_SET')
-  // game: Thingies("Have_ban_i") - the Verminous bundle adds a flat 50 to the same additive bracket.
+  // game: Thingies("Have_ban_i") - the Daydreamer pack adds 50 to the additive bracket.
   const bundleBonus = isBundlePurchased(account?.bundles, 'ban_i') ? 50 : 0;
   const { bonusPerLevel, level } = account?.meritsDescriptions?.[5]?.[4] ?? {};
   const meritLevel = level ?? 0;

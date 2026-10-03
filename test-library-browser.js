@@ -1,0 +1,20 @@
+'use strict';
+const fs=require('fs'),path=require('path'),assert=require('node:assert/strict');
+const {chromium}=require(process.env.PLAYWRIGHT_PATH||'C:/Users/Sofia/AppData/Local/npm-cache/_npx/e41f203b7505f1fb/node_modules/playwright');
+(async()=>{const browser=await chromium.launch({headless:true});try{
+ const page=await browser.newPage({viewport:{width:1440,height:1000}}),errors=[];page.on('pageerror',e=>errors.push(e.message));
+ await page.route('http://localhost:7338/**',async route=>{const pathname=decodeURIComponent(new URL(route.request().url()).pathname);if(pathname.startsWith('/__'))return route.fulfill({contentType:'application/json',body:'{}'});const file=path.resolve(__dirname,'.'+(pathname==='/'?'/index.html':pathname));if(!file.startsWith(__dirname+path.sep)||!fs.existsSync(file)||fs.statSync(file).isDirectory())return route.fulfill({status:404,body:''});return route.fulfill({contentType:({'.js':'text/javascript','.css':'text/css','.html':'text/html','.png':'image/png'})[path.extname(file)]||'application/octet-stream',body:fs.readFileSync(file)});});
+ await page.goto('http://localhost:7338/');
+ await page.evaluate(()=>window.dispatchEvent(new CustomEvent('idleon:navigate',{detail:'library'})));await page.getByText('Load your save to view the Library').waitFor({state:'attached'});
+ await page.reload();await page.evaluate(text=>{document.getElementById('jsonInput').value=text;},fs.readFileSync('../example json.txt','utf8'));await page.evaluate(()=>document.getElementById('parseBtn').click());await page.waitForFunction(()=>/^(Save age|Imported):/.test(document.getElementById('qolFreshness').textContent),{},{timeout:60000});
+ await page.evaluate(()=>window.dispatchEvent(new CustomEvent('idleon:navigate',{detail:'library'})));await page.locator('.library-summary').waitFor({timeout:60000});
+ assert.equal(await page.locator('.library-summary strong').first().innerText(),'409');assert(await page.getByRole('button',{name:'The Winz Lantern',exact:true}).isVisible());assert(await page.getByRole('button',{name:'Crystal Comb',exact:true}).isVisible());assert.match(await page.locator('.library-paid').innerText(),/396 without.*409 with/);
+ await page.getByText('Minimum book level · 195',{exact:true}).click();assert(await page.getByText('Burning Bad Books',{exact:true}).isVisible());
+ await page.getByText('Checkout speed bonuses & meal multipliers',{exact:true}).click();assert(await page.getByText('Wickerlight Spirit',{exact:true}).isVisible());
+ assert.equal(await page.locator('#navLibrary').evaluate(el=>el.closest('.side-group').querySelector(':scope>span').textContent),'World 3');
+ await page.locator('#quickNotesToggle').click();await page.screenshot({path:'../audit/library-desktop.png',fullPage:true});await page.locator('.library-summoning').screenshot({path:'../audit/library-summoning.png'});
+ await page.setViewportSize({width:390,height:844});assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));await page.screenshot({path:'../audit/library-mobile.png',fullPage:true});
+ await page.locator('[data-library-open="saltLick"]').click();assert.equal(await page.locator('#worldContent').getAttribute('data-page'),'saltLick');
+ await page.evaluate(()=>window.dispatchEvent(new CustomEvent('idleon:navigate',{detail:'library'})));await page.locator('.library-summary').waitFor().catch(async e=>{console.log('Return state:',await page.locator('#worldContent').innerText(),errors);throw e;});assert.equal(await page.locator('.library-summary').count(),1);assert.deepEqual(errors,[]);
+ console.log('Library browser: empty/full save, W3 navigation, source link, return navigation, desktop/mobile screenshots, no overflow or page errors pass.');
+}finally{await browser.close();}})().catch(e=>{console.error(e.name,String(e.message).split('Call log:')[0]);process.exitCode=1;});

@@ -8,6 +8,20 @@ World 7 includes the audited combat simulator and layout optimizer.
 Run `npm start` here, or double-click `start.bat`. Open http://localhost:3000.
 No npm install is needed. Edit the files in this folder; source changes hot reload.
 
+World 3 → Library shows the saved talent book cap, its seven contributing
+sources, ordinary book range, checkout balance, and estimated next checkout and
+5/20/40/60 checkout milestones. It explains class/VIP books and the Automation
+Arm's guaranteed maximum-level checkout. Timers use the save timestamp and
+saved bonuses; overdue forecasts ask for a refreshed save. Run
+`npm run test:library` for calculation and desktop/mobile browser checks.
+The Library also expands every Library-specific Summoning multiplier, including
+The Winz Lantern, Crystal Comb, W6 merits/achievements, Godshard, King of All
+Winners, and the Daydreamer Pack. Pack ownership and with/without comparisons
+use the imported save and do not double-count the bonus. Minimum-roll and
+checkout-speed sections name their sources and show the Fortune Cookie meal
+multipliers. Library-cap calculations exclude Emperor/Endless winner multipliers
+as required by the game client's separate Library Max formula.
+
 World 6 → Summoning → Next Purchase Optimizer plans up to 1,000 purchases from
 saved essence balances. Choose a bonus goal, affordable or future purchases,
 an essence color, and a budget percentage; repeat upgrades can be collapsed.

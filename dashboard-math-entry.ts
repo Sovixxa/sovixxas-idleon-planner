@@ -13,3 +13,6 @@ export {calcCost,calcTimeToRankUp,getRefineryCycles} from './vendor/idleon-toolb
 export {getGambitBonus} from './vendor/idleon-toolbox/parsers/world-5/caverns/gambit';
 export {getLegendTalentBonus} from './vendor/idleon-toolbox/parsers/world-7/legendTalents';
 export {getMonumentMaxLinearTime} from './vendor/idleon-toolbox/parsers/world-5/caverns/bravery';
+export {getBookLvRange,getTimeToNextBooks} from './vendor/idleon-toolbox/parsers/misc';
+export {getLocalWinnerBonus} from './vendor/idleon-toolbox/parsers/world-6/summoning';
+export {getLibraryBreakdown} from './library-breakdown';

@@ -69,6 +69,7 @@
     if(name==='practice'&&initialPracticePending){initialPracticePending=false;refreshPracticeFevers();refreshPracticeCells();runPractice(true,true);}
   }
   const SKILL_PAGES={
+    library:{title:'Library',world:'World 3',copy:'Talent book levels, upgrade sources, and checkout timers.'},
     dailies:{title:'Activity dashboard',world:'Home',copy:'Account alerts, character readiness, and collection timers.'},
     shadowCaps:{title:'Shadow Caps',world:'Misc',copy:''},
     communitySheets:{title:"Community Sheets",world:'Misc',copy:''},
@@ -154,12 +155,13 @@ SKILL_PAGES.holeFloors={title:'Floors',world:'World 5',copy:'All 18 Hole caverns
   ];
   const HOLE_VILLAGER_ICONS={hole:0,holeSchematics:1,holeMajik:2,holeMeasurements:3,holeStudies:4};
   function selectSideNav(name){
+    window.LibraryPage?.dispose();
     window.Dashboard?.dispose();
     if(name==='coral')name='coralReef';
     window.plannerQoL?.onNavigate(name);
     if(name!=='jelly'&&practice?.playing)stopPracticePlayback();
     if(name==='jelly'&&state?.hasJelly===false){selectSideNav('classExp');return;}
-    if(!state)$('workspace').classList.toggle('hidden',!['dailies','classExp','accountReview','loadouts','shadowCaps','communitySheets','credits','connectedBonuses'].includes(name));
+    if(!state)$('workspace').classList.toggle('hidden',!['library','dailies','classExp','accountReview','loadouts','shadowCaps','communitySheets','credits','connectedBonuses'].includes(name));
     if(!state)$('inputPanel').classList.toggle('hidden',['loadouts','shadowCaps','communitySheets','credits'].includes(name));
     const selected=SKILL_PAGES[name]?.parent||name;
     for(const id of ['navHome','navJelly',...Object.keys(SKILL_PAGES).map(key=>'nav'+key[0].toUpperCase()+key.slice(1))])$(id)?.classList.toggle('active',id===('nav'+selected[0].toUpperCase()+selected.slice(1)));
@@ -619,6 +621,7 @@ SKILL_PAGES.holeFloors={title:'Floors',world:'World 5',copy:'All 18 Hole caverns
     if(name==='refinery'){window.RefineryPlanner.render($('worldContent'),loadedExport||state?.rawRoot||{},addSubtabs);return;}
     if(name==='holeCove'&&window.CovePage){window.CovePage.render($('worldContent'),loadedExport||state?.rawRoot||state?.rawData||{},addSubtabs);return;}
     if(['statues','dungeons','obols','printer','prayers','hole','holeTrench','holeCove'].includes(name)){window.RemainingWorlds.render($('worldContent'),name,state?.rawData||{},loadedExport||state?.rawRoot||{});addSubtabs();return;}
+    if(name==='library'){window.LibraryPage.render($('worldContent'),loadedExport||state?.rawRoot||{});return;}
     if(name==='construction'){renderConstruction();addSubtabs();return;}
     if(name==='worship'){window.Worship.render($('worldContent'),state?.rawData||{});addSubtabs();return;}
     if(name==='towerDefense'){window.Worship.renderTD($('worldContent'),state?.rawData||{});addSubtabs();return;}
