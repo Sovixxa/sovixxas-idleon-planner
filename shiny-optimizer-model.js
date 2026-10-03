@@ -1,24 +1,29 @@
 (function(root){'use strict';
-const num=v=>Number.isFinite(Number(v))?Number(v):null;
+const num=v=>v!==null&&v!==undefined&&v!==''&&Number.isFinite(Number(v))?Number(v):null;
+const positive=v=>{const n=num(v);return n!==null&&n>=0?n:null;};
 function savedTraps(raw){
- const data=raw.data||raw,rows=[];let unknown=0;
+ const data=raw.data||raw,rows=[],owners=[];let unknown=0;
  for(const key of Object.keys(data).filter(k=>/^PldTraps_\d+$/.test(k))){
-  let traps;try{traps=typeof data[key]==='string'?JSON.parse(data[key]):data[key];}catch{unknown++;continue;}
-  if(!Array.isArray(traps)){unknown++;continue;}
+  const owner={id:Number(key.split('_')[1]),available:true,empty:0,invalid:0};owners.push(owner);
+  let traps;try{traps=typeof data[key]==='string'?JSON.parse(data[key]):data[key];}catch{unknown++;owner.available=false;owner.invalid++;continue;}
+  if(!Array.isArray(traps)){unknown++;owner.available=false;owner.invalid++;continue;}
   for(const [index,t] of traps.entries()){
-   if(!Array.isArray(t)||t[0]===-1)continue;
-   if(!t[3]||t[3]==='Blank')continue;
-   const chance=t[8]==null?null:num(t[8]);
-   rows.push({owner:Number(key.split('_')[1]),slot:index+1,critter:t[3],snapshot:chance,duration:num(t[6])});
+   if(!Array.isArray(t)){unknown++;owner.invalid++;continue;}
+   if(Number(t[0])===-1){owner.empty++;continue;}
+   if(!t[3]||t[3]==='Blank'){unknown++;owner.invalid++;continue;}
+   const chance=positive(t[8]),duration=positive(t[6]),elapsed=positive(t[2]);
+   const remaining=duration>0&&elapsed!==null?Math.max(0,duration-elapsed):null;
+   rows.push({owner:owner.id,slot:index+1,critter:t[3],snapshot:chance,duration,elapsed,remaining,ready:remaining===null?null:remaining===0,quantity:positive(t[4]),xp:positive(t[7]),tier:positive(t[5]),map:num(t[0])});
    if(chance===null)unknown++;
   }
  }
- return {rows,unknown};
+ return {rows,unknown,owners};
 }
 function evaluate(snapshot,collector,duration,visits){
  if(!Number.isFinite(snapshot)||snapshot<0||!(duration>0)||!(visits>0))return null;
+ if(!collector||!(collector.divisor>0)||!Number.isFinite(collector.open)||!Number.isFinite(collector.bundle))return null;
  const rawChance=snapshot*collector.open/collector.divisor,chance=Math.min(100,Math.max(0,rawChance));
- const cycle=Math.ceil(duration/(86400/visits)-1e-10)*(86400/visits);
+ const cycle=Math.max(1,Math.ceil(duration/(86400/visits)-1e-10))*(86400/visits);
  const rounds=86400/cycle,expected=chance/100*collector.bundle;
  return {rawChance,chance,bundle:collector.bundle,rounds,expected,daily:expected*rounds};
 }
@@ -44,7 +49,7 @@ function compare(data,catalog,settings={}){
    }
   }
  }
- const collector=data.roster.find(c=>String(c.id)===String(settings.collector))||data.roster.find(c=>c.id===realistic?.collectorId)||data.roster[0];
+ const collector=data.roster.find(c=>String(c.id)===String(settings.collector))||data.roster[0];
  const existing=data.saved.rows.filter(t=>t.critter===critter.critterName);
  const current=existing.map(t=>({...t,result:t.snapshot===null?null:evaluate(t.snapshot,collector.current,t.duration,visits)}));
  const known=current.filter(t=>t.result),currentDaily=known.reduce((s,t)=>s+t.result.daily,0);
@@ -77,5 +82,22 @@ function missing(data,best,stale){
  if(!saturated)add('Remaining chance gap','Upgrade',`Need ×${(100/best.rawChance).toPrecision(3)} more chance to cap this setup. Improve Reflective Eyesight, reach another 10 Trapping levels, or improve placement multipliers and replace traps.`);
  return rows;
 }
-root.ShinyOptimizerModel={savedTraps,evaluate,compare};
+function overview(data,catalog,settings={}){
+ const collector=data.roster.find(c=>String(c.id)===String(settings.collector))||data.roster[0];
+ const visits=Number(settings.visits)||3;
+ const rows=data.saved.rows.map(t=>({...t,info:catalog.critters.find(c=>c.critterName===t.critter),result:t.snapshot===null?null:evaluate(t.snapshot,collector?.current,t.duration,visits)}));
+ const ids=[...new Set([...data.roster.map(c=>c.id),...(data.saved.owners||[]).map(c=>c.id)])].sort((a,b)=>a-b);
+ const roster=ids.map(id=>{
+  const ch=data.roster.find(c=>c.id===id)||{id,name:`Character ${id+1}`,slots:null};
+  const saved=data.saved.owners?.find(c=>c.id===id),traps=rows.filter(t=>t.owner===id);
+  return {...ch,traps,available:!!saved?.available,invalid:saved?.invalid||0,empty:saved?.empty??null,free:saved?.available&&!saved.invalid&&ch.slots!==null?Math.max(0,ch.slots-traps.length):null};
+ });
+ const totals=catalog.critters.map(c=>{
+  const traps=rows.filter(t=>t.critter===c.critterName),stock=data.stock?.[c.critterName]||{storage:0,inventory:0},shinyStock=data.stock?.[c.critterName+'A']||{storage:0,inventory:0};
+  return {...c,count:traps.length,ready:traps.filter(t=>t.ready===true).length,savedCatch:traps.reduce((s,t)=>s+(t.quantity??0),0),unknownCatch:traps.filter(t=>t.quantity===null).length,daily:traps.reduce((s,t)=>s+(t.result?.daily||0),0),unknownYield:traps.filter(t=>!t.result).length,stock,shinyStock};
+ });
+ const filtered=roster.filter(c=>!settings.accountCharacter||settings.accountCharacter==='all'||String(c.id)===String(settings.accountCharacter)).map(c=>({...c,visible:c.traps.filter(t=>(!settings.accountCritter||settings.accountCritter==='all'||t.critter===settings.accountCritter)&&(!settings.status||settings.status==='all'||(settings.status==='ready'?t.ready===true:settings.status==='waiting'?t.ready===false:t.ready===null)))}));
+ return {collector,roster:filtered,totals,placed:rows.length,ready:rows.filter(t=>t.ready===true).length,unknownTimers:rows.filter(t=>t.ready===null).length,free:roster.reduce((s,c)=>s+(c.free||0),0),missingOwners:roster.filter(c=>!c.available).length,daily:rows.reduce((s,t)=>s+(t.result?.daily||0),0),unknownYield:rows.filter(t=>!t.result).length};
+}
+root.ShinyOptimizerModel={savedTraps,evaluate,compare,overview};
 })(typeof window==='undefined'?globalThis:window);

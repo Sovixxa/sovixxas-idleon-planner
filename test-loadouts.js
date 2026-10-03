@@ -37,3 +37,12 @@ nodes.get('#loadoutBuild').onchange({target:{value:'boss-dps'}});
 assert(host.innerHTML.includes('Boss DPS'));
 assert(host.innerHTML.includes(loadouts.SHEET_URL));
 console.log('Loadouts: 20 full builds, named sprites, reference slots, fishing guide, duplicate slots, selection and search pass');
+
+const sourceText=fs.readFileSync('loadouts.js','utf8');
+const yieldStart=sourceText.indexOf('function shinyYield('),yieldEnd=sourceText.indexOf('\nfunction ',yieldStart+1);
+const yieldFn=vm.runInNewContext('('+sourceText.slice(yieldStart,yieldEnd)+')');
+const plan={chance:100,bundle:25,traps:1,minutes:600,collections:3,target:100};
+assert.equal(yieldFn(plan).rounds,1.5,'10h traps with 8h visits cycle every16h');
+assert.equal(yieldFn({...plan,minutes:2880,collections:1}).daily,12.5,'Multi-day traps still produce a long-run daily yield');
+assert.equal(yieldFn({...plan,collections:0}).daily,0);
+console.log('Manual shiny estimates: visit alignment, multi-day traps and zero visits pass.');

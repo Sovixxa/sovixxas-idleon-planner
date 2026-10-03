@@ -4,10 +4,11 @@ import {getCardSets,calcCardBonus} from './vendor/idleon-toolbox/parsers/cards';
 import {getLegendTalentBonus} from './vendor/idleon-toolbox/parsers/world-7/legendTalents';
 import {isMasteryBonusUnlocked} from './vendor/idleon-toolbox/parsers/misc';
 import {getBubbleBonus} from './vendor/idleon-toolbox/parsers/world-2/alchemy';
+import {getCharacterGalleryBonuses} from './vendor/idleon-toolbox/parsers/world-7/gallery';
 
 const label=(v:any)=>String(v||'').replaceAll('_',' ');
 const qty=(item:any)=>Number(item?.amount??1);
-const trapTier=(item:any)=>Math.min(6,Math.max(0,Number(String(item?.rawName||'').replace('TrapBoxSet',''))-1));
+const trapTier=(item:any)=>Math.min(6,Math.max(0,Number(item?.ID||0)-1));
 export function getShinyLoadoutData(parsed:any){
  const {account,characters}=parsed;
  const allItems=[...(account.storage?.list||[]),...characters.flatMap((c:any)=>[...(c.inventory||[]),...(c.tools||[]),...(c.equipment||[]),...(c.food||[])])].filter((i:any)=>i&&qty(i)>0);
@@ -20,8 +21,17 @@ export function getShinyLoadoutData(parsed:any){
  const prayer=account.prayers?.find((p:any)=>p.name==='Shiny_Snitch');
  const star=account.starSigns?.find((s:any)=>s.starName==='Mount_Eaterest');
  const set=(getCardSets(account) as any).Yum_Yum_Desert;
+ // Native card menu: 4 + GemItemsPurchased[63], capped at eight positions.
+ const cardSlots=Math.min(8,Math.max(4,Math.round(4+Number(account.gemShopPurchases?.[63]||0))));
  const legend=1+getLegendTalentBonus(account,21)/100;
  const chipPool=(account.lab?.chips||[]).filter((c:any)=>[15,16,20,21].includes(c.index)&&c.totalAmount>0);
+ const galleryInput={Spelunk:JSON.stringify(account.gallery?.rawSpelunk??null)};
+ const stock:any={};
+ for(const [location,list] of [['storage',account.storage?.list||[]],['inventory',characters.flatMap((c:any)=>c.inventory||[])]] as any[]){
+  for(const item of list)if(/^Critter\d+A?$/.test(item?.rawName)&&Number(item.amount)>=0){
+   stock[item.rawName]??={storage:0,inventory:0};stock[item.rawName][location]+=Number(item.amount);
+  }
+ }
  const candidates:any[]=[];
  const roster=characters.map((character:any)=>{
   const ch={...character,food:(character.food||[]).filter((f:any)=>qty(f)>0)};
@@ -31,7 +41,8 @@ export function getShinyLoadoutData(parsed:any){
   const tools=[...(account.storage?.list||[]),...(ch.inventory||[]),...(ch.tools||[])].filter((i:any)=>i&&qty(i)>0&&i.Type==='TRAP_BOX_SET'&&Number(i.lvReqToEquip||0)<=Number(ch.skillsInfo?.trapping?.level||0));
   const tool=tools.sort((a:any,b:any)=>trapTier(b)-trapTier(a))[0];
   const equippedTool=ch.tools?.find((i:any)=>i.Type==='TRAP_BOX_SET');
-  const base={id:ch.playerId,name:ch.name,level:s.trappingLevel,placement,sources:s,tool:tool?{id:tool.rawName,name:label(tool.displayName),tier:trapTier(tool)}:null,slots:equippedTool?Number(equippedTool.ID||0)+(getBubbleBonus(account,'CALL_ME_ASH')>0?1:0):0};
+  const hunt=Array.from({length:10},(_,i)=>({quest:i+2,done:Number(ch.questComplete?.['Lord_of_the_Hunt'+(i+2)])>0}));
+  const base={id:ch.playerId,name:ch.name,level:s.trappingLevel,placement,sources:s,hunt,huntBaseBonus:hunt.filter(q=>q.done).length,equippedTool:equippedTool?{id:equippedTool.rawName,name:label(equippedTool.displayName)}:null,tool:tool?{id:tool.rawName,name:label(tool.displayName),tier:trapTier(tool)}:null,slots:equippedTool?Number(equippedTool.ID||0)+(getBubbleBonus(account,'CALL_ME_ASH')>0?1:0):0};
   const currentOpening={id:ch.playerId,name:ch.name,open:1+(s.foodBonus+s.cardBonus+s.minigameBonus+s.arcadeBonus)/100,divisor:s.prayerDivider,bundle:current.bundleSize,prayer:'Saved prayers',sources:s,actions:[],food:s.foodBonus>0};
   // Enumerate only already occupied chip slots: never assume extra unlocked slots.
   const existing=(account.lab?.playersChips?.[ch.playerId]||[]).filter((c:any)=>c?.index>=0);
@@ -45,13 +56,15 @@ export function getShinyLoadoutData(parsed:any){
     const accountCopy={...account,lab:{...account.lab,playersChips:[...(account.lab?.playersChips||[])]}};
     accountCopy.lab.playersChips[ch.playerId]=chips;
     const loadout={...ch,food:useFood?[{...food,amount:1}]:[],cards:{...ch.cards},starSigns:[...(ch.starSigns||[])]};
+    // The parsed character caches Gallery bonuses. Chip 16 changes that cache's multiplier.
+    if(account.gallery?.rawSpelunk)loadout.gallery=getCharacterGalleryBonuses(galleryInput,accountCopy,loadout);
     if(star?.unlocked&&!star.isInfiniteStar&&!loadout.starSigns.some((s:any)=>s.starName===star.starName))loadout.starSigns=[star];
     const choices=owned.filter(c=>(!passive&&c.effect.includes('Shiny_Critter_Chance'))||(useFood&&c.cardIndex==='Y5'))
      .map(c=>({...c,chipBoost:1,legendBonus:legend})).sort((a,b)=>calcCardBonus(b)*(b.cardIndex==='Y5'?.25:1)-calcCardBonus(a)*(a.cardIndex==='Y5'?.25:1));
     const arranged:any[]=Array.from({length:8},()=>({}));
-    const doubled=[...(chips.some((c:any)=>c.index===20)?[0]:[]),...(chips.some((c:any)=>c.index===21)?[7]:[])];
-    const order=[...doubled,...Array.from({length:8},(_,i)=>i).filter(i=>!doubled.includes(i))];
-    choices.slice(0,8).forEach((card,i)=>{arranged[order[i]]={...card,chipBoost:doubled.includes(order[i])?2:1};});
+    const doubled=[...(chips.some((c:any)=>c.index===20)?[0]:[]),...(cardSlots===8&&chips.some((c:any)=>c.index===21)?[7]:[])];
+    const order=[...doubled,...Array.from({length:cardSlots},(_,i)=>i).filter(i=>!doubled.includes(i))];
+    choices.slice(0,cardSlots).forEach((card,i)=>{arranged[order[i]]={...card,chipBoost:doubled.includes(order[i])?2:1};});
     loadout.cards.equippedCards=arranged;
     if(useFood&&set?.stars>=0)loadout.cards.cardSet={...set,bonus:set.bonus*(set.stars+1)};
     const result=getShinyChance(loadout,accountCopy),src=result.sources;
@@ -69,5 +82,5 @@ export function getShinyLoadoutData(parsed:any){
   }
   return {...base,current:currentOpening};
  });
- return {roster,candidates,foodStock,passive,cards:relevant.map(c=>({name:label(c.displayName),id:c.rawName,owned:c.amount>0,stars:c.stars,bonus:calcCardBonus(c),passive:passive&&c.cardIndex!=='Y5'})),prayer:prayer?{level:prayer.level,max:prayer.maxLevel}:null,star:{owned:!!star?.unlocked,passive:!!star?.isInfiniteStar},chips:chipPool.map((c:any)=>({name:label(c.name),id:c.index})),setBonus:set?.stars>=0?set.bonus*(set.stars+1):0};
+ return {roster,candidates,cardSlots,stock,penPalsScore:Number(account.accountOptions?.[99]||0),foodStock,passive,cards:relevant.map(c=>({name:label(c.displayName),id:c.rawName,owned:c.amount>0,stars:c.stars,bonus:calcCardBonus(c),passive:passive&&c.cardIndex!=='Y5'})),prayer:prayer?{level:prayer.level,max:prayer.maxLevel}:null,star:{owned:!!star?.unlocked,passive:!!star?.isInfiniteStar},chips:chipPool.map((c:any)=>({name:label(c.name),id:c.index})),setBonus:set?.stars>=0?set.bonus*(set.stars+1):0};
 }

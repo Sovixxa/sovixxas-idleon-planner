@@ -392,7 +392,7 @@ SKILL_PAGES.holeFloors={title:'Floors',world:'World 5',copy:'All 18 Hole caverns
   function renderConstruction(){
     const parse=v=>{if(typeof v==='string'){try{return JSON.parse(v);}catch{return null;}}return v;},data=state?.rawData||{};
     const {rows,total}=window.Construction.evaluate(data,window.CONSTRUCTION_CATALOG||[]);
-    const tabs=[['buildings','Buildings'],['cogs','Cogs']];
+    const tabs=[['buildings','Buildings'],['cogs','Cogs'],['sampling','Sampling']];
     const capText=r=>r.capKnown?String(r.cap):`${r.cap}+ verified`;
     $('worldContent').innerHTML=`<div class="section-head compact"><div><p class="eyebrow">World 3</p><h2>Construction</h2><p>Click a building for bonuses and ways to raise its cap.</p></div></div><nav class="skill-tabs" aria-label="Construction sections" role="tablist">${tabs.map(([id,label])=>`<button role="tab" aria-selected="${constructionTab===id}" class="skill-tab ${constructionTab===id?'active':''}" data-construction="${id}">${label}</button>`).join('')}</nav><div id="constructionContent"></div>`;
     const host=$('constructionContent');
@@ -407,7 +407,7 @@ SKILL_PAGES.holeFloors={title:'Floors',world:'World 5',copy:'All 18 Hole caverns
         $('constructionDetailClose').onclick=()=>$('constructionBuildingDetail').classList.add('construction-detail-dismissed');
       };
       host.querySelectorAll('[data-construction-building]').forEach(tile=>tile.onclick=()=>show(Number(tile.dataset.constructionBuilding)));
-    }else if(constructionTab==='cogs'){window.CogBoard.render(host,data,state?.rawRoot||{});}else{const key=constructionTab==='cogs'?'CogOrder':'FlagUnlock',value=parse(data[key]),entries=Object.entries(value||{}).filter(([k])=>/^\d+$/.test(k));host.innerHTML=`<section class="exp-card"><h3>${constructionTab==='cogs'?'Cog layout':'Flag unlocks'}</h3><p>${entries.length?'Saved '+entries.length+' entries.':'No saved entries found.'}</p><p>Layout positions and effective bonuses still need decoding. The Building Levels tab reads your saved progress.</p></section>`;}
+    }else if(constructionTab==='sampling'){window.Sampling.render(host,loadedExport||state?.rawRoot||data);}else if(constructionTab==='cogs'){window.CogBoard.render(host,data,state?.rawRoot||{});}else{const key=constructionTab==='cogs'?'CogOrder':'FlagUnlock',value=parse(data[key]),entries=Object.entries(value||{}).filter(([k])=>/^\d+$/.test(k));host.innerHTML=`<section class="exp-card"><h3>${constructionTab==='cogs'?'Cog layout':'Flag unlocks'}</h3><p>${entries.length?'Saved '+entries.length+' entries.':'No saved entries found.'}</p><p>Layout positions and effective bonuses still need decoding. The Building Levels tab reads your saved progress.</p></section>`;}
     $('worldContent').querySelectorAll('[data-construction]').forEach(b=>b.onclick=()=>{constructionTab=b.dataset.construction;renderWorldPage('construction');});
   }
   let selectedBribe=0;

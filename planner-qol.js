@@ -165,7 +165,7 @@
     const content=doc.getElementById('worldContent');
     function fieldKey(el){if(el.id)return 'field:#'+el.id;return 'field:'+el.tagName+':'+(el.name||el.getAttribute('aria-label')||el.getAttribute('placeholder')||Array.from(el.attributes).filter(a=>a.name.startsWith('data-')).map(a=>a.name).join('|'));}
     const controls=()=>[...content.querySelectorAll('select,input[type="search"],input[type="checkbox"]')].filter(el=>!el.closest('.dailies')).filter(el=>el.id||el.name||el.getAttribute('aria-label')||el.getAttribute('placeholder')||Array.from(el.attributes).some(a=>a.name.startsWith('data-')));
-    const tabKey=el=>Array.from(el.attributes).find(a=>(/^data-.*(?:tab|page|loadout|preset)$/.test(a.name)||a.name==='data-category')&&!['data-skill-tab','data-hole-group','data-page'].includes(a.name));
+    const tabKey=el=>Array.from(el.attributes).find(a=>(/^data-.*(?:tab|page|loadout|preset)$/.test(a.name)||a.name==='data-category')&&!['data-skill-tab','data-hole-group','data-page','data-review-page'].includes(a.name));
     const pref=()=>settings.pages[current]||(settings.pages[current]={});
     content.addEventListener('input',remember,true);content.addEventListener('change',remember,true);
     function remember(e){if(restoring||!controls().includes(e.target))return;restoreBudget=0;pref()[fieldKey(e.target)]=e.target.type==='checkbox'?e.target.checked:e.target.value;save();}
@@ -173,7 +173,7 @@
     function restore(){
       if(restoreBudget<=0)return;restoring=true;
       try{const p=pref();for(const el of controls()){const v=p[fieldKey(el)];if(v===undefined)continue;if(el.tagName==='SELECT'&&![...el.options].some(o=>o.value===v))continue;const old=el.type==='checkbox'?el.checked:el.value;if(old!==v){if(el.type==='checkbox')el.checked=v;else el.value=v;restoreBudget--;el.dispatchEvent(new Event(el.type==='search'?'input':'change',{bubbles:true}));return;}}
-        for(const [key,value] of Object.entries(p)){if(!key.startsWith('tab:'))continue;const b=[...content.querySelectorAll('button')].find(b=>{const attr=tabKey(b);return attr?.name===key.slice(4)&&attr.value===value;});if(b&&!b.disabled&&!b.classList.contains('active')&&!b.classList.contains('selected')&&b.getAttribute('aria-selected')!=='true'){restoreBudget--;b.click();return;}}
+        for(const [key,value] of Object.entries(p)){if(!key.startsWith('tab:'))continue;const b=[...content.querySelectorAll('button')].find(b=>{const attr=tabKey(b);return attr?.name===key.slice(4)&&attr.value===value;});if(b&&!b.disabled&&!b.classList.contains('active')&&!b.classList.contains('selected')&&b.getAttribute('aria-selected')!=='true'&&b.getAttribute('aria-pressed')!=='true'){restoreBudget--;b.click();return;}}
       }finally{restoring=false;}
     }
     function hideCompleted(){

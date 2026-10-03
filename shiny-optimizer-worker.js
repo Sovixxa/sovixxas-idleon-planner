@@ -9,6 +9,7 @@ self.onmessage=({data:raw})=>{
   if(!parsed.characters?.length)throw Error('No characters could be decoded. Import a complete export.');
   const result=PrayerMath.getShinyLoadoutData(parsed);
   if(!result.roster.every(c=>Number.isFinite(c.placement))||!result.candidates.every(c=>Number.isFinite(c.open)&&Number.isFinite(c.bundle)))throw Error('Some shiny bonuses could not be calculated. Import a complete export.');
+  for(const ch of result.roster)ch.huntKnown=save["QuestComplete_"+ch.id]!==undefined;
   result.saved=ShinyOptimizerModel.savedTraps(raw);result.catalog=TRAPS_CATALOG;
   result.incomplete=['Cards0','PrayOwned','CauldronInfo'].filter(k=>save[k]===undefined);
   self.postMessage({result});

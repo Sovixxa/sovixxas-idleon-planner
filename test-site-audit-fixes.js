@@ -22,7 +22,12 @@ c.importScripts=(...files)=>files.forEach(load);let result;c.postMessage=value=>
 load('account-review-worker.js');
 const raw=JSON.parse(fs.readFileSync('../example json.txt','utf8'));
 c.onmessage({data:raw});assert(!result.error,result.error);
-const direct=c.AccountReview.model(raw);
+const data=typeof raw.data==='string'?JSON.parse(raw.data):raw.data||raw;
+const parsed=c.PrayerMath.parseData(structuredClone(data),raw.charNames,raw.companion,raw.guildData,raw.serverVars||{},raw.accountCreateTime,raw.tournament);
+const evidence=c.AccountReviewActions.build(raw,parsed);
+evidence.diagnostics=c.ReviewDiagnostics.analyze(parsed,evidence.actions);
+const direct=c.AccountReview.model(raw,c,evidence);
 assert.equal(JSON.stringify(result.report),JSON.stringify(direct),'Worker report must match synchronous report');
 assert(result.report.sections.some(x=>x.id==='sushiReview'));
 console.log('Audit fixes: guild formulas/caps, named event bonuses, observer removal, and worker report parity pass');
+

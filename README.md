@@ -8,6 +8,17 @@ World 7 includes the audited combat simulator and layout optimizer.
 Run `npm start` here, or double-click `start.bat`. Open http://localhost:3000.
 No npm install is needed. Edit the files in this folder; source changes hot reload.
 
+World 6 → Summoning → Next Purchase Optimizer plans up to 1,000 purchases from
+saved essence balances. Choose a bonus goal, affordable or future purchases,
+an essence color, and a budget percentage; repeat upgrades can be collapsed.
+The planner picks the cheapest matching level within each currency, rotating
+between currencies, and includes unowned prerequisites. It recalculates internal
+discounts, doublers and stone bonuses after purchases. Outside discounts and the
+doubler talent are not decoded; prices are estimates with an optional calibration
+multiplier. Plans do not modify the save or simulate battle outcomes. Run
+`npm run test:summoning` for model and desktop/mobile checks; when the local game
+client is available, model tests also compare costs and bonuses to its handler.
+
 All Account Bonuses shows compact purple, searchable stat tiles for the selected character
 and account. The example export has 103 totals: combat stats, skill EXP, activity
 AFK gains, food effects, per-slot capacities, construction and world-system rates.
@@ -65,17 +76,29 @@ save refreshes the dashboard. Hidden activities remain account-specific; old
 checklist marks are preserved in storage but no longer suppress ready activities.
 Run `npm run test:dailies` for save rules and desktop/mobile browser checks.
 
-Optimizers → Account Review reads the current local export and reviews stamps,
-alchemy bubbles, construction build status, worship wave records, cooking meals,
-Rift rewards and character levels. It puts an ordered account action list first, favoring
-confirmed claims and affordable stamp opportunities, then permanent unlocks and
-production bonuses. The first three favor different systems. Each action explains
-its benefit and any unverified requirements and can be added to a local checklist.
-Ranking is a planning heuristic, not measured return per hour. Discovery counts do
-not drive priorities; stamp, bubble and meal advice continues past review benchmarks.
-Missing data and zero progress stay separate from upgrade suggestions. Importing a
-new export refreshes the review. Run `node test-account-review.js` and
-`node test-account-review-browser.js` for ranking and browser checks.
+Optimizers → Account Review generates specific actions from the existing upgrade
+calculators: next-action stamp prices and inventory blockers, fully funded
+single-click bubble purchases, meal upgrades covered by saved stock, refinery
+supply drains and auto-refine blockers, named finished buildings and stamp
+hand-ins. Cards start collapsed with the predicted source-bonus gain visible. Expand for
+save evidence, cost/stock and requirements. Large numbers use K/M/B/T suffixes.
+Bubble previews evaluate the full minimum one-click level change; stamp cap
+payments show zero immediate effect and a separate preview for buying the unlocked
+levels afterward. Percent-bonus deltas are percentage points, not final stat gains.
+The worker shares stamp and bubble decoding helpers with their dedicated pages
+and parses the account once for all four calculation adapters. Missing calculation
+data suppresses advice instead of substituting generic benchmarks.
+
+Choose a goal in Next steps; use My Plan to save actions and Account checks for
+reference milestones and unlock coverage. Goal matching uses effect descriptions.
+Prices apply independently to each alternative, not to a funded combined shopping
+list; refresh after purchases. Rankings do not claim gain per hour. Bubble targets
+show the minimum gain from one click; shared-cap and atom decisions remain in the
+dedicated optimizer. Cooking actions here consume already-saved meal stock.
+Missing stamps require saved item possession or an active regular reward quest
+before becoming collection candidates. Unavailable, rare-random and unverified
+sources remain reference entries. Run `node test-account-review.js`,
+`node test-account-review-actions.js`, and `node test-account-review-browser.js`.
 
 
 Paste a fresh full export, then choose an objective and search quality. Max clear

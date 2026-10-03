@@ -37,3 +37,43 @@ assert.equal(JSON.stringify(parsed),before,'Scenario swaps must not mutate decod
 assert.equal(limited.foodStock,0);assert(limited.candidates.every(x=>!x.food));assert(limited.cards.every(x=>!x.owned));
 assert(limited.candidates.every(x=>!x.actions.some(a=>a.startsWith('Chip:')||a.startsWith('Card slot'))));
 console.log('Shiny optimizer: real save, immutable scenarios, ownership limits, stored snapshots, chance cap, prayer choice, schedule throughput, missing sources and escaping pass.');
+
+const overview=M.overview(fixture,fixture.catalog,{visits:3});
+assert.equal(overview.placed,2);assert.equal(overview.roster[0].visible.length,2);
+assert.equal(overview.totals[0].savedCatch,2);assert.equal(overview.unknownYield,1);
+assert.equal(M.overview(fixture,fixture.catalog,{status:'ready'}).roster[0].visible.length,0);
+assert.equal(M.evaluate(1,null,1200,3),null);
+const partial=M.savedTraps({PldTraps_0:[[16,0,null,'Critter1',null,0,1200,null,null],['-1']],PldTraps_1:'bad'});
+assert.equal(partial.rows[0].ready,null);assert.equal(partial.rows[0].quantity,null);
+assert.equal(partial.owners[0].empty,1);assert.equal(partial.owners[1].available,false);
+const accountHtml=c.ShinyOptimizer.content(fixture,{view:'account',visits:3});
+assert(accountHtml.includes('&lt;unsafe&gt;'));assert(!accountHtml.includes('><unsafe>'));
+console.log('Account overview: totals, filters, missing values and escaping pass.');
+
+const fresh=()=>c.PrayerMath.parseData(structuredClone(raw.data),raw.charNames,raw.companion,raw.guildData,raw.serverVars||{},raw.accountCreateTime,raw.tournament);
+const audit=fresh(),snitch=audit.account.prayers.find(p=>p.name==='Shiny_Snitch');
+const selected=audit.characters[0];selected.activePrayers=[snitch];
+const initial=c.PrayerMath.getShinyChance(selected,audit.account);
+for(const ch of audit.characters.slice(1))ch.activePrayers=[snitch,snitch];
+assert.deepEqual(c.PrayerMath.getShinyChance(selected,audit.account),initial,'Other characters cannot stack prayer on the collector');
+selected.activePrayers=[snitch,snitch];
+assert.deepEqual(c.PrayerMath.getShinyChance(selected,audit.account),initial,'Duplicate prayer entries cannot double the bonus or curse');
+audit.account.rift.currentRift=15;audit.account.totalSkillsLevels.trapping.rank=3;
+const passiveBefore=c.PrayerMath.getShinyChance(selected,audit.account).sources.cardBonus;
+selected.cards.equippedCards=Object.values(audit.account.cards).filter(x=>x.effect?.includes('Shiny_Critter_Chance'));
+assert.equal(c.PrayerMath.getShinyChance(selected,audit.account).sources.cardBonus,passiveBefore,'Passive cards must not stack with equipped copies');
+audit.account.rift.currentRift=0;audit.account.gemShopPurchases[63]=0;
+const four=c.PrayerMath.getShinyLoadoutData(audit);assert.equal(four.cardSlots,4);
+assert(four.candidates.every(x=>x.actions.filter(a=>a.startsWith('Card slot')).length<=4));
+assert(four.candidates.every(x=>!x.actions.some(a=>/^Card slot [5-8]:/.test(a))),'No locked positions, including Omega slot8');
+audit.account.gemShopPurchases[63]=4;
+const eight=c.PrayerMath.getShinyLoadoutData(audit);assert.equal(eight.cardSlots,8);
+assert(eight.candidates.some(x=>x.actions.filter(a=>a.startsWith('Card slot')).length>4),'Fixture exercises more than four relevant cards');
+const defaults=M.compare(data,data.catalog,{visits:3});
+assert.equal(defaults.collector.id,M.overview(data,data.catalog,{visits:3}).collector.id,'Views must use the same default collector');
+console.log('Shiny audit: prayer isolation, duplicate entries, passive cards, unlocked card positions and consistent collectors pass.');
+
+const lv32={name:'Shiny_Snitch',prayerIndex:3,x1:20,x2:15,level:32};
+const lv32Result=c.PrayerMath.getPrayerBonusAndCurse([lv32],'Shiny_Snitch',{});
+assert.equal(lv32Result.curse,61,'Native floating-point operation order is significant at Lv32');
+assert.equal(lv32Result.bonus,82);
