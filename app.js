@@ -156,6 +156,7 @@ SKILL_PAGES.holeFloors={title:'Floors',world:'World 5',copy:'All 18 Hole caverns
   const HOLE_VILLAGER_ICONS={hole:0,holeSchematics:1,holeMajik:2,holeMeasurements:3,holeStudies:4};
   function selectSideNav(name){
     window.LibraryPage?.dispose();
+    window.SailingArtifactChance?.dispose();
     window.Dashboard?.dispose();
     if(name==='coral')name='coralReef';
     window.plannerQoL?.onNavigate(name);
@@ -630,7 +631,7 @@ SKILL_PAGES.holeFloors={title:'Floors',world:'World 5',copy:'All 18 Hole caverns
     if(name==='lab'){window.Lab.render($('worldContent'),state?.rawData||{},state?.rawRoot||{});return;}
     if(['breeding','cooking','rift'].includes(name)){window.World4.render($('worldContent'),name,state?.rawData||{},state?.rawRoot||{});return;}
     if(name==='divinity'){window.Divinity.render($('worldContent'),state?.rawData||{},state?.rawRoot||{},addSubtabs);return;}
-    if(name==='sailing'||name==='gaming'){window.World5.render($('worldContent'),name,state?.rawData||{});return;}
+    if(name==='sailing'||name==='gaming'){window.World5.render($('worldContent'),name,state?.rawData||{},loadedExport||state?.rawRoot||{});return;}
     if(name==='tome'||name==='slab'){window.ProgressionPages.render($('worldContent'),name,loadedExport||state?.rawRoot||{});return;}
     if(name==='equinox'){window.Equinox.render($('worldContent'),state?.rawData||{});return;}
     if(name==='farming'||name==='sneaking'||name==='summoning'){window.World6.render($('worldContent'),name,state?.rawData||{},loadedExport||state?.rawRoot||{});return;}

@@ -270,31 +270,31 @@ const getArtifactChance = (chest: any, artifactsList: any, serverVars: any, acco
   };
 }
 
-const getAncientChances = (islandsUnlocked: any, serverVars: any) => {
+export const getAncientChances = (islandsUnlocked: any, serverVars: any) => {
   return 3 > islandsUnlocked
     ? 850
     : (1e3 + (islandsUnlocked - 3) * serverVars?.AncientOddPerIsland) / (1 + serverVars?.AncientArtiPCT / 100);
 }
 
-const getEldritchChances = (islandsUnlocked: any, serverVars: any) => {
+export const getEldritchChances = (islandsUnlocked: any, serverVars: any) => {
   return 3 > islandsUnlocked
     ? 900 + 250 * islandsUnlocked
     : ((1e3 + (islandsUnlocked - 3) * serverVars?.AncientOddPerIsland) / (1 + serverVars?.AncientArtiPCT / 100)) * 4;
 }
 
-const getSovereignChances = (islandsUnlocked: any, serverVars: any) => {
+export const getSovereignChances = (islandsUnlocked: any, serverVars: any) => {
   return 5 > islandsUnlocked
     ? 9e3 + 2e3 * islandsUnlocked
     : ((1e3 + 1.25 * (islandsUnlocked - 3) * serverVars?.AncientOddPerIsland) / (1 + serverVars?.AncientArtiPCT / 100)) * 180;
 }
 
-const getOmnipotentChances = (islandsUnlocked: any, serverVars: any) => {
+export const getOmnipotentChances = (islandsUnlocked: any, serverVars: any) => {
   return 6 > islandsUnlocked
     ? 12e4 + 4e4 * islandsUnlocked
     : 1e4 * (1 + (50 * (islandsUnlocked - 5)) / 100) * ((3e3 + 3 * (islandsUnlocked - 5) * serverVars?.AncientOddPerIsland) / (1 + serverVars?.AncientArtiPCT / 100));
 }
 
-const getTranscendentChances = (islandsUnlocked: any, serverVars: any) => {
+export const getTranscendentChances = (islandsUnlocked: any, serverVars: any) => {
   return 6 > islandsUnlocked
     ? 4e7 + 6e7 * islandsUnlocked
     : 1e6
@@ -630,7 +630,7 @@ const getCaptainDisplayBonus = (captain: any, value: any) => {
   return Math.round(captain?.level * value * 10) / 10;
 }
 
-const getBoatArtifactChance = (artifacts: any, captain: any, account: any, characters: any, lootLevel = 0, speedLevel = 0) => {
+export const getBoatArtifactChance = (artifacts: any, captain: any, account: any, characters: any, lootLevel = 0, speedLevel = 0) => {
   const holesObject = account?.hole?.holesObject;
 
   // --- Additive group (÷ 100) ---

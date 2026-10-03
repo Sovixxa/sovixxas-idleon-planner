@@ -15,7 +15,7 @@ for(const name of ['communitySheets','credits','shadowCaps','loadouts']){
 context.selectSideNav('home');assert(!$('inputPanel').classList.values.has('hidden'));
 const html=fs.readFileSync('dist/index.html','utf8');
 const release=html.match(/app\.js\?v=([a-f0-9]{12})/)[1];
-for(const [,file] of html.matchAll(/(?:src|href)="([^"?]+\.(?:js|css))\?/g))assert(html.includes(`${file}?v=${release}`));
+for(const [,file] of html.matchAll(/(?:src|href)="([^"?]+\.(?:js|css))\?/g))if(!/^(?:https?:)?\/\//.test(file))assert(html.includes(file+"?v="+release));
 for(const name of ['drop-rate','combat-stat-tabs']){
  const script=fs.readFileSync(`dist/${name}.js`,'utf8');
  assert(script.includes(`-worker.js?v=${release}`));
@@ -34,3 +34,4 @@ for(const file of fs.readdirSync('dist').filter(name=>name.endsWith('.js'))){
 assert(fs.readFileSync('dist/privacy.html','utf8').includes('privacy.js?v='+release));
 assert(fs.readFileSync('dist/privacy.html','utf8').includes('styles.css?v='+release));
 console.log('All qualified Worker constructors and auxiliary HTML assets use the same release version.');
+

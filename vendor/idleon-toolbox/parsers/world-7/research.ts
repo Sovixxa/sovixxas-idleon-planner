@@ -355,7 +355,7 @@ function getGridBonusAllmulti(account: any, research: any) {
   return 1 + (companion55 + 5 * Math.min(1, gridLevel173 * companion0Active) + cloud71 + cloud72 + cloud76 + sushiBonus53) / 100;
 }
 
-function getResearchGridBonusInternal(account: any, research: any, gridIndex: any, mode: any): any {
+export function getResearchGridBonusInternal(account: any, research: any, gridIndex: any, mode: any): any {
   const gridLevels = research?.gridLevels ?? [];
   const gridObservationIndex = research?.gridObservationIndex ?? [];
   const squares = researchGridSquares || [];

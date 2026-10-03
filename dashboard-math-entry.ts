@@ -16,3 +16,4 @@ export {getMonumentMaxLinearTime} from './vendor/idleon-toolbox/parsers/world-5/
 export {getBookLvRange,getTimeToNextBooks} from './vendor/idleon-toolbox/parsers/misc';
 export {getLocalWinnerBonus} from './vendor/idleon-toolbox/parsers/world-6/summoning';
 export {getLibraryBreakdown} from './library-breakdown';
+export {getSailingArtifactData,sailingChestChance} from './sailing-artifact-math';

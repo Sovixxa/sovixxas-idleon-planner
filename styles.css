@@ -97,7 +97,7 @@ body .compact-upgrades{grid-template-columns:repeat(6,minmax(0,1fr));gap:6px;pad
 
 /* Simple two-line product name. */
 .side-brand{display:flex;align-items:center;gap:9px;padding:7px 8px 18px}
-.side-brand>.side-brand-mark{display:grid;place-items:center;flex:0 0 30px;width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,#c27aff,#5c80e7);color:#130d17;font-size:.72rem;font-weight:950}
+.side-brand>.side-brand-mark{display:block;flex:0 0 52px;width:52px;height:60px;object-fit:contain}
 .side-brand>.side-brand-copy{display:flex;width:auto;height:auto;place-items:initial;flex-direction:column;border-radius:0;background:none;color:#f4f7fb;font-size:.84rem;font-weight:850;line-height:1.15}
 .side-brand-copy strong{color:inherit;font-size:inherit;white-space:nowrap}
 .exp-plan-controls{display:flex;gap:12px;flex-wrap:wrap;margin:16px 0}.exp-plan-controls label{display:grid;gap:6px;color:#bcaecb;font-size:.78rem;font-weight:800}.exp-plan-controls select{min-width:190px;background:#10151d;color:var(--text);border:1px solid #514269;border-radius:8px;padding:10px}.exp-next{padding:24px;border:1px solid #d3ae6d;border-radius:14px;background:linear-gradient(135deg,#30263a,#1b202b);box-shadow:0 8px 30px #0003}.exp-next h3{font-size:1.45rem;margin:5px 0 12px}.exp-next-meta{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;color:#c9bdd3}.exp-next-meta strong{color:#a7e9b9}.exp-next ol,.exp-mini-steps{padding-left:24px;line-height:1.65}.exp-next li::marker,.exp-mini-steps li::marker{color:#e9cc89;font-weight:900}.exp-check{padding:10px 12px;border-left:3px solid #77cf9a;background:#182921}.exp-caveat{color:#c9bdd3;font-size:.88rem}
