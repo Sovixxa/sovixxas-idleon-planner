@@ -3,6 +3,7 @@
   "version": "0.9.9",
   "private": true,
   "scripts": {
+    "test:sushi": "node test-sushi.js && node test-sushi-browser.js",
     "pretest": "node test-live-sync.js",
     "test:cloud-sync": "node test-live-sync.js && node test-live-sync-browser.js",
     "test:dailies": "node test-dailies-model.js && node test-dailies.js",

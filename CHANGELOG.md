@@ -1,5 +1,12 @@
 # Project changelog
 
+## 2026-10-03 - Sushi Station planning
+
+- Add the station overview, discounted upgrade priorities, an interactive board planner, knowledge targets, next-discovery rewards, and linked bonus breakdowns.
+- Correct upgrade pricing and cover all 64 sushi knowledge entries, including Perfecto and daily plate EXP forecasts.
+- Preserve saved inventories in board suggestions; compare immediate bucks, fuel, and EXP without changing imported saves. Show unknown account rates explicitly when calculation fails.
+- Validate formulas against the local game client and exercise all six views on desktop and mobile (`node test-sushi.js` and `node test-sushi-browser.js`).
+
 ## 2026-09-25 - Save-aware routine filtering and compact cards
 
 - Show confirmed-ready tasks by default; move uncertain reminders to Needs checking and expose every exclusion reason in Filtered.

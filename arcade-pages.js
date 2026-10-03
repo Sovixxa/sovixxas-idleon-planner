@@ -30,6 +30,7 @@
       const groups=await root.BonusSystems.getRowsAsync(raw);
       if(host.arcadeRequest!==token||host.dataset.page!==key)return;
       const rows=groups[key]||[],state=selections.get(key)||{group:null,query:'',filter:'all',page:0};
+      if(key==='sushi'&&root.SushiPage){await root.SushiPage.render(host,raw,rows,afterRender);return;}
       if(key==='bigFish'){
         host.innerHTML='<section class="advice-fish-page"><header class="advice-fish-hero"><img src="assets/W7_fish.png" alt="Advice Fish"><div><p class="eyebrow">WORLD 7</p><h2>Advice Fish</h2><p>Permanent account bonuses, upgraded with coins.</p><strong>'+rows.filter(x=>x.status==='active').length+' / '+rows.length+' advice unlocked</strong></div></header><div class="advice-fish-list">'+rows.map(x=>{
           const lv=x.fishLevel||0,pct=100*lv/(100+lv),locked=x.status==='missing';
