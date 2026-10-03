@@ -1,0 +1,50 @@
+'use strict';
+const assert=require('node:assert/strict'),fs=require('fs'),vm=require('vm');
+const T=require('./true-dr'),M=require('./true-dr-math');
+const rows=T.rowsFrom(require('./vendor/idleon-toolbox/data/website-data/monsterDrops.json'),require('./vendor/idleon-toolbox/data/website-data/monsters.json'),require('./vendor/idleon-toolbox/data/website-data/shared-data.json').mapEnemiesArray);
+const golden=rows.filter(r=>r.source==='Crystal0'&&r.icon==='FoodG4');assert.equal(golden.length,1);assert.equal(golden[0].routes.length,5);
+const context={crystalRolls:1,rareMultiplier:1,quests:{}};
+const gold=T.dropResult(golden[0],250833.33333333334,context);assert.equal(gold.quantity,301+282+251+452+377);assert.equal(gold.chance,1);
+assert(T.dropResult(golden[0],250833.33333333334,{...context,crystalRolls:3}).quantity>gold.quantity*2.9);
+assert(T.dropResult(golden[0],250833.33333333334,{...context,rareMultiplier:1.3}).quantity>gold.quantity);
+const material=rows.find(r=>r.source==='mushG'&&r.icon==='Grasslands1');
+const loot={damage:1e20,accuracy:100,unlocked:true,base:0,perTier:[1000],hpMultiplier:1};
+assert.equal(T.multikill(material,loot),511);assert.equal(T.quantityPerDrop(material,100000,loot),11242000);
+assert.equal(T.multikill(material,{...loot,accuracy:1.5}),1);assert.equal(T.multikill(material,{...loot,unlocked:false}),1);
+assert.equal(T.multikill(material,{...loot,damage:64}),11);assert.equal(T.multikill(material,{...loot,damage:64,hpMultiplier:2}),1);
+assert.equal(T.multikill({...material,world:6},{...loot,damage:800,perTier:[0,0,0,0,0,0,1000]}),3.26);
+assert.equal(T.quantityPerDrop(material,1000,null),null);
+for(const row of rows.filter(r=>r.unsupported||r.special)){const r=T.dropResult(row,100000,loot);assert.equal(r.quantity,undefined);assert.equal(r.chance,undefined);}
+const e=(key,id,chance,quantity=1,quest='N/A')=>({key,id,chance,quantity,quest});
+const routes=[[e('0','DropTable',.5,3),e('0','Item',.5,2)]];
+assert.equal(M.evaluate(routes,100).mean,150,'Intermediate table quantities preserved');
+assert.equal(M.evaluate([[e('0','Item',.01)]],1).quantity,1,'Per-drop quantity is conditional on receiving loot');
+assert.equal(M.evaluate([[e('0','Item',.5,1,'quest')]],1,{quests:{quest:1}},{savedGates:true}).chance,0);
+assert(Math.abs(M.evaluate([[e('0','PremiumGem',.001,3)]],100000).chance-.01)<1e-12,'Direct gem scaling uses DR^0.2');
+assert.equal(M.evaluate([[e('0','TalentBook1',1,3623100)]],100000).quantity,1,'Encoded talent level is not stack size');
+// Saved death note ranks must actually contribute to per-tier multikill.
+const ctx={console,structuredClone,setTimeout};vm.createContext(ctx);for(const f of ['prayer-math-engine.js','drop-rate-model.js'])vm.runInContext(fs.readFileSync(f,'utf8'),ctx);
+const raw=JSON.parse(fs.readFileSync('../example json.txt','utf8')),P=ctx.PrayerMath,parsed=P.parseData(raw.data,raw.charNames,raw.companion,raw.guildData,raw.serverVars,raw.accountCreateTime,raw.tournament),ch=parsed.characters[0],acc=parsed.account;
+const before=P.getMultiKillPerTier(ch,parsed.characters,acc,0),changed={...acc,deathNote:{...acc.deathNote,0:{...acc.deathNote[0],rank:acc.deathNote[0].rank+50},miniBosses:{...acc.deathNote.miniBosses,rank:acc.deathNote.miniBosses.rank+20}}};
+assert(Math.abs(P.getMultiKillPerTier(ch,parsed.characters,changed,0)-before-70)<1e-8);
+console.log(`True DR: ${rows.length} unique item/source cards; merged paths, stack sizes, multikill gates, W7, Death Note, crystal rolls, quest gates and special sources passed.`);
+const db=parsed.characters.find(c=>P.getTalentBonus(c.flatTalents,'WRAITH_FORM')>=1);
+assert(db,'Fixture contains a Death Bringer with Wraith Form');
+const wraithRaw=JSON.parse(JSON.stringify(raw)),wraithData=typeof wraithRaw.data==='string'?JSON.parse(wraithRaw.data):wraithRaw.data;
+wraithData['BuffsActive_'+db.playerId]=[[195,1000]];wraithRaw.data=wraithData;
+const wraithResult=ctx.DropRateModel.calculate(wraithRaw).characters.find(c=>c.id===db.playerId);
+assert.equal(wraithResult.loot.wraith,true);assert(Number.isFinite(wraithResult.loot.damage));assert(Number.isFinite(wraithResult.loot.accuracy));
+console.log('Saved Death Bringer Wraith mode selects Grimoire stats for material multikill.');
+// Account stack modifiers apply to every relevant item, never ordinary materials.
+const stackBonuses={pack:2,goldenChance:{value:130},statueChance:{value:150},legend:600,statueUpgrade:200};
+assert.equal(M.stackBonus('FoodG4',{stackBonuses}).factor,16);
+assert.equal(M.stackBonus('EquipmentStatues1',{stackBonuses}).factor,20);
+assert.equal(M.stackBonus('Grasslands1',{stackBonuses}).factor,1);
+assert.equal(T.dropResult(golden[0],250833.33333333334,{...context,stackBonuses}).quantity,gold.quantity*16);
+assert.deepEqual(M.iterations('Crystal0',{crystalRolls:1.5,orbScore:150,gimmeChance:.25}),[[2,.25],[3,.375],[5,.375]]);
+assert.deepEqual(M.iterations('mini4a',{gimmeChance:1}),[[1,1]]);
+assert.equal(T.dropResult(golden[0],250833.33333333334,{...context,orbScore:1000}).chance,1);
+console.log('Post-drop pack and proc multipliers, Orb mixtures and Gimme priority passed.');
+// Round each material outcome before averaging; rounding a conditional mean is biased.
+const fractional=M.evaluate([[e('0','Grasslands1',.5)]],1,{}, {materialMulti:1.5,iterations:2});
+assert.equal(fractional.quantity,7/3);

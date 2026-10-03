@@ -93,7 +93,10 @@ export const getResearch = (idleonData: any, account: any, characters: any) => {
   const gridPTSearned = Math.floor(
     researchLevel + (10 * companion153 + companion153Lvl2Bonus + Math.floor(researchLevel / 10) * Math.round(1 + (Math.min(1, Math.floor(researchLevel / 60)) + gridBonus50Lv)) + getSushiBonus(account, 3) + getSushiBonus(account, 13) + Math.min(10, Math.round(fangAcquired)) + meritBonus + ([4, 57].reduce((sum, index) => sum + (research.jellyObstruction > index ? Number(researchData[47]?.[index]) || 0 : 0), 0)))
   );
-  const gridPTSavailable = Math.round(gridPTSearned - gridPTSpent);
+  // Imported snapshots can contain more spent points than decoded sources explain.
+  // Preserve the difference for diagnostics, but never expose a negative budget.
+  const gridPTSbalance = Math.round(gridPTSearned - gridPTSpent);
+  const gridPTSavailable = Math.max(0, gridPTSbalance);
 
   // Map grid index -> shape type (0=Magnifying Glass (Research EXP), 1=Optical Monocle (Insight), 2=Kaleidoscope). Game stores cell->shape in raw[1], type in raw[5][4*shapeIndex+3].
   const gridIndexToPlacementType: Record<number, any> = {};
@@ -297,6 +300,7 @@ export const getResearch = (idleonData: any, account: any, characters: any) => {
     gridPTSearned,
     gridPTSpent,
     gridPTSavailable,
+    gridPTSbalance,
     shapesOwned,
     canRotateShapes: researchLevel >= 90 ? 1 : 0,
     postyNotesOwned: Math.min(14, Math.floor(researchLevel / 10)),

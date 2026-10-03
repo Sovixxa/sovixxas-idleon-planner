@@ -1,0 +1,15 @@
+'use strict';
+const assert=require('node:assert/strict'),m=require('./breeding-exp');
+assert.equal(m.exp(1,4,2),(2+8*1.85)*2);
+const save=m.fromSave({data:{Breeding:JSON.stringify([[1,0],[2,3],[0,0,2,0,0,5,0,0,0,0,0,10]]),GemItemsPurchased:JSON.stringify(Array.from({length:120},(_,i)=>i===119?2:0)),Tasks:JSON.stringify([[],[],[[],[],[],[0,0,1]]])}});
+assert.equal(save.pets,5);assert.equal(save.capacity,8);assert.equal(save.rarity,5);assert.equal(m.fromSave({}).loaded,false);
+const o={capacity:10,rarity:10,pets:60,multi:1,shatter:0,mode:'item'};
+assert.equal(m.simulate(o,1,1000).hatches,1000);
+const a=m.simulate(o,4,20000),b=m.simulate({...o,multi:5},4,20000);
+assert.equal(a.hatches,b.hatches);assert(Math.abs(b.perEgg/a.perEgg-5)<1e-10);
+assert.equal(m.simulate({...o,rarity:0},2).locked,true);
+const refunds=m.simulate({...o,shatter:10},1,150000);
+const chance=Math.ceil(12*10**.698)/100;
+assert(Math.abs(refunds.hatches/150000-(1+chance)/(1-chance))<.06);
+assert.equal(m.optimize({...o,rarity:0},1000).best.target,1);
+console.log('Breeding EXP: formula, imports, locked rarities, multiplier invariance and Shattershell expected return passed.');

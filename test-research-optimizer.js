@@ -32,3 +32,12 @@ assert.equal(M.gridPlan(refundRaw,pureExp,{goal:'insight',budget:1}).spent,0,'di
 assert.equal(M.gridPlan(refundRaw,r=>({...evalRefund(r),canUpgradeGrid:false}),{goal:'exp',budget:1}).spent,0,'tutorial gate prevents purchasing');
 assert.equal(M.lensPlan({...state,observations:[]},[],{goal:'balanced'}).unplaced,3);
 console.log('Actual Insight rates, both additional goals, tutorial gate and empty board pass.');
+
+// A partially reconciled save must never advertise or spend negative points.
+box.onmessage({data:{raw:save}});const normalPoints=response.result.gridPTSavailable;
+const deficitSave=structuredClone(save),deficitResearch=typeof deficitSave.data.Research==='string'?JSON.parse(deficitSave.data.Research):deficitSave.data.Research;
+deficitResearch[0][0]+=normalPoints+1;deficitSave.data.Research=deficitResearch;
+box.onmessage({data:{raw:deficitSave}});assert(!response.error,response.error);
+assert.equal(response.result.gridPTSbalance,-1);assert.equal(response.result.gridPTSavailable,0);
+box.onmessage({data:{action:'grid',config:{budget:20,goal:'exp'}}});assert(!response.error,response.error);assert.equal(response.result.plan.length,0);assert.equal(response.result.spent,0);assert.equal(response.result.left,0);
+console.log('Negative Research point balance is retained for diagnostics, displayed as zero spendable, and cannot fund a purchase.');

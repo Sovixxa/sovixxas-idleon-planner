@@ -60,8 +60,7 @@ export const getRawRefinerySalts = () => {
 export const getDoubleStatueDrop = (account: any, character: any, characters: any) => {
   const tesseractBonus = getTesseractBonus(account, 18);
   const paletteBonus = getPaletteBonus(account, 19);
-  const kattelkrukPlayer = characters?.find(({ linkedDeity }: any) => linkedDeity === 8); // kattelkruk is limited to only 1 player linked.
-  const divinityMinorBonus = getMinorDivinityBonus(kattelkrukPlayer, account, 8, characters);
+  const divinityMinorBonus = (characters || []).filter((c: any) => c.linkedDeity === 8).reduce((sum: number, c: any) => sum + getMinorDivinityBonus(c, account, 8, characters), 0);
   const talentBonus = getTalentBonus(character?.flatStarTalents, 'STATUE_METALLURGY');
   
   return {

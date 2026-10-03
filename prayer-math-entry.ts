@@ -117,3 +117,10 @@ export {getRespawnRate,getPlayerSpeedBonus,getPlayerFoodBonus} from './vendor/id
 export {getCookingEff} from './vendor/idleon-toolbox/parsers/world-4/cooking';
 export {getLabEfficiency} from './vendor/idleon-toolbox/parsers/world-4/lab';
 export {getSpelunkingEfficiency} from './vendor/idleon-toolbox/parsers/world-7/spelunking';
+export {getMultiKillBase,getMultiKillPerTier,getMultiKillTiers,getMultiKillDiminished} from './vendor/idleon-toolbox/parsers/damage';
+
+export {getMonsterHpTotal} from './vendor/idleon-toolbox/parsers/damage';
+
+export {getDoubleStatueDrop,getDoubleGoldenFoodDrop} from './vendor/idleon-toolbox/parsers/misc';
+export {getLegendTalentBonus} from './vendor/idleon-toolbox/parsers/world-7/legendTalents';
+export {getSpelunkingBonus} from './vendor/idleon-toolbox/parsers/world-7/spelunking';

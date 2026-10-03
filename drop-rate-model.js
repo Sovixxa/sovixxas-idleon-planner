@@ -21,6 +21,12 @@ function ledger(result){
  if(!Number.isFinite(running)||Math.abs(running-result.dropRate)>Math.max(1,result.dropRate)*1e-10)throw new Error('Drop-rate breakdown does not reconcile with its total.');
  return rows;
 }
+// Native Grimoire_DMG / Grimoire_ACC, used instead of normal stats in Wraith Form.
+function wraithStats(bonuses,options,total,form,marauder){
+ const b=i=>Number(bonuses[i])||0,o=i=>Number(options[i])||0,log=v=>Math.log(Math.max(1,v))/2.30259;
+ const style=1+marauder*(total/100)/100;
+ return {damage:(5+b(0)+b(6)+b(16)+b(33)+b(46))*(1+form/100)*(1+(b(8)+b(28)+b(43)+b(50))/100)*(1+(o(334)*b(13)+o(335)*b(21)+o(336)*b(31))/100)*(1+b(18)*log(o(330))/100)*style,accuracy:(2+b(1)+b(12)+b(25)+b(37)+b(47))*(1+(b(7)+b(38))/100)*(1+b(41)*log(o(332))/100)*style};
+}
 function calculate(raw,M=root.PrayerMath){
  const copy=JSON.parse(JSON.stringify(raw)),d=parse(copy.data)||copy;
  if(!Object.keys(d).some(k=>/^CharacterClass_\d+$/.test(k)))return {characters:[]};
@@ -43,10 +49,19 @@ function calculate(raw,M=root.PrayerMath){
    const cove=Number(ch.mapIndex)===216&&Number(holes?.[0]?.[ch.playerId])===17;
    const normal=result.dropRate,total=cove?parsed.account.hole.caverns.crystalGlunkoCove.dropRate:normal;
    if(!Number.isFinite(total))throw new Error('Non-finite drop rate');
-   return {id:ch.playerId,name:ch.name,className:ch.class,map:ch.currentMap,total,normal,rows,missing,cove};
+   let loot={rareMultiplier:1+M.getTalentBonus(ch.flatTalents,'RARES_EVERYWHERE!')/100,crystalRolls:ch.crystalSpawnChance?.embiggener||1,quests:parse(d['QuestComplete_'+ch.playerId])||{},stamps:parse(d.StampLvM)||[],recipes:parse(d.AnvilCraftStatus)||[],storage:parse(d.InvStorageUsed)||{},stampMultiplier:1+((parsed.account.bribes?.[1]?.done?parsed.account.bribes[1].value:0)+(parsed.account.bribes?.[8]?.done?parsed.account.bribes[8].value:0))/100,hpMultiplier:M.getMonsterHpTotal(1,ch,parsed.account)};try{const stats=M.getMaxDamage(ch,parsed.characters,parsed.account);Object.assign(loot,{damage:stats.maxDamage,accuracy:stats.accuracy,unlocked:parsed.account.towers?.towersTwo>.5,base:M.getMultiKillBase(ch,parsed.characters,parsed.account),perTier:Array.from({length:7},(_,world)=>M.getMultiKillPerTier(ch,parsed.characters,parsed.account,world))});}catch{}
+   const bundles=parse(d.BundlesReceived)||{};
+   loot.stackBonuses={pack:Number(bundles.bon_k)===1?2:1,goldenChance:M.getDoubleGoldenFoodDrop(parsed.account),statueChance:M.getDoubleStatueDrop(parsed.account,ch,parsed.characters),legend:Number(M.getLegendTalentBonus(parsed.account,2))||0,statueUpgrade:Number(M.getSpelunkingBonus(parsed.account,48))||0};
+   const buffs=parse(d['BuffsActive_'+ch.playerId])||[];
+   loot.gimmeChance=buffs.some(b=>Number(b[0])===19&&Number(b[1])>100)?Math.max(0,Math.min(1,(M.getTalentBonus(ch.flatTalents,'GIMME_GIMME')-.05)/99.95)):0;
+   if(buffs.some(b=>Number(b[0])===195&&Number(b[1])>100)&&M.getTalentBonus(ch.flatTalents,'WRAITH_FORM')>=1){Object.assign(loot,wraithStats((parsed.account.grimoire?.upgrades||[]).map(u=>u.bonus),parsed.account.accountOptions||[],parsed.account.grimoire?.totalUpgradeLevels||0,M.getTalentBonus(ch.flatTalents,'WRAITH_FORM'),M.getTalentBonus(ch.flatTalents,'MARAUDER_STYLE')));loot.wraith=true;}
+   else if(buffs.some(b=>[420,585].includes(Number(b[0]))&&Number(b[1])>100)){loot.damage=null;loot.accuracy=null;}
+   loot.deathNote=Array.from({length:7},(_,i)=>parsed.account.deathNote?.[i]?.rank||0);
+   loot.miniBossNote=parsed.account.deathNote?.miniBosses?.rank||0;
+   return {loot,id:ch.playerId,name:ch.name,className:ch.class,map:ch.currentMap,total,normal,rows,missing,cove};
   }catch(error){return {id:ch.playerId,name:ch.name,className:ch.class,error:error.message,missing};}
  })};
 }
-root.DropRateModel={calculate,ledger};
+root.DropRateModel={calculate,ledger,wraithStats};
 if(typeof module!=='undefined')module.exports=root.DropRateModel;
 })(typeof window!=='undefined'?window:globalThis);

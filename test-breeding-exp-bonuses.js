@@ -1,0 +1,11 @@
+'use strict';
+const fs=require('fs'),vm=require('vm'),assert=require('node:assert/strict');
+const c={console,Date,structuredClone};vm.createContext(c);for(const f of ['dashboard-math.js','breeding-exp-bonuses-model.js'])vm.runInContext(fs.readFileSync(f,'utf8'),c);
+const raw=JSON.parse(fs.readFileSync('../example json.txt')),before=JSON.stringify(raw),m=c.BreedingExpBonusesModel.calculate(raw);
+assert.equal(JSON.stringify(raw),before);assert(c.BreedingExpBonusesModel.calculate({}).missing);
+assert.equal(m.values.length,14);assert(m.values.every(Number.isFinite));
+assert.equal(m.values[3],58,'Nothing upgrade uses slot zero, not Egg Capacity');assert.equal(m.caps[3],200);assert.equal(m.caps[4],35);assert.equal(m.caps[5],null,'Stamp material cap is not a hard cap');assert.equal(m.caps[7],null);assert.equal(m.caps[13],2.5);
+const total=(1+m.values.slice(0,11).reduce((s,v)=>s+v,0)/100)*m.values.slice(11).reduce((s,v)=>s*v,1);assert(Math.abs(total-m.total)<1e-8);
+assert(m.caps[6]>52,'Vial cap includes saved effect boosts');assert(m.maxLevels[10].includes('110'));assert(m.maxLevels[12].includes('6 currently'));
+const catalog=require('./breeding-exp-bonuses');assert.equal(catalog.rows.length,14);assert(catalog.rows.every(r=>r.where&&r.limit&&r.formula));
+console.log('Breeding bonus sources: save purity, 14 terms, total reconciliation, boosted caps and uncapped sources passed.');

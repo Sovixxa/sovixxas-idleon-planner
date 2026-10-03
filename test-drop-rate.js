@@ -51,3 +51,20 @@ if(fs.existsSync('../audit/N.js')){
 console.log('Drop Rate: roster reconciliation, save immutability, Jelly gate/pool, uncapped Glunko, Cove override and native golden-food parity pass');
 
 
+const setBundle=(a,name,owned)=>({...a,bundles:a.bundles.map(b=>b.name===name?{...b,owned}:b)});
+const noDrPack=rate(setBundle(account,'bun_p',false)),drPack=rate(setBundle(account,'bun_p',true));
+assert(Math.abs(drPack.dropRate/noDrPack.dropRate-1.2)<1e-12,'bun_p multiplies final DR by 1.2');
+const addOff=rate(setBundle(account,'bun_v',false)),addOn=rate(setBundle(account,'bun_v',true));
+assert.equal(addOn.breakdown.categories[0].sources.find(s=>s.name==='Gem Bundle2').value,2);
+assert.equal(addOff.breakdown.categories[0].sources.find(s=>s.name==='Gem Bundle2').value,0);
+assert(addOn.dropRate>addOff.dropRate,'bun_v increases the pre-Archlord pool');
+const withoutAutumn=JSON.parse(original),bundles=typeof withoutAutumn.data.BundlesReceived==='string'?JSON.parse(withoutAutumn.data.BundlesReceived):withoutAutumn.data.BundlesReceived;
+bundles.bon_k=0;withoutAutumn.data.BundlesReceived=bundles;
+const noAutumn=D.calculate(withoutAutumn).characters;
+for(let i=0;i<result.characters.length;i++){
+ assert.equal(result.characters[i].loot.stackBonuses.pack,2);
+ assert.equal(noAutumn[i].loot.stackBonuses.pack,1);
+ assert.equal(noAutumn[i].normal,result.characters[i].normal,'Autumn changes stack size, not DR');
+}
+assert.equal(M.getDoubleStatueDrop(account,ch,p.characters.map(c=>({...c,linkedDeity:-1}))).breakdown.find(b=>b.name==='Divinity').value,0,'No linked Kattlekruk means no minor statue bonus');
+console.log('Paid DR bundles, separate Autumn stack multiplier and Kattlekruk link gate passed.');
