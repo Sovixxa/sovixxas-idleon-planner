@@ -157,6 +157,7 @@ SKILL_PAGES.holeFloors={title:'Floors',world:'World 5',copy:'All 18 Hole caverns
   function selectSideNav(name){
     window.LibraryPage?.dispose();
     window.SailingArtifactChance?.dispose();
+    window.SailingTrade?.dispose();
     window.Dashboard?.dispose();
     if(name==='coral')name='coralReef';
     window.plannerQoL?.onNavigate(name);
