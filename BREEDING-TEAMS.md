@@ -16,9 +16,10 @@ Post-change fight power and spice/hour are not calculated.
 `ProgressionModels` supplies the worker-safe species, inventory, ability and
 territory snapshot. It handles `OptLacc` and `OptionsListAccount`, excludes the
 arena placeholder between Pristalle Lake and Nebulon Mantle, and excludes
-unreleased species. `breeding-team-data.js` contains territory names from the
-vendored Toolbox catalog; the final two entries use battle names because that
-catalog does not provide territory names for them.
+unreleased species. `breeding-team-data.js` contains all 26 territory names verified against the
+installed game artwork (`assets/PetTerritory2.png` through `PetTerritory27.png`).
+The October 5, 2026 audit corrected Spirit Fields, Shallow Shoals, and Murky
+Trenches. Battle names are separate from territory labels.
 
 Sources reviewed September 24, 2026:
 

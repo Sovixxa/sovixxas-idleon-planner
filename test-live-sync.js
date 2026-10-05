@@ -9,6 +9,10 @@ function redirect(){const url=new URL('https://www.legendsofidleon.com/steamsso/
   assert.equal(new URL(STEAM_LOGIN).hostname,'steamcommunity.com');
   for(const value of ['javascript:alert(1)',valid.href.replace('www.legendsofidleon.com','www.legendsofidleon.com.evil.test'),valid.href.replace('/steamsso/','/steamsso/other'),valid.href+'&openid.sig=duplicate',valid.href.replace('test-signature',''),valid.href.replace('id_res','cancel')])assert.throws(()=>steamPayload(value));
   assert(!safeError({message:'password=secret-token'}).includes('secret-token'));
+  for(const code of ['auth/invalid-credential','auth/wrong-password','auth/account-exists-with-different-credential']){
+    const message=safeError({code,message:'password=secret-token'});
+    assert.match(message,/Google/);assert.match(message,/JSON import/);assert(!message.includes('secret-token'));
+  }
   let receive,fail,unsubscribed=0,signedOut=0,allow=false;
   const applied=[],adapter={login:async()=>({uid:'account'}),currentUser:async()=>({uid:'account'}),logout:async()=>{signedOut++;},subscribe(user,next,error){receive=next;fail=error;return()=>{unsubscribed++;};}};
   const c=createController({loadAdapter:async()=>adapter,canApply:()=>allow,apply:raw=>{applied.push(raw);return raw.valid!==false;}});

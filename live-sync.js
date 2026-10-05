@@ -1,5 +1,43 @@
 (function(root){
   'use strict';
+  // Public desktop device client bundled in Idleon's own sign-in UI.
+  const GOOGLE_DEVICE_CLIENT={id:'267901585099-u6fjd75v6k9gefq7bcokcndv99riir5j',secret:'HzoZF-UKUNfFwBuz4vafwsaR'};
+  const googleError=code=>Object.assign(Error('Google sign-in failed'),{code:'google/'+code});
+  function waitForPoll(ms,signal){return new Promise((resolve,reject)=>{
+    if(signal?.aborted)return reject(googleError('cancelled'));
+    const abort=()=>{clearTimeout(timer);reject(googleError('cancelled'));};
+    const timer=setTimeout(()=>{signal?.removeEventListener('abort',abort);resolve();},ms);
+    signal?.addEventListener('abort',abort,{once:true});
+  });}
+  async function googleDeviceToken({signal,onCode=()=>{},fetcher=fetch,wait=waitForPoll,now=Date.now}={}){
+    const check=()=>{if(signal?.aborted)throw googleError('cancelled');};
+    const post=async(path,body)=>{
+      check();
+      const timeout=AbortSignal.timeout(30000);
+      const response=await fetcher('https://oauth2.googleapis.com/'+path,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams(body).toString(),credentials:'omit',referrerPolicy:'no-referrer',signal:signal?AbortSignal.any([signal,timeout]):timeout});
+      const data=await response.json();check();
+      if(!response.ok&&!data.error)throw googleError('unavailable');
+      return data;
+    };
+    const code=await post('device/code',{client_id:GOOGLE_DEVICE_CLIENT.id,scope:'email profile'});
+    if(code.error)throw googleError(code.error);
+    if(typeof code.device_code!=='string'||!code.device_code||typeof code.user_code!=='string'||!code.user_code||!Number.isFinite(code.expires_in)||code.expires_in<=0)throw googleError('unavailable');
+    const expiresAt=now()+code.expires_in*1000;
+    let interval=Math.max(5,Number(code.interval)||5)*1000;
+    onCode({userCode:code.user_code,expiresAt});
+    while(now()<expiresAt){
+      await wait(Math.min(interval,expiresAt-now()),signal);check();
+      if(now()>=expiresAt)break;
+      const result=await post('token',{client_id:GOOGLE_DEVICE_CLIENT.id,client_secret:GOOGLE_DEVICE_CLIENT.secret,device_code:code.device_code,grant_type:'urn:ietf:params:oauth:grant-type:device_code'});
+      if(now()>=expiresAt)break;
+      if(result.error==='authorization_pending')continue;
+      if(result.error==='slow_down'){interval+=5000;continue;}
+      if(result.error)throw googleError(result.error);
+      if(typeof result.id_token!=='string'||!result.id_token)throw googleError('unavailable');
+      return result.id_token;
+    }
+    throw googleError('expired_token');
+  }
   const STEAM_RETURN='https://www.legendsofidleon.com/steamsso/';
   const STEAM_LOGIN='https://steamcommunity.com/openid/login?'+new URLSearchParams({
     'openid.ns':'http://specs.openid.net/auth/2.0',
@@ -22,7 +60,11 @@
   }
   function safeError(error){
     const code=String(error?.code||'');
-    if(/invalid-credential|wrong-password|user-not-found|invalid-email/.test(code))return 'Sign-in failed. Check your Idleon email and password.';
+    if(code==='google/access_denied'||code==='google/cancelled')return 'Google sign-in cancelled. You can start again when ready.';
+    if(code==='google/expired_token')return 'Your Google sign-in code expired. Start Google sign-in again for a new code.';
+    if(code.startsWith('google/'))return 'Google sign-in could not finish. Start again, or import a JSON save.';
+    if(/invalid-email/.test(code))return 'Enter a valid email address for your Idleon account.';
+    if(/invalid-credential|wrong-password|invalid-password|user-not-found|account-exists-with-different-credential/.test(code))return 'Sign-in failed. Use the same method you use in Idleon: Google, Steam, or an Idleon email/password login. Your Google password does not belong in the email form. JSON import is also available.';
     if(/too-many-requests/.test(code))return 'Too many sign-in attempts. Please wait before trying again.';
     if(/network|unavailable|timeout/.test(code))return 'Cannot reach Idleon. Check your connection and retry.';
     if(/permission-denied|unauthenticated|token-expired|user-disabled/.test(code))return 'Idleon denied access or your session expired. Disconnect and sign in again.';
@@ -31,7 +73,7 @@
     return 'Could not connect or read this account. Retry, or disconnect and sign in again. Manual JSON import is still available.';
   }
   function createController({loadAdapter,apply,canApply=()=>true,onStatus=()=>{}}){
-    let adapterPromise,adapter,unsubscribe,epoch=0,busy=false,pending=null,lastSignature='',connected=false,logoutTask=Promise.resolve();
+    let adapterPromise,adapter,unsubscribe,epoch=0,busy=false,pending=null,lastSignature='',connected=false,logoutTask=Promise.resolve(),loginAbort;
     let status={phase:'disconnected',pending:false,lastReceived:null,lastApplied:null,message:'Not connected'};
     const publish=patch=>{status={...status,...patch,pending:!!pending,connected,busy};onStatus({...status});};
     const stop=()=>{if(unsubscribe)unsubscribe();unsubscribe=null;pending=null;lastSignature='';};
@@ -63,19 +105,20 @@
     async function connect(method,credentials){
       if(busy)return;
       const token=++epoch;stop();connected=false;busy=true;
-      publish({phase:'connecting',lastReceived:null,lastApplied:null,message:'Connecting to Idleon…'});
+      loginAbort=new AbortController();const signal=loginAbort.signal;
+      publish({phase:'connecting',method,googleCode:null,lastReceived:null,lastApplied:null,message:'Connecting to Idleon…'});
       try{
         await logoutTask;if(token!==epoch)return;
         const service=await getAdapter();if(token!==epoch)return;
-        const user=method==='resume'?await service.currentUser():await service.login(method,credentials);
+        const user=method==='resume'?await service.currentUser():await service.login(method,credentials,{signal,onCode:googleCode=>{if(token===epoch)publish({googleCode,message:'Enter the code on Google, approve access, then return here. Waiting for approval…'});}});
         if(token!==epoch){await service.logout();return;}
         if(!user){publish({phase:'disconnected',message:'Sign in to connect your account.'});return;}
-        listen(user,token);
+        publish({googleCode:null});listen(user,token);
       }catch(error){if(token===epoch)publish({phase:'error',message:safeError(error)});}
-      finally{busy=false;publish({});}
+      finally{busy=false;publish({googleCode:null});}
     }
     async function disconnect(){
-      const token=++epoch;stop();connected=false;publish({phase:'disconnected',lastReceived:null,lastApplied:null,message:'Disconnected · displayed save kept locally'});
+      const token=++epoch;loginAbort?.abort();stop();connected=false;publish({phase:'disconnected',googleCode:null,lastReceived:null,lastApplied:null,message:'Disconnected · displayed save kept locally'});
       logoutTask=logoutTask.then(()=>adapter?.logout()).catch(()=>{if(token===epoch)publish({phase:'error',message:'Updates stopped, but sign-out failed. Close this tab to end the session.'});});
       await logoutTask;
     }
@@ -96,7 +139,12 @@
     const readDoc=async (collection,id)=>{const snap=await fsSdk.getDoc(fsSdk.doc(firestore,collection,id));return snap.exists()?snap.data():null;};
     return {
       async currentUser(){await auth.authStateReady();return auth.currentUser;},
-      async login(method,credentials){
+      async login(method,credentials,options){
+        if(method==='google'){
+          const token=await googleDeviceToken(options);
+          if(options?.signal?.aborted)throw googleError('cancelled');
+          return (await authSdk.signInWithCredential(auth,authSdk.GoogleAuthProvider.credential(token))).user;
+        }
         if(method==='email')return (await authSdk.signInWithEmailAndPassword(auth,credentials.email,credentials.password)).user;
         if(method!=='steam')throw Error('Unsupported sign-in');
         const response=await fetch('https://us-central1-idlemmo.cloudfunctions.net/asil',{
@@ -135,6 +183,6 @@
       }
     };
   }
-  const api={STEAM_LOGIN,steamPayload,safeError,createController,createFirebaseAdapter};
+  const api={STEAM_LOGIN,steamPayload,safeError,createController,createFirebaseAdapter,googleDeviceToken};
   if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.IdleonLive=api;
 })(typeof window!=='undefined'?window:globalThis);

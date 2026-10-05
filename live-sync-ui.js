@@ -20,6 +20,9 @@
     $('cloudRetry').hidden=!status.connected||!['error','reconnecting'].includes(status.phase);
     $('cloudRetry').disabled=status.busy;
     for(const node of dialog.querySelectorAll('button[type="submit"],input'))node.disabled=status.busy;
+    $('cloudGoogleStart').disabled=status.busy;
+    $('cloudGoogleCodePanel').hidden=!status.googleCode;
+    $('cloudGoogleCode').textContent=status.googleCode?.userCode||'';
     if(status.connected){session(true);if(dialog.open)dialog.close();}
     if(status.phase==='disconnected')session(false);
   }
@@ -29,7 +32,10 @@
   $('cloudSteamLink').href=api.STEAM_LOGIN;
   $('cloudConnect').onclick=()=>dialog.showModal();
   $('cloudClose').onclick=()=>dialog.close();
-  dialog.addEventListener('close',()=>{$('cloudPassword').value='';$('cloudSteamUrl').value='';});
+  $('cloudGoogleStart').onclick=()=>controller.connect('google');
+  $('cloudGoogleCancel').onclick=()=>window.PlannerLiveConnection.disconnect();
+  $('cloudGoogleImport').onclick=()=>{dialog.close();$('changeJsonBtn').click();$('jsonInput').scrollIntoView({block:'center'});};
+  dialog.addEventListener('close',()=>{$('cloudPassword').value='';$('cloudSteamUrl').value='';const status=controller.getStatus();if(status.method==='google'&&status.busy&&!status.connected)window.PlannerLiveConnection.disconnect();});
   $('cloudDisconnect').onclick=()=>window.PlannerLiveConnection.disconnect();
   $('cloudRetry').onclick=()=>controller.retry();
   $('cloudApply').onclick=()=>{if(bridge.canApply())controller.applyPending();};

@@ -112,6 +112,18 @@
     <dialog id="cloudDialog" class="cloud-dialog" aria-labelledby="cloudTitle">
       <div class="section-head"><h2 id="cloudTitle">Connect your Idleon account</h2><button id="cloudClose" class="secondary" type="button" aria-label="Close account connection">Close</button></div>
       <p>Updates arrive when Idleon uploads a cloud save. Home refreshes automatically; other pages keep your work open until you apply the update.</p>
+      <section aria-labelledby="cloudGoogleTitle">
+        <h3 id="cloudGoogleTitle">Google</h3>
+        <p>Get a code, then enter it on Google and approve access using the Google account you use for Idleon. Return here to finish connecting.</p>
+        <button id="cloudGoogleStart" class="primary" type="button">Sign in with Google</button>
+        <div id="cloudGoogleCodePanel" hidden>
+          <p>Your sign-in code: <strong id="cloudGoogleCode"></strong></p>
+          <a id="cloudGoogleLink" class="file-button" href="https://www.google.com/device" target="_blank" rel="noopener noreferrer">Open Google to enter your code ↗</a>
+          <button id="cloudGoogleCancel" class="secondary" type="button">Cancel Google sign-in</button>
+        </div>
+        <p>Prefer a file? Export your save as JSON from your account tool and import it here.</p>
+        <button id="cloudGoogleImport" class="secondary" type="button">Import a JSON save</button>
+      </section>
       <details open><summary>Steam</summary>
         <p>Sign in on Steam’s website. On the resulting Idleon page, copy the entire address back here. Do not click the blue button on that page.</p>
         <a id="cloudSteamLink" class="file-button" target="_blank" rel="noopener noreferrer">Sign in through Steam ↗</a>
@@ -121,7 +133,7 @@
         </form>
       </details>
       <details><summary>Email and password</summary>
-        <p>Use your Idleon account’s email sign-in. Accounts created through Steam should use Steam above.</p>
+        <p>Use this only if you sign into Idleon with an email and an Idleon password. For Google accounts, use Google above. For Steam accounts, use Steam above.</p>
         <form id="cloudEmailForm">
           <label for="cloudEmail">Idleon email</label><input id="cloudEmail" type="email" autocomplete="username" required>
           <label for="cloudPassword">Password</label><input id="cloudPassword" type="password" autocomplete="current-password" required>

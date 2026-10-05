@@ -8,16 +8,41 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'C:/Users/Sofia/AppData/Lo
     page.on('pageerror',e=>errors.push(e.message));
     await page.route('**/*',async route=>{
       const url=new URL(route.request().url());
+      // Ads are unrelated to auth and never run in this test. All other external requests remain failures.
+      if(url.origin==='https://pagead2.googlesyndication.com')return route.abort();
       if(url.origin!=='http://localhost:7331'){external.push(url.origin);return route.abort();}
       if(url.pathname.startsWith('/__'))return route.fulfill({contentType:'application/json',body:'{}'});
       const file=path.resolve(__dirname,'.'+(url.pathname==='/'?'/index.html':decodeURIComponent(url.pathname)));
       if(!file.startsWith(__dirname+path.sep)||!fs.existsSync(file)||fs.statSync(file).isDirectory())return route.fulfill({status:404,body:''});
       let body=fs.readFileSync(file);
-      if(path.basename(file)==='live-sync.js')body=body.toString()+`\nwindow.__liveTest={logouts:0,loads:0};window.IdleonLive.createFirebaseAdapter=async()=>{window.__liveTest.loads++;return{login:async()=>({uid:'test'}),currentUser:async()=>({uid:'test'}),logout:async()=>{window.__liveTest.logouts++;},subscribe:(user,next,error)=>{window.__liveTest.next=next;window.__liveTest.error=error;return()=>{window.__liveTest.stopped=true;};}};};`;
+      if(path.basename(file)==='live-sync.js')body=body.toString()+`\nwindow.__liveTest={logouts:0,loads:0};window.IdleonLive.createFirebaseAdapter=async()=>{window.__liveTest.loads++;return{login:async(method,credentials,options)=>{window.__liveTest.method=method;if(method==='google'){options.onCode({userCode:'ABCD-EFGH'});return new Promise((resolve,reject)=>{window.__liveTest.approve=()=>resolve({uid:'test'});options.signal.addEventListener('abort',()=>reject({code:'google/cancelled'}),{once:true});});}return{uid:'test'};},currentUser:async()=>({uid:'test'}),logout:async()=>{window.__liveTest.logouts++;},subscribe:(user,next,error)=>{window.__liveTest.next=next;window.__liveTest.error=error;return()=>{window.__liveTest.stopped=true;};}};};`;
       return route.fulfill({contentType:({'.js':'text/javascript','.css':'text/css','.html':'text/html','.png':'image/png','.svg':'image/svg+xml','.json':'application/json'})[path.extname(file)]||'application/octet-stream',body});
     });
     await page.goto('http://localhost:7331/');await page.locator('#qolSearchOpen').waitFor();
     assert.equal(await page.evaluate(()=>window.__liveTest.loads),0,'Manual import must not load Firebase');
+    await page.locator('#cloudConnect').click();
+    assert.match(await page.locator('#cloudDialog').innerText(),/approve access using the Google account/);
+    await page.locator('#cloudGoogleImport').click();
+    assert.equal(await page.locator('#cloudDialog').evaluate(el=>el.open),false);
+    assert(await page.locator('#inputPanel').isVisible());
+    assert.equal(await page.evaluate(()=>document.activeElement.id),'jsonInput');
+    assert.equal(await page.evaluate(()=>window.__liveTest.loads),0,'Google import must not attempt password authentication');
+    await page.locator('#cloudConnect').click();
+    await page.locator('#cloudGoogleStart').click();
+    await page.waitForFunction(()=>document.getElementById('cloudGoogleCode').textContent==='ABCD-EFGH');
+    assert.equal(await page.locator('#cloudGoogleLink').getAttribute('href'),'https://www.google.com/device');
+    await page.setViewportSize({width:390,height:844});
+    assert(await page.locator('#cloudDialog').evaluate(el=>el.scrollWidth<=el.clientWidth+1));
+    await page.screenshot({path:'../audit/google-device-mobile.png'});
+    await page.locator('#cloudGoogleCancel').click();
+    await page.waitForFunction(()=>!document.getElementById('cloudGoogleStart').disabled);
+    assert.equal(await page.locator('#cloudGoogleCode').innerText(),'');
+    await page.locator('#cloudGoogleStart').click();
+    await page.waitForFunction(()=>document.getElementById('cloudGoogleCode').textContent==='ABCD-EFGH');
+    await page.evaluate(()=>window.__liveTest.approve());
+    await page.waitForFunction(()=>!document.getElementById('cloudDialog').open);
+    assert.equal(await page.locator('#cloudGoogleCode').innerText(),'');
+    await page.locator('#cloudDisconnect').click();
     await page.locator('#cloudConnect').click();
     assert.equal(new URL(await page.locator('#cloudSteamLink').getAttribute('href')).hostname,'steamcommunity.com');
     await page.locator('#cloudSteamUrl').fill('https://example.invalid/not-steam');await page.locator('#cloudSteamForm button').click();
