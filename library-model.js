@@ -1,6 +1,20 @@
 (function(root){
 'use strict';
 const parse=x=>{try{return typeof x==='string'?JSON.parse(x):x;}catch{return null;}};
+// Matches the Library exclusions in the bundled talent parser.
+const bookExcluded=new Set([10,11,12,23,75,79,86,87,266,267,446,447]);
+function characterBooks(characters,data,target){
+ const pretty=s=>String(s||'').replaceAll('_',' ').toLowerCase().replace(/\b\w/g,c=>c.toUpperCase());
+ return characters.map((ch,index)=>{
+  const id=ch.playerId??index, caps=parse(data[`SM_${id}`]), current=parse(data[`SL_${id}`]), other=parse(data[`SLpre_${id}`]),active=Number(ch.selectedTalentPreset)||0;
+  const talents=(ch.flatTalents||[]).filter(t=>t.skillIndex>=0&&t.skillIndex<615&&!bookExcluded.has(t.skillIndex)).map(t=>{
+   const tid=t.skillIndex,cap=Number(caps?.[tid]),known=Number.isFinite(cap)&&cap>0;
+   const levels=active===1?[other?.[tid],current?.[tid]]:[current?.[tid],other?.[tid]];
+   return {id:tid,name:pretty(t.name),cap:known?cap:null,needsBook:known&&cap<target,levels:levels.map(v=>v==null?null:Number(v))};
+  });
+  return {id,name:ch.name||`Character ${index+1}`,className:pretty(ch.class),active,talents};
+ });
+}
 function build(account,characters,data,M,at){
  const range=M.getBookLvRange(account),atom=account.atoms?.atoms?.[7]?.level||0;
  const summoning=account.summoning?.winnerBonuses?.find(x=>x.bonus==='+{ Library Max')?.value||0;
@@ -29,7 +43,7 @@ function build(account,characters,data,M,at){
  const timers=targets.map(target=>{let seconds=target<=count?0:-progress;for(let n=count;n<target;n++)seconds+=M.getTimeToNextBooks(n,account,characters,data).value;return {target,label:target===count+1?'Next checkout':`${target} checkouts`,ready:target<=count,at:at+Math.max(0,seconds)*1000};});
  const subtotal=sources.reduce((n,s)=>n+s.value,0);
  const paid={owned,packValue,packPotential,withoutPack:Math.round(subtotal-packValue),withPack:Math.round(subtotal-packValue+packPotential),burningPurchases:purchases[113]||0};
- return {...range,sources,paid,breakdown:M.getLibraryBreakdown?.(account),count:timerKnown?count:null,at,unlocked:Number(parse(data.Tower)?.[1])>0,automation:Number(parse(data.Tower)?.[8])>=5,timers,speed:speed.breakdown?.categories?.flatMap(c=>c.sources)||[]};
+ return {...range,characters:characterBooks(characters,data,range.maxBookLv),sources,paid,breakdown:M.getLibraryBreakdown?.(account),count:timerKnown?count:null,at,unlocked:Number(parse(data.Tower)?.[1])>0,automation:Number(parse(data.Tower)?.[8])>=5,timers,speed:speed.breakdown?.categories?.flatMap(c=>c.sources)||[]};
 }
 function calculate(raw,M=root.DashboardMath){
  raw=structuredClone(raw||{});const data=parse(raw.data)||raw;
@@ -40,6 +54,6 @@ function calculate(raw,M=root.DashboardMath){
  const OriginalDate=root.Date;root.Date=class extends OriginalDate{constructor(...args){super(...(args.length?args:[at||OriginalDate.now()]));}static now(){return at||OriginalDate.now();}};
  try{const parsed=M.parseData(data,raw.charNames,raw.companion,raw.guildData,raw.serverVars||{},raw.accountCreateTime,raw.tournament);return build(parsed.account,parsed.characters,data,M,at);}finally{root.Date=OriginalDate;}
 }
-root.LibraryModel={build,calculate};
+root.LibraryModel={build,calculate,characterBooks};
 if(typeof module!=='undefined')module.exports=root.LibraryModel;
 })(globalThis);

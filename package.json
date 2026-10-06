@@ -17,6 +17,8 @@
     "build:prayer-math": "node build-prayer-math.js",
     "build:dashboard-math": "node build-dashboard-math.js",
     "test:dashboard": "node test-dashboard-model.js && node test-dashboard-browser.js",
+    "test:outpost-eta": "node test-outpost-eta.js && node test-outpost-eta-browser.js",
+    "audit:outpost-eta": "node test-outpost-client.js && node test-outpost-eta.js && node test-outpost-eta-browser.js",
     "test:fountain": "node test-fountain-optimizer.js && node test-fountain-timers.js",
     "test:fountain-client": "node test-fountain-client.js",
     "test:fountain-browser": "node test-fountain-browser.js",

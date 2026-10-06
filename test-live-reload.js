@@ -1,12 +1,12 @@
 'use strict';
 const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
-function fixture(hostname='localhost'){
+function fixture(hostname='localhost',canReload=()=>true){
   const events={},visibility={},streams=[];let reloads=0,saves=0;
   const doc={readyState:'loading',visibilityState:'visible',addEventListener:(k,v)=>visibility[k]=v,removeEventListener:k=>delete visibility[k]};
   const c={document:doc,location:{hostname,reload(){reloads++;}},addEventListener:(k,v)=>events[k]=v,removeEventListener:k=>delete events[k],EventSource:class{constructor(){this.events={};streams.push(this);}addEventListener(k,v){this.events[k]=v;}close(){this.closed=true;}}};c.window=c;
   vm.runInNewContext(fs.readFileSync('live-reload.js','utf8'),c);
   const badge={textContent:'',classList:{add(){},remove(){}}};
-  const stop=c.PlannerLiveReload.start({badge,beforeReload(){saves++;}});
+  const stop=c.PlannerLiveReload.start({badge,canReload,beforeReload(){saves++;}});
   return{doc,events,visibility,streams,stop,badge,get reloads(){return reloads;},get saves(){return saves;}};
 }
 const f=fixture();assert.equal(f.streams.length,0,'Never open a persistent connection before page load');
@@ -20,3 +20,5 @@ f.events.pageshow();assert.equal(f.streams.length,3);f.events.pagehide();assert(
 f.stop();assert(!f.visibility.visibilitychange);
 const hosted=fixture('example.com');assert.equal(hosted.streams.length,0);assert.equal(hosted.badge.textContent,'STATIC MODE');
 console.log('Live reload: starts after load, releases hidden tabs, resumes safely, ignores stale events and skips hosted sites');
+
+const deferred=fixture('localhost',()=>false);deferred.doc.readyState='complete';deferred.events.load();deferred.streams[0].events.reload();assert.equal(deferred.reloads,0);assert.match(deferred.badge.textContent,/UPDATE READY/);deferred.badge.onclick();assert.equal(deferred.reloads,1);

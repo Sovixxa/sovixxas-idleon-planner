@@ -805,7 +805,7 @@ SKILL_PAGES.holeFloors={title:'Floors',world:'World 5',copy:'All 18 Hole caverns
       const nextState=E.parseInput(text),nextExport=nextState.rawRoot;
       if(!restored&&!live)window.PlannerLiveConnection?.disconnect();
       const returnPage=typeof window!=='undefined'?window.plannerQoL?.lastPage():null;
-      state=nextState;loadedExport=nextExport;$('workspace').classList.remove('hidden');$('jsonInput').value='';persistInput();$('inputPanel').classList.add('hidden');$('changeJsonBtn').classList.remove('hidden');selectSideNav('home');renderHome();
+      state=nextState;loadedExport=nextExport;window.OutpostETA?.observe(nextExport);$('workspace').classList.remove('hidden');$('jsonInput').value='';persistInput();$('inputPanel').classList.add('hidden');$('changeJsonBtn').classList.remove('hidden');selectSideNav('home');renderHome();
       $('navJelly').disabled=state.hasJelly===false;$('navJelly').title=state.hasJelly===false?'Jelly Operator data is not available in this export. Other account pages still work.':'';
       if(!live)$('workspace').scrollIntoView({behavior:'smooth',block:'start'});
       if(typeof window!=='undefined'){window.plannerQoL?.onImport(nextExport);if(returnPage&&returnPage!=='home')selectSideNav(returnPage);}
@@ -821,7 +821,7 @@ SKILL_PAGES.holeFloors={title:'Floors',world:'World 5',copy:'All 18 Hole caverns
   };
 
   $('parseBtn').addEventListener('click',()=>loadText($('jsonInput').value));
-  $('clearBtn').addEventListener('click',()=>{window.PlannerLiveConnection?.disconnect();window.Dashboard?.dispose();stopPracticePlayback();practice=null;$('worldContent').decodeRequest=null;$('worldContent').dataset.page='';$('worldContent').innerHTML='';state=null;loadedExport=null;lastResult=null;currentArrangement=null;$('jsonInput').value='';$('workspace').classList.add('hidden');$('inputPanel').classList.remove('hidden');$('changeJsonBtn').classList.add('hidden');clearFail();try{sessionStorage.removeItem(SESSION_KEY);}catch(_){}});
+  $('clearBtn').addEventListener('click',()=>{window.OutpostETA?.clear();window.PlannerLiveConnection?.disconnect();window.Dashboard?.dispose();stopPracticePlayback();practice=null;$('worldContent').decodeRequest=null;$('worldContent').dataset.page='';$('worldContent').innerHTML='';state=null;loadedExport=null;lastResult=null;currentArrangement=null;$('jsonInput').value='';$('workspace').classList.add('hidden');$('inputPanel').classList.remove('hidden');$('changeJsonBtn').classList.add('hidden');clearFail();try{sessionStorage.removeItem(SESSION_KEY);}catch(_){}});
   $('changeJsonBtn').addEventListener('click',()=>{$('inputPanel').classList.remove('hidden');$('changeJsonBtn').classList.add('hidden');$('jsonInput').focus();});
   $('rememberTab').addEventListener('change',persistInput);
   $('jsonInput').addEventListener('input',()=>{if($('rememberTab').checked)persistInput();});
@@ -1093,7 +1093,7 @@ SKILL_PAGES.holeFloors={title:'Floors',world:'World 5',copy:'All 18 Hole caverns
   // Background tabs must not occupy the browser's limited localhost connections.
   window.plannerQoL=window.PlannerQoL?.init({pages:SKILL_PAGES,navigate:selectSideNav});
   $('clearBtn').addEventListener('click',()=>window.plannerQoL?.clear());
-  window.PlannerLiveReload?.start({badge:$('liveBadge'),beforeReload:persistInput});
+  window.PlannerLiveReload?.start({badge:$('liveBadge'),beforeReload:persistInput,canReload:()=>!(window.plannerQoL?.lastPage()==='royalArmory'&&document.querySelector('[data-mc-tab=outpostEta][aria-selected=true]'))});
 
   try{
     const observed=sessionStorage.getItem(OBS_KEY);if(observed)$('observedTime').value=observed;

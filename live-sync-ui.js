@@ -27,7 +27,7 @@
     if(status.phase==='disconnected')session(false);
   }
   const controller=api.createController({loadAdapter:api.createFirebaseAdapter,apply:bridge.apply,
-    canApply:()=>!paused&&bridge.canAutoApply(),onStatus:draw});
+    canApply:()=>!paused&&bridge.canAutoApply(),onStatus:draw,onReceive:raw=>{if(!paused)window.OutpostETA?.observe(raw);}});
   window.PlannerLiveConnection={disconnect:()=>{session(false);return controller.disconnect();}};
   $('cloudSteamLink').href=api.STEAM_LOGIN;
   $('cloudConnect').onclick=()=>dialog.showModal();

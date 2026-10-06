@@ -72,7 +72,7 @@
     // Never render SDK/server error text: it may contain credentials or URLs.
     return 'Could not connect or read this account. Retry, or disconnect and sign in again. Manual JSON import is still available.';
   }
-  function createController({loadAdapter,apply,canApply=()=>true,onStatus=()=>{}}){
+  function createController({loadAdapter,apply,canApply=()=>true,onStatus=()=>{},onReceive=()=>{}}){
     let adapterPromise,adapter,unsubscribe,epoch=0,busy=false,pending=null,lastSignature='',connected=false,logoutTask=Promise.resolve(),loginAbort;
     let status={phase:'disconnected',pending:false,lastReceived:null,lastApplied:null,message:'Not connected'};
     const publish=patch=>{status={...status,...patch,pending:!!pending,connected,busy};onStatus({...status});};
@@ -96,6 +96,8 @@
         if(token!==epoch)return;
         if(packet.waiting){publish({phase:'reconnecting',message:'Waiting for the server. The displayed save may be out of date.'});return;}
         const signature=JSON.stringify(packet.raw);
+        // Read-only sampling can continue while the UI defers applying a save.
+        try{onReceive(packet.raw);}catch{/* Optional observers must not interrupt sync. */}
         if(signature===lastSignature){pending=null;publish({phase:'connected',message:packet.warning||'Connected · save unchanged'});return;}
         pending={raw:packet.raw,signature,warning:packet.warning};
         publish({phase:'connected',lastReceived:Date.now(),message:packet.warning||'New cloud save received'});

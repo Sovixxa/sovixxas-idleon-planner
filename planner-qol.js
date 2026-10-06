@@ -164,7 +164,7 @@
     }
     const content=doc.getElementById('worldContent');
     function fieldKey(el){if(el.id)return 'field:#'+el.id;return 'field:'+el.tagName+':'+(el.name||el.getAttribute('aria-label')||el.getAttribute('placeholder')||Array.from(el.attributes).filter(a=>a.name.startsWith('data-')).map(a=>a.name).join('|'));}
-    const controls=()=>[...content.querySelectorAll('select,input[type="search"],input[type="checkbox"]')].filter(el=>!el.closest('.dailies')).filter(el=>el.id||el.name||el.getAttribute('aria-label')||el.getAttribute('placeholder')||Array.from(el.attributes).some(a=>a.name.startsWith('data-')));
+    const controls=()=>[...content.querySelectorAll('select,input[type="search"],input[type="checkbox"]')].filter(el=>!el.closest('.dailies,.outpost-eta')).filter(el=>el.id||el.name||el.getAttribute('aria-label')||el.getAttribute('placeholder')||Array.from(el.attributes).some(a=>a.name.startsWith('data-')));
     const tabKey=el=>Array.from(el.attributes).find(a=>(/^data-.*(?:tab|page|loadout|preset)$/.test(a.name)||a.name==='data-category')&&!['data-skill-tab','data-hole-group','data-page','data-review-page'].includes(a.name));
     const pref=()=>settings.pages[current]||(settings.pages[current]={});
     content.addEventListener('input',remember,true);content.addEventListener('change',remember,true);

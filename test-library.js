@@ -30,3 +30,11 @@ let model=M.build(account,[],data,fakeMath,1000000);assert.equal(model.timers[0]
 account.accountOptions[55]=20;model=M.build(account,[],data,fakeMath,1000000);assert(model.timers.find(t=>t.target===20).ready);assert.equal(model.timers[0].target,21);assert(model.timers.find(t=>t.target===40).at>model.timers[0].at);
 model=M.build(account,[],data,fakeMath,null);assert.equal(model.count,null);assert.equal(model.timers.length,0);
 console.log('Library: cap reconciliation, complete save, non-mutating decode, timestamp restoration, increasing waits, ready milestones, and missing timestamp pass.');
+
+const tracked=M.characterBooks([{playerId:0,name:'Test',selectedTalentPreset:1,flatTalents:[{skillIndex:0,name:'HEALTH'},{skillIndex:10,name:'EXCLUDED'},{skillIndex:1,name:'MANA'},{skillIndex:615,name:'STAR'}]}],{SM_0:{0:125,1:150},SL_0:{0:0,1:150},SLpre_0:{0:100,1:0}},150);
+assert.equal(tracked[0].talents.length,2);
+assert.equal(tracked[0].talents[0].needsBook,true);
+assert.deepEqual(Array.from(tracked[0].talents[0].levels),[100,0]);
+assert.equal(tracked[0].talents[1].needsBook,false);
+assert(full.characters.length>0);assert(full.characters[0].talents.length>0);
+console.log('Library character tracking: eligibility, zero points, preset order, and book target pass.');
