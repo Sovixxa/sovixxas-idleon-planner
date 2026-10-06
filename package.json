@@ -18,7 +18,7 @@
     "build:dashboard-math": "node build-dashboard-math.js",
     "test:dashboard": "node test-dashboard-model.js && node test-dashboard-browser.js",
     "test:outpost-eta": "node test-outpost-eta.js && node test-outpost-eta-browser.js",
-    "audit:outpost-eta": "node test-outpost-client.js && node test-outpost-eta.js && node test-outpost-eta-browser.js",
+    "audit:outpost-eta": "node test-outpost-client.js && node test-outpost-eta.js && node test-outpost-optimizer.js && node test-outpost-eta-browser.js",
     "test:fountain": "node test-fountain-optimizer.js && node test-fountain-timers.js",
     "test:fountain-client": "node test-fountain-client.js",
     "test:fountain-browser": "node test-fountain-browser.js",
@@ -51,7 +51,8 @@
     "test:777": "node test-sailing-trade.js && node test-sailing-trade-browser.js",
     "test:true-dr": "node test-true-dr.js && node test-true-dr-browser.js",
     "test:true-dr-client": "node test-true-dr-client.js",
-    "test:breeding-exp": "node test-breeding-exp.js && node test-breeding-exp-bonuses.js && node test-breeding-exp-browser.js"
+    "test:breeding-exp": "node test-breeding-exp.js && node test-breeding-exp-bonuses.js && node test-breeding-exp-browser.js",
+    "test:outpost-optimizer": "node test-outpost-optimizer.js && node test-outpost-eta-browser.js"
   },
   "devDependencies": {
     "esbuild": "0.28.1"

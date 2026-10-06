@@ -113,6 +113,18 @@ export function getOutpostCombatContext(account:any,characters:any[],raw:any,map
    GRADED_RATE:['No direct clearing bonus','Drop rate, not extra outpost credit.']
   };
   const skills=Object.entries(skillNotes).map(([name,note]:any)=>{const t=[...c.flatTalents,...(c.flatStarTalents||[])].find((t:any)=>t.name===name);return {name,level:t?.level||0,baseLevel:t?.baseLevel||0,superTalent:!!t?.isSuperTalent,equipped:equipped(name),active:active(name),category:note[0],note:note[1]};});
-  return {index,currentMap:c.mapIndex,cards,accountCoverage,orb:orbContext,name:c.name||`Character ${index+1}`,hasDI,knowsDI:talent('DIVINE_INTERVENTION')>0,diCritBonus:talent('DIVINE_INTERVENTION'),riChance,riMobs,guardianEquipped:equipped('GUARDIAN_DISCIPLE'),guardianDuration,knightlyDuration,knightlyEnhancement:enhancement,skills,activeBuffs:(c.activeBuffs||[]).map((t:any)=>t.name),creditPerKill:arm(58)>=1?(1+arm(58)/100)*clear:0,militiaPerHour:4000*(1+arm(23)/100)*clear,warbound,armory:arm(58),militiaArmory:arm(23),orblet:orb(3),fish,jelly:jelly(2),maps};
+  const totalArmory=levels.reduce((sum:number,v:any)=>sum+(Number(v)||0),0);
+  const upgrades=[...([58,23].map(id=>{const u=armoryUpgrades[id],level=Number(levels[id]||0);return {key:id===58?'armory':'militiaArmory',name:u.name.replaceAll('_',' '),level,maxLevel:u.maxLevel,step:u.bonusPerLevel,unlocked:level>0||totalArmory>=u.unlockTotalLevels,where:'Royal Armory'};})),...([3].map(id=>{const u=orbletMarket[id],level=Number(market[id]||0);return {key:'orblet',name:'Orblet clearing bonus',level,maxLevel:u.maxLevel,step:Math.floor((level+1)*u.bonusPerLevel)-orb(id),unlocked:true,where:'Orblet Market'};}))];
+  const militiaByWorld=Array.from({length:8},(_,w)=>(parse(g[6+2*w])||[]).filter((v:any)=>Number(v)===4).length);
+  const crystalCards=['Poop','Demon_Genie'].map(name=>{const card=Object.values(account.cards||{}).find((v:any)=>v.displayName?.replaceAll(' ','_')===name) as any;return {name:name.replaceAll('_',' '),owned:!!(card?.amount>0),equipped:cards.some((v:any)=>v.name.replaceAll(' ','_')===name)};});
+  const warboundTalent=c.flatTalents.find((t:any)=>t.name==='WARBOUND_POLITICS');
+  const regalTalent=c.flatTalents.find((t:any)=>t.name==='REGAL_INTERVENTION');
+  const starTalent=c.flatStarTalents?.find((t:any)=>t.name==='CRYSTALS_4_DAYYS');
+  const optimizerInputs={regalShop:{level:Number(market[5]||0),maxLevel:orbletMarket[5].maxLevel,step:orbletMarket[5].bonusPerLevel},warbound:warboundTalent?{x1:warboundTalent.x1,x2:warboundTalent.x2}:null,
+   regal:regalTalent?.level>0?{level:regalTalent.level,x1:regalTalent.x1,x2:regalTalent.x2,y1:regalTalent.y1,y2:regalTalent.y2,market:orb(5)}:null,
+   crystalTalent:starTalent?.level>0?{level:starTalent.level,x1:starTalent.x1,x2:starTalent.x2}:null,
+   fish:account.adviceFish?.upgrades?.[6]?{level:account.adviceFish.upgrades[6].level,scale:account.adviceFish.upgrades[6].x2}:null};
+  const ownedCombatCards=Object.values(account.cards||{}).filter((v:any)=>v.amount>0&&/respawn|crystal|accuracy|damage|crit/i.test(v.effect||'')).map((v:any)=>({name:v.displayName,effect:v.effect,bonus:calcCardBonus(v),equipped:cards.some((e:any)=>e.name===v.displayName)}));
+  return {optimizerInputs,ownedCombatCards,upgrades,militiaByWorld,crystalCards,index,currentMap:c.mapIndex,cards,accountCoverage,orb:orbContext,name:c.name||`Character ${index+1}`,hasDI,knowsDI:talent('DIVINE_INTERVENTION')>0,diCritBonus:talent('DIVINE_INTERVENTION'),riChance,riMobs,guardianEquipped:equipped('GUARDIAN_DISCIPLE'),guardianDuration,knightlyDuration,knightlyEnhancement:enhancement,skills,activeBuffs:(c.activeBuffs||[]).map((t:any)=>t.name),creditPerKill:arm(58)>=1?(1+arm(58)/100)*clear:0,militiaPerHour:4000*(1+arm(23)/100)*clear,warbound,armory:arm(58),militiaArmory:arm(23),orblet:orb(3),fish,jelly:jelly(2),maps};
  });
 }
