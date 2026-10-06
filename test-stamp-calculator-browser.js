@@ -20,6 +20,17 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'C:/Users/Sofia/AppData/Lo
  await page.evaluate(()=>window.dispatchEvent(new CustomEvent('idleon:navigate',{detail:'stamps'})));
  await page.locator('#stampStatus').waitFor({timeout:60000});
  assert(await page.locator('#stampRows tr').count()>100);
+ const materialRows=await page.evaluate(async raw=>{const report=StampOptimizer.model(await StampCalculator.load(raw));return report.rows.map(r=>({name:r.name,categories:UpgradeMaterials.stamp(r)}));},raw);
+ const materialOptions=await page.locator('#stampMaterial option').allTextContents();
+ for(const category of materialOptions.filter(s=>s!=='All')){
+  await page.locator('#stampMaterial').selectOption(category);
+  const expected=materialRows.filter(r=>r.categories.includes(category));
+  assert.equal(await page.locator('#stampRows tr').count(),expected.length,category+' row count');
+  const text=await page.locator('#stampRows').innerText();
+  for(const row of expected)assert(text.includes(row.name),category+': '+row.name);
+  for(const name of await page.locator('.stamp-opt-todo h4').allTextContents())assert(expected.some(r=>r.name===name),category+' recommendation: '+name);
+ }
+ await page.locator('#stampMaterial').selectOption('All');
  await page.locator('#stampGoal').selectOption('0.99');await page.locator('#stampReserve').selectOption('2');
  await page.locator('#stampStatus').selectOption('Clear inventory');assert.match(await page.locator('#stampRows').innerText(),/Clear inventory/);
  await page.locator('#stampStatus').selectOption('Carry blocked');

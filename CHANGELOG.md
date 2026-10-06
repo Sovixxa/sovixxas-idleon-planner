@@ -1,5 +1,12 @@
 # Project changelog
 
+## 2026-10-06 - Bubble and stamp material filters
+
+- Add an Upgrade material selector to both upgrade planners, filtering recommendations and full tables together while preserving existing status, search, and spending filters.
+- Classify all 185 catalogued upgrade resources into 25 categories, including logs, ores, bars, equipment, food, drops, skill resources, and special currencies. Generate the shared map with `node build-upgrade-materials.js` when catalogs change.
+- Stamp filtering follows the cap-unlock material even during coin-level steps; bubbles match any required resource, including liquids.
+- Verify every available category and its recommendations against catalog rows in both browser suites, with existing desktop/mobile and model checks.
+
 ## 2026-10-03 - Sushi Station planning
 
 - Add the station overview, discounted upgrade priorities, an interactive board planner, knowledge targets, next-discovery rewards, and linked bonus breakdowns.

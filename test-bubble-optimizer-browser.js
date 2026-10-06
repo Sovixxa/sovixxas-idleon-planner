@@ -22,14 +22,28 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'C:/Users/Sofia/AppData/Lo
  await page.locator('.bubble-optimizer').waitFor({timeout:60000});
  await page.waitForFunction(()=>!document.querySelector('.bubble-optimizer .review-note').textContent.includes('loading or unavailable'),{},{timeout:60000});
  assert.equal(await page.locator('.bubble-optimizer tbody tr').count(),133);
+ const materialRows=await page.evaluate(async raw=>{const report=BubbleOptimizer.model(raw,ALCHEMY_CATALOG);return report.rows.map(r=>({name:r.name,categories:UpgradeMaterials.bubble(r)}));},raw);
+ const materialOptions=await page.locator('#bubbleMaterial option').allTextContents();
+ for(const category of materialOptions.filter(s=>s!=='All')){
+  await page.locator('#bubbleMaterial').selectOption(category);
+  const expected=materialRows.filter(r=>r.categories.includes(category));
+  assert.equal(await page.locator('.bubble-optimizer tbody tr').count(),expected.length,category+' row count');
+  const text=await page.locator('.bubble-optimizer tbody').innerText();
+  for(const row of expected)assert(text.includes(row.name),category+': '+row.name);
+  for(const name of await page.locator('.bubble-todo h4 strong').allTextContents())assert(expected.some(r=>r.name===name),category+' recommendation: '+name);
+ }
+ await page.locator('#bubbleMaterial').selectOption('All');
  await page.locator('#bubbleClicks').fill('2');await page.locator('#bubbleClicks').dispatchEvent('change');
  await page.locator('#bubbleMethod').selectOption('Candy / materials');
  assert(await page.locator('[data-candy-yield]').count()>0);
+ assert.equal(await page.locator('[data-bubble-details][open]').count(),0);
+ await page.locator('article').filter({has:page.locator('[data-candy-yield]')}).first().locator('summary').click();
  await page.locator('[data-candy-yield]').first().fill('1000000000');await page.locator('[data-candy-yield]').first().dispatchEvent('change');
  assert.match(await page.locator('.bubble-todo').innerText(),/2 candies for this session/);
  assert(await page.locator('.bubble-todo .bubble-name img').first().evaluate(img=>img.complete&&img.naturalWidth>0));
  await page.locator('#bubbleMethod').selectOption('Atoms');
  assert(await page.locator('.bubble-todo article').count()>0);
+ if(!await page.locator('.bubble-todo article details').first().evaluate(el=>el.open))await page.locator('.bubble-todo article').first().locator('summary').click();
  await page.locator('#bubbleAtomClicks').fill('1');await page.locator('#bubbleAtomClicks').dispatchEvent('change');
  assert.match(await page.locator('.bubble-todo article').first().innerText(),/This session: 1 clicks/);
  await page.locator('#bubbleAtomClicks').fill('0');await page.locator('#bubbleAtomClicks').dispatchEvent('change');
@@ -38,7 +52,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'C:/Users/Sofia/AppData/Lo
  await page.locator('#bubbleStatus').selectOption('Capped');assert(await page.locator('.bubble-optimizer tbody tr').count()>0);
  await page.locator('#bubbleStatus').selectOption('All');await page.locator('#bubbleSearch').fill('gifts');assert.equal(await page.locator('.bubble-optimizer tbody tr').count(),1);
  await page.locator('#bubbleSearch').fill('');await page.locator('#bubbleGoal').selectOption('0.99');await page.locator('#bubbleClass').selectOption('matching');
- const marks=page.locator('[data-bubble-done]');if(await marks.count()){const id=await marks.first().getAttribute('data-bubble-done');await marks.first().click();assert.equal(await page.locator('[data-bubble-done="'+id+'"]').count(),0);await page.locator('[data-bubble-reset]').click();assert.equal(await page.locator('[data-bubble-done="'+id+'"]').count(),1);}
+ const marks=page.locator('[data-bubble-done]');if(await marks.count()){const id=await marks.first().getAttribute('data-bubble-done');await marks.first().evaluate(button=>{button.closest('details').open=true;});await marks.first().click();assert.equal(await page.locator('[data-bubble-done="'+id+'"]').count(),0);await page.locator('[data-bubble-reset]').click();assert.equal(await page.locator('[data-bubble-done="'+id+'"]').count(),1);}
  await page.locator('[data-bubble-collection]').click();await page.locator('.alchemy-catalog').waitFor();await page.locator('#backBubbleOptimizer').click();await page.locator('.bubble-optimizer').waitFor();
  await page.evaluate(()=>window.scrollTo(0,0));await page.screenshot({path:'../audit/bubble-optimizer-desktop.png'});
  await page.setViewportSize({width:390,height:844});assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'mobile overflow');await page.screenshot({path:'../audit/bubble-optimizer-mobile.png'});
