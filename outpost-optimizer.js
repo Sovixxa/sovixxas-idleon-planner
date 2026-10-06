@@ -7,6 +7,12 @@ function analyze(rows,c,{mapId,seconds=10,di=c?.hasDI,sample,levels=1,targets={}
  const fit=Model.inferWaveTime(row,c,sample,di),wave=fit?.seconds??seconds;
  const p=Model.estimate(row,c,wave,di),cal=Model.calibrateOrb(row,c,p,sample),base=cal||p;
  const eta=rate=>rate>0?row.remaining/rate*3600:null;
+ // Re-solve finite crystal boosts when an upgrade changes the completion horizon.
+ const projectionWave=cal&&fit?fit.slow:wave;
+ const finiteBoost=p.guaranteed>0&&(!cal||!!fit);
+ const projectRate=(variant,targetRow=row,targetDi=di)=>finiteBoost
+  ?Model.estimate(targetRow,variant,projectionWave,targetDi).creditPerHour
+  :base.activeKills*variant.creditPerKill+targetRow.militia*variant.militiaPerHour;
  const actions=[],combinedOverrides={},editors={};
  const batch=Math.max(1,Math.min(1000,Math.floor(Number(levels)||1)));
  function targetLevel(id,current,max=100000){
@@ -22,13 +28,13 @@ function analyze(rows,c,{mapId,seconds=10,di=c?.hasDI,sample,levels=1,targets={}
   if(!u.unlocked||!(u.level<u.maxLevel)||!(u.step>0))continue;
   const targetLv=targetLevel(u.key,u.level,u.maxLevel),added=targetLv-u.level,target=c[u.key]+u.step*added;
   const variant=Model.customize(c,{[u.key]:target});
-  const rate=base.activeKills*variant.creditPerKill+row.militia*variant.militiaPerHour;
+  const rate=projectRate(variant);
   if(rate>base.creditPerHour+1e-8)combinedOverrides[u.key]=target;
-  add(u.key,`${u.name}: level ${u.level} → ${u.level+added} (+${added})`,rate,`${u.where} · ${c[u.key].toFixed(1)}% → ${target.toFixed(1)}%. Same physical kill pace.`,"Clearing bonus");
+  add(u.key,`${u.name}: level ${u.level} → ${u.level+added} (+${added})`,rate,`${u.where} · ${c[u.key].toFixed(1)}% → ${target.toFixed(1)}%. Same combat setup; finite crystal boosts are recalculated for the new completion time.`,"Clearing bonus");
  }
  const inputs=c.optimizerInputs||{};
  function creditTarget(key,title,target,note,kind='Clearing bonus'){
-  const v=Model.customize(c,{[key]:target}),rate=base.activeKills*v.creditPerKill+row.militia*v.militiaPerHour;
+  const v=Model.customize(c,{[key]:target}),rate=projectRate(v);
   if(rate>base.creditPerHour+1e-8)combinedOverrides[key]=target;
   add(key,title,rate,note,kind);
  }
@@ -43,7 +49,7 @@ function analyze(rows,c,{mapId,seconds=10,di=c?.hasDI,sample,levels=1,targets={}
  function combatTarget(id,title,variant,note,seconds=wave){
   if(!(p.activeKills>0)||cal&&!fit)return;
   const v=Model.estimate(row,variant,seconds,di);
-  add(id,title,base.activeKills*(v.activeKills/p.activeKills)*c.creditPerKill+base.militia,note,id==='chocolatey'?'Chip setup':'Talent upgrade');
+  add(id,title,finiteBoost?projectRate(variant):base.activeKills*(v.activeKills/p.activeKills)*c.creditPerKill+base.militia,note,id==='chocolatey'?'Chip setup':'Talent upgrade');
  }
  function changeMap(change){return {...c,maps:c.maps.map(m=>m.id===row.id?change(structuredClone(m)):m)};}
  if(di&&inputs.regal){const t=inputs.regal,l=targetLevel('regal',t.level);
@@ -69,14 +75,14 @@ function analyze(rows,c,{mapId,seconds=10,di=c?.hasDI,sample,levels=1,targets={}
  }
 
  const available=Math.max(0,(c.militiaByWorld?.[row.world-1]||0)-row.militia);
- if(available>0)add('militia','Reassign one militia (if in range)',base.creditPerHour+c.militiaPerHour,`${available} militia in this world are assigned elsewhere. Check that a connected outpost and the unit’s assignment range allow this target. Moving one reduces clearing or work at its previous destination; this is not a free account-wide gain.`,'Conditional reassignment');
+ if(available>0)add('militia','Reassign one militia (if in range)',projectRate(c,{...row,militia:row.militia+1}),`${available} militia in this world are assigned elsewhere. Check that a connected outpost and the unit’s assignment range allow this target. Moving one reduces clearing or work at its previous destination; this is not a free account-wide gain.`,'Conditional reassignment');
  if(!di&&c.knowsDI&&p.activeKills>0&&(!cal||fit)){
   const improved=Model.estimate(row,c,wave,true);
-  add('di','Maintain Divine Intervention',base.activeKills*(improved.activeKills/p.activeKills)*c.creditPerKill+base.militia,'Equip DI and maintain mana/uptime. Modeled change at the same wave-clear assumption; take a new Orb sample after changing the setup.','Combat scenario');
+  add('di','Maintain Divine Intervention',finiteBoost?projectRate(c,row,true):base.activeKills*(improved.activeKills/p.activeKills)*c.creditPerKill+base.militia,'Equip DI and maintain mana/uptime. Modeled change at the same wave-clear assumption; take a new Orb sample after changing the setup.','Combat scenario');
  }
  // Keep upgrade cards in source order while their gains change.
  const combinedCharacter=Model.customize(c,combinedOverrides);
- const combinedRate=base.activeKills*combinedCharacter.creditPerKill+row.militia*combinedCharacter.militiaPerHour;
+ const combinedRate=projectRate(combinedCharacter);
  const combined={count:Object.keys(combinedOverrides).length,rate:combinedRate,eta:eta(combinedRate),gain:combinedRate-base.creditPerHour};
  const tips=[];
  const map=p.map,stats=di?map?.di:map?.normal;

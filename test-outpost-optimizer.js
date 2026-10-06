@@ -49,3 +49,24 @@ assert.equal(personal.actions.find(a=>a.id==='fish').editor.target,201);
 assert.equal(personal.actions.find(a=>a.id==='warbound').editor.target,101);
 const unchanged=O.analyze(rows,c,{mapId:1,targets:{armory:25}});assert.equal(unchanged.actions.find(a=>a.id==='armory').gain,0);
 assert(O.html(personal).includes('data-outpost-target="armory"'));
+
+// An upgraded outpost finishes sooner and consumes a different share of the
+// finite daily crystal allowance. Scaling the old average gives 792s vs 472s.
+const Model=require('./outpost-eta-model');
+const finiteRow={id:1,world:1,name:'Finite crystals',remaining:10000,militia:0};
+const finiteCharacter=Model.customize({...c,warbound:1,armory:100,orblet:0,fish:0,jelly:25,militiaArmory:0,riChance:0,riMobs:0,maps:[{...map,count:10,respawn:12,damage:100,skillDamage:100,crystal:{chance:0,chainChance:.75,guaranteed:100,hp:100,normal:{damage:100,skillDamage:100,hitChance:1},di:{damage:100,skillDamage:100,hitChance:1}}}]});
+const finiteResult=O.analyze([finiteRow],finiteCharacter,{targets:{armory:500}});
+const exact=Model.estimate(finiteRow,Model.customize(finiteCharacter,{armory:2000}));
+assert(Math.abs(finiteResult.actions.find(a=>a.id==='armory').eta-exact.eta)<1e-8);
+assert(Math.abs(exact.eta-472.3809523809524)<1e-8);
+const combinedBuild=Model.customize(finiteCharacter,{armory:2000,militiaArmory:25});
+assert(Math.abs(finiteResult.combined.eta-Model.estimate(finiteRow,combinedBuild).eta)<1e-8);
+const militiaAction=finiteResult.actions.find(a=>a.id==='militia');
+assert(Math.abs(militiaAction.eta-Model.estimate({...finiteRow,militia:1},finiteCharacter).eta)<1e-8);
+const finiteSample={enabled:true,character:3,map:1,count:500,seconds:374};
+const fit=Model.inferWaveTime(finiteRow,finiteCharacter,finiteSample,false);
+assert(fit);
+const sampledFinite=O.analyze([finiteRow],finiteCharacter,{sample:finiteSample,targets:{armory:500}});
+assert(sampledFinite.calibrated);
+assert(Math.abs(sampledFinite.actions.find(a=>a.id==='armory').eta-Model.estimate(finiteRow,Model.customize(finiteCharacter,{armory:2000}),fit.slow,false).eta)<1e-8);
+console.log('Finite-crystal upgrade, combined, militia and Orb-calibrated horizon projections passed.');

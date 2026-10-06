@@ -179,3 +179,21 @@ assert.equal(Predict.calibrateOrb(large,sampleBuild,Predict.estimate(large,sampl
 assert(Predict.calibrateOrb(large,sampleBuild,Predict.estimate(large,sampleBuild),sampleWindow),'Valid finite-crystal samples remain supported');
 assert.equal(Predict.calibrateOrb({...large,militia:0},sampleBuild,Predict.estimate(large,sampleBuild),{...sampleWindow,count:0}).activeKills,0);
 console.log('Storage quantity preservation, combat-change invalidation and finite-crystal fallback regressions passed.');
+
+// Client handlers treat two or more RoyalMaps fields as an existing outpost.
+const twoField={RoyalMaps:[[123,0]],RoyalG:[]};
+assert.equal(R.snapshot(twoField,{maps:[{name:'Built',required:1000}]}).rows[0].built,true);
+// Impossible guaranteed crystals must not be skipped to an ordinary kill phase.
+const stalled={...guaranteed,maps:[{...guaranteed.maps[0],crystal:{...guaranteed.maps[0].crystal,normal:{damage:100,skillDamage:100,hitChance:0},di:{damage:100,skillDamage:100,hitChance:0}}}]};
+assert.equal(Predict.estimate({...row,militia:0},stalled).eta,null);
+assert.equal(Predict.estimate(row,stalled).eta,row.remaining/character.militiaPerHour*3600);
+// User's 4,000 Orb counts / 374s: conversion and time units independently checked.
+const userBuild={...orbChar,creditPerKill:50,militiaPerHour:0};
+const userRow={...row,remaining:40000000,militia:0};
+const userSample={...orbSample,count:4000,seconds:374};
+const physical=Predict.calibrateOrb(userRow,userBuild,{activeKills:100,crystalKills:0,map:{}},userSample);
+assert(Math.abs(physical.eta-74800)<1e-8,'Unweighted physical-kill floor is 20.78 hours, not 20 days');
+const weighted=Predict.calibrateOrb(userRow,{...userBuild,guardianEquipped:true,guardianDuration:60},orbPrediction,userSample);
+const expectedWeight=1+.2*(3-1)+.8*1.5;
+assert(Math.abs(weighted.eta-74800*expectedWeight)<1e-8,'Orb weighting is applied exactly once');
+console.log('Two-field built outposts, stalled crystals and 4,000/374-second Orb arithmetic passed.');

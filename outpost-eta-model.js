@@ -39,7 +39,10 @@ function estimate(row,character,seconds=10,di=character?.hasDI,horizon=null){
    const initialSeconds=guaranteed>0?(initial.seeds>0?3600*guaranteed/initial.seeds:Infinity):0;
    if(horizon!=null){const first=Math.min(horizon,initialSeconds),tail=horizon-first;
     return {time:horizon,kills:(initial.kills*first+regular.kills*tail)/horizon,crystals:(initial.crystals*first+regular.crystals*tail)/horizon};}
-   const initialTime=initialRate>0?Math.min(initialSeconds,row.remaining/initialRate*3600):0;
+   // A stalled guaranteed-crystal phase cannot be skipped: no seeds are
+   // being consumed to end it. Militia can still finish the outpost.
+   if(initialSeconds===Infinity&&initialRate<=0)return {time:null,kills:0,crystals:0};
+   const initialTime=initialRate>0?Math.min(initialSeconds,row.remaining/initialRate*3600):initialSeconds;
    const remaining=Math.max(0,row.remaining-initialTime*initialRate/3600);
    const regularRate=regular.kills*character.creditPerKill+militia;
    const tail=remaining>0?(regularRate>0?remaining/regularRate*3600:null):0;

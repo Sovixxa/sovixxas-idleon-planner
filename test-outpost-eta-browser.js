@@ -55,7 +55,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'C:/Users/Sofia/AppData/Lo
  await page.locator('#outpostRestoreBonuses').click();
  assert.equal(Number(await creditInput.inputValue()),savedCredit);
  assert.equal(Number(await warboundInput.inputValue()),savedWarbound);
- assert.match(await page.locator('.outpost-card').innerText(),/Estimated/);
+ assert.match(await page.locator('.outpost-card').innerText(),/Estimated · 10s wave assumption/);
  assert.match(await page.locator('.outpost-card').textContent(),/Scenario range/);
  assert.equal(await page.locator('.outpost-map-details').getAttribute('open'),null);
  assert(!(await page.locator('.outpost-card').innerText()).includes('Observed:'));
