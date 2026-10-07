@@ -1192,6 +1192,8 @@ const getKillsPerHour = (character: Character, characters: Character[], account:
   const actionWaitTime = Math.max(0.1, (1 + (10 - charWeapon) / 5) /
     (1 + ((equipmentBonus + obolsBonus) + (mealBonus + (chipBonus + (bubbleBonus
       + postOfficeBonus)))) / 100));
+  // Expose attack cadence independently of AFK gains and multikill.
+  playerInfo.actionWaitTime = actionWaitTime;
   const first = playerInfo?.maxDamage * (playerInfo.mastery + (1 - playerInfo.mastery) / 2)
     * (1 + (playerInfo.critDamage - 1) * (playerInfo.critChance / 100))
     * (playerInfo.hitChance / 100) * Math.max(dEffect, 1);

@@ -197,3 +197,40 @@ const weighted=Predict.calibrateOrb(userRow,{...userBuild,guardianEquipped:true,
 const expectedWeight=1+.2*(3-1)+.8*1.5;
 assert(Math.abs(weighted.eta-74800*expectedWeight)<1e-8,'Orb weighting is applied exactly once');
 console.log('Two-field built outposts, stalled crystals and 4,000/374-second Orb arithmetic passed.');
+
+// Automatic timing varies by map/build, and transfers learned coverage rather
+// than copying the source map's kill rate to every destination.
+const timedBuild={...inverseChar,maps:[{...character.maps[0],autoWaveSeconds:8},{...character.maps[0],id:2,count:20,autoWaveSeconds:24}]};
+assert.equal(Predict.automaticWave(row,timedBuild).seconds,8);
+assert.equal(Predict.estimate(row,timedBuild).seconds,8);
+const learned={fast:2,slow:4,seconds:3};
+assert.equal(Predict.automaticWave({...row,id:2},timedBuild,true,inverseSample,learned).seconds,9);
+assert.equal(Predict.automaticWave({...row,id:2},timedBuild,true,inverseSample,learned).source,'orb-transfer');
+assert.equal(Predict.automaticWave(row,timedBuild,true,{...inverseSample,enabled:false},learned).seconds,8);
+assert.equal(Predict.automaticWave(row,timedBuild,true,{...inverseSample,character:99},learned).seconds,8);
+assert(contexts[0].maps[1].normal.autoWaveSeconds>0&&Number.isFinite(contexts[0].maps[1].normal.autoWaveSeconds));
+assert(contexts[0].maps[1].normal.autoWaveSeconds!==10,'Real saved build supplies timing instead of the old ten-second constant');
+console.log('Automatic build timing, per-map scaling and disabled/wrong-character sample isolation passed.');
+
+// Ten seconds = eight travelling + two attacking. Three hits cost 8+6,
+// not three entire walks (30 seconds). Misses repeat attacks in the same way.
+const travelBuild={...character,hasDI:false,maps:[{...character.maps[0],autoWaveSeconds:10,autoAttackFraction:.2,hp:300,damage:100,skillDamage:300,respawn:4}]};
+const travelRow={...row,militia:0,remaining:1000};
+const travelPrediction=Predict.estimate(travelRow,travelBuild);
+assert(Math.abs(travelPrediction.activeKills-3600*10/18)<1e-8);
+const inaccurate={...travelBuild,maps:[{...travelBuild.maps[0],hp:100,hitChance:.5}]};
+assert(Math.abs(Predict.estimate(travelRow,inaccurate).activeKills-3600*10/16)<1e-8);
+const travelOrb={...travelBuild,index:3,orb:{learned:true,regalExtra:1}};
+const travelSample={enabled:true,character:3,map:1,count:travelPrediction.activeKills/3600*374,seconds:374};
+assert(Math.abs(Predict.inferWaveTime(travelRow,travelOrb,travelSample,false).seconds-10)<1e-7);
+assert(contexts[0].maps[1].normal.autoAttackFraction>0&&contexts[0].maps[1].normal.autoAttackFraction<=1);
+console.log('Multi-hit and accuracy costs preserve one trip per target; Orb inversion matches corrected timing.');
+
+// Wide Orb fits must not become falsely narrow confidence on other maps.
+const wideFit={fast:.25,slow:20,seconds:10.125};
+const transferred=Predict.estimateAutomatic({...row,id:2},timedBuild,true,inverseSample,wideFit);
+const transferredFast=Predict.estimate({...row,id:2},timedBuild,.75,true);
+const transferredSlow=Predict.estimate({...row,id:2},timedBuild,60,true);
+assert(transferred.fast<=transferredFast.eta&&transferred.slow>=transferredSlow.eta);
+assert.equal(transferred.timingSource,'orb-transfer');
+console.log('Transferred timing ranges retain both Orb fit bounds.');

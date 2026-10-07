@@ -3,14 +3,18 @@
 // UnitSpecEffect(4), RI_chance, RI_mobs and the Divine Intervention handler.
 import {getMaxDamage,getMonsterHpTotal} from './vendor/idleon-toolbox/parsers/damage';
 import {getRespawnRate,getPlayerCrystalChance} from './vendor/idleon-toolbox/parsers/character';
-import {getTalentBonus,getHighestTalentAcrossCharacters} from './vendor/idleon-toolbox/parsers/talents';
-import {getAdviceFishBonus,isBundlePurchased} from './vendor/idleon-toolbox/parsers/misc';
+import {getTalentBonus,getHighestTalentAcrossCharacters,getAllTalentAddedLevels,applyTalentAddedLevels,getSuperTalentAddedLevels} from './vendor/idleon-toolbox/parsers/talents';
+import {getAdviceFishBonus,isBundlePurchased,isCompanionBonusActive} from './vendor/idleon-toolbox/parsers/misc';
+import {getSpelunkingBonus} from './vendor/idleon-toolbox/parsers/world-7/spelunking';
+import {getGrimoireBonus} from './vendor/idleon-toolbox/parsers/class-specific/grimoire';
+import {getLegendTalentBonus} from './vendor/idleon-toolbox/parsers/world-7/legendTalents';
+import {getCompassBonus} from './vendor/idleon-toolbox/parsers/class-specific/compass';
 import {getPlayerLabChipBonus} from './vendor/idleon-toolbox/parsers/world-4/lab';
 import {calcCardBonus} from './vendor/idleon-toolbox/parsers/cards';
 import {getResearchGridBonus} from './vendor/idleon-toolbox/parsers/world-7/research';
 import {getSushiBonus} from './vendor/idleon-toolbox/parsers/world-7/sushiStation';
 import {getEffectiveDamage,getStrongestAttack} from './vendor/idleon-toolbox/parsers/misc/boneJoeCalculator';
-import {monsters,mapMonsterCounts,mapEnemiesArray,armoryUpgrades,orbletMarket} from './vendor/idleon-toolbox/data/website-data';
+import {monsters,mapMonsterCounts,mapEnemiesArray,mapDetails,armoryUpgrades,orbletMarket} from './vendor/idleon-toolbox/data/website-data';
 export function getOutpostCombatContext(account:any,characters:any[],raw:any,mapIds:number[]){
  const parse=(v:any)=>typeof v==='string'?JSON.parse(v):v;
  const g=parse(raw.RoyalG)||[],levels=parse(g[2])||[],market=parse(g[23])||[];
@@ -19,9 +23,16 @@ export function getOutpostCombatContext(account:any,characters:any[],raw:any,map
  // Research[47] from the verified client; the vendored shared list omits it.
  const jellyValues:any={2:25,8:25,35:1,56:1};
  const jelly=(i:number)=>account.research?.jellyObstruction>i?jellyValues[i]||0:0;
+ const tasks=parse(raw.Tasks)||account.tasks||[],spelunk=parse(raw.Spelunk)||[];
+ const talentBudgetSources={Base:1,Orblets:orb(2),Spelunking:getSpelunkingBonus(account,62),Lore:Number(parse(spelunk[0])?.[9])>=1?50:0,
+  Merits:5*(Number(tasks?.[2]?.[5]?.[0])||0),Grimoire:getGrimoireBonus(account.grimoire?.upgrades,45),Compass:getCompassBonus(account,46),
+  Companion:isCompanionBonusActive(account,20)?Number(account.companions?.list?.[20]?.bonus)||0:0,
+  Armory:[46,47,48,49].reduce((sum,id)=>sum+arm(id),0),Jelly:(account.research?.jellyObstruction>6?15:0)+(account.research?.jellyObstruction>59?20:0)};
+ const sharedCharacters=characters.map((owner:any,ownerIndex:number)=>({...owner,superTalentsInfo:{bonus:getSuperTalentAddedLevels(account),talents:[...new Set([...(parse(spelunk[20+ownerIndex])||[]),...(parse(spelunk[32+ownerIndex])||[])].map(Number).filter(id=>id>=0))].map(talentIndex=>({talentIndex}))}}));
+ const talentBudget=Math.floor(Math.max(0,Object.values(talentBudgetSources).reduce((sum,v)=>sum+(Number(v)||0),0)));
  return characters.map((c,index)=>({c,index})).filter(({c})=>c.class==='Royal_Guardian').map(({c,index})=>{
   const talent=(name:string,y=false)=>c.flatTalents?.find((t:any)=>t.name===name)?.level>0?getTalentBonus(c.flatTalents,name,y):0;
-  const warbound=Math.max(1,getHighestTalentAcrossCharacters(characters,'WARBOUND_POLITICS',c));
+  const warbound=Math.max(1,getHighestTalentAcrossCharacters(sharedCharacters,'WARBOUND_POLITICS',c));
   const fish=getAdviceFishBonus(account,6),clear=warbound*(1+(orb(3)+fish)/100)*(1+jelly(2)/100);
   const hasDI=!!c.talentsLoadout?.some((t:any)=>t.name==='DIVINE_INTERVENTION'&&t.level>0);
   const riChance=talent('REGAL_INTERVENTION')>0?Math.min(1,Math.max(0,talent('REGAL_INTERVENTION')/100*(1+orb(5)/100)+jelly(56)/1000)):0;
@@ -42,7 +53,13 @@ export function getOutpostCombatContext(account:any,characters:any[],raw:any,map
    const respawn=getRespawnRate(onMap,account);
    const combat=(mode:string,combatTarget=target)=>{const activeBuffs=mode==='di'&&diTalent?.level>0?[...normalBuffs,diTalent]:normalBuffs;
     const variant={...onMap,targetMonster:combatTarget,activeBuffs},p=getMaxDamage(variant,characters,account,shared[mode]),damage=getEffectiveDamage(p,variant),attack=getStrongestAttack(variant);
-    return {damage,skillDamage:damage*Math.max(1,attack?.multi||1),hitChance:Math.max(0,Math.min(1,p.hitChance/100)),critDamage:p.critDamage,movementSpeed:p.movementSpeed};};
+    const spacing=Math.max(0,Number(mapDetails[id]?.[1]?.[1])||0);
+    // Baseline one-hit sweep: attack cadence plus travel between targets.
+    // Orb calibration learns actual skill coverage/placement relative to it.
+    const travel=p.movementSpeed>0?spacing/(130*p.movementSpeed/100):0;
+    const autoWaveSeconds=Math.max(.25,Math.min(300,count*(p.actionWaitTime+travel)));
+    const autoAttackFraction=p.actionWaitTime/(p.actionWaitTime+travel);
+    return {autoWaveSeconds,autoAttackFraction,damage,skillDamage:damage*Math.max(1,attack?.multi||1),hitChance:Math.max(0,Math.min(1,p.hitChance/100)),critDamage:p.critDamage,movementSpeed:p.movementSpeed};};
    const normal=combat('normal'),di=combat('di');
    // Reuse decoded individual bonuses, but match the newer client's card multiplier
    // and Jelly reward rather than the older shared parser's combined formula.
@@ -118,6 +135,17 @@ export function getOutpostCombatContext(account:any,characters:any[],raw:any,map
   const militiaByWorld=Array.from({length:8},(_,w)=>(parse(g[6+2*w])||[]).filter((v:any)=>Number(v)===4).length);
   const crystalCards=['Poop','Demon_Genie'].map(name=>{const card=Object.values(account.cards||{}).find((v:any)=>v.displayName?.replaceAll(' ','_')===name) as any;return {name:name.replaceAll('_',' '),owned:!!(card?.amount>0),equipped:cards.some((v:any)=>v.name.replaceAll(' ','_')===name)};});
   const warboundTalent=c.flatTalents.find((t:any)=>t.name==='WARBOUND_POLITICS');
+  const preset=Number(parse(raw['PlayerStuff_'+index])?.[1])||0;
+  const superIds=(owner:number,p:number)=>(parse(spelunk[20+owner+12*p])||[]).map(Number).filter((id:number)=>Number.isInteger(id)&&id>=0);
+  const savedSupers=[...new Set(superIds(index,preset))],otherSupers=[...new Set(superIds(index,1-preset))],superBonus=getSuperTalentAddedLevels(account);
+  const superUnlocked=getLegendTalentBonus(account,39)>=1;
+  const superSlots=superUnlocked?Math.min(20,Math.floor(Math.max(0,(c.skillsInfo?.character?.level||0)-400)/100)+(Number(parse(spelunk[0])?.[5])>=1?1:0)):0;
+  const talentPlan={budget:talentBudget,sources:talentBudgetSources,preset,superSlots,superBonus,savedSupers,otherSupers,regalMarket:orb(5),regalJelly:jelly(56)/1000,regalMobBonus:getSushiBonus(account,61)+jelly(35),
+   sharedWarboundAdded:characters.map((owner:any,ownerIndex:number)=>getAllTalentAddedLevels(231,c,{...owner,superTalentsInfo:{bonus:superBonus,talents:[...new Set([...superIds(ownerIndex,0),...superIds(ownerIndex,1)])].map(talentIndex=>({talentIndex}))}})),
+   talents:c.flatTalents.filter((t:any)=>t.skillIndex===203||t.skillIndex>=225&&t.skillIndex<=239).map((t:any)=>{
+    const effective=applyTalentAddedLevels(null,[{...t,level:1}],c.addedLevels,c.superTalentsInfo,preset,c.rgTalentAddedLevelsCap)[0].level;
+    return {superActive:savedSupers.includes(t.skillIndex),superOther:otherSupers.includes(t.skillIndex),superBonus:savedSupers.includes(t.skillIndex)?superBonus:0,normalAdded:effective-1-(savedSupers.includes(t.skillIndex)?superBonus:0),id:t.skillIndex,name:t.name,current:t.baseLevel||0,cap:Math.max(0,t.maxLevel||0),added:effective-1,level:t.level,x1:t.x1,x2:t.x2,y1:t.y1,y2:t.y2};
+   })};
   const regalTalent=c.flatTalents.find((t:any)=>t.name==='REGAL_INTERVENTION');
   const starTalent=c.flatStarTalents?.find((t:any)=>t.name==='CRYSTALS_4_DAYYS');
   const optimizerInputs={regalShop:{level:Number(market[5]||0),maxLevel:orbletMarket[5].maxLevel,step:orbletMarket[5].bonusPerLevel},warbound:warboundTalent?{x1:warboundTalent.x1,x2:warboundTalent.x2}:null,
@@ -125,6 +153,6 @@ export function getOutpostCombatContext(account:any,characters:any[],raw:any,map
    crystalTalent:starTalent?.level>0?{level:starTalent.level,x1:starTalent.x1,x2:starTalent.x2}:null,
    fish:account.adviceFish?.upgrades?.[6]?{level:account.adviceFish.upgrades[6].level,scale:account.adviceFish.upgrades[6].x2}:null};
   const ownedCombatCards=Object.values(account.cards||{}).filter((v:any)=>v.amount>0&&/respawn|crystal|accuracy|damage|crit/i.test(v.effect||'')).map((v:any)=>({name:v.displayName,effect:v.effect,bonus:calcCardBonus(v),equipped:cards.some((e:any)=>e.name===v.displayName)}));
-  return {optimizerInputs,ownedCombatCards,upgrades,militiaByWorld,crystalCards,index,currentMap:c.mapIndex,cards,accountCoverage,orb:orbContext,name:c.name||`Character ${index+1}`,hasDI,knowsDI:talent('DIVINE_INTERVENTION')>0,diCritBonus:talent('DIVINE_INTERVENTION'),riChance,riMobs,guardianEquipped:equipped('GUARDIAN_DISCIPLE'),guardianDuration,knightlyDuration,knightlyEnhancement:enhancement,skills,activeBuffs:(c.activeBuffs||[]).map((t:any)=>t.name),creditPerKill:arm(58)>=1?(1+arm(58)/100)*clear:0,militiaPerHour:4000*(1+arm(23)/100)*clear,warbound,armory:arm(58),militiaArmory:arm(23),orblet:orb(3),fish,jelly:jelly(2),maps};
+  return {talentPlan,optimizerInputs,ownedCombatCards,upgrades,militiaByWorld,crystalCards,index,currentMap:c.mapIndex,cards,accountCoverage,orb:orbContext,name:c.name||`Character ${index+1}`,hasDI,knowsDI:talent('DIVINE_INTERVENTION')>0,diCritBonus:talent('DIVINE_INTERVENTION'),riChance,riMobs,guardianEquipped:equipped('GUARDIAN_DISCIPLE'),guardianDuration,knightlyDuration,knightlyEnhancement:enhancement,skills,activeBuffs:(c.activeBuffs||[]).map((t:any)=>t.name),creditPerKill:arm(58)>=1?(1+arm(58)/100)*clear:0,militiaPerHour:4000*(1+arm(23)/100)*clear,warbound,armory:arm(58),militiaArmory:arm(23),orblet:orb(3),fish,jelly:jelly(2),maps};
  });
 }

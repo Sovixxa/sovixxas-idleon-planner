@@ -70,3 +70,22 @@ const sampledFinite=O.analyze([finiteRow],finiteCharacter,{sample:finiteSample,t
 assert(sampledFinite.calibrated);
 assert(Math.abs(sampledFinite.actions.find(a=>a.id==='armory').eta-Model.estimate(finiteRow,Model.customize(finiteCharacter,{armory:2000}),fit.slow,false).eta)<1e-8);
 console.log('Finite-crystal upgrade, combined, militia and Orb-calibrated horizon projections passed.');
+
+// Switching optimizer selection must not change the source sample's fit or
+// make destination predictions disagree with calculator automatic timing.
+const transferBuild={...c,maps:[{...map,autoWaveSeconds:8,autoAttackFraction:.3},{...map,id:2,autoWaveSeconds:24,autoAttackFraction:.6}]};
+const transferSource=rows[0],transferTarget=rows[1];
+const transferPrediction=Model.estimate(transferSource,transferBuild,10,false);
+const transferSample={enabled:true,character:3,map:1,count:transferPrediction.activeKills/3600*374*1.5,seconds:374};
+const transferFit=Model.inferWaveTime(transferSource,transferBuild,transferSample,false);
+assert(transferFit);
+const autoResult=O.analyze(rows,transferBuild,{mapId:2,sample:transferSample});
+const calculatorResult=Model.estimateAutomatic(transferTarget,transferBuild,false,transferSample,transferFit);
+assert.equal(autoResult.base.eta,calculatorResult.eta);
+assert.equal(autoResult.base.fast,calculatorResult.fast);
+assert.equal(autoResult.base.slow,calculatorResult.slow);
+const sourceSelected=O.analyze(rows,transferBuild,{mapId:1,sample:transferSample});
+assert.equal(sourceSelected.maps.find(m=>m.id===2).eta,calculatorResult.eta);
+assert.equal(autoResult.calibrated,false,'Transferred estimates must not claim direct calibration');
+assert.equal(O.analyze(rows,transferBuild,{mapId:2,sample:{...transferSample,enabled:false}}).base.eta,Model.estimate(transferTarget,transferBuild).eta);
+console.log('Calculator/optimizer agree across selections, transferred samples and disabled calibration.');

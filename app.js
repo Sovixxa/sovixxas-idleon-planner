@@ -1093,7 +1093,7 @@ SKILL_PAGES.holeFloors={title:'Floors',world:'World 5',copy:'All 18 Hole caverns
   // Background tabs must not occupy the browser's limited localhost connections.
   window.plannerQoL=window.PlannerQoL?.init({pages:SKILL_PAGES,navigate:selectSideNav});
   $('clearBtn').addEventListener('click',()=>window.plannerQoL?.clear());
-  window.PlannerLiveReload?.start({badge:$('liveBadge'),beforeReload:persistInput,canReload:()=>!(window.plannerQoL?.lastPage()==='royalArmory'&&document.querySelector('[data-mc-tab=outpostEta][aria-selected=true]'))});
+  window.PlannerLiveReload?.start({badge:$('liveBadge'),beforeReload:persistInput,canReload:()=>!(window.plannerQoL?.lastPage()==='royalArmory'&&document.querySelector('[data-mc-tab=outpostEta][aria-selected=true], [data-mc-tab=talentPlan][aria-selected=true]'))});
 
   try{
     const observed=sessionStorage.getItem(OBS_KEY);if(observed)$('observedTime').value=observed;

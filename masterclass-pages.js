@@ -24,7 +24,7 @@ function draw(host,key,raw,model){const cfg=M.configs[key],royal=key==='royalArm
 }
 function mountTabs(host,key,nav,raw){
  const page=host.querySelector('.mc-page'),tabs=document.createElement('nav');tabs.className='mc-subtabs';tabs.setAttribute('role','tablist');tabs.setAttribute('aria-label',M.configs[key].title+' sections');
- const sections=[['upgrades','Upgrades'],['optimizer','Next Purchase Optimizer'],...(key==='royalArmory'?[['verminous','Verminous'],['outpostEta','Outpost ETA']]:[])],panels={};
+ const sections=[['upgrades','Upgrades'],['optimizer','Next Purchase Optimizer'],...(key==='royalArmory'?[['verminous','Verminous'],['outpostEta','Outpost ETA'],['talentPlan','Talent plan']]:[])],panels={};
  for(const [id,label] of sections){const panel=document.createElement('section');panel.className='mc-tab-panel';panel.id='mc-'+key+'-'+id+'-panel';panel.setAttribute('role','tabpanel');panel.setAttribute('aria-labelledby','mc-'+key+'-'+id+'-tab');panel.tabIndex=0;panels[id]=panel;page.append(panel);
  const button=document.createElement('button');button.type='button';button.id='mc-'+key+'-'+id+'-tab';button.dataset.mcTab=id;button.textContent=label;button.setAttribute('role','tab');button.setAttribute('aria-controls',panel.id);tabs.append(button);}
  nav.after(tabs);
@@ -32,9 +32,9 @@ function mountTabs(host,key,nav,raw){
  const planner=host.querySelector('.mc-planner');if(planner)panels.optimizer.append(planner);
  const empty=host.querySelector('.mc-empty');if(empty){panels.upgrades.append(empty);panels.optimizer.append(empty.cloneNode(true));}
  if(panels.verminous)renderVerminous(panels.verminous,raw);
- let outpostMounted=false;
+ let outpostMounted=false,talentsMounted=false;
  const buttons=[...tabs.querySelectorAll('button')];
- function select(id){if(id==='outpostEta'&&!outpostMounted){outpostMounted=true;root.OutpostETA.render(panels.outpostEta,raw);}selectedTabs[key]=id;for(const button of buttons){const active=button.dataset.mcTab===id;button.setAttribute('aria-selected',String(active));button.tabIndex=active?0:-1;panels[button.dataset.mcTab].hidden=!active;}}
+ function select(id){if(id==='talentPlan'&&!talentsMounted){talentsMounted=true;root.OutpostETA.renderTalents(panels.talentPlan,raw);}if(id==='outpostEta'&&!outpostMounted){outpostMounted=true;root.OutpostETA.render(panels.outpostEta,raw);}selectedTabs[key]=id;for(const button of buttons){const active=button.dataset.mcTab===id;button.setAttribute('aria-selected',String(active));button.tabIndex=active?0:-1;panels[button.dataset.mcTab].hidden=!active;}}
  buttons.forEach((button,index)=>{button.onclick=()=>select(button.dataset.mcTab);button.onkeydown=event=>{let next;if(event.key==='ArrowRight')next=(index+1)%buttons.length;else if(event.key==='ArrowLeft')next=(index+buttons.length-1)%buttons.length;else if(event.key==='Home')next=0;else if(event.key==='End')next=buttons.length-1;else return;event.preventDefault();buttons[next].focus();select(buttons[next].dataset.mcTab);};});
  select(selectedTabs[key]||'upgrades');
 }

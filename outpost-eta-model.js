@@ -1,7 +1,16 @@
 (function(root){'use strict';
 // A transparent wave model, not the AFK kills/hr formula. Clear-time scenarios
 // absorb geometry, pathfinding, cast rotation and disciple placement.
-function estimate(row,character,seconds=10,di=character?.hasDI,horizon=null){
+function automaticWave(row,character,di=character?.hasDI,sample=null,fit=null){
+ const baseline=id=>{const map=character?.maps?.find(m=>m.id===id),stats=(di?map?.di:map?.normal)||map;
+  return Math.max(.25,Math.min(300,Number.isFinite(stats?.autoWaveSeconds)?stats.autoWaveSeconds:Math.max(1,map?.count||1)));};
+ const base=baseline(row.id);
+ if(!fit||!sample?.enabled||sample.character!==character?.index)return {seconds:base,source:'build'};
+ const ratio=base/baseline(sample.map),clamp=v=>Math.max(.25,Math.min(300,v*ratio));
+ return {seconds:clamp(fit.seconds),fast:clamp(fit.fast),slow:clamp(fit.slow),source:row.id===sample.map?'orb':'orb-transfer'};
+}
+function estimate(row,character,seconds=null,di=character?.hasDI,horizon=null){
+ seconds=seconds??automaticWave(row,character,di).seconds;
  const sourceMap=character?.maps?.find(m=>m.id===row.id);
  const map=sourceMap?{...sourceMap,...(di?sourceMap.di:sourceMap.normal)}:null,militia=character?row.militia*character.militiaPerHour:null;
  if(row.built||row.remaining===0)return {eta:0,fast:0,slow:0,creditPerHour:0,activeKills:0,militia};
@@ -14,6 +23,10 @@ function estimate(row,character,seconds=10,di=character?.hasDI,horizon=null){
   extra=di?character.riChance*character.riMobs:0;
   hits=Math.max(1,Math.ceil(map.hp/map.damage))/map.hitChance;
   const bestHits=Math.max(1,Math.ceil(map.hp/map.skillDamage))/map.hitChance;
+  // Extra hits/misses cost another attack, not another trip to the target.
+  // Legacy contexts without cadence components retain their all-attack model.
+  const attackFraction=Number.isFinite(map.autoAttackFraction)?Math.max(0,Math.min(1,map.autoAttackFraction)):1;
+  const effort=hitCount=>Number.isFinite(hitCount)?1+attackFraction*(hitCount-1):Infinity;
   const count=map.count+extra,crystal=map.crystal;
   const stats=crystal&&(di?crystal.di:crystal.normal);
   const chance=Math.max(0,Math.min(.1,crystal?.chance||0));
@@ -24,13 +37,13 @@ function estimate(row,character,seconds=10,di=character?.hasDI,horizon=null){
   const phase=(p,scale,strong)=>{
    const normalHits=strong?bestHits:hits;
    const regalHits=Math.max(1,Math.ceil(2*map.hp/(strong?map.skillDamage:map.damage)))/map.hitChance;
-   const baseCycle=clear*scale*(normalHits*map.count+regalHits*extra)/map.count+wait;
+   const baseCycle=clear*scale*(effort(normalHits)*map.count+effort(regalHits)*extra)/map.count+wait;
    // At most five base crystal seeds per second. Chain replacements are separate.
    const seeds=Math.min(map.count*p,5*baseCycle);
    const crystals=seeds/(1-chain);
    const crystalHits=crystals>0?(stats?.hitChance>0&&stats?.damage>0
     ?Math.max(1,Math.ceil(crystal.hp/(strong?stats.skillDamage:stats.damage)))/stats.hitChance:Infinity):0;
-   const cycle=clear*scale*(normalHits*map.count+regalHits*extra+crystals*crystalHits)/map.count+wait;
+   const cycle=baseCycle+(crystals>0?clear*scale*crystals*effort(crystalHits)/map.count:0);
    return {kills:3600*(count+crystals)/cycle,crystals:3600*crystals/cycle,natural:3600*map.count/cycle,seeds:3600*seeds/cycle};
   };
   solve=(scale,strong)=>{
@@ -57,6 +70,17 @@ function estimate(row,character,seconds=10,di=character?.hasDI,horizon=null){
  const rate=(kills)=>kills*character.creditPerKill+militia;
  const time=(kills)=>rate(kills)>0?row.remaining/rate(kills)*3600:null;
  return {eta:solve?solve(1,false).time:time(activeKills),fast:solve?solve(.5,true).time:time(fastKills),slow:solve?solve(2,false).time:time(slowKills),creditPerHour:rate(activeKills),activeKills,crystalKills,guaranteed,militia,wait,extra,hits,map,seconds,di,supported:!!map?.supported};
+}
+function estimateAutomatic(row,character,di=character?.hasDI,sample=null,fit=null){
+ const timing=automaticWave(row,character,di,sample,fit),prediction=estimate(row,character,timing.seconds,di);
+ // Preserve uncertainty in learned Guardian coverage when carrying timing to
+ // another map; a generic half/double scenario may be narrower than the fit.
+ if(timing.source==='orb-transfer'&&prediction.eta!=null){
+  const fast=estimate(row,character,timing.fast,di),slow=estimate(row,character,timing.slow,di);
+  prediction.fast=Math.min(prediction.fast??Infinity,fast.fast??Infinity,slow.fast??Infinity);
+  prediction.slow=prediction.slow==null||fast.slow==null||slow.slow==null?null:Math.max(prediction.slow,fast.slow,slow.slow);
+ }
+ return {...prediction,timingSource:timing.source};
 }
 // An Orb counter is weighted: crystals use Embiggener, Regal mobs add
 // extra counts. A sample only applies to its own character and map.
@@ -97,7 +121,7 @@ function calibrateOrb(row,character,prediction,sample,project=true){
  return {...projected,militia,
   countsPerHour,optimisticFloor:time(1),multiplier,crystalFraction:fraction,embiggener,regalMin,regalMax,killsLow:countsPerHour/maxWeight,killsHigh:countsPerHour/minWeight};
 }
-// Solve against the Orb rate, independently of the manual wave-time default.
+// Solve against the Orb rate, independently of the automatic build baseline.
 function inferWaveTime(row,character,sample,di=character?.hasDI){
  if(!(Number(sample?.count)>0))return null;
  const target=Number(sample.count)/Number(sample.seconds)*3600;
@@ -127,5 +151,5 @@ function customize(character,overrides={}){
  c.customTotals={creditPerKill:Object.hasOwn(overrides,'creditPerKill'),militiaPerHour:Object.hasOwn(overrides,'militiaPerHour')};
  return c;
 }
-const api={estimate,calibrateOrb,inferWaveTime,customize};if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.OutpostETAModel=api;
+const api={estimate,estimateAutomatic,calibrateOrb,inferWaveTime,automaticWave,customize};if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.OutpostETAModel=api;
 })(globalThis);
