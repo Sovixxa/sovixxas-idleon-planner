@@ -4,9 +4,10 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'C:/Users/Sofia/AppData/Lo
 (async()=>{
   const browser=await chromium.launch({headless:true});
   try{
-    const page=await browser.newPage({viewport:{width:1440,height:1000}}),errors=[],external=[];
+    const context=await browser.newContext({viewport:{width:1440,height:1000}});
+    const page=await context.newPage(),errors=[],external=[];
     page.on('pageerror',e=>errors.push(e.message));
-    await page.route('**/*',async route=>{
+    await page.context().route('**/*',async route=>{
       const url=new URL(route.request().url());
       // Ads are unrelated to auth and never run in this test. All other external requests remain failures.
       if(url.origin==='https://pagead2.googlesyndication.com')return route.abort();
@@ -64,12 +65,18 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'C:/Users/Sofia/AppData/Lo
     await page.evaluate(()=>window.dispatchEvent(new CustomEvent('idleon:navigate',{detail:'characters'})));
     await page.locator('#talentCharacter').selectOption('2');
     await page.evaluate(()=>{const raw=structuredClone(window.__liveTest.raw);raw.charNames[0]='Updated Hero';window.__liveTest.next({raw});});
-    await page.locator('#cloudApply').waitFor();assert.equal(await page.locator('#qolPageName').innerText(),'Characters & Talents');assert.equal(await page.locator('#talentCharacter').inputValue(),'2');
+    await page.locator('#cloudApply').waitFor();assert.equal(await page.locator('#cloudSummary').innerText(),'Update ready');assert.equal(await page.locator('#qolPageName').innerText(),'Characters & Talents');assert.equal(await page.locator('#talentCharacter').inputValue(),'2');
     await page.locator('#cloudApply').click();assert.equal(await page.locator('#qolPageName').innerText(),'Characters & Talents');assert.equal(await page.locator('#talentCharacter').inputValue(),'2');assert.equal(await page.locator('#quickNotesInput').inputValue(),'Keep this plan');
     await page.evaluate(()=>window.__liveTest.error({code:'permission-denied',message:'secret-token'}));
     assert.match(await page.locator('#cloudStatus').innerText(),/denied/);assert(!(await page.locator('#cloudStatus').innerText()).includes('secret-token'));
-    await page.locator('#cloudRetry').click();await page.waitForFunction(()=>document.getElementById('cloudStatus').textContent.includes('Waiting'));
+    await page.waitForFunction(()=>document.getElementById('cloudStatus').textContent.includes('Waiting'));
     await page.evaluate(()=>window.dispatchEvent(new CustomEvent('idleon:navigate',{detail:'home'})));
+    await page.locator('#changeJsonBtn').click();
+    await page.locator('#fileInput').setInputFiles({name:'invalid.json',mimeType:'application/json',buffer:Buffer.from('{invalid')});
+    await page.waitForFunction(()=>!document.getElementById('error').classList.contains('hidden'));
+    await page.locator('#jsonInput').fill('');await page.locator('#jsonInput').blur();
+    await page.evaluate(raw=>window.__liveTest.next({raw}),raw);
+    await page.waitForFunction(()=>document.getElementById('cloudSummary').textContent==='Synced');
     await page.locator('#changeJsonBtn').click();await page.locator('#jsonInput').fill(JSON.stringify(raw));await page.locator('#parseBtn').click();
     assert.match(await page.locator('#cloudStatus').innerText(),/Disconnected/);assert.equal(await page.evaluate(()=>sessionStorage.getItem('idleon-planner-cloud-session')),null);
     // Late callbacks cannot replace a manual import.
@@ -77,11 +84,14 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'C:/Users/Sofia/AppData/Lo
     await page.locator('#cloudConnect').click();await page.screenshot({path:'../audit/cloud-login-desktop.png'});
     const steam=new URL('https://www.legendsofidleon.com/steamsso/');
     for(const [key,value] of Object.entries({ns:'http://specs.openid.net/auth/2.0',mode:'id_res',claimed_id:'https://steamcommunity.com/openid/id/76561198000000000',identity:'https://steamcommunity.com/openid/id/76561198000000000',return_to:'https://www.legendsofidleon.com/steamsso/',response_nonce:'test-nonce',assoc_handle:'test-handle',sig:'test-signature',signed:'signed,claimed_id,identity,return_to,response_nonce,assoc_handle'}))steam.searchParams.set('openid.'+key,value);
+    await page.locator('#cloudRemember').check();
     await page.locator('#cloudSteamUrl').fill(steam.href);await page.locator('#cloudSteamForm button').click();
     await page.waitForFunction(()=>sessionStorage.getItem('idleon-planner-cloud-session')==='1');
     assert.equal(await page.locator('#cloudSteamUrl').inputValue(),'');
+    assert.equal(await page.evaluate(()=>localStorage.getItem('idleon-planner-cloud-session')),'1');
+    const reopened=await page.context().newPage();await reopened.goto('http://localhost:7331/');await reopened.waitForFunction(()=>window.__liveTest?.next);assert.equal(await reopened.locator('#cloudRemember').isChecked(),true);await reopened.close();
     await page.reload();await page.waitForFunction(()=>window.__liveTest?.next);assert.equal(await page.evaluate(()=>window.__liveTest.loads),1,'Connected tab should resume on reload');
-    await page.locator('#cloudDisconnect').click();await page.reload();await page.locator('#qolSearchOpen').waitFor();assert.equal(await page.evaluate(()=>window.__liveTest.loads),0,'Disconnected tab must not resume');
+    await page.locator('#cloudDisconnect').click();assert.equal(await page.evaluate(()=>localStorage.getItem('idleon-planner-cloud-session')),null);await page.reload();await page.locator('#qolSearchOpen').waitFor();assert.equal(await page.evaluate(()=>window.__liveTest.loads),0,'Disconnected tab must not resume');
     assert.deepEqual(external,[]);assert.deepEqual(errors,[]);
     console.log('Cloud sync browser: lazy loading, login validation, cleared secrets, mobile layout, live import, queued updates, selection/notes preservation, retry and manual disconnect passed.');
   }finally{await browser.close();}

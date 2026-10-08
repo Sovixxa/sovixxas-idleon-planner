@@ -29,7 +29,7 @@ function harness(responses,expires=100){
   const oldFetch=global.fetch;let credentialToken,subscriptions=0;
   global.fetch=async url=>({ok:true,json:async()=>url.endsWith('/device/code')?{device_code:'private',user_code:'ABCD',expires_in:600,interval:5}:{id_token:'google-id-token'}});
   try{
-    const auth={};const service=await createFirebaseAdapter([{getApps:()=>[],initializeApp:()=>({})},{initializeAuth:()=>auth,GoogleAuthProvider:{credential:token=>{credentialToken=token;return{token};}},signInWithCredential:async(a,c)=>{assert.equal(a,auth);return{user:{uid:'google-user'}};}},{getFirestore:()=>({})},{getDatabase:()=>({})}]);
+    const auth={};const service=await createFirebaseAdapter([{getApps:()=>[],initializeApp:()=>({})},{setPersistence:async()=>{},initializeAuth:()=>auth,GoogleAuthProvider:{credential:token=>{credentialToken=token;return{token};}},signInWithCredential:async(a,c)=>{assert.equal(a,auth);return{user:{uid:'google-user'}};}},{getFirestore:()=>({})},{getDatabase:()=>({})}]);
     assert.equal((await service.login('google',undefined,{wait:async()=>{}})).uid,'google-user');assert.equal(credentialToken,'google-id-token');
   }finally{global.fetch=oldFetch;}
   // Closing/disconnecting during approval aborts polling and cannot subscribe later.

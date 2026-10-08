@@ -825,7 +825,7 @@ SKILL_PAGES.holeFloors={title:'Floors',world:'World 5',copy:'All 18 Hole caverns
   $('changeJsonBtn').addEventListener('click',()=>{$('inputPanel').classList.remove('hidden');$('changeJsonBtn').classList.add('hidden');$('jsonInput').focus();});
   $('rememberTab').addEventListener('change',persistInput);
   $('jsonInput').addEventListener('input',()=>{if($('rememberTab').checked)persistInput();});
-  $('fileInput').addEventListener('change',async e=>{const f=e.target.files?.[0];if(!f)return;try{const text=await f.text();$('jsonInput').value=text;loadText(text);}catch(err){fail(err?.message||String(err));}});
+  $('fileInput').addEventListener('change',async e=>{const f=e.target.files?.[0];try{if(!f)return;const text=await f.text();$('jsonInput').value=text;loadText(text);}catch(err){fail(err?.message||String(err));}finally{window.dispatchEvent(new Event('idleon:import-finished'));}});
   $('searchQuality').addEventListener('change',()=>{if(state){$('solverStatus').textContent='Search quality changed. Re-run Optimize for a new timed search.';}});
   $('objectiveMode').addEventListener('change',()=>{if(state){$('solverStatus').textContent='Optimization goal changed. Re-run Optimize timed clear.';}});
   $('observedTime').addEventListener('change',()=>{try{sessionStorage.setItem(OBS_KEY,$('observedTime').value||'');}catch(_){}if(state){$('solverStatus').textContent='Calibration changed. Re-run Optimize timed clear to apply it.';}});

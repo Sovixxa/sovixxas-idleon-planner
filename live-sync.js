@@ -67,16 +67,27 @@
     if(/invalid-credential|wrong-password|invalid-password|user-not-found|account-exists-with-different-credential/.test(code))return 'Sign-in failed. Use the same method you use in Idleon: Google, Steam, or an Idleon email/password login. Your Google password does not belong in the email form. JSON import is also available.';
     if(/too-many-requests/.test(code))return 'Too many sign-in attempts. Please wait before trying again.';
     if(/network|unavailable|timeout/.test(code))return 'Cannot reach Idleon. Check your connection and retry.';
-    if(/permission-denied|unauthenticated|token-expired|user-disabled/.test(code))return 'Idleon denied access or your session expired. Disconnect and sign in again.';
+    if(/permission-denied|unauthenticated|token-expired|user-disabled/.test(code))return 'Idleon denied access or your session expired. Retry the connection; sign in again if it keeps failing.';
     if(/invalid-custom-token|custom-token-mismatch/.test(code))return 'The Steam sign-in expired or was rejected. Start Steam sign-in again.';
     // Never render SDK/server error text: it may contain credentials or URLs.
     return 'Could not connect or read this account. Retry, or disconnect and sign in again. Manual JSON import is still available.';
   }
-  function createController({loadAdapter,apply,canApply=()=>true,onStatus=()=>{},onReceive=()=>{}}){
-    let adapterPromise,adapter,unsubscribe,epoch=0,busy=false,pending=null,lastSignature='',connected=false,logoutTask=Promise.resolve(),loginAbort;
+  function createController({loadAdapter,apply,canApply=()=>true,onStatus=()=>{},onReceive=()=>{},schedule=setTimeout,cancel=clearTimeout}){
+    let adapterPromise,adapter,unsubscribe,epoch=0,busy=false,pending=null,lastSignature='',connected=false,logoutTask=Promise.resolve(),loginAbort,retryTimer=null,retryCount=0;
     let status={phase:'disconnected',pending:false,lastReceived:null,lastApplied:null,message:'Not connected'};
     const publish=patch=>{status={...status,...patch,pending:!!pending,connected,busy};onStatus({...status});};
-    const stop=()=>{if(unsubscribe)unsubscribe();unsubscribe=null;pending=null;lastSignature='';};
+    const stop=()=>{if(retryTimer!==null)cancel(retryTimer);retryTimer=null;if(unsubscribe)unsubscribe();unsubscribe=null;pending=null;lastSignature='';};
+    function recover(error,token){
+      if(token!==epoch)return;
+      const code=String(error?.code||'');
+      const retryable=/network|unavailable|timeout|deadline-exceeded|resource-exhausted|aborted|internal|permission-denied|unauthenticated|token-expired/.test(code);
+      if(retryable&&retryCount<5){
+        if(retryTimer!==null)return;
+        const delay=Math.min(30000,1000*2**retryCount++);
+        publish({phase:'reconnecting',message:safeError(error)+' Retrying automatically…'});
+        retryTimer=schedule(()=>{retryTimer=null;if(token===epoch)connect('resume',undefined,true);},delay);
+      }else publish({phase:'error',message:safeError(error)});
+    }
     async function getAdapter(){
       if(!adapterPromise)adapterPromise=Promise.resolve().then(loadAdapter).catch(e=>{adapterPromise=null;throw e;});
       adapter=await adapterPromise;return adapter;
@@ -95,6 +106,7 @@
       unsubscribe=adapter.subscribe(user,packet=>{
         if(token!==epoch)return;
         if(packet.waiting){publish({phase:'reconnecting',message:'Waiting for the server. The displayed save may be out of date.'});return;}
+        retryCount=0;if(retryTimer!==null)cancel(retryTimer);retryTimer=null;
         const signature=JSON.stringify(packet.raw);
         // Read-only sampling can continue while the UI defers applying a save.
         try{onReceive(packet.raw);}catch{/* Optional observers must not interrupt sync. */}
@@ -102,21 +114,22 @@
         pending={raw:packet.raw,signature,warning:packet.warning};
         publish({phase:'connected',lastReceived:Date.now(),message:packet.warning||'New cloud save received'});
         if(canApply())applyPending();
-      },error=>{if(token===epoch)publish({phase:'error',message:safeError(error)});});
+      },error=>recover(error,token));
     }
-    async function connect(method,credentials){
+    async function connect(method,credentials,recovery=false,options={}){
       if(busy)return;
-      const token=++epoch;stop();connected=false;busy=true;
+      if(!recovery)retryCount=0;
+      const token=++epoch;stop();if(!recovery)connected=false;busy=true;
       loginAbort=new AbortController();const signal=loginAbort.signal;
       publish({phase:'connecting',method,googleCode:null,lastReceived:null,lastApplied:null,message:'Connecting to Idleon…'});
       try{
         await logoutTask;if(token!==epoch)return;
         const service=await getAdapter();if(token!==epoch)return;
-        const user=method==='resume'?await service.currentUser():await service.login(method,credentials,{signal,onCode:googleCode=>{if(token===epoch)publish({googleCode,message:'Enter the code on Google, approve access, then return here. Waiting for approval…'});}});
+        const user=method==='resume'?await service.currentUser({refresh:recovery}):await service.login(method,credentials,{...options,signal,onCode:googleCode=>{if(token===epoch)publish({googleCode,message:'Enter the code on Google, approve access, then return here. Waiting for approval…'});}});
         if(token!==epoch){await service.logout();return;}
-        if(!user){publish({phase:'disconnected',message:'Sign in to connect your account.'});return;}
+        if(!user){connected=false;publish({phase:'disconnected',message:'Sign in to connect your account.'});return;}
         publish({googleCode:null});listen(user,token);
-      }catch(error){if(token===epoch)publish({phase:'error',message:safeError(error)});}
+      }catch(error){if(method==='resume')recover(error,token);else if(token===epoch)publish({phase:'error',message:safeError(error)});}
       finally{busy=false;publish({googleCode:null});}
     }
     async function disconnect(){
@@ -124,7 +137,7 @@
       logoutTask=logoutTask.then(()=>adapter?.logout()).catch(()=>{if(token===epoch)publish({phase:'error',message:'Updates stopped, but sign-out failed. Close this tab to end the session.'});});
       await logoutTask;
     }
-    return {connect,disconnect,applyPending,getStatus:()=>({...status}),retry:()=>connect('resume')};
+    return {connect:(method,credentials,options)=>connect(method,credentials,false,options),disconnect,applyPending,getStatus:()=>({...status}),retry:()=>{retryCount=0;return connect('resume',undefined,true);}};
   }
   async function createFirebaseAdapter(modules){
     // Load only after the user connects, or resumes an explicitly connected tab.
@@ -135,13 +148,14 @@
       import('https://www.gstatic.com/firebasejs/12.19.0/firebase-database.js')
     ]);
     const app=appSdk.getApps().find(app=>app.name==='planner-live')||appSdk.initializeApp({apiKey:'AIzaSyAU62kOE6xhSrFqoXQPv6_WHxYilmoUxDk',authDomain:'idlemmo.firebaseapp.com',databaseURL:'https://idlemmo.firebaseio.com',projectId:'idlemmo'},'planner-live');
-    const auth=authSdk.initializeAuth(app,{persistence:authSdk.browserSessionPersistence});
+    const auth=authSdk.initializeAuth(app,{persistence:[authSdk.browserLocalPersistence,authSdk.browserSessionPersistence]});
     const firestore=fsSdk.getFirestore(app),database=dbSdk.getDatabase(app);
     const read=async path=>(await dbSdk.get(dbSdk.ref(database,path))).val();
     const readDoc=async (collection,id)=>{const snap=await fsSdk.getDoc(fsSdk.doc(firestore,collection,id));return snap.exists()?snap.data():null;};
     return {
-      async currentUser(){await auth.authStateReady();return auth.currentUser;},
-      async login(method,credentials,options){
+      async currentUser({refresh=false}={}){await auth.authStateReady();const user=auth.currentUser;if(refresh&&user)await user.getIdToken(true);return user;},
+      async login(method,credentials,options={}){
+        await authSdk.setPersistence(auth,options.remember?authSdk.browserLocalPersistence:authSdk.browserSessionPersistence);
         if(method==='google'){
           const token=await googleDeviceToken(options);
           if(options?.signal?.aborted)throw googleError('cancelled');

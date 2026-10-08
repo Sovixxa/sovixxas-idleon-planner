@@ -75,7 +75,7 @@ checklists stay in local storage. The connection bar shows receive/apply times,
 errors, retry, and disconnect. Importing valid JSON or clearing a save disconnects
 cloud sync. Disconnect keeps the displayed save available locally.
 
-Sign-in tokens last for the current browser tab, including reloads. Passwords and
+Sign-in tokens last for the current browser tab by default. Select Keep me signed in on this device to resume after closing the tab. Disconnect clears the saved connection. Passwords and
 Steam redirect URLs are not stored by the planner. The Firebase SDK is loaded from
 Google's CDN only on connection or session resume; cloud data and sign-in go
 directly to Idleon's services. Manual JSON import requires no Firebase connection.

@@ -1,6 +1,6 @@
 # Idleon cloud sync
 
-Supports Steam and email/password sign-in, session resume within a browser tab,
+Supports Google, Steam and email/password sign-in, optional remembered sign-in,
 and Firestore updates. There are no writes to game saves and no planner backend.
 
 ## Data and authentication
@@ -11,7 +11,8 @@ and Firestore updates. There are no writes to game saves and no planner backend.
   precede exchange with `https://us-central1-idlemmo.cloudfunctions.net/asil`.
   That service verifies the Steam result and returns a Firebase custom token.
 - Email/password and the custom token go to the official Firebase Auth SDK.
-  `browserSessionPersistence` keeps tokens in this tab across reloads. No password
+  `browserSessionPersistence` keeps tokens in this tab across reloads by default.
+  Opting into remembered sign-in selects `browserLocalPersistence`. No password
   or Steam redirect is stored, logged or included in save data or analytics.
 - The named Firebase app uses Idleon's public client configuration. These public
   identifiers confer no access by themselves; the signed-in user and game database
@@ -60,3 +61,5 @@ Protocol references inspected:
 - https://github.com/Morta1/IdleonToolbox/blob/main/firebase/index.js
 - https://firebase.google.com/docs/web/alt-setup
 - https://firebase.google.com/docs/auth/web/auth-state-persistence
+
+Recovery retries supported connection errors up to five times with exponential backoff and refreshes the Firebase token before resubscribing. Disconnect cancels recovery. Returning from the browser back/forward cache restarts the connection; returning to a visible tab retries a failed connection. Remembered sign-in is opt-in; passwords and Steam redirects are never persisted by the planner.

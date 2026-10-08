@@ -32,16 +32,36 @@ function redirect(){const url=new URL('https://www.legendsofidleon.com/steamsso/
   let loads=0;const retry=createController({loadAdapter:async()=>{if(++loads===1)throw Error('offline');return adapter;},apply(){}});
   await retry.connect('resume');assert.equal(retry.getStatus().phase,'error');await retry.connect('resume');assert(retry.getStatus().connected);await retry.disconnect();
 
+  // Recovery uses bounded backoff, refreshes auth, and never reconnects after disconnect.
+  let nextRecovery,failRecovery,recoverySubscriptions=0,refreshes=0,timerId=0;
+  const timers=new Map(),delays=[];
+  const recovery=createController({
+    loadAdapter:async()=>({currentUser:async options=>{if(options.refresh)refreshes++;return {uid:'recover'};},logout:async()=>{},
+      subscribe(user,next,error){recoverySubscriptions++;nextRecovery=next;failRecovery=error;return()=>{};}}),
+    apply:()=>true,schedule:(fn,ms)=>{delays.push(ms);timers.set(++timerId,fn);return timerId;},cancel:id=>timers.delete(id)
+  });
+  const runRecovery=async()=>{const [id,fn]=timers.entries().next().value;timers.delete(id);fn();await tick();};
+  await recovery.connect('resume');
+  for(let i=0;i<5;i++){failRecovery({code:'permission-denied'});assert.equal(recovery.getStatus().phase,'reconnecting');await runRecovery();}
+  failRecovery({code:'permission-denied'});assert.equal(recovery.getStatus().phase,'error');assert.equal(timers.size,0);
+  assert.deepEqual(delays,[1000,2000,4000,8000,16000]);assert.equal(refreshes,5);assert.equal(recoverySubscriptions,6);
+  await recovery.retry();nextRecovery({raw:{data:{version:1}}});
+  failRecovery({code:'unavailable'});assert.equal(delays.at(-1),1000);
+  const staleTimer=[...timers.values()][0],staleFailure=failRecovery;
+  await recovery.disconnect();assert.equal(timers.size,0);const stoppedSubscriptions=recoverySubscriptions;
+  staleTimer();staleFailure({code:'unavailable'});await tick();assert.equal(recoverySubscriptions,stoppedSubscriptions);assert.equal(timers.size,0);
+
   // Adapter integration: preserve the full cloud-save wrapper and ignore out-of-order or cancelled reads.
-  let snapshotCallback,reads=[],queue=[],unsubscribeCount=0,emailArgs,token;
+  let snapshotCallback,reads=[],queue=[],unsubscribeCount=0,emailArgs,token,persistence,forcedRefresh=false;
   const names=deferred();let first=true;
-  const auth={currentUser:{uid:'account'},authStateReady:async()=>{}};
+  const auth={currentUser:{uid:'account',getIdToken:async force=>{forcedRefresh=force;}},authStateReady:async()=>{}};
   const appSdk={getApps:()=>[],initializeApp:()=>({})};
-  const authSdk={browserSessionPersistence:'session',initializeAuth:(app,options)=>{assert.equal(options.persistence,'session');return auth;},signInWithEmailAndPassword:async(...args)=>{emailArgs=args;return{user:auth.currentUser};},signInWithCustomToken:async(a,t)=>{token=t;return{user:auth.currentUser};},signOut:async()=>{}};
+  const authSdk={browserLocalPersistence:'local',browserSessionPersistence:'session',setPersistence:async(a,value)=>{persistence=value;},initializeAuth:(app,options)=>{assert.deepEqual(options.persistence,['local','session']);return auth;},signInWithEmailAndPassword:async(...args)=>{emailArgs=args;return{user:auth.currentUser};},signInWithCustomToken:async(a,t)=>{token=t;return{user:auth.currentUser};},signOut:async()=>{}};
   const fsSdk={getFirestore:()=>({}),doc:(db,...p)=>p.join('/'),getDoc:async()=>({exists:()=>true,data:()=>({server:1})}),onSnapshot:(ref,options,next)=>{assert.equal(ref,'_data/account');snapshotCallback=next;return()=>{unsubscribeCount++;};}};
   const dbSdk={getDatabase:()=>({}),ref:(db,p)=>p,get:async p=>{reads.push(p);if(p==='_uid/account'&&first){first=false;await names.promise;}return{val:()=>p.startsWith('_uid/')?['Hero']:p.startsWith('_comp/')?{pets:[1]}:null};}};
   const service=await createFirebaseAdapter([appSdk,authSdk,fsSdk,dbSdk]);
   await service.login('email',{email:'example@test.invalid',password:'test-only'});assert.deepEqual(emailArgs.slice(1),['example@test.invalid','test-only']);
+  assert.equal(persistence,'session');await service.login('email',{email:'example@test.invalid',password:'test-only'},{remember:true});assert.equal(persistence,'local');await service.currentUser({refresh:true});assert.equal(forcedRefresh,true);
   const originalFetch=global.fetch;global.fetch=async(url,options)=>{assert.equal(url,'https://us-central1-idlemmo.cloudfunctions.net/asil');assert.equal(JSON.parse(options.body).data.claimedId,'76561198000000000');return{ok:true,json:async()=>({result:'test-custom-token'})};};
   try{await service.login('steam',steamPayload(valid.href));assert.equal(token,'test-custom-token');}finally{global.fetch=originalFetch;}
   const cancel=service.subscribe(auth.currentUser,packet=>queue.push(packet),error=>{throw error;});
