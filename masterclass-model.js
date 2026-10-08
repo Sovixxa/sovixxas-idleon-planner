@@ -71,13 +71,26 @@ function repeatPlan(model,{percent,goal,mode,count}){
  return {steps,remaining,locked:future?locked:[],requested:limit,needed:Object.fromEntries(Object.entries(remaining).map(([k,v])=>[k,Math.max(0,-v)]))};
 }
 function collapseSteps(steps){const groups=new Map();for(const [i,x] of steps.entries()){const key=x.currency+':'+x.id;let row=groups.get(key);if(!row){row={...x,count:0,cost:0,endLevel:x.level,firstPosition:i+1};groups.set(key,row);}row.count++;row.cost+=x.cost;row.endLevel=x.level+1;row.shortfall=x.shortfall;row.affordable=row.affordable&&x.affordable;}return [...groups.values()];}
-// Match the affected class in the effect, rather than the system awarding it.
-const bonusPatterns={grimoire:/death\s*bringer|grimoire|wraith|\bbones?\b|femur|ribcage|cranium|bovinae/i,compass:/wind\s*walker|compass|tempest|\bdust\b|stardust|moondust|solardust|cooldust|novadust/i,tesseract:/arcane\s*cultist|arcanist|tesseract|tachyon|prisma/i,royalArmory:/royal\s*(guardian|armory)|outpost|orblet|verminous|parchment|castle damage/i};
+// Match the benefit's target, not the source, scaling input, or Prisma metadata.
+const bonusPatterns={grimoire:/\bwraith\b|(?:extra|gain|drop|more|increase)[^.;]*\bbones?\b|\bbones?\s*(?:gain|drop)|bonuses from most Grimoire upgrades/i,compass:/\btempest\b|(?:extra|gain|drop|more|increase)[^.;]*\b(?:dust|stardust|moondust|solardust|cooldust|novadust)\b|\b(?:dust|stardust|moondust|solardust|cooldust|novadust)\s*(?:gain|drop)|bonuses from most Compass upgrades/i,tesseract:/\barcanist\b|arcane (?:damage|mob|crystal)|(?:extra|gain|drop|more|increase)[^.;]*\btachyons?\b|\btachyons?\s*(?:gain|drop)|bonuses from most Tesseract upgrades|prisma bubble drop chance/i,royalArmory:/\boutposts?\b|\borblet|\bverminous\b|parchment|castle damage/i};
+function affectsForm(key,row){
+ if(row.floorKind||/^slab/i.test(row.systemId||''))return false;
+ const effect=String(row.effect||'').split(/\s+per\s+|\s+for every\s+|[·]|\bPrisma multiplier\b/i)[0];
+ // Use catalog effect text, never a positional presentation label.
+ if(row.source==='Alchemy Bubbles'){
+  const names={grimoire:'BONE BUBBLE',compass:'DUST BUBBLE',tesseract:'TACHYON BUBBLE',royalArmory:'ROYAL RICHES'};
+  // Bone Bubble's joke tooltip mentions the other classes and resources.
+  // Explicit catalog identities avoid both misleading prose and shifted labels.
+  return String(row.name||'').replaceAll('_',' ').toUpperCase()===names[key];
+ }
+ const target=effect;
+ return bonusPatterns[key].test(target)||/all master\s*class drops|master\s*class.*drop/i.test(target);
+}
 function bonusRows(key,groups,bubbles=[],upgrades=[]){
  const names={gamingPalette:'Gaming Palette',emperorBonuses:'Emperor',arcade:'Arcade'};
- const rows=Object.entries(groups).filter(([id])=>id!==key).flatMap(([id,entries])=>(Array.isArray(entries)?entries:[]).map(r=>({...r,source:r.source||names[id]||id.replace(/([a-z])([A-Z])/g,'$1 $2')}))).concat(bubbles);
- const matches=rows.filter(r=>bonusPatterns[key].test(`${r.effect||''} ${r.benefitText||''}`)||/all master\s*class|master\s*class.*drops/i.test(r.effect||''));
- return matches.map(r=>({...r,category:/bubble/i.test(r.source)?'bubbles':/gaming/i.test(r.source)?'gaming':'other'})).concat(upgrades.map(r=>({...r,source:configs[key].title,category:'class',level:r.level==null?'Level unknown':`Lv ${r.level}`,status:r.level==null?'unknown':r.unlocked&&r.level>0?'active':'missing'})));
+ const rows=Object.entries(groups).filter(([id])=>id!==key).flatMap(([id,entries])=>(Array.isArray(entries)?entries:[]).map(r=>({...r,systemId:id,source:r.source||names[id]||id.replace(/([a-z])([A-Z])/g,'$1 $2')}))).concat(bubbles);
+ const matches=rows.filter(r=>affectsForm(key,r));
+ return matches.map(r=>({...r,status:r.status==='maxed'?'active':r.status,category:/bubble/i.test(r.source)?'bubbles':/gaming/i.test(r.source)?'gaming':'other'})).concat(upgrades.filter(r=>affectsForm(key,r)).map(r=>({...r,classKey:key,savedLevel:r.level,source:configs[key].title,category:'class',level:r.level==null?'Level unknown':`Lv ${r.level}`,status:r.level==null?'unknown':r.unlocked&&r.level>0?'active':'missing'})));
 }
 // These categories describe the displayed contribution, not its final formula pool.
 // In particular, a +% source can feed a pool that later multiplies another stat.
@@ -90,6 +103,44 @@ function bonusType(row){
  if(additive)return 'additive';
  return 'other';
 }
+const capFormat=v=>Number(v).toLocaleString(undefined,{maximumFractionDigits:3});
+function bonusCaps(row){
+ if(row.caps)return row.caps;
+ const level=row.savedLevel??(typeof row.level==='number'?row.level:Number(String(row.level).match(/^Lv ([\d,]+)/)?.[1]?.replaceAll(',','')));
+ const max=row.max??Number(String(row.level).match(/\/ ([\d,]+)/)?.[1]?.replaceAll(',',''));
+ const c={maximum:'Not established by the current decoder',hard:'Not verified',soft:'Not verified',target:'No reliable numeric target available for this source.'};
+ if(Number.isFinite(max)&&max>0){
+  c.maximum='Level '+capFormat(max)+(max>=999999?' (catalog limit; not a practical target)':'');
+  c.hard='Level limit '+capFormat(max)+'; this is not a combined-stat cap.';
+  c.soft='No separate soft cap verified.';
+  c.target=Number.isFinite(level)?level>=max?'Level limit reached.':max===1?'Unlock this upgrade.':max>=999999?'Compare the next affordable level with other upgrades; do not target the catalog limit.':capFormat(max-level)+' levels remain to the level limit. Affordability determines how far to push.':'Import the saved level to show remaining levels.';
+  if(row.category==='class'&&Number.isFinite(row.cost)&&level<max)c.next='Next level costs '+capFormat(row.cost)+' of its upgrade currency (estimate).';
+ }
+ const id=row.systemId||'';
+ if(id==='vials')return {...c,maximum:'Vial level 13',hard:'Level 13; the effect can still grow through account multipliers.',soft:'No separate soft cap.',target:level>=13?'Vial maxed. Improve vial multipliers for further effect gain.':Number.isFinite(level)?capFormat(13-level)+' vial levels remaining.':'Import the vial level.'};
+ if(id==='killroy'&&row.name==='Masterclass Drops'){
+  const checkpoint=Number.isFinite(level)?[200,800,1800,3800].find(v=>v>level):200;
+  return {maximum:'2.3× theoretical ceiling (never reached at a finite level)',hard:'No effect hard cap in the decoded formula.',soft:'Diminishing returns from the first level: 1 + 1.3 × L / (L + 200). Lv 200 / 800 / 1,800 / 3,800 give 50% / 80% / 90% / 95% of the scaling bonus.',target:checkpoint?'Next checkpoint: Lv '+capFormat(checkpoint)+'. Compare skull cost with other Killroy upgrades; this is not a mandatory target.':'Above 95% of the scaling bonus; prioritize cost versus the tiny next gain.',next:Number.isFinite(level)?'Next level: '+capFormat(1+1.3*(level+1)/(level+201))+'×; gain +'+Number(1.3*200/((level+200)*(level+201))).toLocaleString(undefined,{maximumSignificantDigits:4})+'×.':undefined};
+ }
+ if(id==='emperorBonuses')return {maximum:'No finite ceiling in the decoded formula',hard:'No bonus-level hard cap in the decoded formula.',soft:'Linear per awarded level, with rounding; boss difficulty and attempts limit progress.',target:'Work toward the next kill that awards this bonus.',next:row.killProjections?.find(x=>x.improved)?'In '+row.killProjections.find(x=>x.improved).kill+' total kills: '+row.killProjections.find(x=>x.improved).effect:row.projection};
+ if(id==='meritocracy')return {maximum:'Account-scaled weekly effect',hard:'Not a levelable upgrade; no fixed account-wide maximum established.',soft:'Not applicable to the weekly selection.',target:row.status==='active'?'This weekly bonus is selected. Improve Meritocracy multipliers for a larger effect.':'Not selected this week. The shown effect is potential, not currently active.'};
+ if(/Lab Jewels/i.test(row.source))return {maximum:'Fixed jewel reward × account amplifiers',hard:'One jewel unlock; its amplified effect has no fixed maximum established here.',soft:'No jewel levels or soft-cap target.',target:row.status==='active'?'Jewel active. Improve applicable jewel/mainframe amplification.':'Unlock and connect the jewel; check its connection conditions.'};
+ if(id==='sushi'&&row.group==='Sushi collection')return {maximum:'One first-discovery reward',hard:'Discovery is a one-time unlock.',soft:'No level-based soft cap for this discovery reward.',target:row.status==='missing'?'Discover this sushi.':'Discovery reward obtained; repeating the discovery does not add another copy.'};
+ if(Number.isFinite(row.fishCeiling))return {maximum:capFormat(row.fishCeiling)+'% theoretical ceiling',hard:'Not reached at a finite advice level.',soft:'L / (L + 100): Lv 100 / 400 / 900 / 1,900 give 50% / 80% / 90% / 95%.',target:'Use the next advice level you can afford; compare the marginal effect with other advice.',next:row.detail};
+ if(/^Talents/.test(row.source))return {...c,maximum:'Depends on book maximum and added talent levels',hard:'Saved preset level is not a verified talent cap.',target:'Compare talent points and book upgrades. Per-resource effects still require their stated resource scaling.'};
+ if(row.classKey==='royalArmory'&&row.id===40){c.hard='Recycling effect capped at 75%; level limit '+capFormat(max)+'.';c.target='Stop buying for recycling once its displayed effect reaches 75%.';}
+ if(row.classKey==='royalArmory'&&row.id===37){c.hard='Combined parchment chance is capped at 100%; includes other sources.';c.target='Unlock first; check the combined chance in Verminous before investing in further drop bonuses.';}
+ return c;
+}
+function enrichBonusCaps(groups,systems){
+ const gaming=systems.get('gaming');
+ for(const row of groups.gamingPalette||[]){const color=gaming?.paletteColors?.find(x=>x.data.name===row.name);if(!color)continue;
+  const linear=color.data.usesDecay!==1,level=color.level,bonus=gaming.getPaletteBonus(color.index),gain=level>0?bonus/level:null;
+  row.caps=linear?{maximum:'No finite ceiling in the decoded formula',hard:'No level hard cap in the palette formula.',soft:'Linear bonus per level; upgrade costs increase.',target:'Buy affordable levels; there is no special stopping level.',next:gain==null?'Per-level gain needs a nonzero saved level.':'Next level adds '+capFormat(gain)+' percentage points with current account boosts.'}:{maximum:level>0?capFormat(bonus*(level+25)/level)+'% theoretical ceiling':'Account-scaled theoretical ceiling',hard:'Not reached at a finite level.',soft:'L / (L + 25): Lv 25 / 100 / 225 / 475 give 50% / 80% / 90% / 95%.',target:'Compare the next checkpoint with palette costs; checkpoints are not hard caps.'};
+ }
+ for(const row of groups.button||[]){const x=systems.get('button')?.bonuses?.find(x=>x.data.name===row.name);if(!x)continue;row.caps={maximum:'No finite ceiling in the decoded formula',hard:'No accumulated-bonus cap in the formula.',soft:'Linear gain per press awarded to this category; requirements get harder.',target:'Complete the next affordable Button requirement. Categories rotate every five presses.',next:'Each press in this category adds '+capFormat(x.data.bonusPerPress*x.bonusMultiplier/100)+'× to this multiplier with current boosts.'};}
+ return groups;
+}
 const bonusTypes={multi:'Multipliers (×)',additive:'Additive bonuses (+)',other:'Conditional / other'};
-const api={configs,snapshot,optimize,availableGoals,costAt,collapseSteps,bonusRows,bonusType,bonusTypes};if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.MasterclassModel=api;
+const api={configs,snapshot,optimize,availableGoals,costAt,collapseSteps,bonusRows,bonusType,bonusTypes,bonusCaps,enrichBonusCaps};if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.MasterclassModel=api;
 })(typeof self!=='undefined'?self:globalThis);

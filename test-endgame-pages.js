@@ -12,3 +12,9 @@ console.log('Endgame: complete page groups, lore breakpoints, actual sprites, Bu
 
 for(const x of g.spelunking.filter(x=>x.floorKind==='discovery'))assert(g.spelunking.some(t=>t.floorKind==='tunnel'&&t.floor===x.floor));
 
+
+const caps=require('./masterclass-model');
+for(const key of Object.keys(caps.configs))for(const row of caps.bonusRows(key,g)){const c=caps.bonusCaps(row);assert(c.maximum&&c.hard&&c.soft&&c.target);assert(!/NaN|undefined/.test(JSON.stringify(c)),row.name);}
+assert.match(g.gamingPalette.find(r=>r.name==='Fuchsia').caps.soft,/Linear/);
+assert.match(g.button.find(r=>r.name==='Xtra Masterclass Drops').caps.maximum,/No finite ceiling/);
+console.log('MC cap metadata covers all decoded external rows without invalid values');

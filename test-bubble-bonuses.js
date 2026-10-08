@@ -23,3 +23,17 @@ for(const target of [80,90,95,99,99.9]){
  assert.match(damage.summary.target.text,new RegExp(String(target).replace('.','\\.')+'% checkpoint'));
 }
 console.log('Bubble bonus dropdown targets: 80, 90, 95, 99 and 99.9 percent pass.');
+
+const mc=require('./masterclass-model');
+const actual=B.model(JSON.parse(fs.readFileSync('../example json.txt','utf8')),catalog,{prismaMulti:2}).entries;
+const soul=actual.find(r=>r.name==='DMG OF THE SOUL');
+const tachyon=actual.find(r=>r.name==='TACHYON BUBBLE');
+assert(soul&&tachyon);
+assert.equal(soul.label,'Total damage');
+assert.equal(tachyon.label,'Arcane Cultist tachyon gain');
+const mcBubbles=actual.map(r=>({source:'Alchemy Bubbles',name:r.name,effect:r.summary.effect,scopeEffect:r.description,benefitText:r.label}));
+assert.deepEqual(mc.bonusRows('tesseract',{},mcBubbles).map(r=>r.name),['TACHYON BUBBLE']);
+assert.equal(mc.bonusRows('tesseract',{},[{source:'Alchemy Bubbles',name:'DMG OF THE SOUL',effect:'+3800% Total Damage',benefitText:'Arcane Cultist tachyon gain'}]).length,0);
+console.log('Actual save/catalog: soul damage excluded, tachyon bubble retained, labels aligned');
+
+for(const [key,name] of [['grimoire','BONE BUBBLE'],['compass','DUST BUBBLE'],['tesseract','TACHYON BUBBLE'],['royalArmory','ROYAL RICHES']])assert.deepEqual(mc.bonusRows(key,{},mcBubbles).map(r=>r.name),[name]);
