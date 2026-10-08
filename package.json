@@ -39,7 +39,7 @@
     "test:stamp-bonuses": "node test-stamp-bonuses.js && node test-stamp-bonuses-browser.js",
     "test:live-bonuses": "node test-catalog-coverage.js && node test-client-audit.js && node test-tome-current.js && node test-fountain-client.js && node test-spelunking-client.js && node test-cove-client.js && node test-bubba-client.js && node test-killroy-client.js && node test-arcade-companion-client.js && node test-divinity-client.js",
     "test:connected-bonuses": "node test-connected-pools.js && node test-connected-stats.js && node test-connected-traces.js && node test-connected-bonuses-browser.js",
-    "test:masterclasses": "node test-masterclass-model.js && node test-masterclass-browser.js",
+    "test:masterclasses": "node test-masterclass-model.js && node test-masterclass-audit.js && node test-masterclass-browser.js",
     "test:site-browser": "node test-site-navigation-browser.js && node test-loadouts-navigation-browser.js && node test-save-navigation-browser.js && node test-live-sync-browser.js && node test-planner-qol-browser.js && node test-worker-recovery-browser.js",
     "test:site-structure": "node test-site-structure-browser.js && node test-constellations-browser.js",
     "test:all": "node audit-all-tests.cjs",

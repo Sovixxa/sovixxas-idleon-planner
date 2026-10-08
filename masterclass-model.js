@@ -4,7 +4,7 @@ const parse=v=>{try{return typeof v==='string'?JSON.parse(v):v;}catch{return nul
 const valid=v=>v!=null&&v!==''&&Number.isFinite(Number(v))&&Number(v)>=0;
 function snapshot(key,raw,systems){const cfg=configs[key],data=parse(raw?.data)||raw||{};
  if(!Array.isArray(parse(data[cfg.save])))return {available:false,upgrades:[],balances:{}};
- if(key==='royalArmory'){const m=root.RoyalArmory.model(raw),r=parse(data.RoyalG),stored=parse(r[1])||[];return {available:true,balances:Object.fromEntries(stored.map((v,i)=>[i,valid(v)?Number(v):null])),upgrades:m.upgrades.filter(x=>x.slot>=0).sort((a,b)=>a.slot-b.slot).map(x=>{const c=root.ROYAL_ARMORY_CATALOG.upgrades.find(c=>c.index===x.id);return {...x,effect:x.description,currency:c.costResourceIndex,costModel:{kind:'royal',base:c.baseCost,growth:c.costScaling},cost:x.level==null?null:x.id===46&&x.level<3?2:x.id===58&&x.level<1?3:25*Math.pow(1.24,x.slot)*(3+5*x.slot)*c.baseCost*Math.pow(c.costScaling,x.level),icon:`assets/RAupg${x.id}.png`,group:`Shelf ${Math.floor(x.slot/10)+1}`};})};}
+ if(key==='royalArmory'){const m=root.RoyalArmory.model(raw),r=parse(data.RoyalG),stored=parse(r[1])||[];return {available:true,balances:Object.fromEntries(stored.map((v,i)=>[i,valid(v)?Number(v):null])),upgrades:m.upgrades.filter(x=>x.slot>=0).sort((a,b)=>a.slot-b.slot).map(x=>{const c=root.ROYAL_ARMORY_CATALOG.upgrades.find(c=>c.index===x.id);return {...x,effect:x.description,currency:root.ROYAL_ARMORY_CATALOG.upgrades.find(row=>row.index===x.slot)?.costResourceIndex,costModel:{kind:'royal',base:c.baseCost,growth:c.costScaling},cost:x.level==null?null:x.id===46&&x.level<3?2:x.id===58&&x.level<1?3:25*Math.pow(1.24,x.slot)*(3+5*x.slot)*c.baseCost*Math.pow(c.costScaling,x.level),icon:`assets/RAupg${x.id}.png`,group:`Shelf ${Math.floor(x.slot/10)+1}`};})};}
  const s=systems.get(key),balances=s?.resources||s?.availableDust||{};
  return {available:true,balances,upgrades:(s?.upgrades||[]).map(x=>({id:x.id,name:x.data.name,level:x.level,max:x.data.maxLevel??x.data.max_level,unlocked:x.unlocked,cost:x.cost,currency:x.data.dustType??x.data.x1,costModel:{kind:key==='compass'?'exponential':'scaled',base:x.data.base_cost,growth:key==='compass'?x.data.costMult:x.data.scaling_factor+.01},effect:x.getDescription(s.upgrades),icon:`assets/${x.getImageData().location}.png`,group:x.data.upgradeType||cfg.title}))};
 }
@@ -74,7 +74,11 @@ function collapseSteps(steps){const groups=new Map();for(const [i,x] of steps.en
 // Match the benefit's target, not the source, scaling input, or Prisma metadata.
 const bonusPatterns={grimoire:/\bwraith\b|(?:extra|gain|drop|more|increase)[^.;]*\bbones?\b|\bbones?\s*(?:gain|drop)|bonuses from most Grimoire upgrades/i,compass:/\btempest\b|(?:extra|gain|drop|more|increase)[^.;]*\b(?:dust|stardust|moondust|solardust|cooldust|novadust)\b|\b(?:dust|stardust|moondust|solardust|cooldust|novadust)\s*(?:gain|drop)|bonuses from most Compass upgrades/i,tesseract:/\barcanist\b|arcane (?:damage|mob|crystal)|(?:extra|gain|drop|more|increase)[^.;]*\btachyons?\b|\btachyons?\s*(?:gain|drop)|bonuses from most Tesseract upgrades|prisma bubble drop chance/i,royalArmory:/\boutposts?\b|\borblet|\bverminous\b|parchment|castle damage/i};
 function affectsForm(key,row){
- if(row.floorKind||/^slab/i.test(row.systemId||''))return false;
+ if(row.mcKeys)return row.mcKeys.includes(key);
+ if(row.mcKey)return row.mcKey===key;
+ if(row.floorKind||/^slab/i.test(row.systemId||'')||row.systemId==='holeAllBonuses')return false;
+ if(key==='royalArmory'&&/masterclass.*drops|all masterclasses.*(?:bones|dust|tachyon)|W6 Masterclasses/i.test(row.effect||''))return false;
+ if(key==='compass'&&['Elemental','Fighter','Survival'].includes(row.group))return true;
  const effect=String(row.effect||'').split(/\s+per\s+|\s+for every\s+|[·]|\bPrisma multiplier\b/i)[0];
  // Use catalog effect text, never a positional presentation label.
  if(row.source==='Alchemy Bubbles'){
@@ -84,7 +88,7 @@ function affectsForm(key,row){
   return String(row.name||'').replaceAll('_',' ').toUpperCase()===names[key];
  }
  const target=effect;
- return bonusPatterns[key].test(target)||/all master\s*class drops|master\s*class.*drop/i.test(target);
+ return bonusPatterns[key].test(target)||key!=='royalArmory'&&/all master\s*class drops|master\s*class.*drop/i.test(target);
 }
 function bonusRows(key,groups,bubbles=[],upgrades=[]){
  const names={gamingPalette:'Gaming Palette',emperorBonuses:'Emperor',arcade:'Arcade'};
@@ -95,6 +99,7 @@ function bonusRows(key,groups,bubbles=[],upgrades=[]){
 // These categories describe the displayed contribution, not its final formula pool.
 // In particular, a +% source can feed a pool that later multiplies another stat.
 function bonusType(row){
+ if(row.calculationType)return row.calculationType;
  const text=String(row.effect||'').trim();
  const multi=/(?:\d[\d,.]*(?:e[+-]?\d+)?\s*[x×](?=\s|$)|[x×]\s*\d|\btrue multiplier\b)/i.test(text);
  const additive=/(?:^|\s)\+\s*\d/.test(text);
