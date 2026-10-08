@@ -24,10 +24,18 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'C:/Users/Sofia/AppData/Lo
  await tab('Knowledge').click();assert.equal(await page.locator('.sushi-knowledge-cards article').count(),64);
  await page.locator('[data-knowledge-filter]').selectOption('perfecto');assert(await page.locator('.sushi-knowledge-cards article').count()<64);
  await page.screenshot({path:'../audit/sushi-targets-desktop.png'});
+ await tab('Perfecto chances').click();assert.equal(await page.locator('.sushi-perfecto-card').count(),64);
+ const completed=await page.locator('.sushi-perfecto-card[data-perfecto=true]').count();assert(completed>0);
+ await page.locator('[data-hide-perfectos]').click();assert.equal(await page.locator('.sushi-perfecto-card[data-perfecto=true]').count(),0);assert.equal(await page.locator('.sushi-perfecto-card').count(),64-completed);
+ await page.locator('[data-hide-perfectos]').click();assert.equal(await page.locator('.sushi-perfecto-card').count(),64);
+ await page.screenshot({path:'../audit/sushi-perfecto-desktop.png',fullPage:true});
+ await page.locator('[data-perfecto-tab="Bonuses & upgrades"]').click();assert.equal(await page.locator('.sushi-perfecto-sources article').count(),2);assert((await page.locator('.sushi-perfecto-sources').innerText()).includes('Caviar Supreme'));assert.equal(await page.locator('.sushi-perfecto-grid article').count(),6);
+ await page.locator('[data-perfecto-tab=Chances]').click();
  await tab('Sushi collection').click();assert.equal(await page.locator('[data-discovery]').count(),64);await page.locator('[data-discovery="0"]').click();assert.equal(await page.locator('[data-discovery="0"]').getAttribute('aria-pressed'),'true');
  await tab('Bonus breakdowns').click();assert.equal(await page.locator('.sushi-breakdowns>section').count(),4);
  await page.setViewportSize({width:390,height:844});await tab('Overview').click();await page.screenshot({path:'../audit/sushi-overview-mobile.png',fullPage:true});
  const overflow=()=>page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1);assert.equal(await overflow(),false);
+ await tab('Perfecto chances').click();assert.equal(await overflow(),false);await page.screenshot({path:'../audit/sushi-perfecto-mobile.png',fullPage:true});await page.locator('[data-perfecto-tab="Bonuses & upgrades"]').click();assert.equal(await overflow(),false);await page.screenshot({path:'../audit/sushi-perfecto-bonuses-mobile.png',fullPage:true});
  await tab('Board planner').click();assert.equal(await overflow(),false);await page.screenshot({path:'../audit/sushi-board-mobile.png',fullPage:true});
  // A new account has a next discovery, locked systems, and zero passive plate income.
  await page.evaluate(async raw=>{
@@ -44,7 +52,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'C:/Users/Sofia/AppData/Lo
  assert((await page.locator('.sushi-panel').innerText()).includes('Unavailable'));
  await page.locator('[data-retry]').click();await page.locator('.sushi-hero').waitFor({timeout:60000});assert.equal(await page.locator('.sushi-planner [role=alert]').count(),0);
  await tab('Bonus breakdowns').click();await page.locator('[data-source=eventShop]').click();await page.waitForFunction(()=>!document.querySelector('.sushi-planner'));
- assert.deepEqual(errors,[]);console.log('Sushi browser: all six views, filtering, board suggestions/swaps/reset, desktop and mobile passed.');
+ assert.deepEqual(errors,[]);console.log('Sushi browser: all seven views, filtering, board suggestions/swaps/reset, desktop and mobile passed.');
 }finally{await browser.close();}})().catch(e=>{console.error(e);process.exitCode=1;});
 
 

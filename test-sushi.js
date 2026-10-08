@@ -3,6 +3,8 @@ const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/st
 const box={window:{}};vm.runInNewContext(fs.readFileSync('world7-data.js','utf8'),box);const catalog=box.window.WORLD7_CATALOG;
 const raw=JSON.parse(fs.readFileSync('../example json.txt','utf8')),snapshot=JSON.stringify(raw);
 const context={superbit:100,factors:[{name:'test external bonus',value:1.2}]},s=M.decode(raw,catalog,context),base=M.calculate(s);
+assert.equal(base.knowledge[0].perfectChance,Math.min(1,.6*(1+base.totals[10]/100)));
+assert.equal(base.knowledge[63].perfectChance,Math.min(1,.6*.81**63/(1+63/8)*(1+base.totals[10]/100)));
 assert.equal(M.decode({},catalog,context),null);assert.equal(base.knowledge.length,64);assert.equal(base.unique,64);
 assert(base.knowledge.filter(x=>x.discovered&&!x.perfecto).length>0);assert(Number.isFinite(base.bucksPerHour)&&base.bucksPerHour>0);
 assert(base.knowledge[63].effect&&!base.knowledge[63].effect.includes('{'));
@@ -39,7 +41,7 @@ if(fs.existsSync(clientPath)){
    const near=(a,b,label)=>{assert(Math.abs(a-b)<=1e-10*Math.max(1,Math.abs(b)),label+': '+a+' vs '+b);checks++;};
    near(actual.fuel,game('FuelGen'),'fuel');near(actual.cap,game('FuelCap'),'capacity');near(actual.currencyMulti,game('CurrencyMulti'),'currency multiplier');near(actual.bucksPerHour,game('CurrencyperHR',-1),'income');near(actual.combo,game('ComboMulti'),'combo');
    for(let i=0;i<46;i++)near(M.cost(state,i,actual),game('UpgCost',i),'cost '+i);
-   for(let i=0;i<64;i++){near(actual.knowledge[i].required,game('KnowledgeXP_req',state.knowledge[i]),'xp requirement');near(actual.knowledge[i].bonus,game('KnowledgeBonusSpecific',i),'knowledge bonus');}
+   for(let i=0;i<64;i++){near(actual.knowledge[i].perfectChance,Math.min(1,game('PerfectOdds',i)),'Perfecto chance');near(actual.knowledge[i].required,game('KnowledgeXP_req',state.knowledge[i]),'xp requirement');near(actual.knowledge[i].bonus,game('KnowledgeBonusSpecific',i),'knowledge bonus');}
  }
  console.log('Sushi real-client formula comparisons passed:',checks);
 }

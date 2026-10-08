@@ -12,3 +12,18 @@ assert.equal(spiceRoles(1,'focus',0,true)[0][0],'Opticular');assert.equal(spiceR
 for(const mode of ['focus','power'])for(let target=0;target<10;target++){const plan=spiceRoles(10,mode,target,true);for(let i=0;i<plan.length;i++)if(plan[i].includes('Borger'))assert(plan[i-1]?.includes('Forager'),'focused changes preserve downstream Borger support');}
 assert.equal(recommendArena({inventory:[],species:['Mercenary','Cursory','Refiller','Defender'].map(gene=>({gene,unlocked:true}))},4).id,'four-early');
 console.log('Breeding teams: slot thresholds, unique combat species, global inventory allocation, availability and neighboring spice synergies pass.');
+
+const {improveOpticular,auditSpiceRow}=require('./breeding-teams');
+const owned=(gene,power=100,key=gene)=>({gene,pet:{gene,power,key},state:'owned'});
+const chain=spiceRoles(4,'early',3);assert(chain.every(row=>row[0]==='Targeter'),'top row seeds every lower Targeter');
+assert.deepEqual(spiceRoles(0,'focus',0),[]);
+let checks=auditSpiceRow([owned('Borger'),owned('Miasma'),owned('Flashy'),owned('Converter')],[owned('Forager')]);
+assert.equal(checks.warnings.length,0);assert(checks.notes.some(n=>n.includes('10×')));assert(checks.notes.some(n=>n.includes('4×')));
+checks=auditSpiceRow([owned('Borger'),owned('Miasma'),owned('Flashy'),owned('Converter')],[{gene:'Forager',state:'hatch'}]);assert(checks.warnings.some(n=>n.includes('Borger')),'planned hatch does not activate support');
+checks=auditSpiceRow([owned('Targeter')],[owned('Forager'),owned('Targeter')]);assert(checks.warnings.some(n=>n.includes('Targeter')),'Targeter must be directly above');
+checks=auditSpiceRow([owned('Miasma'),owned('Forager'),owned('Forager'),owned('Flashy')]);assert(checks.warnings.some(n=>n.includes('Miasma')));
+checks=auditSpiceRow([owned('Flashy'),owned('Tsar')]);assert(checks.warnings.some(n=>n.includes('Flashy')));
+const opticSlots=[owned('Opticular',100,'o'),owned('Miasma',200),owned('Flashy',50),owned('Converter',50)],opticUsed=new Set(['o']);
+const improved=improveOpticular({inventory:[{gene:'Forager',power:80,key:'f'}]},opticSlots,opticUsed);assert.equal(improved[0].gene,'Forager');assert(!opticUsed.has('o'));assert(opticUsed.has('f'));
+const activeOptic=[owned('Opticular',300),owned('Miasma',200),owned('Flashy'),owned('Converter')];assert.equal(improveOpticular({inventory:[{gene:'Forager',power:400,key:'f'}]},activeOptic,new Set())[0].gene,'Opticular','900 Opticular contribution beats 800 Forager');
+console.log('Spice audit: chain seeding, actual support, distinct abilities, combat restrictions and power-aware Opticular selection pass.');

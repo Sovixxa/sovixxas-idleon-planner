@@ -43,7 +43,7 @@ function calculate(s){
     if(lv(13)>0&&tier>=0){if(plate===2)for(let j=0;j<tier&&j<ks.length;j++)xpDaily[j]+=.2*plateBase*km;else if(plate===3&&tier<ks.length)xpDaily[tier]+=plateBase*km;}
     return {i,tier,plate,fire,bucks:bucks*currencyMulti,xpMulti:km};
   });
-  ks.forEach(k=>{k.daily=xpDaily[k.i];k.days=k.daily>0?k.remaining/k.daily:null;k.effect=formatEffect(k.description,k.bonus);k.nextEffect=formatEffect(k.description,k.bonus+k.perLevel);k.perfectEffect=formatEffect(k.description,k.bonus*2);});
+  ks.forEach(k=>{k.perfectChance=Math.min(1,.6*.81**k.i/(1+k.i/8)*(1+t(10)/100));k.daily=xpDaily[k.i];k.days=k.daily>0?k.remaining/k.daily:null;k.effect=formatEffect(k.description,k.bonus);k.nextEffect=formatEffect(k.description,k.bonus+k.perLevel);k.perfectEffect=formatEffect(k.description,k.bonus*2);});
   const rog=i=>unique>i?num(s.catalog.Research[37][i]):0;
   const discounts=[factor('Wholesale Pricing',1/(1+q(36)/100)),factor('Discovery discount',Math.max(.1,1-Math.max(rog(26),rog(44))/100)),factor('Knowledge discount',1/(1+t(6)/100)),factor('Jelly Operator',1/(1+s.jellyDiscount/100),'jelly')];
   return {knowledge:ks,totals,unique,fuel,cap,combo,sparkPct,fireBase,plateBase,slots,bucksPerHour:baseBucks*currencyMulti,currencyMulti,currencyFactors,fuelFactors,knowledgeFactors,discounts,discount:product(discounts),xpDaily,totalXpDaily:xpDaily.reduce((a,b)=>a+b,0),xpCreation:(1+q(37)/10)*xpMulti,hoursToCap:Math.max(0,cap-num(s.misc[0]))/fuel};

@@ -28,8 +28,10 @@
     return ARENA.filter(t=>t.slots===slots).map(t=>({...t,missing:t.roles.filter(g=>!available(data,g)).length})).sort((a,b)=>a.missing-b.missing)[0];
   }
   function spiceRoles(count,mode,focus,hasConverter=true){
+    if(count<=0)return [];
+    focus=Math.max(0,Math.min(count-1,focus));
     const rows=Array.from({length:count},(_,i)=>{
-      if(mode==='early')return [i?'Targeter':'Opticular','Miasma','Forager','Fleeter'];
+      if(mode==='early')return [count>1?'Targeter':'Opticular','Miasma','Forager','Fleeter'];
       const fourth=hasConverter?'Converter':'Flashy';
       if(i<3)return ['Alchemic','Alchemic','Alchemic',fourth];
       if(i===3)return ['Alchemic','Forager','Miasma',fourth];
@@ -44,6 +46,52 @@
       rows.forEach((row,i)=>{if(row.includes('Borger')&&!rows[i-1]?.includes('Forager'))rows[i]=row.map(g=>g==='Borger'?'Alchemic':g);});
     }
     return rows;
+  }
+  // Compare the conditional Opticular contribution with an unused Forager.
+  // The other three roles stay fixed so their row and neighbor bonuses are preserved.
+  function improveOpticular(data,slots,used){
+    const index=slots.findIndex(s=>s.gene==='Opticular');if(index<0)return slots;
+    const current=slots[index],others=slots.filter((_,i)=>i!==index);
+    const active=current.pet&&others.every(s=>s.pet&&s.pet.power<=current.pet.power);
+    const score=current.pet?current.pet.power*(active?3:1):0;
+    const candidate=data.inventory.filter(p=>p.gene==='Forager'&&!used.has(p.key)).sort((a,b)=>b.power-a.power)[0];
+    if(candidate&&candidate.power*2>score){
+      if(current.pet)used.delete(current.pet.key);used.add(candidate.key);
+      slots[index]={gene:'Forager',pet:candidate,target:candidate,state:'owned'};
+    }
+    return slots;
+  }
+  function auditSpiceRow(slots,above=[],below=[]){
+    const warnings=[],notes=[],pets=slots.map(s=>s.pet),has=g=>pets.some(p=>p?.gene===g);
+    if(pets.some(p=>!p))warnings.push('Incomplete team: hatch the missing pets before relying on these bonuses.');
+    if(has('Borger')){
+      const supported=above.some(s=>s.pet?.gene==='Forager');
+      (supported?notes:warnings).push(supported?'Borger: 10× own contribution; Forager is in the row above.':'Borger: 10× bonus inactive until a Forager is placed in the row above.');
+    }
+    pets.forEach((p,i)=>{
+      if(p?.gene==='Targeter'){
+        const active=above[i]?.pet?.gene==='Targeter';
+        (active?notes:warnings).push(active?'Targeter: 5× own contribution; Targeter is directly above in the same slot.':'Targeter: no 5× bonus here; this pet can seed the chain below.');
+      }
+      if(p?.gene==='Opticular'){
+        const active=pets.every(other=>other&&other.power<=p.power);
+        (active?notes:warnings).push(active?'Opticular: 3× own contribution; highest power in this row.':'Opticular: 3× bonus is not confirmed; it must have the highest power in this row.');
+      }
+    });
+    if(has('Miasma')){
+      const active=pets.every(Boolean)&&new Set(pets.map(p=>p.gene)).size===4;
+      (active?notes:warnings).push(active?'Miasma: 4× row speed; four different abilities.':'Miasma: 4× bonus inactive until all four slots have different abilities.');
+    }
+    if(has('Flashy')){
+      const combat=new Set(['Fighter','Defender','Mercenary','Boomer','Sniper','Amplifier','Tsar','Rattler','Cursory','Defstone','Lazarus','Heavyweight','Fastihoop','Ninja','Superboomer','Peapeapod']);
+      const active=!pets.some(p=>p&&combat.has(p.gene));
+      (active?notes:warnings).push(active?'Flashy: 1.5× row speed; no combat pets.':'Flashy: bonus inactive because this row contains a combat pet.');
+    }
+    const neighbors=[...above,...below].filter(s=>s.pet?.gene==='Badumdum').length;
+    if(neighbors)notes.push(neighbors+' neighboring Badumdum pets support this row.');
+    if(has('Converter'))notes.push('Converter: claim-retention benefit, not a raw speed multiplier.');
+    if(has('Alchemic'))notes.push('Alchemic: extra spice on fills, not a raw speed multiplier.');
+    return {warnings,notes};
   }
   const name=id=>String(root.WORLD4_CATALOG?.MonsterNames?.[id]||id||'No species available').replaceAll('_',' ');
   const territoryName=t=>root.BREEDING_TERRITORIES?.[t.index]||t.name;
@@ -69,9 +117,9 @@
       const count=territories.length,converter=available(data,'Converter'),roles=spiceRoles(count,mode,focus,converter),used=new Set(),plans=new Map();
       // Reserve best copies for the focused row and its support rows before filling the rest.
       const order=[...Array(count).keys()];if(['focus','power'].includes(mode))order.sort((a,b)=>(a===focus?-2:Math.abs(a-focus)===1?-1:0)-(b===focus?-2:Math.abs(b-focus)===1?-1:0)||b-a);else order.reverse();
-      for(const i of order)plans.set(i,assign(data,roles[i],{used}));
-      const needed=[...plans.values()].flat().filter(s=>!s.pet),descriptions={early:'Build a vertical Targeter chain in slot 1. The top row uses Opticular because it has no pet above it. Opticular must have the highest power in its row; substitute Forager if needed. Miasma needs four different abilities.',balanced:'Use Alchemic for early, easy-to-fill rows and Borger for later rows. Keep a Forager directly above each Borger row. The last row can drop its Forager because no row below needs it.',focus:'Boost one chosen spice by dedicating the row above to three Badumdums and a Forager, and the row below to four Badumdums when available. This sacrifices the neighboring rows. Borger gets its 10× base foraging contribution from the Forager above.',power:'Use a Forager and Tsars above the target, then three Borgers and Flashy in the target row. This is a fight-power recovery setup, not the best long-term collection setup. Check the game’s fight-power requirement after moving pets.'};
-      host.innerHTML=`<section class="pet-planner spice-compact"><header class="section-head compact"><div><p class="eyebrow">World 4 · Breeding</p><h2>Best Spices</h2><p>${unlocked.length} confirmed territories unlocked · Choose your collection goal.</p></div></header><div class="pet-plan-controls"><label>Strategy <select id="spiceMode">${[['early','Early · Targeter chain'],['balanced','General collection'],['focus','Focus one spice'],['power','Meet fight power']].map(([id,label])=>`<option value="${id}" ${mode===id?'selected':''}>${label}</option>`).join('')}</select></label><label ${['focus','power'].includes(mode)?'':'hidden'}>Target territory <select id="spiceFocus">${territories.map((t,i)=>`<option value="${i}" ${i===focus?'selected':''}>${i+1}. ${esc(territoryName(t))}</option>`).join('')}</select></label></div><details class="pet-plan-intro"><summary>Setup notes · ${needed.length} slots need a hatch/unlock</summary><h3>${mode==='balanced'?'A strong default for regular collection':mode==='early'?'Start with a connected foraging chain':mode==='focus'?'Prioritize '+esc(territoryName(territories[focus]||{})):'Get the target territory producing'}</h3><p>${esc(descriptions[mode])}</p><p>${converter?'Use one Converter per production row. Extra Converters do not stack.':'Converter is not confirmed unlocked; this plan uses Flashy instead where appropriate.'} <strong>Placing a Converter resets that territory’s trekking progress.</strong> Claim first before rearranging.</p><small>${needed.length} planned slots need a hatch/unlock. Each saved pet is assigned at most once in this plan. Higher rows in the game must stay directly above the rows they support.</small></details>${!unlocked.length?'<p class="pet-plan-help">No territory is confirmed unlocked in this export. Rows below are a reference, not a ready-to-place plan.</p>':''}<details class="pet-plan-help"><summary>Collection and power checks</summary><p>More raw speed is not always more claimed spice: Alchemic adds extra spice on fills, and Converter can preserve progress when claiming. Frequent collection and long gaps favor different setups.</p><p>Blooming Axe lets foraging contribution supply fight power. A team below the territory’s required fight power produces nothing. Verify the game’s power bar before leaving a new setup; this planner does not calculate post-swap power or spice/hour.</p><p>Flashy requires no combat pets in its own row. Miasma needs four different ability types. Multiple copies of the same species are allowed for production, but each needs a separate saved pet. The plan may move pets from existing teams; their source is shown.</p></details><div class="spice-plan-list">${territories.map((t,i)=>`<section class="spice-plan-row ${['focus','power'].includes(mode)&&i===focus?'spice-focus':''}"><header><h3>${i+1}. ${esc(territoryName(t))}</h3><span>${t.unlocked===true?'Unlocked':t.unlocked===false?'Locked':'Unknown'} · Required fight power ${fmt(t.requirement)}</span></header><div class="pet-plan-team">${plans.get(i).map((s,j)=>card(s,j)).join('')}</div><details><summary>Assignments &amp; current team</summary><p><strong>Planned sources:</strong> ${plans.get(i).map((s,j)=>`${j+1}. ${esc(s.gene)} — ${s.pet?esc(s.pet.location):s.state==='hatch'?'Hatch a copy':'Unlock species'}`).join(' · ')}</p><p><strong>Current:</strong> ${t.pets.length?t.pets.map(p=>`${esc(name(p.id))} (${esc(p.gene)}, ${fmt(p.power)})`).join(' → '):'No assigned pets recorded.'}</p></details></section>`).join('')||'<p>No territory records available.</p>'}</div>${sources()}</section>`;
+      for(const i of order)plans.set(i,improveOpticular(data,assign(data,roles[i],{used}),used));
+      const needed=[...plans.values()].flat().filter(s=>!s.pet),descriptions={early:'Build a vertical Targeter chain in slot 1. The top Targeter seeds the chain; it does not receive 5× itself. Every lower Targeter must be in the same slot as the one above. For a single territory, compare Opticular with an available Forager by their actual contribution. Miasma needs four different abilities.',balanced:'Use Alchemic for early, easy-to-fill rows and Borger for later rows. Keep a Forager directly above each Borger row. The last row can drop its Forager because no row below needs it.',focus:'Boost one chosen spice by dedicating the row above to three Badumdums and a Forager, and the row below to four Badumdums when available. This sacrifices the neighboring rows. Borger gets its 10× base foraging contribution from the Forager above.',power:'Use a Forager and Tsars above the target, then three Borgers and Flashy in the target row. This is a fight-power recovery setup, not the best long-term collection setup. Check the game’s fight-power requirement after moving pets.'};
+      host.innerHTML=`<section class="pet-planner spice-compact"><header class="section-head compact"><div><p class="eyebrow">World 4 · Breeding</p><h2>Best Spices</h2><p>${unlocked.length} confirmed territories unlocked · Choose your collection goal.</p></div></header><div class="pet-plan-controls"><label>Strategy <select id="spiceMode">${[['early','Early · Targeter chain'],['balanced','General collection'],['focus','Focus one spice'],['power','Meet fight power']].map(([id,label])=>`<option value="${id}" ${mode===id?'selected':''}>${label}</option>`).join('')}</select></label><label ${['focus','power'].includes(mode)?'':'hidden'}>Target territory <select id="spiceFocus">${territories.map((t,i)=>`<option value="${i}" ${i===focus?'selected':''}>${i+1}. ${esc(territoryName(t))}</option>`).join('')}</select></label></div><details class="pet-plan-intro"><summary>Setup notes · ${needed.length} slots need a hatch/unlock</summary><h3>${mode==='balanced'?'General collection template':mode==='early'?'Start with a connected foraging chain':mode==='focus'?'Prioritize '+esc(territoryName(territories[focus]||{})):'Get the target territory producing'}</h3><p>${esc(descriptions[mode])}</p><p>${converter?'Use one Converter per production row. Extra Converters do not stack.':'Converter is not confirmed unlocked; this plan uses Flashy instead where appropriate.'} <strong>Placing a Converter resets that territory’s trekking progress.</strong> Claim first before rearranging.</p><small>${needed.length} planned slots need a hatch/unlock. Each saved pet is assigned at most once in this plan. Higher rows in the game must stay directly above the rows they support.</small></details>${!unlocked.length?'<p class="pet-plan-help">No territory is confirmed unlocked in this export. Rows below are a reference, not a ready-to-place plan.</p>':''}<details class="pet-plan-help"><summary>Collection and power checks</summary><p>These are strategy templates, not a proven maximum-spice solution for your account. The first three Alchemic rows are a starting point; the best cutoff depends on pet power and collection timing. More raw speed is not always more claimed spice: Alchemic adds extra spice on fills, and Converter can preserve progress when claiming. Frequent collection and long gaps favor different setups.</p><p>Blooming Axe lets foraging contribution supply fight power. A team below the territory’s required fight power produces nothing. Verify the game’s power bar before leaving a new setup; this planner does not calculate post-swap power or spice/hour.</p><p>Flashy requires no combat pets in its own row. Miasma needs four different ability types. Multiple copies of the same species are allowed for production, but each needs a separate saved pet. The plan may move pets from existing teams; their source is shown.</p></details><div class="spice-plan-list">${territories.map((t,i)=>`<section class="spice-plan-row ${['focus','power'].includes(mode)&&i===focus?'spice-focus':''}"><header><h3>${i+1}. ${esc(territoryName(t))}</h3><span>${t.unlocked===true?'Unlocked':t.unlocked===false?'Locked':'Unknown'} · Required fight power ${fmt(t.requirement)}</span></header><div class="pet-plan-team">${plans.get(i).map((s,j)=>card(s,j)).join('')}</div><details><summary>Assignments &amp; current team</summary><p><strong>Ability placement check:</strong> ${[...auditSpiceRow(plans.get(i),plans.get(i-1),plans.get(i+1)).warnings,...auditSpiceRow(plans.get(i),plans.get(i-1),plans.get(i+1)).notes].map(esc).join(' · ')||'No conditional ability bonuses in this row.'}</p><p><strong>Planned sources:</strong> ${plans.get(i).map((s,j)=>`${j+1}. ${esc(s.gene)} — ${s.pet?esc(s.pet.location):s.state==='hatch'?'Hatch a copy':'Unlock species'}`).join(' · ')}</p><p><strong>Current:</strong> ${t.pets.length?t.pets.map(p=>`${esc(name(p.id))} (${esc(p.gene)}, ${fmt(p.power)})`).join(' → '):'No assigned pets recorded.'}</p></details></section>`).join('')||'<p>No territory records available.</p>'}</div>${sources()}</section>`;
       host.querySelector('#spiceMode').onchange=e=>{mode=e.target.value;paint();};host.querySelector('#spiceFocus').onchange=e=>{focus=Number(e.target.value);paint();};afterRender?.();
     }paint();
   }
@@ -80,5 +128,5 @@
     try{const groups=await root.BonusSystems.getRowsAsync(raw);if(host.breedingRequest!==token||host.dataset.page!==key)return;const data=groups.breedingTeams?.[0];if(!data){host.innerHTML='<div class="section-head"><h2>Pet team planner</h2></div><p>Load a full save from Home to see pet teams.</p>';afterRender?.();return;}if(key==='arenaTeams')renderArena(host,data,groups.petArena||[],afterRender);else renderSpices(host,data,afterRender);}
     catch(error){if(host.breedingRequest!==token||host.dataset.page!==key)return;host.innerHTML='<div class="section-head"><h2>Pet team planner</h2></div><p>Could not read breeding records. Try importing a fresh full export.</p>';afterRender?.();}
   }
-  const api={ARENA,arenaSlots,assign,recommendArena,spiceRoles,render};if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.BreedingTeams=api;
+  const api={ARENA,arenaSlots,assign,recommendArena,spiceRoles,improveOpticular,auditSpiceRow,render};if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.BreedingTeams=api;
 })(typeof window!=='undefined'?window:globalThis);
