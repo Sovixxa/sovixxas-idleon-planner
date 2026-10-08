@@ -127,3 +127,5 @@ export {getSpelunkingBonus} from './vendor/idleon-toolbox/parsers/world-7/spelun
 
 // Catalogs used to map drop-rate upgrade scenarios back to native save slots.
 export {ninjaExtraInfo as dropBeanstalkOrder, vials as dropVialCatalog, summoningEndless as dropEndlessCatalog} from "./vendor/idleon-toolbox/data/website-data";
+
+export {carryBags as dropCarryBags} from "./vendor/idleon-toolbox/data/website-data";

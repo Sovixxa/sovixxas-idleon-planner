@@ -36,7 +36,7 @@ add('Crop Depot','farming','Farming','Crop Depot progression adds account-wide d
 add('Monument','holeMonuments','Monuments','The Hole monument reward adds drop rate.','Depends on monument progress and reward scaling; improve the relevant monument reward.');
 add('Measurement','holeMeasurements','Measure','Measurement 15 converts Hole progress into additive drop rate.','Progression-dependent; improve the measured stat and measurement boosts.');
 add('Emperor','emperorBonuses','Emperor Bonuses','Emperor reward 11 adds account-wide drop rate.','Complete the remaining reward milestones shown on the Emperor page.');
-add('Efaunt Set','armorSets','Armor Sets','The Efaunt armor-set reward adds drop rate.','Unlock the set reward and its available amplification; use the set page for requirements.');
+add('Efaunt Set','armorSets','Armor Sets','The Efaunt armor-set reward adds drop rate.','Unlock the fixed set reward; use the set page for requirements.');
 add('Exotic Market','farming','Farming','Exotic Market upgrade 59 adds drop rate.','Depends on its saved upgrade limit and Farming progression.');
 add('Friend','friendBonuses','Friend Bonuses','An active friend bonus adds drop rate.','Depends on the supplied friend bonus; not a directly spendable upgrade.');
 add('Legend Talent','legendTalents','Legend Talents','Legend talent 1 adds account-wide drop rate.','Use available Legend points and the talent cap shown on its page.');
@@ -51,7 +51,7 @@ add('Ninja Mastery','sneaking','Sneaking','Adds a flat 0.30× after Archlord and
 add('Tesseract Map','tesseract','Tesseract','Applies the Tesseract multiplier for the character’s saved map.','Map-dependent; improve Tesseract progression for the location you actually farm.');
 add('Royal Statue','royalArmory','Royal Armory','The Royal Guardian drop-rate statue multiplies account drop rate.','Improve the statue toward its available upgrade limit in the Royal Armory.');
 add('Royal Guardian family','familyBonuses','Family Bonuses','Royal Guardian levels supply a family drop-rate multiplier. The Family Guy boosts it for the supplying character.','Depends on Royal Guardian level and the provider’s talent level, rather than a fixed final multiplier.');
-add('Sushi + Jelly Operator','sushi','Sushi','Unagi Nigiri and Jelly Operator share one additive percentage inside this multiplier.','Jelly contributes +5% after obstruction 14. The combined maximum also depends on the Sushi bonus.');
+add('Sushi + Jelly Operator','sushi','Sushi','Unagi Nigiri and Jelly Operator share one additive percentage inside this multiplier.','Jelly contributes +5% after obstruction 14. Unagi Nigiri is a fixed discovery reward; Knowledge and Perfecto do not amplify it.');
 add('Glimbo DR|Minehead','minehead','Minehead','Minehead progression supplies this drop-rate multiplier.','Progression-dependent; improve the relevant Minehead upgrade or Glimbo bonus.');
 add('Equinox Multi','equinox','Equinox','The relevant completed Equinox cloud adds 5% to this multiplier.','Fixed ×1.05 when the cloud reward is active.');
 add('Pristine Charm','sneaking','Sneaking','The drop-rate Pristine Charm multiplies the running total.','Obtain the relevant charm; its saved charm bonus determines the multiplier.');

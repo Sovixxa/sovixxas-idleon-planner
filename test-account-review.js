@@ -29,7 +29,7 @@ const elements=new Map();const host={innerHTML:'',querySelector(s){if(!elements.
 const ui={...catalogs,document:{},console};ui.window=ui;vm.createContext(ui);vm.runInContext(fs.readFileSync('account-review.js','utf8'),ui);
 ui.STAMP_CATALOG=[{stamps:[{id:'A1',name:'<script>bad</script>',bonus:'<img onerror=bad>'}]}];
 ui.AccountReview.render(host,{StampLv:[[0]],ChestOrder:['StampA1'],ChestQuantity:[1]});assert(host.innerHTML.includes('&lt;script&gt;'));assert(!host.innerHTML.includes('<script>'));
-assert(host.innerHTML.includes('My Plan'));assert(host.innerHTML.includes('Add to plan'));assert(!host.innerHTML.includes('check its coin, material and carry-capacity requirements'));
+assert(!host.innerHTML.includes('My Plan'));assert(!host.innerHTML.includes('Add to plan'));assert(!host.innerHTML.includes('check its coin, material and carry-capacity requirements'));
 assert(host.innerHTML.includes('What are you working toward?'));assert(host.innerHTML.includes('Account checks'));assert(host.innerHTML.includes('data-review-goal'));
 
 ui.AccountReview.render(host,{});assert(host.innerHTML.includes('Start with your account'));
@@ -58,7 +58,7 @@ assert.deepEqual(review.model(raw,catalogs).priorities,review.model(raw,catalogs
 ui.AccountReview.render(host,{StampLv:[[0]],ChestOrder:['StampA1'],ChestQuantity:[1]});
 assert(host.innerHTML.includes('Your next account steps'));
 assert(host.innerHTML.includes('Hand in'));
-assert(host.innerHTML.includes('data-review-priority'));
+assert(!host.innerHTML.includes('data-review-priority'));
 console.log('Account priorities: readiness, growth weighting, diversity, uncertainty, deterministic order and placement OK');
 
 assert.equal(review.model({StampLv:[[100]]},growthCatalog).priorities.length,0,'No arbitrary next-level fallback');

@@ -45,7 +45,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'C:/Users/Sofia/AppData/Lo
  await page.locator('[data-budget-panel] > summary').click();
  await page.locator('[data-budget-count]').selectOption('1');
  await page.locator('[data-budget-run]').click();
- await page.locator('[data-budget-add]').waitFor({timeout:120000});
+ await page.locator('[data-budget-panel] h4').waitFor({timeout:120000});
  assert((await page.locator('[data-budget-panel]').innerText()).includes('Resource spending'));
  await page.evaluate(()=>window.dispatchEvent(new CustomEvent('idleon:navigate',{detail:'construction'})));
  await page.locator('[data-construction="sampling"]').click();
@@ -58,17 +58,8 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'C:/Users/Sofia/AppData/Lo
  await page.setViewportSize({width:1440,height:1000});
  await page.evaluate(()=>window.dispatchEvent(new CustomEvent('idleon:navigate',{detail:'accountReview'})));
  await page.locator('.review-priorities').waitFor();
- const firstName=await page.locator('.review-priorities h4').first().innerText();
- await page.locator('.review-priorities .review-action-fold > summary').first().click();
- await page.locator('.review-priorities [data-review-priority]').first().click();
- assert.equal(await page.locator('.review-priorities [data-review-priority]').first().isDisabled(),true);
- await page.locator('[data-review-tab="plan"]').click();
- assert.equal(await page.locator('.review-plan-item').count(),1);
- assert((await page.locator('.review-plan-item').innerText()).includes(firstName));
- await page.locator('[data-review-done]').click();
- assert.equal(await page.locator('.review-plan-item.complete').count(),1);
- await page.locator('[data-review-remove]').click();
- assert.equal(await page.locator('.review-plan-item').count(),0);
+ assert.equal(await page.locator('[data-review-tab="plan"]').count(),0);
+ assert.equal(await page.locator('[data-review-priority], [data-review-add], [data-budget-add]').count(),0);
  await page.locator('[data-review-tab="checks"]').click();
  await page.locator('[aria-label="Review status"]').selectOption('unknown');
  await page.locator('[aria-label="Review status"]').selectOption('all');

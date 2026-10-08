@@ -19,17 +19,27 @@ function plan(raw,character,target,M=root.PrayerMath,progress=()=>{}){
   for(const patch of c.extraPatches||[]){if(S.get(base,patch.path)!==patch.from)throw Error('The stored item has already moved.');S.set(changed,patch.path,patch.value);}
   S.set(changed,c.path,c.to);
   if(c.capPath)S.set(changed,c.capPath,Math.max(Number(S.get(base,c.capPath)),c.capTo));
-  let p=parse(changed),foodBefore,foodAfter;
+  let p=parse(changed),foodBefore,foodAfter;const stockPatches=[];
+  if(c.mealIndex!==undefined){
+   const path=['Meals',0,c.mealIndex],level=Number(S.get(changed,path));
+   const value=Math.max(level,Math.min(p.account.cooking.mealMaxLevel,level+5));
+   S.set(changed,path,value);stockPatches.push({path,value});p=parse(changed);
+  }
   if(c.foodFill){
    foodBefore=S.foodState(parse(base),ch.playerId,base,M);foodAfter=S.foodState(p,ch.playerId,changed,M);
    if(foodAfter.missing)throw Error('A matching equipped golden food is required for this route.');
    const amount=c.id==='food-fill'?Math.min(c.to,Math.floor(foodAfter.capacity)):Math.max(foodBefore.amount,Math.floor(foodAfter.capacity));
+   // Reserve banked food in this hypothetical route, so later refills cannot
+   // promise to reuse the same saved cakes. Any deficit remains a farming task.
+   let needed=Math.max(0,amount-foodBefore.amount);
+   for(const slot of foodBefore.bankSlots){const used=Math.min(needed,slot.amount);if(used>0){const value=slot.amount-used;S.set(changed,slot.path,value);stockPatches.push({path:slot.path,value});needed-=used;}}
    S.set(changed,foodAfter.path,amount);p=parse(changed);foodAfter=S.foodState(p,ch.playerId,changed,M);
   }
   const after=rate(p);if(!Number.isFinite(after))throw Error('This upgrade could not be calculated.');
   const patches=[{path:c.path,value:S.get(changed,c.path)},...(c.extraPatches||[]).map(({path,value})=>({path,value}))];
   if(c.capPath)patches.push({path:c.capPath,value:S.get(changed,c.capPath)});
   if(foodAfter)patches.push({path:foodAfter.path,value:foodAfter.amount});
+  patches.push(...stockPatches);
   return {after,changed,p,step:{...c,from,foodBefore,foodAfter,patches}};
  }
  for(const [i,c] of built.candidates.entries()){
@@ -40,11 +50,12 @@ function plan(raw,character,target,M=root.PrayerMath,progress=()=>{}){
  // from the cumulative raw save, never by adding independent projected gains.
  options.sort((a,b)=>b.relative-a.relative||a.name.localeCompare(b.name));
  let current=before,combined=structuredClone(save);const steps=[],conflicts=new Set();
- const routeOptions=[...options].sort((a,b)=>(a.id==='food-fill'?-1:b.id==='food-fill'?1:0)||b.relative-a.relative);
+ const routeOptions=options.filter(c=>c.group!=='nametags').sort((a,b)=>(a.id==='food-fill'?-1:b.id==='food-fill'?1:0)||b.relative-a.relative);
  for(const candidate of routeOptions){
   if(candidate.conflict&&conflicts.has(candidate.conflict))continue;
   if(current>=target)break;
-  if(candidate.gain<=1e-10)continue;
+  // An independently neutral option can gain after earlier upgrades.
+  // Judge it against the cumulative save, not its original comparison.
   progress({phase:'combine',current:steps.length+1,total:options.length,name:candidate.name});
   try{
    let c={...candidate},test=simulate(combined,c);
