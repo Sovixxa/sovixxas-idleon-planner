@@ -39,7 +39,7 @@ function calculate(raw,M=root.PrayerMath){
   try{
    if([39,40,70,71,118,119].includes(Number(ch.mapIndex)))throw new Error('Dungeon drop rate uses live dungeon stats that are not in this export.');
    const result=M.getDropRate(ch,parsed.account,parsed.characters),rows=ledger(result);
-   const gold=rows.find(row=>row.name==='Golden Food');
+   const gold=rows.find(row=>row.name.toLowerCase()==='golden food');
    if(gold){
     const effect=Math.max(0,100*(M.getGoldenFoodMulti(ch,parsed.account,parsed.characters).value-1));
     gold.detail=`Gold Food Bonus: +${effect.toLocaleString('en-US',{maximumFractionDigits:2})}%. Includes equipped Golden Cake and Beanstalk.`;

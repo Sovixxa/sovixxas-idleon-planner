@@ -53,7 +53,8 @@
     "test:true-dr": "node test-true-dr.js && node test-true-dr-browser.js",
     "test:true-dr-client": "node test-true-dr-client.js",
     "test:breeding-exp": "node test-breeding-exp.js && node test-breeding-exp-bonuses.js && node test-breeding-exp-browser.js",
-    "test:outpost-optimizer": "node test-outpost-optimizer.js && node test-outpost-eta-browser.js"
+    "test:outpost-optimizer": "node test-outpost-optimizer.js && node test-outpost-eta-browser.js",
+    "test:drop-target": "node test-drop-target.js && node test-drop-target-browser.js"
   },
   "devDependencies": {
     "esbuild": "0.28.1"

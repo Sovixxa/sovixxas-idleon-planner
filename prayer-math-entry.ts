@@ -124,3 +124,6 @@ export {getMonsterHpTotal} from './vendor/idleon-toolbox/parsers/damage';
 export {getDoubleStatueDrop,getDoubleGoldenFoodDrop} from './vendor/idleon-toolbox/parsers/misc';
 export {getLegendTalentBonus} from './vendor/idleon-toolbox/parsers/world-7/legendTalents';
 export {getSpelunkingBonus} from './vendor/idleon-toolbox/parsers/world-7/spelunking';
+
+// Catalogs used to map drop-rate upgrade scenarios back to native save slots.
+export {ninjaExtraInfo as dropBeanstalkOrder, vials as dropVialCatalog, summoningEndless as dropEndlessCatalog} from "./vendor/idleon-toolbox/data/website-data";
