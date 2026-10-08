@@ -23,8 +23,22 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'C:/Users/Sofia/AppData/Lo
  await page.locator('#navConnectedBonuses').click();
  await page.locator('[data-total="bits"]').waitFor({state:'attached',timeout:180000});
  await page.locator('#connectedSearch').waitFor({timeout:120000});
+ await page.locator('#connectedBenefit').selectOption('power10');
+ await page.locator('#connectedSearch').fill('power of 10');const powerCount=await page.locator('#connectedCount').innerText();
+ await page.locator('#connectedSearch').fill('pow 10');assert.equal(await page.locator('#connectedCount').innerText(),powerCount);
+ assert(!powerCount.startsWith('0 '));
+ await page.locator('#connectedSearch').fill('');await page.locator('#connectedBenefit').selectOption('');
  await page.locator('[data-bonus-view="data"]').click();
  assert(await page.locator('#connectedTotals').isHidden());
+ await page.locator('#connectedStatus').selectOption('all');
+ const powerNames=[];function collectPower(x){if(!x||typeof x!=='object')return;if(x.name&&/pow(?:er)?s?[ _-]*(?:of[ _-]*)?10/i.test([x.description,x.desc,x.bonus,x.lvlUpText].join(' ')))powerNames.push(x.name);Object.values(x).filter(v=>v&&typeof v==='object').forEach(collectPower);}
+ for(const file of fs.readdirSync('vendor/idleon-toolbox/data/website-data').filter(f=>f.endsWith('.json')))collectPower(JSON.parse(fs.readFileSync('vendor/idleon-toolbox/data/website-data/'+file,'utf8')));
+ await page.locator('#connectedBenefit').selectOption('power10');
+ const renderedNames=await page.locator('.connected-data-table th[scope="row"]').allTextContents(),normalize=s=>s.toLowerCase().replace(/[^a-z0-9]/g,'');
+ assert.deepEqual(powerNames.filter(n=>!renderedNames.some(r=>normalize(r)===normalize(n))),[],'Every bundled Power of 10 bonus must be present in the Power of 10 filter');
+ await page.locator('#connectedBenefit').selectOption('');
+ await page.locator('#connectedStatus').selectOption('current');
+
  assert(await page.locator('.connected-data-table tbody tr').count()>100,JSON.stringify(errors));
  assert(!await page.locator('.connected-data-table tbody').innerText().then(t=>t.includes('Missing / locked')));
  await page.locator('#connectedSource').selectOption('Stamps');

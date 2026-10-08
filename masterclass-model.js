@@ -71,5 +71,25 @@ function repeatPlan(model,{percent,goal,mode,count}){
  return {steps,remaining,locked:future?locked:[],requested:limit,needed:Object.fromEntries(Object.entries(remaining).map(([k,v])=>[k,Math.max(0,-v)]))};
 }
 function collapseSteps(steps){const groups=new Map();for(const [i,x] of steps.entries()){const key=x.currency+':'+x.id;let row=groups.get(key);if(!row){row={...x,count:0,cost:0,endLevel:x.level,firstPosition:i+1};groups.set(key,row);}row.count++;row.cost+=x.cost;row.endLevel=x.level+1;row.shortfall=x.shortfall;row.affordable=row.affordable&&x.affordable;}return [...groups.values()];}
-const api={configs,snapshot,optimize,availableGoals,costAt,collapseSteps};if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.MasterclassModel=api;
+// Match the affected class in the effect, rather than the system awarding it.
+const bonusPatterns={grimoire:/death\s*bringer|grimoire|wraith|\bbones?\b|femur|ribcage|cranium|bovinae/i,compass:/wind\s*walker|compass|tempest|\bdust\b|stardust|moondust|solardust|cooldust|novadust/i,tesseract:/arcane\s*cultist|arcanist|tesseract|tachyon|prisma/i,royalArmory:/royal\s*(guardian|armory)|outpost|orblet|verminous|parchment|castle damage/i};
+function bonusRows(key,groups,bubbles=[],upgrades=[]){
+ const names={gamingPalette:'Gaming Palette',emperorBonuses:'Emperor',arcade:'Arcade'};
+ const rows=Object.entries(groups).filter(([id])=>id!==key).flatMap(([id,entries])=>(Array.isArray(entries)?entries:[]).map(r=>({...r,source:r.source||names[id]||id.replace(/([a-z])([A-Z])/g,'$1 $2')}))).concat(bubbles);
+ const matches=rows.filter(r=>bonusPatterns[key].test(`${r.effect||''} ${r.benefitText||''}`)||/all master\s*class|master\s*class.*drops/i.test(r.effect||''));
+ return matches.map(r=>({...r,category:/bubble/i.test(r.source)?'bubbles':/gaming/i.test(r.source)?'gaming':'other'})).concat(upgrades.map(r=>({...r,source:configs[key].title,category:'class',level:r.level==null?'Level unknown':`Lv ${r.level}`,status:r.level==null?'unknown':r.unlocked&&r.level>0?'active':'missing'})));
+}
+// These categories describe the displayed contribution, not its final formula pool.
+// In particular, a +% source can feed a pool that later multiplies another stat.
+function bonusType(row){
+ const text=String(row.effect||'').trim();
+ const multi=/(?:\d[\d,.]*(?:e[+-]?\d+)?\s*[x×](?=\s|$)|[x×]\s*\d|\btrue multiplier\b)/i.test(text);
+ const additive=/(?:^|\s)\+\s*\d/.test(text);
+ if(/\b(?:unlock|instead of|chance|replac)\b|\bper\b|\bPOW\b/i.test(text)||multi&&additive)return 'other';
+ if(multi)return 'multi';
+ if(additive)return 'additive';
+ return 'other';
+}
+const bonusTypes={multi:'Multipliers (×)',additive:'Additive bonuses (+)',other:'Conditional / other'};
+const api={configs,snapshot,optimize,availableGoals,costAt,collapseSteps,bonusRows,bonusType,bonusTypes};if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.MasterclassModel=api;
 })(typeof self!=='undefined'?self:globalThis);
