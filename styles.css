@@ -154,3 +154,19 @@ body .alchemy-board .alchemy-bubble>span{display:block;width:100%;min-width:0;te
 @media(max-width:600px){body .compact-upgrades .arcade-tile .upgrade-tip{position:fixed;top:auto;bottom:16px;left:16px;right:auto;width:min(320px,calc(100vw - 32px));max-height:45vh;overflow:auto;box-sizing:border-box}}
 
 #panelUpgrades,.upgrade-panel,#jellyUpgradePlan{min-width:0;max-width:100%}#panelUpgrades>section{min-width:0}#jellyUpgradePlan td img{vertical-align:middle;object-fit:contain;image-rendering:pixelated}.upgrade-panel>details{margin-top:14px}.upgrade-panel>details>summary{cursor:pointer;font-size:.85rem;color:var(--muted)}
+
+/* Jelly optimizer: separate heading, settings, explanation and action row. */
+.optimize-panel .jelly-optimizer-heading{display:block;margin-bottom:20px}
+.jelly-optimizer-heading p{max-width:850px}
+.optimize-panel .jelly-optimizer-settings{display:grid;grid-template-columns:minmax(300px,2.2fr) minmax(130px,1fr) minmax(170px,1fr) minmax(140px,1fr);gap:16px;align-items:end;margin:0}
+.jelly-optimizer-settings>label{min-width:0;gap:8px}
+.jelly-optimizer-settings .jelly-goal{order:0}.jelly-optimizer-settings .jelly-quality{order:1}.jelly-optimizer-settings .jelly-observed{order:2}.jelly-optimizer-settings .jelly-revive{order:3}
+.jelly-optimizer-settings select,.jelly-optimizer-settings input[type="number"]{width:100%;min-width:0;height:44px}
+.optimize-panel #jellyObjectiveNote{margin:12px 0 18px;max-width:900px;font-size:.82rem;line-height:1.55;color:var(--muted)}
+.jelly-optimizer-actions{display:flex;justify-content:space-between;align-items:center;gap:16px;padding-top:16px;border-top:1px solid var(--line);margin-bottom:16px}
+.jelly-optimizer-actions .check{display:flex;align-items:center;gap:9px;font-size:.82rem;color:var(--muted);cursor:pointer}
+.jelly-optimizer-actions input[type="checkbox"]{width:16px;height:16px;margin:0;accent-color:var(--accent)}
+.jelly-optimizer-buttons{display:flex;gap:10px;align-items:center}
+.jelly-optimizer-buttons button{min-height:44px}
+@media(max-width:1100px){.optimize-panel .jelly-optimizer-settings{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.jelly-optimizer-settings .jelly-goal{grid-column:1/-1}}
+@media(max-width:600px){.optimize-panel .jelly-optimizer-settings{gap:14px}.jelly-optimizer-settings .jelly-quality{grid-column:1/-1}.jelly-optimizer-actions{align-items:stretch;flex-direction:column}.jelly-optimizer-buttons{display:grid;grid-template-columns:1fr 1.5fr}.jelly-optimizer-settings select{font-size:.72rem;padding:0 6px}}

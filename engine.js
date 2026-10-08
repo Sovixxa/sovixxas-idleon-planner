@@ -468,6 +468,9 @@ const VERSION='0.9.9-alchemy-bubbles';
     let nextManualRevive=0;
     const dead=Array(BOARD_SIZE).fill(false),progress=Array(units.length).fill(0);
     const runtimeLevels=state.cellLevels.slice(),runtimeExp=state.cellExp.slice();
+    const economy=bloodcellBonuses(state),dpsUnlocked=upgradeQty(state,12)>=1;
+    const currencyBase=economy.known?economy.multiplier/economy.factors.savedDps/economy.factors.upgrades:null;
+    let bloodcellsGained=0,totalDamage=0,bestDps=state.bestDps;
     let levelCooldown=0,levelsGained=0;
     const expMulti=cellExpMultiplier(state),levelingEnabled=canLevelCells(state);
     for(let i=0;i<units.length;i++)progress[i]=randInt(rng,0,Math.max(5,Math.floor(units[i].cd-1)));
@@ -522,13 +525,17 @@ const VERSION='0.9.9-alchemy-bubbles';
         }
       }
       for(let i=projectiles.length-1;i>=0;i--)if(projectiles[i].hitFrame<=frame){
-        const p=projectiles[i];if(events&&dead[p.sourceAnchor])events.push({type:'posthumousHit',time:elapsed,anchor:p.sourceAnchor,damage:p.damage});hp-=p.damage;bucketDamage+=p.damage;if(upgradeQty(state,28)>=1&&p.type===0)stack++;
+        const p=projectiles[i];if(events&&dead[p.sourceAnchor])events.push({type:'posthumousHit',time:elapsed,anchor:p.sourceAnchor,damage:p.damage});hp-=p.damage;bucketDamage+=p.damage;
+        // Client pays per hit, including failed attempts and the full finishing hit.
+        totalDamage+=p.damage;
+        if(currencyBase!==null)bloodcellsGained+=p.damage*currencyBase*dpsBloodcellMultiplier(bestDps)*(1+(upgradeQty(state,23)+upgradeQty(state,24)+upgradeQty(state,25)+upgradeQty(state,33)*runtimeLevels.reduce((a,b)=>a+b,0))/100);
+        if(upgradeQty(state,28)>=1&&p.type===0)stack++;
         if(levelingEnabled)runtimeExp[p.type]=asNum(runtimeExp[p.type],0)+expMulti;
         projectiles.splice(i,1);
       }
       if(frame%FPS===0){
         damageBuckets.unshift(bucketDamage);bucketDamage=0;if(damageBuckets.length>5)damageBuckets.length=5;
-        if(damageBuckets.length>=4){const d=(damageBuckets[1]+damageBuckets[2]+damageBuckets[3])/3;peak3s=Math.max(peak3s,d);}
+        if(damageBuckets.length>=4){const d=(damageBuckets[1]+damageBuckets[2]+damageBuckets[3])/3;peak3s=Math.max(peak3s,d);if(dpsUnlocked)bestDps=Math.max(bestDps,d);}
       }
       if(trace&&frame%FPS===0)trace.push({time:elapsed,hpFraction:Math.max(0,hp/hpMax),dead:dead.flatMap((v,i)=>v?[i]:[]),levels:runtimeLevels.slice(),steroid:roidFrames>0});
       if(!dpsOnly&&hp<=0){result='clear';break;}
@@ -559,7 +566,7 @@ const VERSION='0.9.9-alchemy-bubbles';
     }
     if(trace)trace.push({time:elapsed,hpFraction:Math.max(0,hp/hpMax),dead:dead.flatMap((v,i)=>v?[i]:[]),levels:runtimeLevels.slice(),steroid:roidFrames>0});
     if(dpsOnly)result='dps';
-    return {trace:trace||undefined,events:events||undefined,result,clear:result==='clear',time:result==='clear'?elapsed:null,elapsed,hpRemaining:dpsOnly?null:Math.max(0,hp),hpFraction:dpsOnly?null:Math.max(0,hp/hpMax),hpAtTimer,criticalEntered,amoebaStacks:stack,peak3s,bossHits,revivesLeft:revives,steroidUsed:roidUsed,steroidStart:roidUsed?steroidStart:null,reviveDelaySeconds:reviveDelayFrames/FPS,coldFirstTick,levelsGained,runtimeLevels,runtimeExp};
+    return {bloodcellsGained:currencyBase===null?null:bloodcellsGained,totalDamage,projectedDpsMultiplier:dpsBloodcellMultiplier(bestDps),currencyMissing:economy.missing,trace:trace||undefined,events:events||undefined,result,clear:result==='clear',time:result==='clear'?elapsed:null,elapsed,hpRemaining:dpsOnly?null:Math.max(0,hp),hpFraction:dpsOnly?null:Math.max(0,hp/hpMax),hpAtTimer,criticalEntered,amoebaStacks:stack,peak3s,bossHits,revivesLeft:revives,steroidUsed:roidUsed,steroidStart:roidUsed?steroidStart:null,reviveDelaySeconds:reviveDelayFrames/FPS,coldFirstTick,levelsGained,runtimeLevels,runtimeExp};
   }
   function simulateMany(state,arr,options={}){
     const runs=Math.max(1,Math.min(500,Math.round(asNum(options.runs,24)))),seedBase=Math.round(asNum(options.seed,0xC0FFEE));
@@ -568,6 +575,8 @@ const VERSION='0.9.9-alchemy-bubbles';
     const timer=bossTime(state.obstruction),normalClears=clears.filter(x=>x.time<=timer),criticalClears=clears.filter(x=>x.time>timer);
     const critEntries=out.filter(x=>x.criticalEntered),stacks=out.map(x=>x.amoebaStacks).filter(Number.isFinite),bossHits=out.map(x=>x.bossHits).filter(Number.isFinite);
     return {
+      avgBloodcells:out.every(x=>x.bloodcellsGained!==null)?out.reduce((sum,x)=>sum+x.bloodcellsGained,0)/runs:null,
+      avgDpsMultiplier:out.reduce((sum,x)=>sum+x.projectedDpsMultiplier,0)/runs,currencyMissing:out[0].currencyMissing,
       runs,clearRate:clears.length/runs,normalClearRate:normalClears.length/runs,criticalClearRate:criticalClears.length/runs,criticalEntryRate:critEntries.length/runs,
       medianClearTime:percentile(times,.5),p10ClearTime:percentile(times,.1),p90ClearTime:percentile(times,.9),meanClearTime:times.length?times.reduce((a,b)=>a+b,0)/times.length:null,
       medianElapsed:median(out.map(x=>x.elapsed)),
@@ -618,11 +627,14 @@ const VERSION='0.9.9-alchemy-bubbles';
     return best;
   }
   function timedObjective(stats,mode='chance'){
-    const cr=stats.clearRate,t=stats.medianClearTime??1e9,p90=stats.p90ClearTime??t;
+    if(mode==='dps')return stats.avgPeakDps??0;
+    if(mode==='bloodcells')return stats.avgBloodcells??-Infinity;
+    const cr=stats.clearRate,t=stats.medianClearTime??1e9;
     if(cr>0){
-      if(mode==='fastest')return 1e12-1e8*t+1e7*cr-1e4*p90;
-      if(mode==='balanced')return 1e12+cr*1e10-1e8*t-1e6*p90; // ~1% clear chance ~= 1 second median time
-      return cr*1e12-1e7*t-1e5*p90; // chance-first: time mainly breaks close ties
+      // Simulations have at most 500 runs, so distinct sampled clear rates
+      // differ by at least 1/(500*499). The time term is bounded by 1:
+      // it can only break equal clear rates, never buy a lower clear chance.
+      return cr*1e6+1/(1+Math.max(0,t));
     }
     const hp=stats.medianHpRemaining??stats.medianHpAtTimer??1;return -1e12-1e10*hp+Math.min(1e8,stats.avgPeakDps);
   }
@@ -912,6 +924,8 @@ const VERSION='0.9.9-alchemy-bubbles';
   }
   const FEVER_NAMES=['COLD','RASH','SEPSIS','NAUSEA','RABIES','PLAGUE'];
   function optimizeOperation(state,options={}){
+    if(options.objectiveMode==='bloodcells'&&!bloodcellBonuses(state).known)throw new Error('Bloodcell optimization needs a full account export. Missing: '+bloodcellBonuses(state).missing.join(', '));
+    if(options.objectiveMode==='dps'&&upgradeQty(state,12)<1)throw new Error('Unlock DPS Biometrics before optimizing the recorded DPS bloodcell multiplier.');
     const fevers=options.searchFever===false||!feverUnlocked(state)?[state.fever]:[...new Set([state.fever,...Array.from({length:Math.min(6,Math.floor(upgradeQty(state,16)))},(_,i)=>i)])];
     const begin=performanceNow();let best=null,baseline=null;const feverResults=[];
     for(const fever of fevers){

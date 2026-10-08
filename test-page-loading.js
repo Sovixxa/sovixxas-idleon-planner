@@ -1,7 +1,7 @@
 'use strict';
 const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
 const source=fs.readFileSync('app.js','utf8');
-const navigation=source.slice(source.indexOf('  function selectSideNav('),source.indexOf("  $('tabHome').addEventListener"));
+const navigation=source.slice(source.indexOf('  function selectSideNav('),source.indexOf("  $('tabOptimizer').addEventListener"));
 const nodes=new Map();
 const $=id=>{if(!nodes.has(id))nodes.set(id,{classList:{values:new Set(),toggle(key,on){on?this.values.add(key):this.values.delete(key);},add(key){this.values.add(key);},remove(key){this.values.delete(key);}}});return nodes.get(id);};
 const context={$,state:null,practice:null,SKILL_PAGES:{},document:{querySelector:()=>null,querySelectorAll:()=>[]},renderWorldPage(){},selectWorkspaceTab(){}};

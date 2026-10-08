@@ -60,7 +60,8 @@
   function selectWorkspaceTab(name){
     window.PlannerAnalytics?.page(name==='home'?'home':'jelly/'+name);
     $('panelWorld').classList.add('hidden');
-    const tabs={home:['tabHome','panelHome'],optimizer:['tabOptimizer','panelOptimizer'],practice:['tabPractice','panelPractice'],upgrades:['tabUpgrades','panelUpgrades'],bonuses:['tabBonuses','panelBonuses']};
+    $('panelHome').classList.toggle('hidden',name!=='home');
+    const tabs={optimizer:['tabOptimizer','panelOptimizer'],practice:['tabPractice','panelPractice'],upgrades:['tabUpgrades','panelUpgrades'],bonuses:['tabBonuses','panelBonuses']};
     for(const [key,[button,panel]] of Object.entries(tabs)){
       const active=key===name;$(button).classList.toggle('active',active);$(button).setAttribute('aria-selected',String(active));$(panel).classList.toggle('hidden',!active);
     }
@@ -176,7 +177,6 @@ SKILL_PAGES.holeFloors={title:'Floors',world:'World 5',copy:'All 18 Hole caverns
     window.PlannerAnalytics?.page(name);
     document.querySelectorAll('.tab-panel').forEach(panel=>panel.classList.add('hidden'));$('panelWorld').classList.remove('hidden');renderWorldPage(name);
   }
-  $('tabHome').addEventListener('click',()=>selectSideNav('home'));
   $('tabOptimizer').addEventListener('click',()=>selectSideNav('jelly'));
   $('tabPractice').addEventListener('click',()=>{selectSideNav('jelly');selectWorkspaceTab('practice');});
   $('tabUpgrades').addEventListener('click',()=>{selectSideNav('jelly');selectWorkspaceTab('upgrades');});
@@ -198,7 +198,7 @@ SKILL_PAGES.holeFloors={title:'Floors',world:'World 5',copy:'All 18 Hole caverns
   function pct(x,d=0){return Number.isFinite(x)?(100*x).toFixed(d)+'%':'—';}
   function stat(k,v,sub=''){return `<div class="stat"><div class="k">${esc(k)}</div><div class="v">${esc(v)}</div>${sub?`<div class="m-sub">${esc(sub)}</div>`:''}</div>`;}
   function quality(){
-    const q=$('searchQuality').value,objectiveMode=$('objectiveMode')?.value||'balanced';
+    const q=$('searchQuality').value,objectiveMode=$('objectiveMode')?.value||'chance';
     if(q==='quick')return {timeMs:1800,runs:32,mixLimit:190,shortlist:32,screenRuns:4,refineRuns:8,objectiveMode};
     if(q==='deep')return {timeMs:15000,runs:384,mixLimit:1050,shortlist:104,screenRuns:8,refineRuns:32,refineCount:24,finalists:12,objectiveMode};
     return {timeMs:5200,runs:128,mixLimit:480,shortlist:64,screenRuns:5,refineRuns:16,refineCount:16,objectiveMode};
@@ -282,6 +282,9 @@ SKILL_PAGES.holeFloors={title:'Floors',world:'World 5',copy:'All 18 Hole caverns
   function resultMetrics(stats){
     const cr=stats?.clearRate??0, med=stats?.medianClearTime;
     return [
+      ['Peak DPS',E.formatNumber(stats?.avgPeakDps??0),'mean three-second peak per attempt'],
+      ['Bloodcells / attempt',stats?.avgBloodcells==null?'Unknown':E.formatNumber(stats.avgBloodcells),stats?.avgBloodcells==null?'full account bonuses required':'mean total, including failed attempts'],
+      ['DPS BC multiplier',stats?.avgDpsMultiplier==null?'—':stats.avgDpsMultiplier.toFixed(3)+'×','mean projected best-ever multiplier'],
       ['Clear chance',pct(cr,0),`${stats?.runs||0} simulated runs`],
       ['Median clear',E.formatTime(med),med==null?'no successful sample':med>E.bossTime(state.obstruction)?'after timer / Critical':'inside normal timer'],
       ['Before timer',pct(stats?.normalClearRate??0,0),'clears without Critical'],
@@ -311,6 +314,8 @@ SKILL_PAGES.holeFloors={title:'Floors',world:'World 5',copy:'All 18 Hole caverns
   }
   function verdict(stats){
     if(!stats)return '';
+    if($('objectiveMode').value==='dps')return `<span class="good">${E.formatNumber(stats.avgPeakDps??0)} peak DPS</span><br>${pct(stats.clearRate,0)} clear`;
+    if($('objectiveMode').value==='bloodcells')return `<span class="good">${stats.avgBloodcells==null?'Unknown':E.formatNumber(stats.avgBloodcells)} Bloodcells</span><br>per attempt · ${pct(stats.clearRate,0)} clear`;
     if(stats.clearRate>=.999&&stats.medianClearTime!=null)return `<span class="good">${E.formatTime(stats.medianClearTime)}</span><br>${pct(stats.clearRate,0)} clear`;
     if(stats.clearRate>0)return `<span class="good">${pct(stats.clearRate,0)} clear</span><br>${E.formatTime(stats.medianClearTime)}`;
     return `<span class="bad">No simulated clear</span>`;
@@ -691,7 +696,7 @@ SKILL_PAGES.holeFloors={title:'Floors',world:'World 5',copy:'All 18 Hole caverns
 
   function trainingContext(){
     if(!state)return null;
-    return JSON.stringify({boss:state.obstruction,plots:(state.plots||[]).slice().sort((a,b)=>a-b),cells:E.unitsOwned(state),virus:E.virusLimit(state)});
+    return JSON.stringify({goal:$('objectiveMode').value,boss:state.obstruction,plots:(state.plots||[]).slice().sort((a,b)=>a-b),cells:E.unitsOwned(state),virus:E.virusLimit(state)});
   }
   function readPlaybook(){
     try{const value=JSON.parse(localStorage.getItem(TRAINING_KEY)||'[]');return Array.isArray(value)?value.filter(x=>x&&Array.isArray(x.arrangement)):[];}catch(_){return [];}
@@ -789,13 +794,13 @@ SKILL_PAGES.holeFloors={title:'Floors',world:'World 5',copy:'All 18 Hole caverns
     calibration=chooseCalibration();
     const q=quality();
     currentStats=E.simulateMany(state,currentArrangement,{runs:Math.max(18,q.runs),damageScale:calibration.scale,seed:0xCAFE,useSteroid:true,reviveDelaySeconds:currentReviveDelay()});
-    $('alternativesPanel').classList.add('hidden');$('layoutChanges').textContent='';$('replayPanel').classList.add('hidden');$('planBtn').disabled=true;lastResult=null;lastNextMove=null;$('nextMove').innerHTML='<p class="subtitle">Run Optimize timed clear to calculate the next purchase.</p>';
+    $('alternativesPanel').classList.add('hidden');$('layoutChanges').textContent='';$('replayPanel').classList.add('hidden');$('planBtn').disabled=true;lastResult=null;lastNextMove=null;$('nextMove').innerHTML='<p class="subtitle">Run Optimize Jelly to calculate the next purchase.</p>';
     renderStateStats();renderBoard($('currentBoard'),currentArrangement);renderBoard($('bestBoard'),currentArrangement);
     renderSummary($('currentSummary'),currentStats);renderSummary($('bestSummary'),currentStats);renderTimeline($('currentTimeline'),currentStats);renderTimeline($('bestTimeline'),currentStats);
     $('currentVerdict').innerHTML=verdict(currentStats);$('bestVerdict').innerHTML=verdict(currentStats);
     renderCellMix(currentArrangement);renderTrainer();renderHome();
     initialUpgradesPending=true;initialPracticePending=true;
-    $('solverStatus').textContent='Loaded. Current layout has been timed. Hit Optimize timed clear to search legal arrangements.';
+    $('solverStatus').textContent='Loaded. Current layout has been timed. Hit Optimize Jelly to search legal arrangements.';
     $('calibrationNote').textContent=calibrationText(calibration);
   }
 
@@ -827,9 +832,13 @@ SKILL_PAGES.holeFloors={title:'Floors',world:'World 5',copy:'All 18 Hole caverns
   $('jsonInput').addEventListener('input',()=>{if($('rememberTab').checked)persistInput();});
   $('fileInput').addEventListener('change',async e=>{const f=e.target.files?.[0];try{if(!f)return;const text=await f.text();$('jsonInput').value=text;loadText(text);}catch(err){fail(err?.message||String(err));}finally{window.dispatchEvent(new Event('idleon:import-finished'));}});
   $('searchQuality').addEventListener('change',()=>{if(state){$('solverStatus').textContent='Search quality changed. Re-run Optimize for a new timed search.';}});
-  $('objectiveMode').addEventListener('change',()=>{if(state){$('solverStatus').textContent='Optimization goal changed. Re-run Optimize timed clear.';}});
-  $('observedTime').addEventListener('change',()=>{try{sessionStorage.setItem(OBS_KEY,$('observedTime').value||'');}catch(_){}if(state){$('solverStatus').textContent='Calibration changed. Re-run Optimize timed clear to apply it.';}});
-  if($('reviveDelay'))$('reviveDelay').addEventListener('change',()=>{try{sessionStorage.setItem(REVIVE_KEY,$('reviveDelay').value||'0');}catch(_){}if(state){$('solverStatus').textContent='Revive reaction time changed. Re-run Optimize timed clear.';}});
+  $('objectiveMode').addEventListener('change',()=>{
+    const mode=$('objectiveMode').value;
+    $('jellyObjectiveNote').textContent=mode==='dps'?'Maximizes the mean three-second peak reached during an actual operation, for DPS Biometrics. Boss clears, the timer and Critical deaths still apply.':mode==='bloodcells'?'Maximizes mean total Bloodcells per attempt, including failed attempts, Sepsis, cell level-ups and new DPS records. Uses your current obstruction and account bonuses; this is not Bloodcells per second.':'Prioritizes the highest simulated clear chance, then the fastest median successful clear among layouts tied on clear chance. Searches layouts, unlocked Fevers and Stronkroid timing.';
+    if(state){$('solverStatus').textContent='Optimization goal changed. Re-run Optimize Jelly.';renderTrainer();}
+  });
+  $('observedTime').addEventListener('change',()=>{try{sessionStorage.setItem(OBS_KEY,$('observedTime').value||'');}catch(_){}if(state){$('solverStatus').textContent='Calibration changed. Re-run Optimize Jelly to apply it.';}});
+  if($('reviveDelay'))$('reviveDelay').addEventListener('change',()=>{try{sessionStorage.setItem(REVIVE_KEY,$('reviveDelay').value||'0');}catch(_){}if(state){$('solverStatus').textContent='Revive reaction time changed. Re-run Optimize Jelly.';}});
 
   function renderReplay(){
     if(!lastResult?.replay)return;
@@ -1029,7 +1038,7 @@ SKILL_PAGES.holeFloors={title:'Floors',world:'World 5',copy:'All 18 Hole caverns
       const alternatives=$('alternatives');alternatives.innerHTML='';
       for(const [i,alt] of res.alternatives.entries()){
         const card=document.createElement('article');card.className='panel';
-        const heading=document.createElement('h3');heading.textContent=`Alternative ${i+1} · ${pct(alt.stats.clearRate)} clear · ${pct(alt.stats.medianHpRemaining,1)} HP left`;card.appendChild(heading);
+        const heading=document.createElement('h3');heading.textContent=`Alternative ${i+1} · ${q.objectiveMode==='dps'?E.formatNumber(alt.stats.avgPeakDps)+' peak DPS':q.objectiveMode==='bloodcells'?E.formatNumber(alt.stats.avgBloodcells)+' Bloodcells / attempt':pct(alt.stats.clearRate)+' clear'}`;card.appendChild(heading);
         const board=document.createElement('div');board.className='jelly-board';renderBoard(board,alt.arrangement);card.appendChild(board);alternatives.appendChild(card);
       }
       $('alternativesPanel').classList.remove('hidden');
@@ -1040,7 +1049,7 @@ SKILL_PAGES.holeFloors={title:'Floors',world:'World 5',copy:'All 18 Hole caverns
       $('replayPanel').classList.remove('hidden');$('replayFrame').max=String(res.replay.trace.length);$('replayFrame').value='0';renderReplay();
       const same=E.arrangementKey(res.arrangement)===E.arrangementKey(res.current)&&res.fever===state.fever;
       const confidence=E.clearConfidence(res.stats);
-      const outcome=res.stats.clearRate>0?`${pct(res.stats.clearRate)} clear; median ${E.formatTime(res.stats.medianClearTime)}.`:`No clear found; median ${pct(res.stats.medianHpRemaining,1)} boss HP remains at the end.`;
+      const outcome=q.objectiveMode==='dps'?`${E.formatNumber(res.stats.avgPeakDps)} mean peak DPS; projected DPS BC multiplier ${res.stats.avgDpsMultiplier.toFixed(3)}×.`:q.objectiveMode==='bloodcells'?`${E.formatNumber(res.stats.avgBloodcells)} mean Bloodcells per attempt.`:res.stats.clearRate>0?`${pct(res.stats.clearRate)} clear; median ${E.formatTime(res.stats.medianClearTime)}.`:`No clear found; median ${pct(res.stats.medianHpRemaining,1)} boss HP remains at the end.`;
       const steroid=res.steroidStart==null?'':` Press Stronkroid at ${res.steroidStart.toFixed(1)}s.`;
       $('solverStatus').textContent=`Best found: ${outcome} Fever: ${E.FEVER_NAMES[res.fever]||'none'}.${steroid} ${same?'Your current layout won for this objective. ':''}${res.stats.runs} runs; approximate 95% clear-rate interval ${pct(confidence[0],1)}–${pct(confidence[1],1)}. Search ${(res.timeMs/1000).toFixed(1)}s. ${state.attemptsRemaining===0?'Your save has no operation attempts remaining. ':''}Heuristic search cannot prove a global optimum.`;
       $('nextMove').textContent='Use Plan next purchase to compare progression options.';

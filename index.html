@@ -176,14 +176,13 @@
       </section>
 
       <nav id="jellyTabs" class="workspace-tabs hidden" role="tablist" aria-label="Jelly Operator workspace">
-        <button id="tabHome" class="workspace-tab active" role="tab" aria-selected="true" aria-controls="panelHome">Home</button>
         <button id="tabOptimizer" class="workspace-tab" role="tab" aria-selected="false" aria-controls="panelOptimizer">Optimizer</button>
         <button id="tabPractice" class="workspace-tab" role="tab" aria-selected="false" aria-controls="panelPractice">Practice game</button>
         <button id="tabUpgrades" class="workspace-tab" role="tab" aria-selected="false" aria-controls="panelUpgrades">Upgrade optimizer</button>
         <button id="tabBonuses" class="workspace-tab" role="tab" aria-selected="false" aria-controls="panelBonuses">Bonuses & cells</button>
       </nav>
 
-      <div id="panelHome" class="tab-panel" role="tabpanel" aria-labelledby="tabHome">
+      <div id="panelHome" class="tab-panel" role="region" aria-label="Home">
         <section class="panel home-panel">
           <div class="home-hero"><div><p class="eyebrow">Your account at a glance</p><h2>Character Roster</h2><p>Every character, activity and saved AFK timer on one screen.</p></div><div id="homeRosterSummary" class="home-roster-summary"></div></div>
           <div id="characterDashboard" class="character-dashboard"></div>
@@ -198,37 +197,42 @@
       <div id="panelOptimizer" class="tab-panel hidden" role="tabpanel" aria-labelledby="tabOptimizer">
 
       <section class="panel optimize-panel">
-        <div class="section-head">
+        <div class="section-head jelly-optimizer-heading">
           <div>
-            <h2>3. Find the fastest reliable clear</h2>
+            <h2>3. Optimize your Jelly operation</h2>
             <p>This simulates attack timing, projectile travel, Amoeba ramp, the operation timer, Critical Condition, Immunoid shielding, Fever, Steroid and revives.</p>
           </div>
-          <div class="controls">
-            <label>Observed current clear <span class="optional">optional</span>
+        </div>
+          <div class="controls jelly-optimizer-settings">
+            <label class="jelly-observed"><span>Observed clear <span class="optional">optional</span></span>
               <div class="number-wrap"><input id="observedTime" type="number" min="0.01" step="0.01" inputmode="decimal" placeholder="seconds"><span>s</span></div>
             </label>
-            <label>Revive reaction <span class="optional">future-proof</span>
+            <label class="jelly-revive">Revive reaction
               <div class="number-wrap"><input id="reviveDelay" type="number" min="0" max="2" step="0.05" inputmode="decimal" value="0"><span>s</span></div>
             </label>
-            <label>Optimize for
+            <label class="jelly-goal">Optimize for
               <select id="objectiveMode">
-                <option value="balanced">Balanced</option>
-                <option value="chance" selected>Max clear chance</option>
-                <option value="fastest">Fastest successful clear</option>
+                <option value="chance" selected>Max clear chance → Fastest successful clear</option>
+                <option value="dps">Highest DPS (for BC multiplier)</option>
+                <option value="bloodcells">Highest bloodcell gain</option>
               </select>
             </label>
-            <label>Search quality
+            <label class="jelly-quality">Search quality
               <select id="searchQuality">
                 <option value="quick">Quick</option>
                 <option value="normal" selected>Normal</option>
                 <option value="deep">Deep</option>
               </select>
             </label>
-            <label class="check"><input id="searchFever" type="checkbox" checked> Compare unlocked Fevers</label>
-            <button id="cancelBtn" class="secondary" disabled>Cancel</button>
-            <button id="optimizeBtn" class="primary">Optimize timed clear</button>
           </div>
-        </div>
+          <p id="jellyObjectiveNote" class="fountain-note">Prioritizes the highest simulated clear chance, then the fastest median successful clear among layouts tied on clear chance. Searches layouts, unlocked Fevers and Stronkroid timing.</p>
+          <div class="jelly-optimizer-actions">
+            <label class="check"><input id="searchFever" type="checkbox" checked> Compare unlocked Fevers</label>
+            <div class="jelly-optimizer-buttons">
+            <button id="cancelBtn" class="secondary" disabled>Cancel</button>
+            <button id="optimizeBtn" class="primary">Optimize Jelly</button>
+            </div>
+          </div>
         <div id="solverStatus" class="solver-status" aria-live="polite">Parse your JSON first.</div>
         <div id="calibrationNote" class="calibration-note"></div>
       </section>
@@ -263,7 +267,7 @@
 
         <article class="panel board-card recommended">
           <div class="board-heading">
-            <div><span class="board-label">RECOMMENDED</span><h3>Timed optimizer layout</h3></div>
+            <div><span class="board-label">RECOMMENDED</span><h3>Optimized Jelly layout</h3></div>
             <div id="bestVerdict" class="verdict"></div>
           </div>
           <div id="bestBoard" class="jelly-board" aria-label="Recommended Jelly Operator board"></div>

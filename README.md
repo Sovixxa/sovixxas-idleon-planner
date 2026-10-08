@@ -5,6 +5,19 @@ characters, quests and collections. Load a full export on Home, then select a
 system from the sidebar. Related systems use internal tabs. Jelly Operator in
 World 7 includes the audited combat simulator and layout optimizer.
 
+Jelly's default clear goal prioritizes **Max clear chance → Fastest successful
+clear**: highest simulated clear rate first, then lowest median successful clear
+time for equal rates. Speed never trades away clear chance.
+The **Optimize for** menu also offers **Highest DPS (for BC multiplier)**
+and **Highest bloodcell gain**. These rank mean three-second peak DPS or total
+Bloodcells per attempt at the saved obstruction, searching layouts, unlocked
+Fevers and Stronkroid timing. Bloodcells accrue per hit, including failed
+attempts and finishing-hit overkill, with runtime cell levels and DPS records.
+The real clear/timeout/death rules apply. Bloodcell optimization requires a full
+account export; DPS record optimization requires DPS Biometrics. Results are
+Monte Carlo estimates from a bounded search, not guaranteed global maxima.
+Run `node test-jelly-objectives.js` for objective and payout regression checks.
+
 Run `npm start` here, or double-click `start.bat`. Open http://localhost:3000.
 No npm install is needed. Edit the files in this folder; source changes hot reload.
 
