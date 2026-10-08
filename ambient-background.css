@@ -1,0 +1,149 @@
+/* Quiet starlight behind the planner; no extra elements or animation loop. */
+body {
+  background-color: var(--bg, #0d1017);
+  background-image:
+    radial-gradient(ellipse at 52% 44%, #0d1017cc 0%, transparent 65%),
+    radial-gradient(ellipse at 22% 0%, #9858d838, transparent 48%),
+    radial-gradient(ellipse at 100% 58%, #36b9b522, transparent 43%),
+    radial-gradient(ellipse at 65% 110%, #7455d92b, transparent 48%),
+    radial-gradient(circle at 31px 47px, #e6d5ff70 0 1px, transparent 1.5px),
+    radial-gradient(circle at 137px 113px, #a6dfdc50 0 1px, transparent 1.5px),
+    radial-gradient(circle at 83px 191px, #c1adf538 0 .7px, transparent 1.2px);
+  background-size: cover, cover, cover, cover, 293px 307px, 419px 397px, 223px 251px;
+  background-attachment: fixed;
+}
+
+/* A darker companion sky keeps navigation readable against the page glow. */
+.side-nav {
+  background-color: #0b0d16;
+  background-image:
+    linear-gradient(180deg, transparent, #b77aef65 16%, #8860bc25 65%, transparent),
+    radial-gradient(ellipse 150px 125px at 45px 48px, #a451e52e, transparent 75%),
+    radial-gradient(ellipse at 0% 40%, #7040a31c, transparent 65%),
+    radial-gradient(ellipse at 100% 95%, #7350b51c, transparent 55%),
+    radial-gradient(circle at 19px 137px, #dec7ff38 0 .7px, transparent 1.2px),
+    radial-gradient(circle at 173px 73px, #c1b3ed30 0 .7px, transparent 1.2px);
+  background-size: 1px 100%, auto, auto, auto, 211px 283px, 197px 337px;
+  background-position: right top, left top, left top, left top, left top, left top;
+  background-repeat: no-repeat, no-repeat, no-repeat, no-repeat, repeat, repeat;
+  border-right-color: #81609e40;
+}
+
+.side-brand > .side-brand-mark {
+  filter: drop-shadow(0 0 12px #ad57eb55);
+}
+
+/* Storybook labels retain the original names and disclosure arrows. */
+.side-nav .side-link,
+.side-nav .side-group > span {
+  font-family: ui-rounded, "Trebuchet MS", "Segoe UI", sans-serif;
+}
+.side-nav .side-link {
+  font-weight: 700;
+  letter-spacing: .01em;
+}
+.side-nav .side-group > span {
+  color: var(--world-ink, #c3aedb);
+  font-size: .76rem;
+  font-weight: 700;
+  letter-spacing: .025em;
+  text-transform: none;
+  line-height: 1.5;
+}
+.side-group[data-world="1"] { --world-ink: #a5dbb8; }
+.side-group[data-world="2"] { --world-ink: #e8cd99; }
+.side-group[data-world="3"] { --world-ink: #a5d5ed; }
+.side-group[data-world="4"] { --world-ink: #ddb1e8; }
+.side-group[data-world="5"] { --world-ink: #efb39c; }
+.side-group[data-world="6"] { --world-ink: #a8dfd2; }
+.side-group[data-world="7"] { --world-ink: #c7b6f1; }
+.side-group[data-world] > span::after {
+  content: "";
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-left: 8px;
+  background: currentColor;
+  clip-path: polygon(50% 0, 63% 37%, 100% 50%, 63% 63%, 50% 100%, 37% 63%, 0 50%, 37% 37%);
+  opacity: .75;
+}
+.side-nav .side-link.active {
+  color: #f0dfff;
+  text-shadow: 0 0 12px #c48cff55;
+}
+.side-link-label, .side-link > .side-icon {
+  transition: transform 160ms ease;
+}
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .side-link:not(:disabled):not(.locked):hover .side-link-label { transform: translateX(2px); }
+  .side-link:not(:disabled):not(.locked):hover > .side-icon { transform: translateY(-1px) rotate(-5deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .side-link-label, .side-link > .side-icon { transition: none; }
+}
+
+/* Muted enamel and a little starlight tie the working area to the sidebar. */
+.panel {
+  border-color: #423a53;
+  background-color: #151823;
+  background-image: radial-gradient(ellipse at 0 0, #a27cc310, transparent 55%);
+  box-shadow: inset 0 1px 0 #d9baff09, 0 6px 20px #00000014;
+}
+.section-head h2 {
+  color: #e7deef;
+  font-family: ui-rounded, "Trebuchet MS", "Segoe UI", sans-serif;
+  font-weight: 700;
+  letter-spacing: .015em;
+  line-height: 1.35;
+}
+.section-head h2::after {
+  content: "";
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-left: 9px;
+  vertical-align: middle;
+  background: #b59acb;
+  clip-path: polygon(50% 0, 63% 37%, 100% 50%, 63% 63%, 50% 100%, 37% 63%, 0 50%, 37% 37%);
+  opacity: .65;
+}
+button.primary {
+  color: #fff7ff;
+  background: linear-gradient(180deg, #76518f, #614077);
+  border: 1px solid #9974af;
+  box-shadow: inset 0 1px 0 #f3dbff24, 0 2px 4px #00000020;
+  text-shadow: 0 1px 1px #23132f60;
+}
+button.primary:hover:not(:disabled) {
+  background: linear-gradient(180deg, #825d9b, #6b4882);
+  border-color: #b395c6;
+}
+button.primary:active:not(:disabled) {
+  background: #604175;
+  box-shadow: inset 0 1px 3px #21112e40;
+}
+button.secondary, .file-button {
+  background: linear-gradient(180deg, #252333, #1e1e2b);
+  border-color: #494154;
+  color: #ddd4e8;
+}
+button.secondary:hover:not(:disabled), .file-button:hover {
+  background: #2c273a;
+  border-color: #786087;
+}
+button.primary:focus-visible, button.secondary:focus-visible, .file-button:focus-within {
+  outline: 2px solid #d2b0ed;
+  outline-offset: 3px;
+}
+
+/* Mobile browsers paint scrolling backgrounds more efficiently this way. */
+@media (max-width: 700px) {
+  body { background-attachment: scroll; }
+}
+
+@media print, (forced-colors: active) {
+  body, .side-nav { background-image: none; }
+  .side-brand > .side-brand-mark { filter: none; }
+  .panel, button.primary, button.secondary, .file-button { background-image: none; box-shadow: none; }
+  button.primary, .side-nav .side-link.active { text-shadow: none; }
+}
