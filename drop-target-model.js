@@ -28,7 +28,7 @@ function plan(raw,character,target,M=root.PrayerMath,progress=()=>{}){
   if(c.foodFill){
    foodBefore=S.foodState(parse(base),ch.playerId,base,M);foodAfter=S.foodState(p,ch.playerId,changed,M);
    if(foodAfter.missing)throw Error('A matching equipped golden food is required for this route.');
-   const amount=c.id==='food-fill'?Math.min(c.to,Math.floor(foodAfter.capacity)):Math.max(foodBefore.amount,Math.floor(foodAfter.capacity));
+   const amount=c.id==='food-fill'?Math.min(c.to,Math.floor(foodAfter.capacity)):foodAfter.capacity>foodBefore.capacity?Math.max(foodBefore.amount,Math.floor(foodAfter.capacity)):foodBefore.amount;
    // Reserve banked food in this hypothetical route, so later refills cannot
    // promise to reuse the same saved cakes. Any deficit remains a farming task.
    let needed=Math.max(0,amount-foodBefore.amount);
@@ -73,7 +73,7 @@ function plan(raw,character,target,M=root.PrayerMath,progress=()=>{}){
   }catch(error){issues.push({name:candidate.name,error:error.message});}
  }
  const rows=root.DropRateModel.ledger(M.getDropRate(ch,parsed.account,parsed.characters));
- const coverage=rows.map(row=>{const matches=options.filter(c=>c.sources.some(name=>name.toLowerCase()===row.name.toLowerCase()));return {name:row.name,value:row.value,operation:row.operation,detail:row.detail,...root.DropSourceInfo.get(row),status:matches.length?'Compared '+matches.length+' upgrade option'+(matches.length===1?'':'s'):'Review source - no verified next-step simulation',options:matches.map(c=>c.name)};});
+ const coverage=rows.map(row=>{const matches=options.filter(c=>c.sources.some(name=>name.toLowerCase()===row.name.toLowerCase()));return {name:row.name,value:row.value,operation:row.operation,detail:row.detail,...root.DropSourceInfo.get(row),status:matches.length?'Compared '+matches.length+' upgrade option'+(matches.length===1?'':'s')+'; partial coverage':'Review source - no verified next-step simulation',options:matches.map(c=>c.name)};});
  const golden=M.getGoldenFoodMulti(ch,parsed.account,parsed.characters);
  return {before,after:current,target,reached:current>=target,steps,options,issues,coverage,notes:built.notes,food:built.food,golden:{multiplier:golden.value,categories:golden.breakdown.categories},tested:options.length,missing:built.candidates.length-options.length};
 }

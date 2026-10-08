@@ -57,6 +57,58 @@ add('Equinox Multi','equinox','Equinox','The relevant completed Equinox cloud ad
 add('Pristine Charm','sneaking','Sneaking','The drop-rate Pristine Charm multiplies the running total.','Obtain the relevant charm; its saved charm bonus determines the multiplier.');
 add('DR Vial','vials','Vials','The drop-rate multiplier vial supplies a separate multiplier.','Finish the vial levels and improve vial-effect amplification; the final percentage is account-dependent.');
 add('Crystal Custard|Quenchie|Santa Snake|Clammie|Lucky Slug|Mama Troll|Crystal Glunko|Mallay|Glunko The Massive','pets','Pets','An active owned or borrowed companion supplies this drop-rate bonus. Some companions contribute to both additive and multiplier stages.','Obtain the companion and check its upgraded bonus on the Pets page. Availability and upgrade tier determine the practical limit.');
+// This is a dependency inventory, not a claim that one compared option covers
+// every route in a source. Keep it separate from account-specific candidates.
+function planning(names,modeled,review){for(const name of names.split('|'))Object.assign(entries[name.toLowerCase()],{modeled,review});}
+planning('Base','Fixed baseline.','No upgrade.');
+planning('Luck','Saved Luck only.','Primary-stat and Luck redistribution are not simulated.');
+planning('Talents|Graded Rate (Royal Guardian)|Archlord of the Pirates|Royal Guardian family','Plunder kills and family class-level milestones where relevant.','Talent allocation, library caps, Boss Battle Spillover boss count, Royal resource grades and The Family Guy remain manual.');
+planning('Post Office','Next Loot Box points.','New boxes must be earned; other boxes and Luck effects are not optimized.');
+planning('Obols','Current personal and family layouts.','Acquiring, combining, rerolling and rearranging DR/golden-food obols remain manual.');
+planning('Bubble','Relevant bubble milestones and Prisma amplification from Tesseract, Legend talents, Arcade and Exotic Market.','Prisma assignment, cauldron/class amplifiers, palette, sushi, ethereal sigils and companion acquisition remain manual. Saturated base bubbles can still benefit from amplification.');
+planning('Cards|Card Multi','Owned relevant cards: next natural star.','Card-set thresholds, card swaps, Lab doubling chips and unowned-card acquisition remain manual.');
+planning('Shrine','Next DR shrine level and passive shrine card stars.','Shrine placement, artifact global activation and charge-rate improvements remain manual.');
+planning('Prayers','Next Midas Minded level with the saved activation rules.','Prayer swaps and curse tradeoffs remain manual.');
+planning('Sigil','Trove tier, Chilled Yarn tier and active Meritocracy amplification.','Unlock and research prerequisites must be met; time is not estimated.');
+planning('Shiny','Next owned DR shiny level.','Pet acquisition, fence allocation and time budgets remain manual.');
+planning('Arcade','Next DR shop level while in the active rotation.','Companion amplification and rotation availability remain manual.');
+planning('Starsign','Astrology Cultism, Summoning level, Infinite Star Sign shinies and Meritocracy amplification.','Constellation unlocks, sign alignment and Silkrode Nanochip setup remain manual. Native Seraph Cosmos cap applies.');
+planning('Guild','Saved guild bonuses.','Guild DR and carry-capacity upgrades require guild progression and permissions.');
+planning('Equinox','Faux Jewels levels within the saved cap.','Cloud completion and cap-unlock chains remain manual.');
+planning('Stamps','Relevant stamp levels/cap hand-in; Exalted amplification from Aluminium, Compass, Legend talents and Exotic Market.','Selecting new Exalted stamps, Lab stamp doubling, pristine charms, palette, sushi and fragment acquisition remain manual.');
+planning('Tome|Tome Multi','Saved Tome score and both reward pools.','No synthetic score increment: finish actual Tome categories. Full score optimization remains manual.');
+planning('Owl','Next DR Bonus milestone and Orion Legend talent.','Feather farming, resets and Meritocracy/companion acquisition remain manual.');
+planning('Summoning','Endless milestones, Winz Lantern and Emperor amplification.','Normal battles, W6 task merit, Crystal Comb, Godshard Set, achievements and paid boosts remain manual.');
+planning('Golden Food','Cake refill/capacity, stamps, pouches, prayers, shrines, vials, Beanstalk, meals/ribbons/mastery, stars, family, Vault and applicable shared amplifiers.','Haungry for Gold/Apocalypse Wow, obols/gear swaps, Gumm Stick, Secret Set, Lab jewel, achievements, new food slots and temporary loading presets remain manual.');
+planning('Achievements','Saved fixed achievement rewards.','DR achievements 377/381 and golden-food achievements 37/380/383 require their real objectives; no completion flags are fabricated.');
+planning('Land Rank','Seed of Loot point and Exotic rank amplification.','Fifth-column cap upgrades, Dank Ranks and point allocation across ranks remain manual.');
+planning('Vote','Voter Rights and both voting Legend talents; Meritocracy Arcade and Clam Work compensation.','Weekly winners stay as saved. Palette, sushi, event shop, companions and Hole ballot amplifiers remain manual.');
+planning('Schematics','Next Grotto/Temple layer with an owned DR schematic.','Acquiring schematics 46/82 and encounter prerequisites remain manual.');
+planning('Grimoire','Upgrade 44 within its native cap.','Bone farming and access prerequisites remain manual.');
+planning('Upgrade Vault','Upgrade 18 within its native cap.','Unlock requirements and the coin budget remain manual.');
+planning('Crop Depot','Vault 79, Grimoire 22 and Exotic 40 amplification.','Science Highlighter, discovering crops beyond 100, Lab Crop Depot node and Pure Opal Rhombol remain manual.');
+planning('Monument','Wisdom DR reward and reward-amplification levels.','Attempt availability, reward selection, Monumental Vibes and Fountain monument amplification remain manual.');
+planning('Measurement','Measurement 15 level and Temple Golem kill progress.','Required resources and access prerequisites remain manual.');
+planning('Emperor','Next relevant showdown milestone, Vicar and Emperor Arcade amplification.','Attempt limits, HP requirements and resources remain manual.');
+planning('Efaunt Set','Saved fixed set reward.','Complete the actual Efaunt armor-set requirements.');
+planning('Exotic Market','Next DR upgrade milestone.','Weekly rotation, beans and purchase limits remain manual.');
+planning('Friend','Saved friend bonus.','Not a freely purchasable upgrade; external friend state is preserved.');
+planning('Legend Talent','Next DR talent level within its cap.','Earn new points; other talents are not stripped for points. Research cap alone does not allocate a follow-up point.');
+planning('Spelunking','Golden Hardhat shop levels.','Amber farming and access requirements remain manual.');
+planning('Research','Relevant grid levels including DR and Glimbo.','Observation assignments, Sushi 53, Equinox clouds 71/72/76, companion amplification, points and prerequisite research paths remain manual.');
+planning('Equipment, Gallery & Hat Rack|BONUS DROP RATE equipment pool|DROP RATE MULTI equipment pool','Grey Coral, Codfrey/Prisma, Gallery card, podium Legend talent, Deathskull, Clam compensation and a stored trophy placed on an empty podium. Nametag grades are separate.','Equipment crafting/rolls, Hat Rack collection/amplification (Minehead 21, Sushi 36, event shop and companion), full trophy assignment, Killroy Gallery bonus, chips, sushi, new podium acquisition and paid/seasonal item acquisition remain manual.');
+planning('Drop-rate chip (base capped at 5×)','Saved chip effect with the native 5x ceiling.','Chip ownership and slot loadout remain manual; no gain above the ceiling.');
+planning('Drop-rate bundle (+2)|Gem Bundle','Saved bundle ownership.','Paid acquisition is not included in the main route.');
+planning('Ninja Mastery','Saved fixed unlock.','Complete the Sneaking Mastery unlock; no free unlock is assumed.');
+planning('Tesseract Map','Saved-map progress and Beyond All Limits cap upgrade.','Overwhelming Energy allocation and unlocking new maps remain manual.');
+planning('Royal Statue','Next successful DR statue enhancement.','Item costs, failure chance and enhancement availability remain manual.');
+planning('Sushi + Jelly Operator','Next relevant Jelly obstruction and immediate Unagi discovery.','Earlier Sushi discovery chains and Jelly resource/board requirements remain manual. Knowledge/Perfecto do not scale Unagi.');
+planning('Glimbo DR','Next 100 total trades across used resources and relevant Research level.','Trade costs escalate; no cheapest-material or affordability search.');
+planning('Minehead','Saved Minehead bonus.','Opponent wins and first unlock require their real battle progression.');
+planning('Equinox Multi','Saved cloud 69 reward.','Complete the Megaflesh objective; no completion flag is fabricated.');
+planning('Pristine Charm','Saved Cotton Candy effect.','Charm acquisition remains manual; Gumm Stick, Crystal Comb, Liqorice Rolle and Jellypick also amplify upstream sources.');
+planning('DR Vial','DR vial levels, level-13 Vial Mastery completions, Vault and active Meritocracy amplification.','My First Chemistry Set Lab activation and lower-vial progression chains remain manual.');
+planning('Crystal Custard|Quenchie|Santa Snake|Clammie|Lucky Slug|Mama Troll|Crystal Glunko|Mallay|Glunko The Massive','Saved owned/borrowed companions and upgrade state.','Companion acquisition, upgrades, borrowing and expiry are not assumed by the main route.');
 function get(row){
  const info={...(entries[row.name.toLowerCase()]||{page:'buffs',label:'All Bonuses',effect:'Contributes to the saved character’s drop-rate calculation.',max:'A verified practical maximum is not available for this source.'})};
  if(row.operation==='multiply'){
