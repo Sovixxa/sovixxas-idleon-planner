@@ -139,14 +139,24 @@
     }
     return {connect:(method,credentials,options)=>connect(method,credentials,false,options),disconnect,applyPending,getStatus:()=>({...status}),retry:()=>{retryCount=0;return connect('resume',undefined,true);}};
   }
+  const moduleSource=typeof document==='undefined'?null:document.currentScript?.src;
+  let modulesPromise;
+  function loadFirebaseModules(){
+    if(root.IdleonFirebaseModules)return Promise.resolve(root.IdleonFirebaseModules);
+    if(!modulesPromise)modulesPromise=new Promise((resolve,reject)=>{
+      const script=document.createElement('script');
+      const url=new URL('firebase-modules.js',moduleSource||document.baseURI);
+      if(moduleSource)url.search=new URL(moduleSource).search;
+      script.type='module';script.src=url.href;
+      script.onload=()=>{if(root.IdleonFirebaseModules)resolve(root.IdleonFirebaseModules);else{script.remove();reject({code:'auth/network-request-failed'});}};
+      script.onerror=()=>{script.remove();reject({code:'auth/network-request-failed'});};
+      document.head.appendChild(script);
+    }).catch(error=>{modulesPromise=null;throw error;});
+    return modulesPromise;
+  }
   async function createFirebaseAdapter(modules){
-    // Load only after the user connects, or resumes an explicitly connected tab.
-    const [appSdk,authSdk,fsSdk,dbSdk]=modules||await Promise.all([
-      import('https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js'),
-      import('https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js'),
-      import('https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js'),
-      import('https://www.gstatic.com/firebasejs/12.19.0/firebase-database.js')
-    ]);
+    // Loading through a module script preserves strict CSP trust for SDK imports.
+    const [appSdk,authSdk,fsSdk,dbSdk]=modules||await loadFirebaseModules();
     const app=appSdk.getApps().find(app=>app.name==='planner-live')||appSdk.initializeApp({apiKey:'AIzaSyAU62kOE6xhSrFqoXQPv6_WHxYilmoUxDk',authDomain:'idlemmo.firebaseapp.com',databaseURL:'https://idlemmo.firebaseio.com',projectId:'idlemmo'},'planner-live');
     const auth=authSdk.initializeAuth(app,{persistence:[authSdk.browserLocalPersistence,authSdk.browserSessionPersistence]});
     const firestore=fsSdk.getFirestore(app),database=dbSdk.getDatabase(app);

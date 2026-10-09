@@ -64,7 +64,7 @@
     "test:review-relevance": "node test-review-relevance.js && node test-shared-sources-browser.js",
     "test:review-stats": "node test-primary-stats-audit.js && node test-primary-stat-dependencies.js && node test-review-stats.js && node test-review-stats-browser.js",
     "test:calculator-audit": "node test-calculator-audit-fixes.js && node test-calculator-dependency-closure.js",
-    "test:release": "node test-release.js && node test-release-browser.js && node test-release-import-races.js",
+    "test:release": "node test-release.js && node test-release-browser.js && node test-release-import-races.js && node test-live-sync-release.js",
     "test:scenarios": "node run-scenario-audit.cjs"
   },
   "devDependencies": {
