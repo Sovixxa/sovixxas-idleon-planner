@@ -129,3 +129,5 @@ export {getSpelunkingBonus} from './vendor/idleon-toolbox/parsers/world-7/spelun
 export {ninjaExtraInfo as dropBeanstalkOrder, vials as dropVialCatalog, summoningEndless as dropEndlessCatalog} from "./vendor/idleon-toolbox/data/website-data";
 
 export {carryBags as dropCarryBags} from "./vendor/idleon-toolbox/data/website-data";
+
+export {getCharacterStatAccount} from './vendor/idleon-toolbox/parsers/world-2/voteBallot';

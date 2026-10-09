@@ -19,6 +19,53 @@ function foodState(parsed,id,save,M){
  let bank=0;const bankSlots=[];for(const [i,item] of Object.entries(chest||{}))if(item===last.food.rawName){const amount=Math.max(0,Number(qty?.[i])||0);bank+=amount;bankSlots.push({path:['ChestQuantity',i],amount});}
  return {path,rawName:last.food.rawName,name:clean(last.food.displayName||last.food.name),amount:Number(last.food.amount),capacity:cap,capacityBreakdown:capacitySource.breakdown,loadAt,bank,bankSlots,duplicates:matches.length};
 }
+// Preserve source identity through worker comparisons and cumulative route steps.
+function upgradeIcon(c,p,save,M){
+ const [key,i,j]=c.path||[],a=p.account;
+ if(/^Stamp(Lv|Level)$/.test(key))return a.stamps?.[['combat','skills','misc'][i]]?.[j]?.rawName;
+ if(key==='CauldronInfo')return i===4?Object.values(M.dropVialCatalog||{})[j]?.mainItem:'aUpgrades'+'OGPY'[i]+j;
+ if(key==='CauldronP2W'&&i===4)return 'aSiga'+Math.floor(j/2);
+ if(key==='Meals')return 'CookingM'+j;
+ if(key==='Ribbon')return 'CookingM'+(i-28);
+ if(key==='CookMaster')return 'CookingM'+j;
+ if(key==='UpgVault')return 'VaultUpg'+i;
+ if(key==='ArcadeUpg')return 'PachiShopICON'+i;
+ if(key==='Atoms')return 'Atom'+i;
+ if(key==='PrayersUnlocked'||key==='PrayOwned')return 'Prayer'+i;
+ if(key==='Grimoire')return 'GrimoireUpg'+i;
+ if(key==='Arcane')return 'ArcaneUpg'+i;
+ if(key==='Compass')return 'CompassUpg'+j;
+ if(key==='Sailing'&&i===3)return 'Arti'+j;
+ if(key==='SaltLick')return a.saltLick?.[i]?.rawName;
+ if(key==='BribeStatus')return 'BribeO'+a.bribes?.[i]?.npc;
+ if(key==='Breeding'&&i>=22)return a.breeding?.pets?.[i-22]?.[j]?.icon;
+ if(key==='Cards'||key==='Cards0')return 'Cards'+Object.values(a.cards||{}).find(card=>card.rawName===(key==='Cards'?j:i))?.cardIndex;
+ if(/^(POu_|PostOfficeInfo_)/.test(key))return 'UIboxUpg'+i;
+ if(key==='FarmRank'&&i===2)return 'RankUpg'+j;
+ if(key==='Summon'&&i===0)return 'SumUpgIc'+j;
+ if(key==='Holes'&&i===31)return 'HoleFountainUpg'+j+'_'+c.path[3];
+ if(key==='Research'&&i===4)return 'ResObj'+j;
+ if(key==='Spelunk'){
+  if(i===5)return 'CaveShopUpg'+j;
+  if(i===8)return 'Spelunking'+Math.floor(j/4);
+  if(i===17)return 'EquipmentNametag'+j+(j===6?'b':'');
+  if(i===16)return 'Trophy'+c.to;
+  if(i===18)return 'LegendTalentIcon'+a.legendTalents?.talents?.find(t=>t.originalIndex===j)?.index;
+  if(i===13)return 'Coral'+j;
+ }
+ if(key==='Ninja'&&i===104)return (M.dropBeanstalkOrder?.[29]||[]).filter(v=>isNaN(v))[j];
+ if(/^EquipQTY_/.test(key))return get(save,[key.replace('EquipQTY_','EquipOrder_'),i,j]);
+ if(/^(SL_|SkillLevels_)/.test(key))return 'UISkillIcon'+i;
+ if(/^StatueLevels_/.test(key))return 'EquipmentStatues'+(Number(i)+1);
+
+ if(key==='Sushi'&&i===5)return 'Sushi'+j;
+ if(/^MaxCarryCap_/.test(key))return Object.values(M.dropCarryBags?.Foods||{}).find(b=>b.capacity===c.to)?.rawName;
+ if(/^Lv0_/.test(key)){
+  const ch=p.characters.find(x=>String(x.playerId)===key.slice(4));
+  return i>0?Object.values(ch?.skillsInfo||{}).find(x=>x.index===i)?.icon:ch?.classIndex!=null?'ClassIcons'+ch.classIndex:null;
+ }
+ return null;
+}
 function build(parsed,save,id,M=root.PrayerMath){
  const optionKey=save.OptLacc!==undefined?'OptLacc':'OptionsListAccount';
  const a=parsed.account,ch=parsed.characters.find(c=>String(c.playerId)===String(id)),candidates=[],notes=['Luck is held at its saved value. Changes to primary stats from golden-food effect or Gallery items are not recomputed; their direct DR effects are included.'];
@@ -227,7 +274,8 @@ function build(parsed,save,id,M=root.PrayerMath){
  }
  notes.push('Setup review: temporary food-loading gear and Ruck Sack/Zerg Rushogen changes can increase the stack you load. This planner checks your saved setup and town only; it does not optimize a separate loading preset.');
  notes.push('Acquisition and amplification checks still matter: Secret and Godshard armor sets, Pristine Charms, Lab jewels/chips, Vial Mastery, Sailing artifacts, star signs, card sets, obols, talent books, family levels, Royal resource grades, Apocalypse, Hole measurements/monuments/schematics, Crop Depot, Tesseract maps, Minehead opponents, Tome and companions. Current effects are included; not every prerequisite chain has a numerical upgrade route.');
+ for(const c of candidates)c.icon=upgradeIcon(c,parsed,save,M);
  return {candidates,notes,food};
 }
-root.DropTargetSources={get,set,foodState,build};
+root.DropTargetSources={upgradeIcon,get,set,foodState,build};
 })(typeof window!=='undefined'?window:globalThis);

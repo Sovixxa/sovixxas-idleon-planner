@@ -6,6 +6,7 @@
   'use strict';
 
 const VERSION='0.9.9-alchemy-bubbles';
+  const COMBAT_MODEL_VERSION=2;
   const COLS=18, ROWS=10, BOARD_SIZE=180, FPS=60;
   const UNIT_NAMES=['Amoeba','Plasmid','Ribosome','Organelle','Immunoid','Virus','Mitochondria','Gigacyst','Bruhollio'];
   const UNIT_IMG_DIMS=[[36,36],[73,36],[36,109],[110,110],[73,73],[36,36],[147,147],[184,183],[36,36]];
@@ -76,7 +77,7 @@ const VERSION='0.9.9-alchemy-bubbles';
     ['Cell Evolution',9999,1.650,10,0,'Cell EXP multiplier.'],
     ['DPS Biometrics',1,1.0,1,1.5,'Bloodcell multiplier from best-ever DPS.'],
     ['Proximity Stimulus',5,2000,1,0,'Cells with cores beside the obstruction get multiplicative DMG and SPD.'],
-    ['Cells of Three, Better They Be!',1,1.0,1,0,'Every 3rd cell of a type doubles that cell type passive contribution.'],
+    ['Cells of Three, Better They Be!',1,1.0,1,0,'Each full group of three non-Virus cells adds one effective passive count.'],
     ['Viral Injection',4,10000,1,0,'Allows additional Virus cells.'],
     ['Feverizer',6,250,1,0.04,'Unlocks Fever effects.'],
     ['Cell Mutilation',20,40,1,0.20,'More DMG per Cell LV.'],
@@ -369,7 +370,8 @@ const VERSION='0.9.9-alchemy-bubbles';
     // Client quirk: JellyOperation('CellLV_tot') is cached in DNSM and the runtime
     // level-up path does not invalidate it. Individual-cell level damage updates live,
     // but Cell Metabolism's combined-level breakpoint stays on the operation-start/cache value.
-    // `levels` is intentionally ignored for that combined total.
+    // `levels` is intentionally ignored for that combined total. During combat
+    // the level panel is hidden, so individual levels also stay fixed.
     const cachedTotalLv=state.cellLevels.reduce((a,b)=>a+asNum(b),0);
     return (1+(q(18)+q(19)+q(20)+ext.palette)/100)*(1+ext.grid/100)*(1+q(21)/100)*(1+q(22)/100)*(1+q(32)*Math.floor(cachedTotalLv/100)/100)*feverDamageMultiplier(state,elapsedSeconds,coldFirstTick);
   }
@@ -471,7 +473,10 @@ const VERSION='0.9.9-alchemy-bubbles';
     const economy=bloodcellBonuses(state),dpsUnlocked=upgradeQty(state,12)>=1;
     const currencyBase=economy.known?economy.multiplier/economy.factors.savedDps/economy.factors.upgrades:null;
     let bloodcellsGained=0,totalDamage=0,bestDps=state.bestDps;
-    let levelCooldown=0,levelsGained=0;
+    // The client only spends Cell EXP while its level panel is visible (x > -5).
+    // Starting an operation slides that panel to -135, so hits bank EXP but do
+    // not level cells during combat. Use the exported levels for this attempt.
+    const levelsGained=0;
     const expMulti=cellExpMultiplier(state),levelingEnabled=canLevelCells(state);
     for(let i=0;i<units.length;i++)progress[i]=randInt(rng,0,Math.max(5,Math.floor(units[i].cd-1)));
     const trace=options.trace?[]:null,events=options.trace?[]:null;
@@ -489,17 +494,10 @@ const VERSION='0.9.9-alchemy-bubbles';
     let result='timeout';
     while(elapsed<maxSeconds){
       frame++;elapsed=frame/FPS;
-      // Jelly UI processes Cell EXP/level-ups before the active-operation attack loop.
-      // The cooldown counter decrements every update; at most one type levels when <=0,
-      // scanning type 0..8. A level-up sets the gate back to 20 updates.
-      levelCooldown--;
-      if(levelingEnabled&&levelCooldown<=0){
-        for(let t=0;t<9;t++){
-          const req=cellExpReq(runtimeLevels[t]);
-          if(asNum(runtimeExp[t],0)>=req){runtimeExp[t]=asNum(runtimeExp[t],0)-req;runtimeLevels[t]=Math.round(asNum(runtimeLevels[t],0)+1);levelCooldown=20;levelsGained++;break;}
-        }
+      if(!roidUsed&&options.useSteroid!==false&&steroidUnlocked(state)&&elapsed>=steroidStart){
+        roidFrames=300;roidUsed=true;
+        if(events)events.push({type:'steroid',time:elapsed,multiplier:roidMulti(state),durationSeconds:300/FPS});
       }
-      if(!roidUsed&&options.useSteroid!==false&&steroidUnlocked(state)&&elapsed>=steroidStart){roidFrames=300;roidUsed=true;}
       // Client update order decrements GenINFO[238] before it evaluates RoidMulti.
       if(roidFrames>0)roidFrames--;
       const roid=roidFrames>0?roidMulti(state):1;
@@ -575,6 +573,8 @@ const VERSION='0.9.9-alchemy-bubbles';
     const timer=bossTime(state.obstruction),normalClears=clears.filter(x=>x.time<=timer),criticalClears=clears.filter(x=>x.time>timer);
     const critEntries=out.filter(x=>x.criticalEntered),stacks=out.map(x=>x.amoebaStacks).filter(Number.isFinite),bossHits=out.map(x=>x.bossHits).filter(Number.isFinite);
     return {
+      steroidStartSeconds:options.useSteroid!==false&&steroidUnlocked(state)?Math.max(0,asNum(options.steroidStartSeconds,0)):null,
+      steroidUses:out.filter(x=>x.steroidUsed).length,
       avgBloodcells:out.every(x=>x.bloodcellsGained!==null)?out.reduce((sum,x)=>sum+x.bloodcellsGained,0)/runs:null,
       avgDpsMultiplier:out.reduce((sum,x)=>sum+x.projectedDpsMultiplier,0)/runs,currencyMissing:out[0].currencyMissing,
       runs,clearRate:clears.length/runs,normalClearRate:normalClears.length/runs,criticalClearRate:criticalClears.length/runs,criticalEntryRate:critEntries.length/runs,
@@ -608,19 +608,37 @@ const VERSION='0.9.9-alchemy-bubbles';
     const scale=best?best.scale:hi;
     return {scale:clamp(scale,.002,1000),source:'observedClear',observedSeconds:target,matchedTime:best?.stats?.medianClearTime??null,modelPeak:0};
   }
-  function steroidStartCandidates(state){
+  function steroidStartCandidates(state,horizon=bossTime(state.obstruction)){
     if(!steroidUnlocked(state))return [0];
     const timer=bossTime(state.obstruction),dur=300/FPS;
     const set=new Set([0,Math.max(0,timer-dur),Math.max(0,timer/2-dur/2)]);
     for(let t=5;t<timer;t+=5)set.add(t);
+    // Critical Condition can last well beyond the normal timer, and Stronkroid
+    // remains clickable then. Keep this extension bounded for large shield boards.
+    if(critUnlocked(state)&&horizon>timer){
+      const last=Math.max(timer,horizon-dur),step=Math.max(5,Math.ceil((last-timer)/8/5)*5);
+      for(let t=timer;t<last;t+=step)set.add(t);
+      set.add(last);
+    }
     return [...set].sort((a,b)=>a-b);
   }
   function optimizeSteroidStart(state,arr,options={}){
     if(options.useSteroid===false||!steroidUnlocked(state))return {start:0,stats:simulateMany(state,arr,{...options,useSteroid:false}),tested:1};
-    const candidates=steroidStartCandidates(state),runs=Math.max(1,Math.min(500,Math.round(asNum(options.runs,24))));
+    const runs=Math.max(1,Math.min(500,Math.round(asNum(options.runs,24))));
+    const sample=start=>simulateMany(state,arr,{...options,runs,useSteroid:true,steroidStartSeconds:start,seed:Math.round(asNum(options.seed,0x57E2))});
+    const initial=sample(0),allCandidates=steroidStartCandidates(state,initial.medianElapsed);
+    // Screening needs more than an immediate burst, but testing every possible
+    // time for every mutation is too costly. Cover early/mid/late normal combat
+    // and two Critical timings; surviving candidates get the full timing search.
+    const timer=bossTime(state.obstruction),dur=300/FPS;
+    const coarse=[0,Math.max(0,(timer-dur)/2),Math.max(0,timer-dur)];
+    if(critUnlocked(state)&&initial.medianElapsed>timer){
+      const last=Math.max(timer,initial.medianElapsed-dur);coarse.push((timer+last)/2,last);
+    }
+    const candidates=options.timingSearch==='coarse'?[...new Set(coarse)]:allCandidates;
     let best=null;
     for(const start of candidates){
-      const stats=simulateMany(state,arr,{...options,runs,useSteroid:true,steroidStartSeconds:start,seed:Math.round(asNum(options.seed,0x57E2))});
+      const stats=start===0?initial:sample(start);
       const obj=timedObjective(stats,options.objectiveMode);
       if(!best||obj>best.objective)best={start,stats,objective:obj,tested:candidates.length};
     }
@@ -693,6 +711,14 @@ const VERSION='0.9.9-alchemy-bubbles';
     return dfs(0n,emptyBudget)?chosen.map(p=>({type:p.type,anchor:p.anchor,cells:p.cells.slice()})):null;
   }
   function arrangementKey(arr){return arr.slice().sort((a,b)=>a.anchor-b.anchor||a.type-b.type).map(x=>x.anchor+':'+x.type).join('|');}
+  function fillEmptySlots(state,arr){
+    const full=arr.map(p=>({type:p.type,anchor:p.anchor,cells:p.cells.slice()}));
+    if(unitsOwned(state)<1)return full;
+    const used=new Set(full.flatMap(p=>p.cells));
+    // Amoebas cost no combat resource and fit every remaining unlocked square.
+    for(const anchor of unlockedSlots(state))if(!used.has(anchor))full.push({type:0,anchor,cells:[anchor]});
+    return full.sort((a,b)=>a.anchor-b.anchor);
+  }
   function organelleSurroundSlots(anchor){
     const surround=new Set(),col=anchor%COLS;
     [anchor-36,anchor-19,anchor-17,anchor+17,anchor+19,anchor+36].forEach(x=>{if(x>=0&&x<BOARD_SIZE)surround.add(x)});
@@ -764,6 +790,21 @@ const VERSION='0.9.9-alchemy-bubbles';
     }
     return generateLayout(state,index,rng,arr);
   }
+  function generateBreakpointLayout(state,index,rng,type=null,target=null){
+    // Deliberately seed passive-count breakpoints rather than relying only on
+    // random mixes to discover the 3/6/9 bonuses. Timed combat decides their value.
+    const types=[0,1,2,3,6,7].filter(t=>t<unitsOwned(state)&&3*SHAPE_OFFSETS[t].length<=index.slots.length);
+    if(upgradeQty(state,14)<1||!types.length)return generateRoleAwareLayout(state,index,rng);
+    const chosen=type??types[Math.floor(rng()*types.length)];
+    if(!types.includes(chosen))return generateRoleAwareLayout(state,index,rng);
+    const quota=target??3*(1+Math.floor(rng()*Math.min(3,Math.floor(index.slots.length/SHAPE_OFFSETS[chosen].length/3))));
+    const arr=[],used=new Set(),placements=index.placements.filter(p=>p.type===chosen);
+    for(let n=0;n<quota;n++){
+      const legal=placements.filter(p=>p.cells.every(c=>!used.has(c)));if(!legal.length)break;
+      const p=legal[Math.floor(rng()*legal.length)];arr.push(p);p.cells.forEach(c=>used.add(c));
+    }
+    return generateLayout(state,index,rng,arr);
+  }
   function generateSupportLayout(state,index,rng){
     // Build around Organelle first, then deliberately occupy its buff ring with
     // high-output shapes. This gives timed validation candidates that can realize
@@ -786,10 +827,12 @@ const VERSION='0.9.9-alchemy-bubbles';
   function relocateLayout(state,index,rng,arr){
     if(!arr.length)return generateLayout(state,index,rng);
     const chosen=Math.floor(rng()*arr.length),cell=arr[chosen],rest=arr.filter((_,i)=>i!==chosen),used=new Set(rest.flatMap(p=>p.cells));
-    const legal=index.placements.filter(p=>p.type===cell.type&&p.anchor!==cell.anchor&&p.cells.every(c=>!used.has(c)));
+    const full=used.size+cell.cells.length===index.slots.length,fillers=new Set(rest.filter(p=>p.type===0).map(p=>p.anchor));
+    const legal=index.placements.filter(p=>p.type===cell.type&&p.anchor!==cell.anchor&&p.cells.every(c=>!used.has(c)||full&&fillers.has(c)));
     if(!legal.length)return arr;
     const replacement=legal[Math.floor(rng()*legal.length)];
-    return [...rest,{type:replacement.type,anchor:replacement.anchor,cells:replacement.cells.slice()}].sort((a,b)=>a.anchor-b.anchor);
+    const moved=[...rest.filter(p=>!replacement.cells.includes(p.anchor)),{type:replacement.type,anchor:replacement.anchor,cells:replacement.cells.slice()}];
+    return full?fillEmptySlots(state,moved):moved.sort((a,b)=>a.anchor-b.anchor);
   }
   function localImproveLayout(state,index,rng,arr,maxSteps=6,deadline=Infinity){
     // A random layout is good at discovering a cell mix, but poor at arranging a
@@ -806,9 +849,12 @@ const VERSION='0.9.9-alchemy-bubbles';
       for(const at of order){
         if(performanceNow()>=deadline)break;
         const cell=best[at],rest=best.filter((_,i)=>i!==at),used=new Set(rest.flatMap(p=>p.cells));
-        const legal=index.placements.filter(p=>p.type===cell.type&&p.anchor!==cell.anchor&&p.cells.every(c=>!used.has(c)));
+        const full=used.size+cell.cells.length===index.slots.length,fillers=new Set(rest.filter(p=>p.type===0).map(p=>p.anchor));
+        const legal=index.placements.filter(p=>p.type===cell.type&&p.anchor!==cell.anchor&&p.cells.every(c=>!used.has(c)||full&&fillers.has(c)));
         for(const replacement of legal){
-          const next=[...rest,{type:replacement.type,anchor:replacement.anchor,cells:replacement.cells.slice()}].sort((a,b)=>a.anchor-b.anchor);
+          if(performanceNow()>=deadline)break;
+          const moved=[...rest.filter(p=>!replacement.cells.includes(p.anchor)),{type:replacement.type,anchor:replacement.anchor,cells:replacement.cells.slice()}];
+          const next=full?fillEmptySlots(state,moved):moved.sort((a,b)=>a.anchor-b.anchor);
           const score=layoutScore(state,next).withJellyUpgrades;
           if(score>winnerScore*(1+1e-12)){winner=next;winnerScore=score;}
         }
@@ -836,16 +882,19 @@ const VERSION='0.9.9-alchemy-bubbles';
     const rng=seededRng(asNum(options.searchSeed,0xB00B5)),candidates=new Map(),currentKey=arrangementKey(current);
     const shortlistTarget=Math.max(16,Math.min(120,Math.round(asNum(options.shortlist,48))));
     const report=(stage,detail)=>{if(typeof options.onProgress==='function')options.onProgress({stage,...detail});};
-    function add(arr){const key=arrangementKey(arr);if(candidates.has(key))return candidates.get(key);
+    const clearGoal=!options.objectiveMode||options.objectiveMode==='chance';
+    function add(arr,preserve=false){
+      if(clearGoal&&!preserve)arr=fillEmptySlots(state,arr);
+      const key=arrangementKey(arr);if(candidates.has(key))return candidates.get(key);
       const score=layoutScore(state,arr),counts=score.counts,shields=counts[4],prox=arr.filter(p=>PROXIMITY_CORES.has(p.anchor)).length;
       const c={arr,key,proxy:score.withJellyUpgrades,score,counts,shields,prox,
         supportKey:[shields>0,score.organelleBoosted>0,score.infectedSlots>0,prox>0,counts.some((n,t)=>t!==5&&n>=3&&upgradeQty(state,14)>=1)].join(':')};candidates.set(key,c);return c;}
-    add(current);
-    if(options.incumbentArr&&isLegalLayout(state,options.incumbentArr))add(options.incumbentArr);
+    add(current,true);add(current);
+    if(options.incumbentArr&&isLegalLayout(state,options.incumbentArr)){add(options.incumbentArr,true);add(options.incumbentArr);}
     for(let n=0;n<60;n++)add(relocateLayout(state,index,rng,current));
     // Deterministic bounded construction; no exponential mix enumeration on the hot path.
     const generationCount=Math.max(100,Math.min(1200,Math.round(asNum(options.mixLimit,300)*2)));
-    for(let i=0;i<generationCount;i++)add(i%5===0?generateSupportLayout(state,index,rng):i%4===0?generateRoleAwareLayout(state,index,rng):generateLayout(state,index,rng));
+    for(let i=0;i<generationCount;i++)add(i%6===0?generateBreakpointLayout(state,index,rng):i%5===0?generateSupportLayout(state,index,rng):i%4===0?generateRoleAwareLayout(state,index,rng):generateLayout(state,index,rng));
     // Spend a small, predictable share of the search budget turning the strongest
     // mixes into coordinated support layouts before the costly timed screening.
     const constructionDeadline=start+timeMs*.28;
@@ -860,15 +909,28 @@ const VERSION='0.9.9-alchemy-bubbles';
     // Round-robin shield-count lanes ensure defense is actually simulated.
     const lanes=new Map();for(const c of ranked){if(!lanes.has(c.shields))lanes.set(c.shields,[]);lanes.get(c.shields).push(c);}
     const supportLanes=new Map();for(const c of ranked){if(!supportLanes.has(c.supportKey))supportLanes.set(c.supportKey,[]);supportLanes.get(c.supportKey).push(c);}
+    // Static DPS cannot price the growing Immuno Weakening stacks. Reserve
+    // timed trials for different Amoeba counts instead of letting shield lanes
+    // consume the entire shortlist and erase stack-building mixtures.
+    const weakeningLanes=new Map();if(upgradeQty(state,28)>=1)for(const c of ranked){
+      const key=Math.floor(c.counts[0]/3);if(!weakeningLanes.has(key))weakeningLanes.set(key,[]);weakeningLanes.get(key).push(c);
+    }
     const laneDepth=Math.max(2,Math.min(6,Math.ceil(shortlistTarget/16)));
-    for(let depth=0;depth<laneDepth;depth++)for(const lane of lanes.values())keep(lane[depth]);
-    for(let depth=0;depth<laneDepth&&shortlist.size<shortlistTarget;depth++)for(const lane of supportLanes.values())keep(lane[depth]);
+    for(let depth=0;depth<laneDepth;depth++)for(const lane of lanes.values())if(shortlist.size<Math.ceil(shortlistTarget*.3))keep(lane[depth]);
+    for(let depth=0;depth<laneDepth;depth++)for(const lane of supportLanes.values())if(shortlist.size<Math.ceil(shortlistTarget*.5))keep(lane[depth]);
+    for(let depth=0;depth<laneDepth;depth++)for(const lane of weakeningLanes.values())if(shortlist.size<Math.ceil(shortlistTarget*.75))keep(lane[depth]);
     ranked.slice(0,Math.max(12,Math.floor(shortlistTarget*.45))).forEach(c=>keep(c));
     for(const c of ranked)if(shortlist.size<shortlistTarget)keep(c);
     if(options.incumbentArr)keep(candidates.get(arrangementKey(options.incumbentArr)),true);
     const common={damageScale,useSteroid:options.useSteroid!==false,reviveDelaySeconds,objectiveMode:options.objectiveMode};
     const screenRuns=Math.max(3,Math.min(12,Math.round(asNum(options.screenRuns,4)))),screened=[];let simulated=0,lastPreview=-Infinity;
-    function screen(c){if(c.stats)return c; c.stats=simulateMany(state,c.arr,{...common,runs:screenRuns,seed:0x51A7});c.obj=timedObjective(c.stats,options.objectiveMode);screened.push(c);simulated++;if(performanceNow()-lastPreview>100){report('testing layouts',{tested:simulated,candidates:candidates.size,arrangement:c.arr,stats:c.stats});lastPreview=performanceNow();}return c;}
+    function screen(c){
+      if(c.stats)return c;
+      const timing=optimizeSteroidStart(state,c.arr,{...common,runs:screenRuns,seed:0x51A7,timingSearch:'coarse'});
+      c.stats=timing.stats;c.obj=timedObjective(c.stats,options.objectiveMode);screened.push(c);simulated++;
+      if(performanceNow()-lastPreview>100){report('testing layouts',{tested:simulated,candidates:candidates.size,arrangement:c.arr,stats:c.stats});lastPreview=performanceNow();}
+      return c;
+    }
     report('screening',{candidates:candidates.size});
     for(const c of shortlist.values())screen(c);
     // Mutate multiple timed elites. Deleting whole cells leaves legal empty squares;
@@ -892,27 +954,37 @@ const VERSION='0.9.9-alchemy-bubbles';
     screened.sort((a,b)=>b.obj-a.obj);
     const refineRuns=Math.max(screenRuns,Math.min(96,Math.round(asNum(options.refineRuns,screenRuns))));
     const refineCount=Math.max(0,Math.min(screened.length,Math.round(asNum(options.refineCount,Math.min(12,shortlistTarget)))));
+    let finalistPool=screened;
     if(refineRuns>screenRuns&&refineCount){
-      for(let i=0;i<refineCount;i++){
-        const c=screened[i];report('deep rechecking',{index:i+1,total:refineCount,runs:refineRuns});
-        c.stats=simulateMany(state,c.arr,{...common,runs:refineRuns,seed:0x9EED+i*313});c.obj=timedObjective(c.stats,options.objectiveMode);simulated++;
+      finalistPool=screened.slice(0,refineCount);
+      for(let i=0;i<finalistPool.length;i++){
+        const c=finalistPool[i];report('deep rechecking',{index:i+1,total:finalistPool.length,runs:refineRuns});
+        c.plan=optimizeSteroidStart(state,c.arr,{...common,runs:6,seed:0x57E2});
+        c.stats=simulateMany(state,c.arr,{...common,runs:refineRuns,seed:0x9EED,steroidStartSeconds:c.plan.start});c.obj=timedObjective(c.stats,options.objectiveMode);simulated++;
       }
     }
-    screened.sort((a,b)=>b.obj-a.obj);
-    const finalists=screened.slice(0,Math.max(4,Math.min(12,asNum(options.finalists,8))));
+    // Once rechecked, compare only that cohort. A lucky screening score from
+    // outside it must not displace a board tested on the larger seed set.
+    finalistPool.sort((a,b)=>b.obj-a.obj);
+    const finalists=finalistPool.slice(0,Math.max(4,Math.min(12,asNum(options.finalists,8))));
     if(options.incumbentArr){const prior=candidates.get(arrangementKey(options.incumbentArr));if(prior&&!finalists.includes(prior))finalists.push(prior);}
     if(!finalists.some(c=>c.key===currentKey))finalists.push(candidates.get(currentKey));
+    // Preserve an honest saved-board baseline, but always validate its filled
+    // counterpart too. Do the same for remembered partial-board incumbents.
+    if(clearGoal)for(const c of finalists.slice()){
+      const full=add(c.arr);if(!finalists.includes(full))finalists.push(full);
+    }
     const fullRuns=Math.max(8,Math.min(500,Math.round(asNum(options.runs,64))));
     const plans=[];
     for(let i=0;i<finalists.length;i++){
       const c=finalists[i];report('validating',{index:i+1,total:finalists.length,runs:fullRuns});
       // Timing selection uses training seeds; final comparison uses independent seeds.
-      const plan=optimizeSteroidStart(state,c.arr,{...common,runs:6,seed:0x57E2});
+      const plan=c.plan||optimizeSteroidStart(state,c.arr,{...common,runs:6,seed:0x57E2});
       const stats=simulateMany(state,c.arr,{...common,runs:fullRuns,seed:0xD00D,steroidStartSeconds:plan.start});
       report('validated layout',{tested:simulated,candidates:candidates.size,arrangement:c.arr,stats});
       plans.push({c,plan,stats,obj:timedObjective(stats,options.objectiveMode)});simulated++;
     }
-    plans.sort((a,b)=>b.obj-a.obj);const best=plans[0],baseline=plans.find(p=>p.c.key===currentKey);
+    plans.sort((a,b)=>b.obj-a.obj||b.c.score.filledSlots-a.c.score.filledSlots);const best=plans[0],baseline=plans.find(p=>p.c.key===currentKey);
     report('complete',{clearRate:best.stats.clearRate,runs:fullRuns});
     return {arrangement:best.c.arr,stats:best.stats,current,currentStats:baseline.stats,damageScale,calibration:cal,
       mixesTested:generationCount,tilings:candidates.size,candidates:candidates.size,simulated,timeMs:performanceNow()-start,
@@ -928,14 +1000,17 @@ const VERSION='0.9.9-alchemy-bubbles';
     if(options.objectiveMode==='dps'&&upgradeQty(state,12)<1)throw new Error('Unlock DPS Biometrics before optimizing the recorded DPS bloodcell multiplier.');
     const fevers=options.searchFever===false||!feverUnlocked(state)?[state.fever]:[...new Set([state.fever,...Array.from({length:Math.min(6,Math.floor(upgradeQty(state,16)))},(_,i)=>i)])];
     const begin=performanceNow();let best=null,baseline=null;const feverResults=[];
+    // Calibrate against the saved board and Fever once. Re-fitting each Fever
+    // to the same historical DPS record would cancel its real damage effect.
+    const calibration=options.damageScale?{scale:asNum(options.damageScale,1),source:'custom'}:autoDamageScale(state,arrangementFromBoard(state));
     for(const fever of fevers){
       const st=cloneState(state);st.fever=fever;
-      const result=optimizeTimed(st,{...options,timeMs:Math.max(500,asNum(options.timeMs,4200)/fevers.length),onProgress:p=>options.onProgress?.({...p,fever:FEVER_NAMES[fever]||'None'})});
+      const result=optimizeTimed(st,{...options,damageScale:calibration.scale,timeMs:Math.max(500,asNum(options.timeMs,4200)/fevers.length),onProgress:p=>options.onProgress?.({...p,fever:FEVER_NAMES[fever]||'None',feverIndex:fever})});
       if(fever===state.fever)baseline=result;
       feverResults.push({fever,stats:result.stats});
       if(!best||timedObjective(result.stats,options.objectiveMode)>timedObjective(best.stats,options.objectiveMode))best={...result,fever};
     }
-    return {...best,currentStats:baseline.currentStats,currentSteroidStart:baseline.currentSteroidStart,currentFever:state.fever,feverResults,timeMs:performanceNow()-begin};
+    return {...best,calibration,currentStats:baseline.currentStats,currentSteroidStart:baseline.currentSteroidStart,currentFever:state.fever,feverResults,timeMs:performanceNow()-begin};
   }
   function clearConfidence(stats){
     const n=stats.runs,p=stats.clearRate,z=1.96,den=1+z*z/n;
@@ -1053,8 +1128,8 @@ const VERSION='0.9.9-alchemy-bubbles';
   function arrangementGrid(arr){const g=Array(BOARD_SIZE).fill(null);for(const p of arr)for(const c of p.cells)g[c]={type:p.type,anchor:p.anchor,isAnchor:c===p.anchor};return g;}
   function formatNumber(n){n=asNum(n);const a=Math.abs(n);if(a<1000)return n.toLocaleString(undefined,{maximumFractionDigits:2});const units=['K','M','B','T','Q','Qi','Sx'];let v=a,u=-1;while(v>=1000&&u<units.length-1){v/=1000;u++;}return(n<0?'-':'')+v.toFixed(v>=100?1:v>=10?2:3).replace(/\.0+$|(?<=\.[0-9]*?)0+$/,'')+units[u];}
   function formatTime(t){if(t==null||!Number.isFinite(t))return '—';return t<60?t.toFixed(2)+'s':Math.floor(t/60)+'m '+(t%60).toFixed(1)+'s';}
-  return {VERSION,bonusAudit,bloodcellBonuses,arcadeBloodcellBonus,dpsBloodcellMultiplier,researchGridBonus,cellDetails,CELL_PASSIVES,CELL_ABILITIES,FEVER_NAMES,optimizeOperation,clearConfidence,COLS,ROWS,BOARD_SIZE,FPS,UNIT_NAMES,UNIT_IMG_DIMS,UNIT_VISUAL_OFFSET,UPGRADE_META,UPGRADE_ORDER,PLOTS,SHAPE_OFFSETS,SHAPE_COORDS,BULLET_LAUNCH,PROXIMITY_CORES,BLOCKED_CENTER,SUSHI_ROG_BONUS,
+  return {VERSION,COMBAT_MODEL_VERSION,bonusAudit,bloodcellBonuses,arcadeBloodcellBonus,dpsBloodcellMultiplier,researchGridBonus,cellDetails,CELL_PASSIVES,CELL_ABILITIES,FEVER_NAMES,optimizeOperation,clearConfidence,COLS,ROWS,BOARD_SIZE,FPS,UNIT_NAMES,UNIT_IMG_DIMS,UNIT_VISUAL_OFFSET,UPGRADE_META,UPGRADE_ORDER,PLOTS,SHAPE_OFFSETS,SHAPE_COORDS,BULLET_LAUNCH,PROXIMITY_CORES,BLOCKED_CENTER,SUSHI_ROG_BONUS,
     parseInput,makeState,cloneState,upgradeQty,unitsOwned,virusLimit,feverUnlocked,critUnlocked,steroidUnlocked,reviveCount,bossHP,bossTime,bossAtkCD,cellExpReq,cellExpMultiplier,canLevelCells,obstructionTier,bundleFlag,slotPurchasesLeft,plotCells,plotLabel,
     unlockedSlots,footprint,placementsForState,arrangementFromBoard,rawCounts,effectiveCounts,rawArray,paletteCellDamageBonus,companionGridBonus,dreamCloudBonus,gridAllMultiplier,gridCellDamageBonus,externalDamageStatus,sushiUniqueCount,sushiRogBonus,organelleSpeedMultiplier,organelleBoosted,infectedSlots,combatModel,jellyDamageMultiplier,layoutScore,backInEase,projectileLaunchPosition,projectileHitDelayFrames,simulateOne,simulateMany,autoDamageScale,calibrateToObservedClearTime,steroidStartCandidates,optimizeSteroidStart,optimizeTimed,
-    upgradeCost,upgradeLevelReq,upgradeCandidates,upgradeRoadmap,planUpgradePurchases,findUpgradeTarget,recommendNextPlot,arrangementGrid,formatNumber,formatTime,arrangementKey,isLegalLayout,relocateLayout,localImproveLayout,generateLayout,generateRoleAwareLayout,generateSupportLayout,enumerateMixes,buildPlacementIndex,tileMix,timedObjective,seededRng};
+    upgradeCost,upgradeLevelReq,upgradeCandidates,upgradeRoadmap,planUpgradePurchases,findUpgradeTarget,recommendNextPlot,arrangementGrid,formatNumber,formatTime,arrangementKey,isLegalLayout,fillEmptySlots,relocateLayout,localImproveLayout,generateLayout,generateRoleAwareLayout,generateSupportLayout,generateBreakpointLayout,enumerateMixes,buildPlacementIndex,tileMix,timedObjective,seededRng};
 });

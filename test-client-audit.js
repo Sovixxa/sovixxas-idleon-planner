@@ -6,7 +6,7 @@ const sourcePath=path.resolve(__dirname,process.env.IDLEON_CLIENT_PATH||'../audi
 if(!fs.existsSync(sourcePath)){if(process.env.IDLEON_CLIENT_PATH)throw Error('Requested client is unavailable: '+sourcePath);console.log('SKIP client audit: extract local N.js first');process.exit(0);}
 const source=fs.readFileSync(sourcePath,'utf8');
 function handler(name){
- const match=new RegExp('\\.'+name+'\\s*=\\s*(function\\s*\\()').exec(source);assert(match,'Missing '+name);
+ const match=new RegExp('(?:\\.|\\b)'+name+'\\s*[:=]\\s*(function\\s*\\()').exec(source);assert(match,'Missing '+name);
  const start=match.index+match[0].length-match[1].length;let depth=0,quote='',escape=false;
  for(let i=source.indexOf('{',start);i<source.length;i++){
   const ch=source[i];if(quote){if(escape)escape=false;else if(ch==='\\')escape=true;else if(ch===quote)quote='';continue;}
@@ -59,3 +59,60 @@ for(const counts of [[3,4,2,3,1,2,2,2],[1,0,4,0,0,0,3,5]]){
  close(game('UnitSumAtkCD',0,0),1/((1+.5*counts[6])*(1+.25*counts[3]+.15*counts[1])),'mixed speed stacking');
 }
 console.log('Client audit OK: all eight cell formulas and mixed passive stacking');
+
+// Run the actual board-setup event. Earlier tests fed our effective counts and
+// adjacency into the client formula, which could not detect a shared setup bug.
+const researchRows=vm.runInNewContext('('+handler('Research')+')()',{}, {timeout:1000});
+attrs.CustomLists.h.Research=researchRows;
+assert.deepEqual(Array.from(researchRows[49],x=>String(x).split(',').map(Number)),E.SHAPE_OFFSETS);
+assert.deepEqual(Array.from(researchRows[50],String),E.PLOTS);
+Object.assign(context.c,{attachImageToActor(){},removeImage(){},fadeImageTo(){},moveImageBy(){},spinImageTo(){}});
+context.h={string:String};context.t={expoIn:0,backOut:0,backInOut:0};
+context.k={_customBlock_addImgInst:()=>({set_rotation(){}}),_customBlock_GrowImgInstREAL(){},_customBlock_AdjustImgInst(){}};
+const setup=vm.runInNewContext('('+handler('_customEvent_JellyStuff')+')',context,{timeout:1000});
+const actor={_TRIGGEREDtext:'i',_GenINFO:info,_UIinventory17:[],_UIinventory17On:[],actor:{}};
+actor._UIinventory17[98]=[];actor._UIinventory17On[98]=Array(180).fill(0);
+state.board=Array(180).fill(-1);state.research[14]=state.board;
+for(const enabled of [0,1])for(let type=0;type<8;type++)for(let count=0;count<=12;count++){
+ state.upgrades[14]=enabled;state.board.fill(-1);
+ for(let i=0;i<count;i++)state.board[i]=type;
+ setup.call(actor);
+ const raw=Array(9).fill(0);raw[type]=count;
+ assert.deepEqual(Array.from(info[233]),E.effectiveCounts(state,raw),'client count cache '+type+'/'+count+'/'+enabled);
+ assert.equal(info[233][type],count+(enabled&&type!==5?Math.floor(count/3):0));
+}
+state.plots=Array.from({length:E.PLOTS.length},(_,i)=>i);
+const placementIndex=E.buildPlacementIndex(state),random=E.seededRng(51439);
+let boardChecks=0;
+for(const triples of [0,1])for(const proximity of [0,10])for(let fever=0;fever<6;fever++)for(let trial=0;trial<4;trial++){
+ state.upgrades[14]=triples;state.upgrades[13]=proximity;state.fever=fever;state.research[7][13]=fever;
+ const layout=E.fillEmptySlots(state,E.generateRoleAwareLayout(state,placementIndex,random));
+ assert(E.isLegalLayout(state,layout));state.board.fill(-1);for(const p of layout)state.board[p.anchor]=p.type;
+ setup.call(actor);const model=E.combatModel(state,layout);
+ assert.deepEqual(Array.from(info[233]),model.effectiveCounts);
+ assert.deepEqual(Array.from(info[235]).sort((a,b)=>a-b),[...model.infected].sort((a,b)=>a-b));
+ for(const u of model.units){
+  close(game('MainAtkCD',u.type,0),u.cd,'setup cooldown');
+  close(game('MainAtkDMG',u.type,0)*game('ObstAdj',u.anchor,0),u.baseDamage*E.jellyDamageMultiplier(state,0),'setup damage');
+  close(.65*game('OrganelleSPD',u.anchor,0)*game('ObstAdj',u.anchor,1),u.progressPerFrame,'setup progress');
+ }
+ boardChecks++;
+}
+console.log('Client setup audit OK: 208 count/breakpoint cases, '+boardChecks+' legal boards across all Fevers, adjacency, infection and proximity');
+
+// Execute the shipped level-up block with the operation panel position. The
+// operation-start handler moves this panel to -135; only idle x > -5 can level.
+const levelStart=source.indexOf('if(this._GenINFO[242]=c.asNumber(this._GenINFO[242])-1');
+const levelEnd=source.indexOf('if(1==this._GenINFO[221])',levelStart);
+assert(levelStart>=0&&levelEnd>levelStart);
+const levelStep=vm.runInNewContext('(function(){var e,n;'+source.slice(levelStart,levelEnd)+'})',context);
+assert(source.includes('c.moveImageTo(this._UIinventory17[88],-135,0,.5,t.quadOut)'));
+context.a.SCALE=1;
+actor._UIinventory17[99]=[];actor._UIinventory17On[99]=[];
+actor._UIinventory17[88]={get_x:()=>-135};info[242]=0;
+state.cellLevels.fill(0);state.research[15]=Array(9).fill(1000);
+for(let frame=0;frame<600;frame++)levelStep.call(actor);
+assert(state.cellLevels.every(n=>n===0),'operation panel blocks banked EXP level-ups');
+actor._UIinventory17[88]={get_x:()=>0};levelStep.call(actor);
+assert.equal(state.cellLevels[0],1,'same client block levels cells when idle');
+console.log('Client level-up audit OK: banked EXP waits until the idle panel is visible');

@@ -1,3 +1,4 @@
+import { getJellyReward } from '@parsers/world-7/jellyRewards';
 import { groupByKey, growth, tryToParse } from '@utility/helpers';
 import { crafts, items, stamps } from '@website-data';
 import { liveEntries } from '@parsers/catalog';
@@ -81,10 +82,18 @@ export const getStampsPerDay = (account: any) => {
   };
 }
 
-export const evaluateStamp = (stamp: any, account: any, characters: any, gildedStamp = true, forcedStampReducer: any, forceMaxCapacity = false, withMinReduction = false) => {
+export const evaluateStamp = (stamp: any, account: any, characters: any, gildedStamp = true, forcedStampReducer: any, forceMaxCapacity = false, withMinReduction = false, capacityContext?: { townCharacters: any; byType: Map<any, any> }) => {
   const rawStampReducer = forcedStampReducer ?? account?.atoms?.stampReducer;
   const stampReducer = Number.isFinite(rawStampReducer) ? rawStampReducer : 0;
-  const bestCharacter = getHighestCapacityCharacter(items?.[stamp?.itemReq?.rawName], characters?.map((character: any) => ({ ...character, mapIndex: 0 })), account, forceMaxCapacity);
+  const item = items?.[stamp?.itemReq?.rawName];
+  const capacityKey = item?.itemType === 'Equip' ? 'equipment' : item?.typeGen;
+  // Capacity depends on the bag type, not the individual stamp material. This
+  // context exists for only one update, so a new scenario/pass always recomputes.
+  let bestCharacter = capacityContext?.byType.get(capacityKey);
+  if (!bestCharacter) {
+    bestCharacter = getHighestCapacityCharacter(item, capacityContext?.townCharacters ?? characters?.map((character: any) => ({ ...character, mapIndex: 0 })), account, forceMaxCapacity);
+    capacityContext?.byType.set(capacityKey, bestCharacter);
+  }
   const goldCost = getGoldCost(stamp?.level, stamp, account);
   const hasMoney = account?.currencies?.rawMoney >= goldCost;
   const materialCost = Math.floor(getMaterialCost(stamp?.level, stamp, account, stampReducer, gildedStamp));
@@ -126,8 +135,9 @@ export const evaluateStamp = (stamp: any, account: any, characters: any, gildedS
 
 // Updated version of updateStamps that uses the new evaluateStamp function
 export const updateStamps = (account: any, characters: any, gildedStamp = true, forcedStampReducer?: any, forceMaxCapacity?: any, withMinReduction = false) => {
+  const capacityContext = { townCharacters: characters?.map((character: any) => ({ ...character, mapIndex: 0 })), byType: new Map() };
   const flatten = Object.values(account?.stamps || {}).flat().map(stamp =>
-    evaluateStamp(stamp, account, characters, gildedStamp, forcedStampReducer, forceMaxCapacity, withMinReduction)
+    evaluateStamp(stamp, account, characters, gildedStamp, forcedStampReducer, forceMaxCapacity, withMinReduction, capacityContext)
   );
   return groupByKey(flatten, ({ category }: any) => category);
 }
@@ -329,7 +339,7 @@ export const getExaltedStampBonus = (account: any) => {
 
   return {
     value: 100 + (atomBonus + charmBonusExalted + compassBonus + armorSetBonus +
-      20 * eventBonus + paletteBonus + exoticBonus + exaltedFragmentFound + legendBonus + sushiBonus),
+      20 * eventBonus + paletteBonus + exoticBonus + exaltedFragmentFound + legendBonus + sushiBonus + getJellyReward(account, 50) / 100),
     breakdown: [
       { name: 'Base', value: 100 },
       { name: 'Atom', value: atomBonus },
@@ -342,6 +352,7 @@ export const getExaltedStampBonus = (account: any) => {
       { name: 'Exalted Fragment', value: exaltedFragmentFound },
       { name: 'Legend Talent', value: legendBonus },
       { name: 'Sushi Station', value: sushiBonus },
+      { name: 'Jelly Operator', value: getJellyReward(account, 50) / 100 },
     ]
   };
 }

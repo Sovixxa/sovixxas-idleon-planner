@@ -1,7 +1,6 @@
 import { growth } from '@utility/helpers';
-import { checkCharClass, CLASSES, getFamilyBonusValue, getTalentBonus } from '@parsers/talents';
+import { checkCharClass, CLASSES, getTalentBonus } from '@parsers/talents';
 import { classFamilyBonuses } from '@website-data';
-import { getHighestLevelOfClass } from '@parsers/misc';
 
 export const getFamilyBonusBonus = (bonuses: any[], bonusName: string, level: number) => {
   const bonus = bonuses?.find(({ name }) => name?.includes(bonusName));
@@ -14,13 +13,18 @@ export const getFamilyBonus = (bonuses: any[], bonusName: string) => {
 }
 
 export const getUpdatedFamilyBonus = (character: any, charactersLevels: any) => {
-  const highestLevelElementalSorc = getHighestLevelOfClass(charactersLevels, CLASSES.Elemental_Sorcerer, true);
-  if (highestLevelElementalSorc === 0) return 0;
-  let familyEffBonus = getFamilyBonusBonus(classFamilyBonuses, 'LV_FOR_ALL_TALENTS_ABOVE_LV_1', highestLevelElementalSorc);
-  if (checkCharClass(character?.class, CLASSES.Elemental_Sorcerer)) {
-    familyEffBonus *= (1 + getTalentBonus(character?.flatTalents, 'THE_FAMILY_GUY') / 100);
-    const familyBonus = getFamilyBonus(classFamilyBonuses, 'LV_FOR_ALL_TALENTS_ABOVE_LV_1');
-    familyEffBonus = getFamilyBonusValue(familyEffBonus, familyBonus?.func, familyBonus?.x1, familyBonus?.x2);
-  }
-  return familyEffBonus;
+  return getCharacterFamilyBonus(character, charactersLevels, 'LV_FOR_ALL_TALENTS_ABOVE_LV_1', CLASSES.Elemental_Sorcerer);
 }
+
+// TalentCalc(-3) compares the next raw provider to the already amplified cache.
+// Keep roster order and amplify only when the provider is the played character.
+export const getCharacterFamilyBonus = (character: any, providers: any[], name: string, className: string) => {
+  let result = 0;
+  for (const [index, provider] of (providers ?? []).entries()) {
+    if (!checkCharClass(provider?.class, className)) continue;
+    const raw = getFamilyBonusBonus(classFamilyBonuses, name, provider?.level ?? 0);
+    if (raw > result) result = raw * ((provider.playerId ?? index) === character?.playerId
+      ? 1 + getTalentBonus(character?.flatTalents, 'THE_FAMILY_GUY') / 100 : 1);
+  }
+  return result;
+};

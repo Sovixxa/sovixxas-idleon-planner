@@ -1,3 +1,5 @@
+import { getStatueBonus } from '@parsers/world-1/statues';
+import { getJellyReward } from '@parsers/world-7/jellyRewards';
 import type { IdleonData, Account } from '../types';
 import { getEquinoxBonus } from '@parsers/world-3/equinox';
 import { ninjaExtraInfo } from '@website-data';
@@ -27,11 +29,14 @@ const parseVoteBallot = (idleonData: IdleonData, accountData: Account) => {
   const clamWorkBonus = getClamWorkBonus(accountData, 3) ?? 0;
   const meritocracySushiBonus = getSushiBonus(accountData, 51) ?? 0;
   const meritocracyEventShopBonus = getEventShopBonus(accountData, 23) ?? 0;
-  const meritocracyMult = (1 + poppyBonus / 100) * (1 + (5 * clamWorkBonus
+  const meritocracyBase = Number((accountData as any)?.accountOptions?.[472]) === 1 ? 1 : 0.25;
+  const meritocracyAccess = (accountData as any)?.meritocracyAccessible !== false;
+  const jellyBonus = getJellyReward(accountData, 33);
+  const meritocracyMult = meritocracyAccess ? (1 + poppyBonus / 100) * (meritocracyBase + (5 * clamWorkBonus
     + (companionBonus
       + (legendTalentBonus
         + (arcadeBonus
-          + (20 * meritocracyEventShopBonus + meritocracySushiBonus))))) / 100);
+          + (20 * meritocracyEventShopBonus + meritocracySushiBonus + jellyBonus))))) / 100) : 0;
   const meritocracyMultBreakdown = {
     statName: 'Meritocracy multi',
     totalValue: meritocracyMult,
@@ -50,7 +55,8 @@ const parseVoteBallot = (idleonData: IdleonData, accountData: Account) => {
           { name: 'Legend Talent', value: legendTalentBonus },
           { name: 'Arcade', value: arcadeBonus },
           { name: 'Event Shop', value: 20 * meritocracyEventShopBonus },
-          { name: 'Sushi Tier 51', value: meritocracySushiBonus }
+          { name: 'Sushi Tier 51', value: meritocracySushiBonus },
+          { name: 'Jelly Operator', value: jellyBonus }
         ]
       }
     ]
@@ -167,3 +173,34 @@ export const getMeritocracyBonus = (account: Account, index: number): number => 
   const isSelected = (account as any)?.voteBallot?.meritocracyBonuses?.[index]?.selected;
   return isSelected ? (account as any)?.voteBallot?.meritocracyBonuses?.[index]?.bonus : 0;
 }
+
+// Meritocracy is unavailable until THIS character reaches W7. Account previews
+// retain their shared bonuses; stat calculations remove the cached vial/sigil
+// factors and recompute ballot scaling for characters who have not reached it.
+export const getCharacterStatAccount = (account: any, character: any) => {
+  if (character?.galleryUnlocked !== false || account?.meritocracyAccessible === false) return account;
+  const vialFactor = 1 + getMeritocracyBonus(account, 20) / 100;
+  const sigilFactor = 1 + getMeritocracyBonus(account, 21) / 100;
+  const contextual = { ...account, meritocracyAccessible: false,
+    voteBallot: { ...account.voteBallot, meritocracyBonuses: account.voteBallot?.meritocracyBonuses?.map((b: any) => ({ ...b, bonus: 0 })) },
+    alchemy: { ...account.alchemy,
+      vials: account.alchemy?.vials?.map((v: any) => ({ ...v, multiplier: (v.multiplier ?? 1) / vialFactor })),
+      p2w: { ...account.alchemy?.p2w, sigils: account.alchemy?.p2w?.sigils?.map((s: any) => {
+        const copy = { ...s };
+        for (const key of ['bonus', 'unlockBonus', 'boostBonus', 'jadeBonus', 'etherealBonus', 'eclecticBonus'])
+          if (typeof copy[key] === 'number') copy[key] /= sigilFactor;
+        return copy;
+      }) }
+    }
+  };
+  // Remove cached Meritocracy factors, including Dragon statue's downstream multiplier.
+  contextual.statues = account.statues?.map((statue: any) => ({ ...statue, meritocracyMulti: 1 }));
+  const dragonMulti = 1 + getStatueBonus(contextual, 29) / 100;
+  contextual.statues = contextual.statues?.map((statue: any) => ({ ...statue, dragonMulti }));
+  const artifactFactor = 1 + getMeritocracyBonus(account, 23) / 100;
+  contextual.sailing = { ...account.sailing, artifacts: account.sailing?.artifacts?.map((artifact: any) =>
+    ['Ruble_Cuble', '10_AD_Tablet', 'Jade_Rock', 'Gummy_Orb'].includes(artifact.name)
+      ? { ...artifact, bonus: artifact.bonus / artifactFactor } : artifact) };
+  contextual.voteBallot = getVoteBallot({} as IdleonData, contextual);
+  return contextual;
+};

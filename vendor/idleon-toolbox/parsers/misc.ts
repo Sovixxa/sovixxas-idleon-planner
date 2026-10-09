@@ -1,3 +1,5 @@
+import { getJellyReward } from '@parsers/world-7/jellyRewards';
+import { getCharacterFamilyBonus } from './family';
 import { createRange, lavaLog, notateNumber, number2letter, tryToParse } from '@utility/helpers';
 import { filteredGemShopItems, filteredLootyItems, keysMap, unrealisticGreenstackItems } from './parseMaps';
 import {
@@ -287,46 +289,53 @@ export const getBookLvRange = (account: any) => {
 }
 
 export const getLibraryBookTimes = (idleonData: any, characters: any, account: any) => {
-  const { bookCount, libTime, breakdown } = calcBookCount(account, characters, idleonData);
+  // Only the book-count term changes while building the checkout schedule.
+  // Reuse the exact multiplier within this call; never across account scenarios.
+  const basis = getTimeToNextBooks(0, account, characters, idleonData);
+  const bookTime = (count: number) => {
+    const value = Math.round(basis.baseFactor * (1 + 10 * Math.pow(count, 1.4) / 100));
+    return { ...basis, value, breakdown: { ...basis.breakdown, totalValue: value } };
+  };
+  const { bookCount, libTime, breakdown } = calcBookCount(account, characters, idleonData, bookTime);
   let breakpoints = [16, 18, 20].map((maxCount) => {
     return {
       breakpoint: maxCount,
-      time: calcTimeToXBooks(bookCount, maxCount, account, characters, idleonData) - libTime
+      time: calcTimeToXBooks(bookCount, maxCount, account, characters, idleonData, bookTime) - libTime
     }
   })
   breakpoints = [...breakpoints,
   ...[20, 40, 60, 80, 100].map((maxCount) => ({
     breakpoint: 0,
     label: `0 to ${maxCount}`,
-    time: calcTimeToXBooks(0, maxCount, account, characters, idleonData)
+    time: calcTimeToXBooks(0, maxCount, account, characters, idleonData, bookTime)
   }))]
   return {
     bookCount,
-    next: getTimeToNextBooks(bookCount, account, characters, idleonData)?.value - libTime,
+    next: bookTime(bookCount)?.value - libTime,
     breakdown,
     breakpoints
   }
 }
 
-const calcBookCount = (account: any, characters: any, idleonData: any) => {
+const calcBookCount = (account: any, characters: any, idleonData: any, bookTime: (count: number) => any) => {
   const baseBookCount = account?.accountOptions?.[55] ?? 0;
   const timeAway = account?.timeAway;
   let libTime = timeAway?.BookLib ?? 0;
   let afk = timeAway ? (new Date).getTime() / 1e3 - timeAway.GlobalTime : 0;
   let bookCount = baseBookCount;
   if (afk > 300) libTime += afk;
-  const { breakdown } = getTimeToNextBooks(bookCount, account, characters, idleonData);
-  while (libTime > getTimeToNextBooks(bookCount, account, characters, idleonData)?.value) {
-    libTime -= getTimeToNextBooks(bookCount, account, characters, idleonData)?.value;
+  const { breakdown } = bookTime(bookCount);
+  while (libTime > bookTime(bookCount)?.value) {
+    libTime -= bookTime(bookCount)?.value;
     bookCount += 1;
   }
   return { bookCount, libTime, breakdown };
 }
 
-const calcTimeToXBooks = (bookCount: any, maxCount: any, account: any, characters: any, idleonData: any) => {
+const calcTimeToXBooks = (bookCount: any, maxCount: any, account: any, characters: any, idleonData: any, bookTime: (count: number) => any) => {
   let time = 0;
   for (let i = bookCount; i < maxCount; i++) {
-    time += getTimeToNextBooks(i, account, characters, idleonData)?.value;
+    time += bookTime(i)?.value;
   }
   return time;
 }
@@ -844,13 +853,8 @@ export const getGiantMobChance = (character: any, account: any) => {
 }
 
 export const getGoldenFoodMulti = (character: any, account: any, characters: any) => {
-  const highestLevelShaman = account?.charactersLevels?.reduce((max: number, { level, class: cName }: any) => {
-    return checkCharClass(cName, CLASSES.Shaman) ? Math.max(max, level) : max;
-  }, 0) ?? 0;
   const theFamilyGuy = getTalentBonus(character?.flatTalents, 'THE_FAMILY_GUY');
-  const familyBonus = getFamilyBonusBonus(classFamilyBonuses, 'GOLDEN_FOODS', highestLevelShaman);
-  const isShaman = checkCharClass(character?.class, CLASSES.Shaman);
-  const amplifiedFamilyBonus = familyBonus * (theFamilyGuy > 0 ? (1 + theFamilyGuy / 100) : 1) || 0;
+  const amplifiedFamilyBonus = getCharacterFamilyBonus(character, characters ?? account?.charactersLevels, 'GOLDEN_FOODS', CLASSES.Shaman);
   const obolsBonus = getObolsBonus(character?.obols, bonuses?.etcBonuses?.[8]);
   const { value: gearGoldFoodBonus, newBreakdown: equipmentBonusBreakdown } = getStatsFromGear(character, 8, account);
   const hungryForGoldTalentBonus = getTalentBonus(character?.flatTalents, 'HAUNGRY_FOR_GOLD');
@@ -880,15 +884,14 @@ export const getGoldenFoodMulti = (character: any, account: any, characters: any
   };
   const cardBonus = goldenFoodCardBonus('cropfallEvent1') + goldenFoodCardBonus('anni5Event1');
   const vaultBonus86 = getUpgradeVaultBonus(account?.upgradeVault?.upgrades, 86);
-  const jellyGoldFoodBonus = (account?.research?.jellyObstruction > 10 ? 100 : 0)
-    + (account?.research?.jellyObstruction > 51 ? 200 : 0);
+  const jellyGoldFoodBonus = getJellyReward(account, 10) + getJellyReward(account, 51);
 
   const deathBringer = characters?.find((char: any) => checkCharClass(char?.class, CLASSES.Death_Bringer));
   const apocalypseWow = getHighestTalentAcrossCharacters(characters, 'APOCALYPSE_WOW', character);
   const apocalypses = deathBringer?.wow?.finished?.at(0) || 0;
   const armorSetBonus = getArmorSetBonus(account, 'SECRET_SET');
   const value = (1 + (armorSetBonus + 50 * companionBonus174) / 100)
-    * (Math.max(isShaman ? amplifiedFamilyBonus : familyBonus, 1)
+    * (Math.max(amplifiedFamilyBonus, 1)
       + ((gearGoldFoodBonus + obolsBonus)
         + (hungryForGoldTalentBonus
           + (goldenAppleStamp
@@ -916,7 +919,7 @@ export const getGoldenFoodMulti = (character: any, account: any, characters: any
         sources: [
           {
             name: 'Family Bonus',
-            value: isShaman ? amplifiedFamilyBonus : familyBonus
+            value: amplifiedFamilyBonus
           },
           { name: 'The Family Guy', value: theFamilyGuy },
 
@@ -958,7 +961,7 @@ export const getGoldenFoodMulti = (character: any, account: any, characters: any
     value,
     breakdown,
     expression: `(1 + armorSetBonus / 100)
-* (Math.max(isShaman ? amplifiedFamilyBonus : familyBonus, 1)
+* (Math.max(amplifiedFamilyBonus, 1)
 + (gearGoldFoodBonus
 + (hungryForGoldTalentBonus
 + (goldenAppleStamp
@@ -1386,7 +1389,9 @@ export const getCompanions = (companionObject: any = {}, accountOptions: any = [
       nonTradableCount: ownedCompanions?.[index]?.nonTradableCount ?? 0,
       level,
       upgraded,
-      bonus: upgraded ? (comp?.upgradedBonus ?? comp?.bonus) : comp?.bonus
+      // Native CompanionBon loads owned upgrades first, then overwrites token entries
+      // with the base bonus. Ownership still controls CompLV2 and inventory metadata.
+      bonus: tokenIndexSet.has(index) ? comp?.bonus : upgraded ? (comp?.upgradedBonus ?? comp?.bonus) : comp?.bonus
     }
   })
 

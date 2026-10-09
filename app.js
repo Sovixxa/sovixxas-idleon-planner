@@ -73,6 +73,7 @@
     library:{title:'Library',world:'World 3',copy:'Talent book levels, upgrade sources, and checkout timers.'},
     dailies:{title:'Activity dashboard',world:'Home',copy:'Account alerts, character readiness, and collection timers.'},
     trueDr:{title:'True DR',world:'Misc',copy:''},
+    statConnections:{title:'Game Connections',world:'Misc',copy:''},
     shadowCaps:{title:'Shadow Caps',world:'Misc',copy:''},
     communitySheets:{title:"Community Sheets",world:'Misc',copy:''},
     accountReview:{title:'Account Review',world:'Optimizers',copy:'Review saved progress and plan your next account milestones.'},
@@ -157,6 +158,7 @@ SKILL_PAGES.holeFloors={title:'Floors',world:'World 5',copy:'All 18 Hole caverns
   ];
   const HOLE_VILLAGER_ICONS={hole:0,holeSchematics:1,holeMajik:2,holeMeasurements:3,holeStudies:4};
   function selectSideNav(name){
+    window.StatConnections?.dispose();
     window.LibraryPage?.dispose();
     window.SailingArtifactChance?.dispose();
     window.BreedingExpBonuses?.dispose();
@@ -166,8 +168,8 @@ SKILL_PAGES.holeFloors={title:'Floors',world:'World 5',copy:'All 18 Hole caverns
     window.plannerQoL?.onNavigate(name);
     if(name!=='jelly'&&practice?.playing)stopPracticePlayback();
     if(name==='jelly'&&state?.hasJelly===false){selectSideNav('classExp');return;}
-    if(!state)$('workspace').classList.toggle('hidden',!['library','dailies','classExp','accountReview','loadouts','shadowCaps','trueDr','communitySheets','credits','connectedBonuses'].includes(name));
-    if(!state)$('inputPanel').classList.toggle('hidden',['loadouts','shadowCaps','trueDr','communitySheets','credits'].includes(name));
+    if(!state)$('workspace').classList.toggle('hidden',!['library','dailies','classExp','accountReview','loadouts','statConnections','shadowCaps','trueDr','communitySheets','credits','connectedBonuses'].includes(name));
+    if(!state)$('inputPanel').classList.toggle('hidden',['loadouts','statConnections','shadowCaps','trueDr','communitySheets','credits'].includes(name));
     const selected=SKILL_PAGES[name]?.parent||name;
     for(const id of ['navHome','navJelly',...Object.keys(SKILL_PAGES).map(key=>'nav'+key[0].toUpperCase()+key.slice(1))])$(id)?.classList.toggle('active',id===('nav'+selected[0].toUpperCase()+selected.slice(1)));
     const jelly=name==='jelly';$('operationStatePanel').classList.toggle('hidden',!jelly);$('jellyTabs').classList.toggle('hidden',!jelly);
@@ -286,6 +288,7 @@ SKILL_PAGES.holeFloors={title:'Floors',world:'World 5',copy:'All 18 Hole caverns
       ['Bloodcells / attempt',stats?.avgBloodcells==null?'Unknown':E.formatNumber(stats.avgBloodcells),stats?.avgBloodcells==null?'full account bonuses required':'mean total, including failed attempts'],
       ['DPS BC multiplier',stats?.avgDpsMultiplier==null?'—':stats.avgDpsMultiplier.toFixed(3)+'×','mean projected best-ever multiplier'],
       ['Clear chance',pct(cr,0),`${stats?.runs||0} simulated runs`],
+      ['Stronkroid',stats?.steroidStartSeconds==null?'Off / locked':`at ${stats.steroidStartSeconds.toFixed(1)}s`,stats?.steroidStartSeconds==null?'not enabled for this simulation':`activated in ${stats.steroidUses}/${stats.runs} attempts`],
       ['Median clear',E.formatTime(med),med==null?'no successful sample':med>E.bossTime(state.obstruction)?'after timer / Critical':'inside normal timer'],
       ['Before timer',pct(stats?.normalClearRate??0,0),'clears without Critical'],
       ['Critical clears',pct(stats?.criticalClearRate??0,0),'clears after timer'],
@@ -658,6 +661,7 @@ SKILL_PAGES.holeFloors={title:'Floors',world:'World 5',copy:'All 18 Hole caverns
     if(name==='pets'){window.PetsPage.render($('worldContent'),state?.rawData||{},loadedExport||state?.rawRoot||{});return;}
     if(name==='goldFood'){window.GoldFood.render($('worldContent'),state?.rawData||{},state?.rawRoot||{});return;}
     if(name==='trueDr'){window.TrueDr.render($('worldContent'),loadedExport||state?.rawRoot||{});return;}
+    if(name==='statConnections'){window.StatConnections.render($('worldContent'),loadedExport||state?.rawRoot||{});return;}
     if(name==='shadowCaps'){
       window.ShadowCaps.render($('worldContent'));
       return;
@@ -696,7 +700,7 @@ SKILL_PAGES.holeFloors={title:'Floors',world:'World 5',copy:'All 18 Hole caverns
 
   function trainingContext(){
     if(!state)return null;
-    return JSON.stringify({goal:$('objectiveMode').value,boss:state.obstruction,plots:(state.plots||[]).slice().sort((a,b)=>a-b),cells:E.unitsOwned(state),virus:E.virusLimit(state)});
+    return JSON.stringify({model:E.COMBAT_MODEL_VERSION,goal:$('objectiveMode').value,boss:state.obstruction,plots:(state.plots||[]).slice().sort((a,b)=>a-b),cells:E.unitsOwned(state),virus:E.virusLimit(state)});
   }
   function readPlaybook(){
     try{const value=JSON.parse(localStorage.getItem(TRAINING_KEY)||'[]');return Array.isArray(value)?value.filter(x=>x&&Array.isArray(x.arrangement)):[];}catch(_){return [];}
@@ -734,7 +738,8 @@ SKILL_PAGES.holeFloors={title:'Floors',world:'World 5',copy:'All 18 Hole caverns
       stat('Gaming Palette','+'+Number(a.damage.palette).toFixed(2)+'%','shares the Destruction additive term'),
       stat('Cellular Warfare','+'+Number(a.damage.grid).toFixed(2)+'%','separate damage multiplier'),
       stat('Organelle adjacency',factor(a.organelle),a.sushiUnique+' Sushi rewards decoded'),
-      stat('Cells of Three',E.upgradeQty(boardState,14)>=1?'active':'locked',E.upgradeQty(boardState,14)>=1?'each full three of a non-Virus type adds one effective passive count':''),
+      stat('Board occupancy',`${E.layoutScore(boardState,arr).filledSlots}/${E.unlockedSlots(boardState).size}`,'occupied / unlocked squares; locked squares cannot hold cells'),
+      stat('Cells of Three',E.upgradeQty(boardState,14)>=1?'active':'locked',E.upgradeQty(boardState,14)>=1?'3 → 4, 6 → 8, 9 → 12 effective passive counts per type; excludes Virus':''),
       stat('Cell EXP',factor(a.expMultiplier),'per landed shot when Biology is unlocked'),
       stat('Fever speed',factor(a.feverSpeed)),
       stat('Bloodcell multiplier',e.known?factor(e.multiplier):'Incomplete','at saved best DPS; does not increase combat damage'),
@@ -1009,9 +1014,11 @@ SKILL_PAGES.holeFloors={title:'Floors',world:'World 5',copy:'All 18 Hole caverns
           $('solverStatus').textContent=`${p.fever?p.fever+' · ':''}${p.stage}${detail}${p.candidates?' · '+p.candidates+' unique layouts generated':''}…`;
           if(job==='train')$('trainerStatus').textContent=`${p.fever?p.fever+' · ':''}${p.stage}${detail}…`;
           if(job==='optimize'&&p.arrangement){
-            renderBoard($('bestBoard'),p.arrangement);renderCellMix(p.arrangement);
+            const previewState=E.cloneState(state);previewState.fever=p.feverIndex??state.fever;
+            renderBoard($('bestBoard'),p.arrangement,previewState);renderCellMix(p.arrangement,previewState);
             renderSummary($('bestSummary'),p.stats);$('bestVerdict').textContent=p.stage==='validated layout'?'Finalist test':'Testing candidate · preliminary';
-            $('layoutChanges').textContent=`Live preview: ${p.arrangement.length} cells. Exploring cell types, placements and empty squares.`;
+            const filled=E.layoutScore(previewState,p.arrangement).filledSlots,slots=E.unlockedSlots(previewState).size;
+            $('layoutChanges').textContent=`Trial board: ${p.arrangement.length} cells occupy ${filled}/${slots} unlocked squares. ${options.objectiveMode==='chance'?'New clear candidates fill every unlocked square; saved boards are also tested for comparison.':'Exploring cell types and placements.'}`;
           }
         }else if(data.type==='result'){finish();resolve(data.value);}
         else if(data.type==='error'){finish();reject(new Error(data.message));}

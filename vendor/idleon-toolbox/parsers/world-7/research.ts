@@ -1,3 +1,4 @@
+import { getJellyReward } from '@parsers/world-7/jellyRewards';
 import { commaNotation, notateNumber, tryToParse } from '@utility/helpers';
 import {
   mapEnemiesArray,
@@ -91,7 +92,7 @@ export const getResearch = (idleonData: any, account: any, characters: any) => {
   // game: W7 merit 3 ("+{ Research PTS."), 1 per level.
   const meritBonus = account?.tasks?.[2]?.[6]?.[3] ?? 0;
   const gridPTSearned = Math.floor(
-    researchLevel + (10 * companion153 + companion153Lvl2Bonus + Math.floor(researchLevel / 10) * Math.round(1 + (Math.min(1, Math.floor(researchLevel / 60)) + gridBonus50Lv)) + getSushiBonus(account, 3) + getSushiBonus(account, 13) + Math.min(10, Math.round(fangAcquired)) + meritBonus + ([4, 57].reduce((sum, index) => sum + (research.jellyObstruction > index ? Number(researchData[47]?.[index]) || 0 : 0), 0)))
+    researchLevel + (10 * companion153 + companion153Lvl2Bonus + Math.floor(researchLevel / 10) * Math.round(1 + (Math.min(1, Math.floor(researchLevel / 60)) + gridBonus50Lv)) + getSushiBonus(account, 3) + getSushiBonus(account, 13) + Math.min(10, Math.round(fangAcquired)) + meritBonus + ([4, 57].reduce((sum, index) => sum + getJellyReward({ research }, index), 0)))
   );
   // Imported snapshots can contain more spent points than decoded sources explain.
   // Preserve the difference for diagnostics, but never expose a negative budget.
@@ -274,7 +275,7 @@ export const getResearch = (idleonData: any, account: any, characters: any) => {
     observations,
     occurrencesToBeFound,
     totalOccurrencesFound,
-    maxRoll: Math.floor(100 + gridBonus51Lv + getSushiBonus(account, 30)),
+    maxRoll: Math.floor(100 + gridBonus51Lv + getSushiBonus(account, 30) + getJellyReward({ research }, 12)),
     minRoll: Math.floor(1 + Math.min((optionsListAccount?.[514] ?? 0) * getResearchGridBonusInternal(account, research, 31, 1), getResearchGridBonusInternal(account, research, 31, 2))),
     rollsPerDay: Math.round(3 + gridBonus90Lv + 3 * (getEventShopBonus(account, 35) ? 1 : 0) + getSushiBonus(account, 2)),
     dailyRollsLeft,
@@ -483,7 +484,7 @@ function getKaleiMultiBase(account: any, research: any) {
   const gridBonus52 = getResearchGridBonusInternal(account, research, 52, 0);
   const gridBonus72 = getResearchGridBonusInternal(account, research, 72, 0);
   const opticalMonocle = Number(isJadeBonusUnlocked(account, 'Optimal_Optometry'));
-  return (30 + gridBonus52 + gridBonus72 + 6 * opticalMonocle) / 100;
+  return (30 + gridBonus52 + gridBonus72 + 6 * opticalMonocle + getJellyReward({ research }, 25)) / 100;
 }
 
 function buildResearchKalMap(shapePlacements: any) {
@@ -550,7 +551,7 @@ function getObservationInsightExpRate(account: any, research: any, observationIn
   const grid91Bonus = getResearchGridBonusInternal(account, research, 91, 0);
   const opticalMonocle = Number(isJadeBonusUnlocked(account, 'Optimal_Optometry'));
   const kaleidoscopeMultiplier = getKaleiMultiTot(account, research, observationIndex);
-  return 3 * opticalMonocleCountOnObservation * (1 + (grid92Bonus + grid91Bonus) / 100) * (1 + 35 * opticalMonocle / 100) * kaleidoscopeMultiplier;
+  return (1 + getJellyReward({ research }, 7) / 100) * 3 * opticalMonocleCountOnObservation * (1 + (grid92Bonus + grid91Bonus) / 100) * (1 + 35 * opticalMonocle / 100) * kaleidoscopeMultiplier;
 }
 
 /** Grid_CanWeSelect: whether this grid square can be selected in the UI. */
@@ -644,7 +645,8 @@ function getResearchEXPmulti(account: any, research: any) {
   const greenWaterFactor = 1 + getFountainBonusTotal(holesObject, 2, 16) / 100; // Pen N Paper (Green Water)
   const cglunkoFactor = 1 + getCglunkoBonus(account, 11) / 100; // Researchy (Crystal Glunko Cove)
   const outpostRogFactor = Math.max(1, getOutpostRogBonus(account, 1));
-  const value = additiveFactor * grid70Factor * nonstopFactor * companionFactor * (1 + getSushiBonus(account, 0) / 100) * (1 + getButtonBonus(account, 0) / 100) * killroyResearchBonus * greenWaterFactor * cglunkoFactor * outpostRogFactor;
+  const jellyFactor = [0, 23, 46, 54].reduce((factor, index) => factor * (1 + getJellyReward({ research }, index) / 100), 1);
+  const value = jellyFactor * additiveFactor * grid70Factor * nonstopFactor * companionFactor * (1 + getSushiBonus(account, 0) / 100) * (1 + getButtonBonus(account, 0) / 100) * killroyResearchBonus * greenWaterFactor * cglunkoFactor * outpostRogFactor;
 
   const breakdown = {
     statName: 'Research EXP Multi',
@@ -683,7 +685,8 @@ function getResearchEXPmulti(account: any, research: any) {
           { name: 'Companions', value: companionFactor },
           { name: 'Button Bonus', value: 1 + getButtonBonus(account, 0) / 100 },
           { name: 'Killroy Research', value: killroyResearchBonus },
-          { name: 'Royal Guardian Outpost', value: outpostRogFactor }
+          { name: 'Royal Guardian Outpost', value: outpostRogFactor },
+          { name: 'Jelly rewards', value: jellyFactor }
         ]
       }
     ]
@@ -698,6 +701,7 @@ function getResearchEXPmulti(account: any, research: any) {
 export const getResearchPlanningState = (raw: any, account: any, characters: any) => {
   const result = getResearch({ Research: raw } as any, account, characters);
   const context: any = {
+    jellyObstruction: result.jellyObstruction,
     gridLevels: raw[0] || [], gridObservationIndex: raw[1] || [],
     observationInsight: raw[4] || [], shapePlacements: [], researchKalMap: {},
     kingRatCrowns: raw[11] || [], totalOccurrencesFound: result.totalOccurrencesFound,

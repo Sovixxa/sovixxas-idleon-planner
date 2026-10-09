@@ -12,11 +12,17 @@ The **Optimize for** menu also offers **Highest DPS (for BC multiplier)**
 and **Highest bloodcell gain**. These rank mean three-second peak DPS or total
 Bloodcells per attempt at the saved obstruction, searching layouts, unlocked
 Fevers and Stronkroid timing. Bloodcells accrue per hit, including failed
-attempts and finishing-hit overkill, with runtime cell levels and DPS records.
+attempts and finishing-hit overkill, with saved cell levels and changing DPS records.
+Hits bank Cell EXP; level-ups happen after combat when the level panel returns.
 The real clear/timeout/death rules apply. Bloodcell optimization requires a full
 account export; DPS record optimization requires DPS Biometrics. Results are
 Monte Carlo estimates from a bounded search, not guaranteed global maxima.
 Run `node test-jelly-objectives.js` for objective and payout regression checks.
+Run `npm run test:jelly-clear` for formula, clear-search, and browser checks.
+Fever searches share one calibration from the saved board. Rechecked candidates
+compete on equal sample counts and common seeds; screening-only scores cannot
+bypass refinement. Final validation includes the saved and previous best boards
+and uses a separate seed set from Stronkroid timing selection.
 
 Run `npm start` here, or double-click `start.bat`. Open http://localhost:3000.
 No npm install is needed. Edit the files in this folder; source changes hot reload.
@@ -130,7 +136,15 @@ sources remain reference entries. Run `node test-account-review.js`,
 
 Paste a fresh full export, then choose an objective and search quality. Max clear
 chance is the default. The solver compares unlocked Fevers and Stronkroid timing,
-uses independent final-evaluation seeds, and includes partial and defensive boards.
+uses independent final-evaluation seeds, and includes defensive boards. New clear
+candidates fill all unlocked squares and explicitly explore Cells of Three
+breakpoints (3 → 4, 6 → 8, 9 → 12 effective passive counts, excluding Virus).
+Saved and remembered partial boards remain comparison controls, alongside filled
+versions. Other objectives can still explore partial boards. Stronkroid timing
+includes Critical Condition, not just the normal timer.
+Screening compares up to five Stronkroid timings per board; refinement performs
+the full timing search before narrowing the finalists. Summaries show the chosen
+time and the number of attempts in which Stronkroid actually activated.
 After it discovers a strong cell mix, it also performs bounded legal local placement
 refinement so adjacency, infection and Proximity arrangements are deliberately tested.
 Quick/Normal/Deep use 32/128/384 runs per finalist. This is a bounded heuristic search,

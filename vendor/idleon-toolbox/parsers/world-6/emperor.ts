@@ -1,3 +1,4 @@
+import { getJellyReward } from '@parsers/world-7/jellyRewards';
 import { emperorBonuses } from '@website-data';
 import { commaNotation, notateNumber } from '@utility/helpers';
 import { isJadeBonusUnlocked } from '@parsers/world-6/sneaking';
@@ -46,7 +47,8 @@ export const getEmperor = (idleonData: any, account: any) => {
   }, {} as Record<string, any>);
   const tesseractBonus = getTesseractBonus(account, 48) ?? 0;
   const arcadeBonus = getArcadeBonus(account?.arcade?.shop, 'Emperor_Bonuses')?.bonus ?? 0;
-  const multiTotal = 1 + (tesseractBonus + arcadeBonus) / 100;
+  const jellyBonus = getJellyReward(account, 28);
+  const multiTotal = 1 + (tesseractBonus + arcadeBonus + jellyBonus) / 100;
   const formatBonusName = (name: string, total: number) => name
     .replace('{', '' + commaNotation(total))
     .replace('}', '' + notateNumber(1 + total / 100, 'MultiplierInfo'))
@@ -78,6 +80,7 @@ export const getEmperor = (idleonData: any, account: any) => {
         sources: [
           { name: 'Base', value: 1 },
           { name: 'Arcade Shop', value: arcadeBonus },
+          { name: 'Jelly Operator', value: jellyBonus },
           { name: 'Tesseract (Vicar of the Emperor)', value: tesseractBonus }
         ]
       }

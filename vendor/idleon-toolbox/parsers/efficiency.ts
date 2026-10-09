@@ -18,7 +18,8 @@ import {
   isCompanionBonusActive,
   isMasteryBonusUnlocked
 } from '@parsers/misc';
-import { getFamilyBonusBonus } from '@parsers/family';
+import { getCharacterFamilyBonus } from '@parsers/family';
+import { getCharacterStatAccount } from '@parsers/world-2/voteBallot';
 import { bonuses, classFamilyBonuses } from '@website-data';
 import { calculateItemTotalAmount, getStatsFromGear } from '@parsers/items';
 import { getJewelBonus, getLabBonus } from '@parsers/world-4/lab';
@@ -84,10 +85,8 @@ export const getAllBaseSkillEff = (character: any, account: any, characters: any
 }
 
 export const getAllEff = (character: any, characters: any, account: any) => {
-  const highestLevelHunter = getHighestLevelOfClass(account?.charactersLevels, CLASSES.Wind_Walker);
-  // const theFamilyGuy = getHighestTalentByClass(characters, CLASSES.Beast_Master, 'THE_FAMILY_GUY');
-  const familyEffBonus = getFamilyBonusBonus(classFamilyBonuses, 'EFFICIENCY_FOR_ALL_SKILLS', highestLevelHunter);
-  // const amplifiedFamilyBonus = familyEffBonus * (theFamilyGuy > 0 ? (1 + theFamilyGuy / 100) : 1);
+  account = getCharacterStatAccount(account, character);
+  const familyEffBonus = getCharacterFamilyBonus(character, characters, 'EFFICIENCY_FOR_ALL_SKILLS', CLASSES.Wind_Walker);
   const vialBonus = getVialsBonusByStat(account?.alchemy?.vials, '6SkillEff');
   const { value: effFromEquipment } = getStatsFromGear(character, 48, account);
   const effFromObols = getObolsBonus(character?.obols, bonuses?.etcBonuses?.[48]);

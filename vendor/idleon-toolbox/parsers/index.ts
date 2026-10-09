@@ -110,6 +110,9 @@ export const parseData = (idleonData: IdleonData, charNames: string[], companion
     }
 
     const { accountData, charactersData } = processedData;
+    // Tome resolves after Spelunking; refresh its early-pass lore consumers.
+    accountData.hole = safeSection<any>('hole', accountData.hole, () => getHole(idleonData, accountData));
+    accountData.equinox = safeSection<any>('equinox', accountData.equinox, () => getEquinox(idleonData, accountData));
     return { account: accountData, characters: charactersData };
   } catch (err) {
     console.error('Error while parsing data', err);
@@ -131,8 +134,7 @@ export const parseData = (idleonData: IdleonData, charNames: string[], companion
 const getStaticData = (idleonData: IdleonData, charNames: string[], companion: CompanionData, guildData: GuildData | null, serverVars: ServerVars, accountCreateTime: number, tournament: TournamentData | null, options?: ParseOptions) => {
   const serializedCharactersData = getCharacters(idleonData, charNames);
   const charactersLevels = serializedCharactersData?.map((char: any) => {
-    const personalValuesMap = char?.[`PersonalValuesMap`];
-    return { level: personalValuesMap?.StatList?.[4] ?? 0, class: classes?.[char?.[`CharacterClass`]] ?? '' };
+    return { playerId: char.playerId, level: Number(char?.Lv0?.[0]) || 0, class: classes?.[char?.[`CharacterClass`]] ?? '' };
   });
   const { tasks, tasksDescriptions, meritsDescriptions, unlockedRecipes, taskUnlocks } =
     safeSection<any>('tasks', { tasks: [], tasksDescriptions: [], meritsDescriptions: [], unlockedRecipes: [], taskUnlocks: [] },
@@ -144,6 +146,7 @@ const getStaticData = (idleonData: IdleonData, charNames: string[], companion: C
 
   return {
     serializedCharactersData,
+    meritocracyAccessible: serializedCharactersData.some((char: any) => Number(char?.KillsLeft2Advance?.[250]?.[0]) <= 0),
     charactersLevels,
     accountCreateTime,
     companions: safeSection<any>('companions', {}, () => getCompanions(companion, accountOptions, options?.simulatedCompanions)),

@@ -22,6 +22,7 @@ import { getTesseractBonus } from '@parsers/class-specific/tesseract';
 import { isSuperbitUnlocked } from '@parsers/world-5/gaming';
 import { getLegendTalentBonus } from './world-7/legendTalents';
 import { getZenithBonus } from './world-1/statues';
+import { getResearchGridBonus } from './world-7/research';
 
 
 export const getTalentBonus = (talents: any = [], talentName?: any, yBonus?: any, useMaxLevel?: any, addedLevels?: any, useMaxAndAddedLevels?: any, forceTalent = false) => {
@@ -166,7 +167,7 @@ export const getAllTalentAddedLevels = (talentId: number, activeCharacter: any, 
   // talent counts here whichever preset it was bought on - unlike applyTalentAddedLevels, which is
   // showing one preset and therefore filters by it.
   const superTalentOwner = ownerCharacter ?? activeCharacter;
-  const isSuper = superTalentOwner?.superTalentsInfo?.talents?.some(({ talentIndex }: any) => talentIndex === talentId);
+  const isSuper = (superTalentOwner?.superTalentsInfo?.allPresetTalents ?? superTalentOwner?.superTalentsInfo?.talents)?.some(({ talentIndex }: any) => talentIndex === talentId);
   return isSuper ? addedLevels + (superTalentOwner?.superTalentsInfo?.bonus ?? 0) : addedLevels;
 };
 
@@ -294,10 +295,16 @@ export const getTalentAddedLevels = (talents: any, presetIndex: any, linkedDeity
   let superTalentsInfo: any = {
     talents: [] as any[],
     bonus: 0,
+    allPresetTalents: [] as any[],
   }
   const talentSpelunkArrays = account?.spelunking?.talentSpelunkArrays;
   if (character?.playerId !== undefined && talentSpelunkArrays && Array.isArray(talentSpelunkArrays)) {
     const characterIndex = character.playerId;
+    superTalentsInfo.allPresetTalents = [0, 1].flatMap(preset =>
+      (talentSpelunkArrays[characterIndex + 12 * preset] ?? [])
+        .filter((id: any) => id != null && id !== -1)
+        .map((talentIndex: any) => ({ talentIndex, presetIndex: preset })));
+    superTalentsInfo.bonus = superTalentsInfo.allPresetTalents.length ? superTalentBonus : 0;
     const spelunkArrayIndex = Math.round(characterIndex + 12 * presetIndex);
 
     const spelunkArray = talentSpelunkArrays[spelunkArrayIndex];
@@ -317,7 +324,8 @@ export const getTalentAddedLevels = (talents: any, presetIndex: any, linkedDeity
   }
 
   const pocketLinked = account?.hole?.godsLinks?.find(({ index }: any) => index === 1);
-  if (isCompanionBonusActive(account, 0) || pocketLinked) {
+  if ((isCompanionBonusActive(account, 0) && character?.skillsInfo?.divinity?.level >= 2) || pocketLinked
+    || getResearchGridBonus(account, 173, 0) >= 1) {
     addedLevels += Math.ceil(getMinorDivinityBonus(character, account, 1));
   }
   else {

@@ -5,7 +5,7 @@ const fs=require('fs'),path=require('path'),esbuild=require('esbuild');
 const playwright=process.env.PLAYWRIGHT_PATH||'C:/Users/Sofia/AppData/Local/npm-cache/_npx/e41f203b7505f1fb/node_modules/playwright';
 const {babelParse,traverse}=require(path.join(playwright,'lib/transform/babelBundle.js'));
 const root=__dirname,vendor=path.join(root,'vendor/idleon-toolbox');
-const wanted=new Set(('parseGaming parseSailing parseFarming parseFlags parseEquinox scorePlacement getMaxHp getMaxMp getAccuracy getCritChance getCritDamage getMastery getHitChance getSurvivability getMiningEff getAllEff getAllBaseSkillEff getCookingEff getLabEfficiency getSpelunkingEfficiency getAllSkillsExp getPrinterSampleRate getPlayerFoodBonus getPlayerSpeedBonus getMaxCharge getChargeRate getPlayerConstructionSpeed getArmyHealth getArmyDamage getFarming getResearch getResearchEXPrateObj getEquinox getSailing getUnlockedSailing getNewMutationChance getConstruction evaluateBoard getSkillExpMulti getAfkGain getItemCapacity').split(' '));
+const wanted=new Set(('parseGaming parseSailing parseFarming parseFlags parseEquinox scorePlacement getMaxHp getMaxMp getAccuracy getCritChance getCritDamage getMastery getHitChance getSurvivability getMiningEff getAllEff getAllBaseSkillEff getCookingEff getLabEfficiency getSpelunkingEfficiency getAllSkillsExp getAllSkillExpMultiplier getPrinterSampleRate getPlayerFoodBonus getPlayerSpeedBonus getMaxCharge getChargeRate getPlayerConstructionSpeed getArmyHealth getArmyDamage getFarming getResearch getResearchEXPmulti getResearchEXPrateObj getEquinox getSailing getUnlockedSailing getNewMutationChance getConstruction evaluateBoard getSkillExpMulti getAfkGain getItemCapacity').split(' '));
 const pretty=s=>s.replace(/([a-z])([A-Z])/g,'$1 $2').replace(/_/g,' ').replace(/^get /,'').replace(/^./,x=>x.toUpperCase());
 function instrument(source,file){
  if(!file.includes(path.sep+'parsers'+path.sep))return source;
@@ -42,7 +42,7 @@ function instrument(source,file){
    'MemberExpression|OptionalMemberExpression'(p){if(!owner(p))return;const parent=p.parent;if((parent.type==='CallExpression'||parent.type==='OptionalCallExpression')&&parent.callee===p.node)return;if((parent.type==='AssignmentExpression'&&parent.left===p.node)||parent.type==='UpdateExpression')return;wrap(p.node,'@'+p.node.start,label(p.node));},
    ReferencedIdentifier(p){if(!owner(p)||['undefined','Math','Number','Object','Array','String','Infinity','NaN','console'].includes(p.node.name))return;const par=p.parent;if((par.type==='NewExpression'||par.type==='CallExpression'||par.type==='OptionalCallExpression')&&par.callee===p.node)return;if(par.type==='ObjectProperty'&&par.shorthand)return;if(par.type==='UpdateExpression'||par.type==='AssignmentExpression'&&par.left===p.node)return;wrap(p.node,p.node.name,pretty(p.node.name),'Input value',new Set());}
   });
-  add(body.start+1,`\nconst ${token}=globalThis.ConnectedTrace.enter(${JSON.stringify(name)});try{\n`,-Infinity);
+  add(body.start+1,`\nif(globalThis.ConnectedTrace.disabled)return (()=>{${source.slice(body.start+1,body.end-1)}})();\nconst ${token}=globalThis.ConnectedTrace.enter(${JSON.stringify(name)});try{\n`,-Infinity);
   add(body.end-1,`\n}finally{globalThis.ConnectedTrace.leave(${token});}\n`,Infinity);
  }});
  inserts.sort((a,b)=>b.pos-a.pos||b.rank-a.rank);for(const x of inserts)source=source.slice(0,x.pos)+x.text+source.slice(x.pos);return source;

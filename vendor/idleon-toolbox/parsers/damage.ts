@@ -1,3 +1,6 @@
+import { getCharacterFamilyBonus } from './family';
+import { getCharacterStatAccount } from './world-2/voteBallot';
+import { getJellyReward } from './world-7/jellyRewards';
 import type { Account, Character } from './types';
 import { checkCharClass, CLASSES, getTalentBonus, getTalentBonusIfActive, mainStatMap, getHighestTalentAcrossCharacters } from './talents';
 import { getPostOfficeBonus } from './world-3/postoffice';
@@ -7,7 +10,6 @@ import { getGuildBonusBonus } from './guild';
 import { getActiveBubbleBonus, getBubbleBonus, getSigilBonus, getVialsBonusByStat } from './world-2/alchemy';
 import { getStatsFromGear } from './items';
 import { getObolsBonus } from './obols';
-import { getFamilyBonusBonus } from './family';
 import { bonuses, classFamilyBonuses, mapDetails, monsters, randomList } from '@website-data';
 import {
   getFoodBonus,
@@ -71,6 +73,7 @@ import { getRoyalStatueBonus } from './class-specific/royalGuardian';
 // character variant). Everything touching the map or its monster - maxHp (shrines), crit chance,
 // hit chance, the damage components reading them, respawn, kills per hour - stays per-call.
 export const getMaxDamage = (character: Character, characters: Character[], account: Account, shared?: any) => {
+  account = getCharacterStatAccount(account, character);
   const playerInfo: any = { survivabilityMath: 0 };
   if (!shared || !shared.invariants) {
     const mainStat = mainStatMap?.[character?.class];
@@ -247,15 +250,10 @@ const getDamagePercent = (character: Character, characters: Character[], account
   const secondPostOfficeBonus = getPostOfficeBonus(character?.postOffice, 'Scurvy_C\'arr\'ate', 2);
   const thirdPostOfficeBonus = getPostOfficeBonus(character?.postOffice, 'Gaming_Lootcrate', 2);
 
-  const highestLevelBb = getHighestLevelOf(characters, CLASSES.Blood_Berserker)
-  const theFamilyGuy = getTalentBonus(character?.flatTalents, 'THE_FAMILY_GUY')
-  const familyBonus = getFamilyBonusBonus(classFamilyBonuses, 'TOTAL_DAMAGE', highestLevelBb);
-  const amplifiedFamilyBonus = familyBonus * (checkCharClass(character?.class, CLASSES.Blood_Berserker) && theFamilyGuy > 0
-    ? (1 + theFamilyGuy / 100)
-    : 1)
+  const amplifiedFamilyBonus = getCharacterFamilyBonus(character, characters, 'TOTAL_DAMAGE', CLASSES.Blood_Berserker);
 
   const firstArtifact = isArtifactAcquired(account?.sailing?.artifacts, 'Crystal_Steak');
-  const artifactBonus = firstArtifact?.additionalData?.[character?.playerId]?.bonus ?? 0;
+  const artifactBonus = firstArtifact ? (firstArtifact.bonus ?? 0) * Math.floor((character?.stats?.[mainStatMap[character?.class]] ?? 0) / 100) : 0;
   const secondArtifactBonus = isArtifactAcquired(account?.sailing?.artifacts, 'Ruble_Cuble')?.bonus ?? 0;
   const thirdArtifactBonus = isArtifactAcquired(account?.sailing?.artifacts, 'Fun_Hippoete')?.bonus ?? 0;
   const fourthArtifactBonus = isArtifactAcquired(account?.sailing?.artifacts, 'Opera_Mask')?.bonus ?? 0;
@@ -386,7 +384,7 @@ const getDamagePercent = (character: Character, characters: Character[], account
   const mineheadWepPow = mineheadUpg4 * weaponWP;
   // Royal Statue 0 (TOTAL DAMAGE) - returns 0 for accounts with no Royal Guardian.
   const royalStatueDmgBonus = getRoyalStatueBonus(account, 0);
-  damage *= (1 + mineheadBonus / 100) * (1 + mineheadWepPow / 100) * (1 + royalStatueDmgBonus / 100);
+  damage *= (1 + mineheadBonus / 100) * (1 + mineheadWepPow / 100) * (1 + getJellyReward(account, 37) / 100) * (1 + royalStatueDmgBonus / 100);
 
   // Weekly boss guild bonus
   const weeklyBossBonus = account?.weeklyBossesRaw?.g ?? 0;
@@ -456,7 +454,7 @@ const getDamagePercent = (character: Character, characters: Character[], account
 
   // Family bonus: FamBonusQTYs[80]. The DNSM key is 2 * classIndex + I, so 80 is classFamilyBonuses[40],
   // the Arcane Cultist. Elemental Sorcerer is class 34 and gives added talent levels instead.
-  const famBonus80 = getFamilyBonusBonus(classFamilyBonuses, 'TOTAL_DMG_MULTIPLIER', getHighestLevelOf(characters, CLASSES.Arcane_Cultist));
+  const famBonus80 = getCharacterFamilyBonus(character, characters, 'TOTAL_DMG_MULTIPLIER', CLASSES.Arcane_Cultist);
   damage *= (1 + famBonus80 / 100);
 
   // Reliquarium penalty
@@ -485,6 +483,7 @@ const getDamagePercent = (character: Character, characters: Character[], account
         { name: 'Prayer Curse (Fibers)', value: -secondPrayerCurse },
         { name: 'Minehead', value: mineheadBonus },
         { name: 'Minehead (WP DMG%)', value: mineheadWepPow },
+        { name: 'Jelly damage', value: getJellyReward(account, 37) },
         { name: 'Royal Statue (Total Damage)', value: royalStatueDmgBonus },
         { name: 'Weekly Boss', value: Math.max(0, Math.min(150, weeklyBossBonus)) },
         { name: 'Equipment (Dmg Multi)', value: postEtcBonus72 },
@@ -1009,12 +1008,7 @@ const getMaxHp = (character: Character, characters: Character[], account: Accoun
   const activeBuff = getTalentBonusIfActive(character?.activeBuffs, 'NO_PAIN_NO_GAIN');
   const starSignBonus = getStarSignBonus(character, account, 'Total_HP');
 
-  const highestLevelSquire = getHighestLevelOf(characters, CLASSES.Squire)
-  const theFamilyGuy = getTalentBonus(character?.flatTalents, 'THE_FAMILY_GUY')
-  const familyBonus = getFamilyBonusBonus(classFamilyBonuses, 'TOTAL_HP', highestLevelSquire);
-  const amplifiedFamilyBonus = familyBonus * (checkCharClass(character?.class, CLASSES.Squire) && character?.level === highestLevelSquire && theFamilyGuy > 0
-    ? (1 + theFamilyGuy / 100)
-    : 1)
+  const amplifiedFamilyBonus = getCharacterFamilyBonus(character, characters, 'TOTAL_HP', CLASSES.Squire);
 
   const { value: equipmentBonus } = getStatsFromGear(character, 15, account);
   const obolsBonus = getObolsBonus(character?.obols, bonuses?.etcBonuses?.[15]);
@@ -1064,8 +1058,7 @@ const getWeaponPower = (character: Character, characters: Character[], account: 
     ? getBubbleBonus(account, 'WAND_PAWUR', false, mainStat === 'wisdom')
     : 0;
   const vialBonus = getVialsBonusByStat(account?.alchemy?.vials, 'WeaponPOW');
-  const highestLevelBarbarian = getHighestLevelOf(characters, CLASSES.Barbarian)
-  const familyBonus = getFamilyBonusBonus(classFamilyBonuses, 'WEAPON_POWER', highestLevelBarbarian);
+  const familyBonus = getCharacterFamilyBonus(character, characters, 'WEAPON_POWER', CLASSES.Barbarian);
   const starSignBonus = getStarSignBonus(character, account, 'Weapon_Power');
   const arcadeBonus = getArcadeBonus(account?.arcade?.shop, 'Weapon_Power')?.bonus;
   const wpPerCookingTalentBonus = getTalentBonus(character?.flatTalents, 'TOUGH_STEAKS');
@@ -1433,12 +1426,7 @@ const getKillPerKill = (character: Character, characters: Character[], account: 
   // FamBonusQTYs[28], the Death Bringer family bonus. THE_FAMILY_GUY enlarges only the bonus the
   // character themself gives, and the game applies it only while that character is the one being
   // played, so it lands on the provider rather than on everyone.
-  const highestDeathBringer = getHighestLevelOf(characters, CLASSES.Death_Bringer);
-  const rawFamilyBonus = getFamilyBonusBonus(classFamilyBonuses, 'KILL_PER_KILL', highestDeathBringer);
-  const givesFamilyBonus = checkCharClass(character?.class, CLASSES.Death_Bringer) && character?.level >= highestDeathBringer;
-  const familyBonus = givesFamilyBonus
-    ? rawFamilyBonus * (1 + getTalentBonus(character?.flatTalents, 'THE_FAMILY_GUY') / 100)
-    : rawFamilyBonus;
+  const familyBonus = getCharacterFamilyBonus(character, characters, 'KILL_PER_KILL', CLASSES.Death_Bringer);
   const votingBonus = getVoteBonus(account, 5);
 
   const labBonus = getLabBonus(account?.lab?.labBonuses, 4);

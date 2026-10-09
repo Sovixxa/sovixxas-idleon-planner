@@ -3,7 +3,8 @@
   "version": "0.9.9",
   "private": true,
   "scripts": {
-    "test:jelly-objectives": "node test-jelly-objectives.js && node test-jelly-objectives-browser.js",
+    "test:jelly-objectives": "node test-jelly-clear-search.js && node test-jelly-objectives.js && node test-jelly-objectives-browser.js",
+    "test:jelly-clear": "node test-client-audit.js && node test-engine.js && node test-jelly-clear-search.js && node test-jelly-stronkroid.js && node test-jelly-objectives.js && node test-jelly-objectives-browser.js",
     "test:sushi": "node test-sushi.js && node test-sushi-browser.js",
     "pretest": "node test-google-device.js && node test-live-sync.js",
     "test:cloud-sync": "node test-google-device.js && node test-live-sync.js && node test-live-sync-browser.js",
@@ -54,7 +55,15 @@
     "test:true-dr-client": "node test-true-dr-client.js",
     "test:breeding-exp": "node test-breeding-exp.js && node test-breeding-exp-bonuses.js && node test-breeding-exp-browser.js",
     "test:outpost-optimizer": "node test-outpost-optimizer.js && node test-outpost-eta-browser.js",
-    "test:drop-target": "node test-drop-target.js && node test-drop-target-browser.js"
+    "test:review-target": "node test-review-target-client.js && node test-review-target.js && node test-review-target-scenarios.js && node test-review-target-browser.js",
+    "test:drop-target": "node test-drop-target.js && node test-drop-target-browser.js",
+    "test:calculator-performance": "node test-calculator-performance.js",
+    "test:review-quick": "node test-review-quick.js && node test-review-quick-browser.js",
+    "test:review-full": "node test-review-full-parity.js && node test-review-full-browser.js && node test-review-route-workers-browser.js && node test-review-worker-choice-browser.js",
+    "test:review-shared": "node test-review-shared-plan.js && node test-review-shared-browser.js",
+    "test:review-relevance": "node test-review-relevance.js && node test-shared-sources-browser.js",
+    "test:review-stats": "node test-primary-stats-audit.js && node test-primary-stat-dependencies.js && node test-review-stats.js && node test-review-stats-browser.js",
+    "test:calculator-audit": "node test-calculator-audit-fixes.js && node test-calculator-dependency-closure.js"
   },
   "devDependencies": {
     "esbuild": "0.28.1"

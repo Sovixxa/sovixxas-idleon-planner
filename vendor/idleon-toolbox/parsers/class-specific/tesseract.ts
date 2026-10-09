@@ -1,3 +1,4 @@
+import { getJellyReward } from '@parsers/world-7/jellyRewards';
 import { commaNotation, lavaLog, lavaLog2, notateNumber, tryToParse } from '@utility/helpers';
 import { getFilteredPortals } from '@parsers/portals';
 import { liveEntries } from '@parsers/catalog';
@@ -574,7 +575,7 @@ export const getPrismaMulti = (account: any) => {
   const companionBonus = isCompanionBonusActive(account, 88) ? (account?.companions?.list?.at(88)?.bonus ?? 0) : 0;
   const sushiBonus = getSushiBonus(account, 23);
   // JellyOperation RoG_BonusQTY(36): Research[7][9] > 36, Research[47][36] = 1.
-  const jellyBonus = account?.research?.jellyObstruction > 36 ? 1 : 0;
+  const jellyBonus = getJellyReward(account, 36);
 
   const value = Math.min(4, 2 + (tesseractBonus
     + (arcadeBonus + sushiBonus + jellyBonus + (trophyBonus + (paletteBonus

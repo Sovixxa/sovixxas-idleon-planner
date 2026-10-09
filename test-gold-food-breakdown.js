@@ -2,7 +2,7 @@
 const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
 const c={console:{log(){},warn(){},error(){}},structuredClone};c.window=c;c.self=c;vm.createContext(c);c.importScripts=(...files)=>files.forEach(f=>vm.runInContext(fs.readFileSync(f,'utf8'),c,{filename:f}));let result;c.postMessage=x=>result=structuredClone(x);c.importScripts('gold-food-worker.js');
 const raw=JSON.parse(fs.readFileSync('../example json.txt'));c.onmessage({data:raw});assert(!result.error,result.error);const best=result.values.reduce((a,b)=>a.percent>b.percent?a:b);
-assert(Math.abs(best.percent-177064.35821249807)<.01);const b=best.breakdown;
+assert(Math.abs(best.percent-177075.56206267353)<.01);const b=best.breakdown;
 assert.equal(b.meals[0].mastery,37);assert.equal(b.meals[0].level,145);assert.equal(b.meals[0].ribbon,24);
 assert.equal(b.outer,1.75);assert.equal(b.sources.find(x=>x.name==='Jelly Operator').value,100);
 for(const x of result.values){assert(Math.abs(x.breakdown.sources.reduce((sum,s)=>sum+s.contribution,0)+x.breakdown.baselineContribution-x.percent)<1e-6);}

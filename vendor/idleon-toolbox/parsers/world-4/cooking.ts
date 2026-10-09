@@ -1,3 +1,4 @@
+import { getJellyReward } from '@parsers/world-7/jellyRewards';
 import { atomsInfo, cookingMenu, monsters, randomList, randomList2, bonuses } from '@website-data';
 import { liveEntries } from '@parsers/catalog';
 import { getStampsBonusByEffect } from '@parsers/world-1/stamps';
@@ -221,7 +222,7 @@ export const getRibbonBonus = (account: any, t: any) => {
   const rank = t ?? 0;
   return 1 + (Math.floor(5 * rank + Math.floor(rank / 2) *
     (4 + 6.5 * Math.floor(rank / 5))) + Math.floor(rank / 4) * (armorSetBonus / 4)
-    + Math.floor(rank / 10) * cloudBonus73) / 100;
+    + Math.floor(rank / 10) * cloudBonus73 + Math.floor(rank / 20) * getJellyReward(account, 60)) / 100;
 }
 
 export const COOKING_MASTERY_RANK_THRESHOLDS = [0, 1, 5, 10, 25, 100, 150, 250, 500];

@@ -1,3 +1,4 @@
+import { getJellyReward } from '@parsers/world-7/jellyRewards';
 import { isGodEnabledBySorcerer } from '@parsers/world-4/lab';
 import { isCompanionBonusActive } from '@parsers/misc';
 import { getActiveBubbleBonus, isPrismaBubble } from '@parsers/world-2/alchemy';
@@ -40,7 +41,7 @@ const parseDivinity = (divinityRaw: any, serializedCharactersData: any, accountD
         level,
         blessingBonus,
         unlocked: index < unlockedDeities,
-        maxLevel: Math.round(100 + (coralKidBonus + (getMineheadBonusQTY(accountData, 9) + getUpgradeVaultBonus(accountData?.upgradeVault?.upgrades, 76))))
+        maxLevel: Math.round(100 + getJellyReward(accountData, 49) + getJellyReward(accountData, 63) + (coralKidBonus + (getMineheadBonusQTY(accountData, 9) + getUpgradeVaultBonus(accountData?.upgradeVault?.upgrades, 76))))
       }
     }
   );
@@ -309,7 +310,7 @@ export const getW7ChosenGodIndex = (account: any) => {
 // God indices 6 (Purrmep) and 8 (Kattlekruk) short circuit on their own unlock flags in the game;
 // nothing reads those through here yet, so they are not modelled.
 export const isMajorDivinityActive = (character: any, account: any, godIndex: number) => {
-  if (isCompanionBonusActive(account, 0)) return true;
+  if (isCompanionBonusActive(account, 0) && character?.skillsInfo?.divinity?.level >= 2) return true;
   if (isPocketDivinityOwned(account, godIndex)) return true;
   if (getW7ChosenGodIndex(account) === godIndex) return true;
   // Research grid square 173 hands Arctis to everyone, and gem shop item 9 does the same for

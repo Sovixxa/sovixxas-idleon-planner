@@ -1,3 +1,4 @@
+import { getJellyReward } from '@parsers/world-7/jellyRewards';
 import { gamingImports, gamingPalette, gamingUpgrades, randomList2, superbitsUpgrades } from '@website-data';
 import { commaNotation, notateNumber, number2letter, tryToParse } from '@utility/helpers';
 import { getMinorDivinityBonus } from '@parsers/world-5/divinity';
@@ -611,7 +612,7 @@ const calcRatKing = (gamingSproutRaw: any, researchRaw: any, account: any, super
   );
 
   const arcadeBonusCrown = getArcadeBonus(account?.arcade?.shop, 'New_Crown_Chance')?.bonus ?? 0;
-  const ratCrownOdds = Math.min(1,
+  const ratCrownOdds = Math.min(1, (1 + getJellyReward(account, 42) / 100) *
     0.05
     * (1 + 0.5 * superbit60)
     * (1 + (ratShopBonus2 + (ratBaseBonus ?? 0) + arcadeBonusCrown) / 100)

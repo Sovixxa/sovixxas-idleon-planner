@@ -58,7 +58,7 @@ self.onmessage=event=>{
     if(job==='optimize'){
       const value=E.optimizeOperation(state,{...options,onProgress:progress=>postMessage({type:'progress',progress})});
       const chosen=E.cloneState(state);chosen.fever=value.fever;
-      value.replay=E.simulateOne(chosen,value.arrangement,{damageScale:value.damageScale,seed:0xD00D,useSteroid:true,steroidStartSeconds:value.steroidStart??0,reviveDelaySeconds:value.reviveDelaySeconds,trace:true});
+      value.replay=E.simulateOne(chosen,value.arrangement,{damageScale:value.damageScale,seed:0xD00D,useSteroid:options.useSteroid!==false,steroidStartSeconds:value.steroidStart??0,reviveDelaySeconds:value.reviveDelaySeconds,trace:true});
       postMessage({type:'result',value});
     }else if(job==='plan'){
       state=E.cloneState(state);state.fever=result.fever??state.fever;

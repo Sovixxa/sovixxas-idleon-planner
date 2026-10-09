@@ -26,11 +26,11 @@ assert.equal(sample.sections.filter(s=>s.known).length,7);
 for(const s of sample.sections)for(const r of s.rows){assert(r.progress>=0&&r.progress<=1);if(r.status==='next')assert(r.target>r.current);}
 // Render escaping and filter wiring without retaining private fixture data.
 const elements=new Map();const host={innerHTML:'',querySelector(s){if(!elements.has(s))elements.set(s,{});return elements.get(s);},querySelectorAll(){return[];}};
-const ui={...catalogs,document:{},console};ui.window=ui;vm.createContext(ui);vm.runInContext(fs.readFileSync('account-review.js','utf8'),ui);
+const ui={...catalogs,document:{},console,ReviewTargetUI:{release(){},mount(host,raw,goal){this.last={host,raw,goal};}}};ui.window=ui;vm.createContext(ui);vm.runInContext(fs.readFileSync('account-review.js','utf8'),ui);
 ui.STAMP_CATALOG=[{stamps:[{id:'A1',name:'<script>bad</script>',bonus:'<img onerror=bad>'}]}];
-ui.AccountReview.render(host,{StampLv:[[0]],ChestOrder:['StampA1'],ChestQuantity:[1]});assert(host.innerHTML.includes('&lt;script&gt;'));assert(!host.innerHTML.includes('<script>'));
+ui.AccountReview.render(host,{StampLv:[[0]],ChestOrder:['StampA1'],ChestQuantity:[1]});assert.equal(ui.ReviewTargetUI.last.raw.ChestOrder[0],'StampA1');assert(!host.innerHTML.includes('<script>'));
 assert(!host.innerHTML.includes('My Plan'));assert(!host.innerHTML.includes('Add to plan'));assert(!host.innerHTML.includes('check its coin, material and carry-capacity requirements'));
-assert(host.innerHTML.includes('What are you working toward?'));assert(host.innerHTML.includes('Account checks'));assert(host.innerHTML.includes('data-review-goal'));
+assert(host.innerHTML.includes('What are you working toward?'));assert(host.innerHTML.includes('Target calculator'));assert(host.innerHTML.includes('data-review-goal'));
 
 ui.AccountReview.render(host,{});assert(host.innerHTML.includes('Start with your account'));
 console.log('Account Review: partial exports, boundaries, fresh saves, seven-system fixture, placeholder exclusion, escaping and filters OK');
@@ -56,8 +56,8 @@ assert.equal(review.model({StampLv:[[9,9]]},growthCatalog).priorities.length,0,'
 assert.equal(review.model({StampLv:[[0,null]]},growthCatalog).priorities.length,0);
 assert.deepEqual(review.model(raw,catalogs).priorities,review.model(raw,catalogs).priorities);
 ui.AccountReview.render(host,{StampLv:[[0]],ChestOrder:['StampA1'],ChestQuantity:[1]});
-assert(host.innerHTML.includes('Your next account steps'));
-assert(host.innerHTML.includes('Hand in'));
+assert.equal(ui.ReviewTargetUI.last.goal,'balanced');
+assert(review.model(ui.ReviewTargetUI.last.raw,ui).unlocks.some(x=>x.name.includes('<script>')));
 assert(!host.innerHTML.includes('data-review-priority'));
 console.log('Account priorities: readiness, growth weighting, diversity, uncertainty, deterministic order and placement OK');
 

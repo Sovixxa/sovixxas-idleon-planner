@@ -1,0 +1,16 @@
+'use strict';
+const fs=require('fs'),vm=require('vm'),assert=require('assert/strict');
+const raw=JSON.parse(fs.readFileSync('../example json.txt','utf8')),original=JSON.stringify(raw);
+const c={console:{log(){},warn(){},error(){},debug(){}},structuredClone};c.self=c;vm.createContext(c);c.importScripts=(...files)=>files.forEach(f=>vm.runInContext(fs.readFileSync(f,'utf8'),c,{filename:f}));c.postMessage=()=>{};c.importScripts('review-target-worker.js');
+const build=c.ReviewTargetSources.build;c.ReviewTargetSources.build=(...args)=>{const r=build(...args);return {...r,candidates:r.candidates.filter(x=>x.name==='Stat Graph Stamp').map(x=>({...x,to:x.to+100,capTo:x.capTo+100}))};};
+const s=c.ReviewTargetModel.session(raw),p=s.parse(raw.data),ch=p.characters[0];
+assert.equal(JSON.stringify(c.ReviewTargetMetrics.metrics.filter(m=>m.goals.includes('stats')).map(m=>m.id)),JSON.stringify(['allStats','strength','wisdom','agility','luck']));
+for(const metric of ['allStats','strength','wisdom','agility','luck']){
+ const d=s.describe(ch.playerId,metric);assert.equal(d.value,metric==='allStats'?ch.stats.strength+ch.stats.wisdom+ch.stats.agility+ch.stats.luck:ch.stats[metric]);if(metric==='allStats'){assert.equal(d.primaryStats.length,4);assert.equal(d.primaryStats.reduce((n,x)=>n+x.value,0),d.value);}assert(d.rows.length>0);
+ const plan=s.plan(ch.playerId,metric,1e100);assert.equal(plan.options.length,1);assert.equal(plan.issues.length,0);
+ const replay=structuredClone(raw.data);for(const step of plan.steps)c.ReviewTargetModel.apply(replay,step);
+ const final=s.parse(replay);assert.equal(c.ReviewTargetMetrics.evaluate(final,ch.playerId,metric,replay,c.PrayerMath).value,plan.after,metric+' cumulative route matches a fresh reconstruction');if(metric==='allStats'){assert(plan.steps.length>0,'Combined metric must exercise an accepted upgrade');assert.equal(plan.primaryStats.reduce((n,x)=>n+x.value,0),plan.after);assert.equal(JSON.stringify(plan.beforePrimaryStats),JSON.stringify(d.primaryStats));}
+ const shared=s.accountWide('describe',metric);assert(shared.sharedGain);assert.equal(shared.value,0);assert.equal(shared.unit,'% gain');if(metric==='allStats')for(const stat of shared.results[0].result.primaryStats){const eligible=p.characters.filter(ch=>![39,40,70,71,118,119].includes(Number(ch.mapIndex)));assert.equal(stat.value,eligible.reduce((n,ch)=>n+ch.stats[stat.id],0)/eligible.length);}
+ const ctx=s.prepareFull('all',metric,0.5);assert.equal(ctx.candidates.length,1);const result=s.compareCandidate(ctx,ctx.candidates[0]);assert(!result.error);assert(Number.isFinite(result.option.gain));if(metric==='allStats'){const sharedPlan=s.accountWide('plan',metric,0.5).results[0].result;assert(sharedPlan.steps.length>0);const sharedReplay=structuredClone(raw.data);sharedPlan.steps.forEach(step=>c.ReviewTargetModel.apply(sharedReplay,step));const finalShared=s.parse(sharedReplay).characters.filter(ch=>![39,40,70,71,118,119].includes(Number(ch.mapIndex)));for(const stat of sharedPlan.primaryStats)assert.equal(stat.value,finalShared.reduce((n,ch)=>n+ch.stats[stat.id],0)/finalShared.length);}
+}
+assert.equal(JSON.stringify(raw),original);console.log('All-stats sum and STR/WIS/AGI/LUK totals, breakdowns, route replay, fractional shared targets and save immutability passed.');

@@ -74,42 +74,37 @@ export const getStatsFromGear = (character: any, bonusIndex: any, account?: any,
   const isEtcBonus = !isNaN(bonusIndex);
   const bonusName = isNaN(bonusIndex) ? bonusIndex : bonuses?.etcBonuses?.[bonusIndex];
 
-  // Items tracked in gallery (TROPHY, NAMETAG) or hatRack (PREMIUM_HELMET) should be skipped
-  // Their bonuses come from getGalleryBonus/getHatRackBonus instead
-  const isGalleryOrHatRackItem = (item: any) => {
-    const type = item?.Type;
-    return type === 'TROPHY' || type === 'NAMETAG' || type === 'PREMIUM_HELMET' || type === 'REPLICA_TROPHY' || type === 'REPLICA_NAMETAG';
-  };
+  // The client replaces these equipped slots only after the corresponding portal unlock.
+  const isCollectionSlot = (index: number) =>
+    ((index === 10 || index === 14) && character.galleryUnlocked)
+    || (index === 8 && character.hatRackUnlocked);
 
-  // Well_Dressed research (grid 172): first MISC bonus on attire/clothing (slot 15) gives }x more bonus
+  // Well_Dressed research (grid 172) amplifies attire MISC bonuses, never its base stats.
   const wellDressedBonus = getResearchGridBonus(account, 172, 0);
   const wellDressedMulti = wellDressedBonus >= 1 ? (1 + wellDressedBonus / 100) : 1;
 
   // Calculate from equipment
   const equipmentTotal = equipment?.reduce((total: number, item: any, index: number) => {
-    if (isGalleryOrHatRackItem(item)) {
+    if (isCollectionSlot(index)) {
       return total; // Skip - bonus comes from gallery/hatRack
     }
     const statValue = getStatFromEquipment(item, bonusName);
     // The Silkrode chips double the slot's UQ/etc bonus only - TotalStats applies them inside the
     // UQ branch, never to an item's base stats.
     const chipMultiplier = isEtcBonus && ((index === 3 && silkroadProcessor) || (index === 10 && silkroadMotherboard) || (index === 9 && silkroadSoftware)) ? 2 : 1;
-    const researchMultiplier = index === 15 ? wellDressedMulti : 1;
+    const researchMultiplier = isEtcBonus && index === 15 ? wellDressedMulti : 1;
     return total + (statValue * chipMultiplier * researchMultiplier);
   }, 0) || 0;
 
   // Calculate from tools (no chip multipliers for tools)
   // excludeTools: tool Weapon_Power is skill power (Choppin/Mining/etc.), not combat WP
   const toolsTotal = excludeTools ? 0 : (tools?.reduce((total: number, item: any) => {
-    if (isGalleryOrHatRackItem(item)) {
-      return total; // Skip - bonus comes from gallery/hatRack
-    }
     return total + getStatFromEquipment(item, bonusName);
   }, 0) || 0);
 
   // Get gallery and hatRack bonuses for tracked item types
-  const galleryBonus = getGalleryBonus(account, bonusName, character) || 0;
-  const hatRackBonus = getHatRackBonus(account, bonusName) || 0;
+  const galleryBonus = character.galleryUnlocked ? getGalleryBonus(account, bonusName, character) || 0 : 0;
+  const hatRackBonus = character.hatRackUnlocked ? getHatRackBonus(account, bonusName) || 0 : 0;
 
   const gearTotal = equipmentTotal + toolsTotal;
   const value = gearTotal + galleryBonus + hatRackBonus;

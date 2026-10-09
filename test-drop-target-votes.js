@@ -13,7 +13,7 @@ S.set(active.data,['Dream',eqIndex+2],1);S.set(active.data,['ArcadeUpg',arcIndex
 const isVote=s=>(s.path[0]==='Spelunk'&&s.path[1]===18&&[22,24].includes(s.path[2]))||(s.path[0]==='Dream'&&s.path[1]===eqIndex+2)||(s.path[0]==='ArcadeUpg'&&s.path[1]===arcIndex);
 S.build=(...args)=>{const built=build(...args);return {...built,candidates:built.candidates.filter(isVote)};};
 try{
- const original=JSON.stringify(active),result=c.DropTargetModel.plan(active,0,1,M);
+ const original=JSON.stringify(active),result=c.DropTargetModel.plan(active,0,Number.MAX_VALUE,M);
  assert.equal(result.options.length,4);assert.equal(result.issues.length,0);
  for(const option of result.options){
   assert(option.gain>0,option.name+' strengthens the active DR vote or sigil meritocracy');
@@ -23,7 +23,7 @@ try{
  }
  assert.equal(JSON.stringify(active),original);
  const inactive=structuredClone(active);inactive.serverVars.voteCategories=[];inactive.serverVars.voteCat2=[];inactive.serverVars.ArcadeBonuses=[];
- const neutral=c.DropTargetModel.plan(inactive,0,1,M);
+ const neutral=c.DropTargetModel.plan(inactive,0,Number.MAX_VALUE,M);
  assert.equal(neutral.options.length,3,'Inactive arcade upgrades are not purchase recommendations');
  assert(neutral.options.every(s=>s.gain===0),'Amplification does not invent a weekly reward');
 }finally{S.build=build;}

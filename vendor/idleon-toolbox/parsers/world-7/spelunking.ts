@@ -1,3 +1,4 @@
+import { getJellyReward } from '@parsers/world-7/jellyRewards';
 import { cleanUnderscore, commaNotation, growth, lavaLog, notateNumber, tryToParse } from '@utility/helpers';
 import { generalSpelunky, spelunkingChapters, spelunkingRocks, spelunkingUpgrades } from '@website-data';
 import { getWinnerBonus } from '@parsers/world-6/summoning';
@@ -147,7 +148,7 @@ const parseSpelunking = (account: any, characters: any, rawSpelunking: any, rawT
   // Royal Guardian GRAND_VEIN (talent 238, mode 1 = getbonus2(1,238,-1)) and shop upgrade 55.
   const grandVeinTalentBonus = Math.max(1, getHighestTalentAcrossCharacters(characters, 'GRAND_VEIN', activeCharacter));
   const shopUpg55 = getSpelunkingBonus(account, 55);
-  const sharedGrandDiscoveryFactors = (1 + getZenithBonus(account, 6, 0) / 100)
+  const sharedGrandDiscoveryFactors = (1 + getJellyReward(account, 31) / 100) * (1 + getZenithBonus(account, 6, 0) / 100)
     * (1 + getChapterBonus(updatedAccount, 4, 0) / 100)
     * (1 + (highestSpelunkingLevelCharacter * (getMineheadBonusQTY(account, 14) + getSushiBonus(account, 21))) / 100)
     * (1 + getCglunkoBonus(account, 20) / 100) // Grandioso (Crystal Glunko Cove)
@@ -751,7 +752,7 @@ const getPower = (account: any, _unused1?: any) => {
   const toolUpg16 = getSpelunkingBonus(account, 16);
   const toolUpg17 = getSpelunkingBonus(account, 17);
 
-  const powerMulti = (1 + winnerBonus / 100)
+  const powerMulti = (1 + getJellyReward(account, 21) / 100) * (1 + getJellyReward(account, 38) / 100) * (1 + winnerBonus / 100)
     * (1 + meritBonus / 100)
     * gemItemBonus
     * chapterBonus1_2 * chapterBonus4_2 * chapterBonus5_0 * Math.max(1, companion143)
@@ -789,6 +790,8 @@ const getPower = (account: any, _unused1?: any) => {
           sources: [
             { name: "Learning the POW", value: basePower },
             { name: "Winner", value: winnerBonus },
+            { name: "Jelly POW I", value: getJellyReward(account, 21) },
+            { name: "Jelly POW II", value: getJellyReward(account, 38) },
             { name: "Merit (Tasks)", value: meritBonus },
             { name: "Gem Item", value: gemItemBonus },
             { name: "Chapters", value: chapterBonus1_2 * chapterBonus4_2 * chapterBonus5_0 },
@@ -840,7 +843,7 @@ const getSpelunkingCostDiscount = (account: any, characters: any) => {
       .reduce((sum: number, statue: any) => sum + (statue?.level ?? 0), 0)
   );
   const rgCostReduction = 1 / (1 + Math.max(0, rgTalentBest * royalStatueLevelSum) / 100);
-  return rgCostReduction * costReduction * Math.max(0.1, 1 - sushiDiscount / 100);
+  return (1 - getJellyReward(account, 22) / 100) * rgCostReduction * costReduction * Math.max(0.1, 1 - sushiDiscount / 100);
 }
 
 const getSpelunkingUpgradeCost = (account: any, characters: any, upgrade: any, discount?: number) => {

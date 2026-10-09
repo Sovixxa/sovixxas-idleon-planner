@@ -28,12 +28,13 @@ assert(orgBoost instanceof Set,'Organelle boost set');
 const virArr=[{type:5,anchor:10,cells:[10]},{type:5,anchor:11,cells:[11]}];
 const inf=E.infectedSlots(virArr);
 assert(inf.has(10)&&inf.has(11)&&inf.size===2,'Adjacent viruses should infect each other');
-// Runtime Cell EXP can level cells during a simulated operation.
+// Cell EXP is earned during an operation, but the client only levels while idle.
 const R=Array.from({length:19},()=>[]);R[7]=Array(20).fill(0);R[7][9]=11;R[14]=Array(180).fill(-1);R[14][77]=0;R[15]=Array(9).fill(0);R[16]=Array(9).fill(0);R[17]=Array(100).fill(0);R[18]=[];
 R[15][0]=100;R[17][0]=1;R[17][10]=1; // Amoeba unlocked + Cell Biology, with banked XP.
 const st=E.makeState(R,999,null,null);const ar=E.arrangementFromBoard(st);
 const sim=E.simulateOne(st,ar,{seed:1,dpsOnly:true,useSteroid:false});
-assert(sim.levelsGained>=1&&sim.runtimeLevels[0]>=1,'Banked Cell EXP should level during Jelly UI updates');
+assert(sim.levelsGained===0&&sim.runtimeLevels[0]===0,'Banked Cell EXP waits until the operation ends');
+assert(sim.runtimeExp[0]>st.cellExp[0],'Hits still bank EXP with Biology unlocked');
 console.log('extra mechanics OK','virus infected',Array.from(inf).join(','),'runtime levels+',sim.levelsGained);
 // Cells of Three adds one effective passive count for each full set of three.
 const threeState=E.cloneState(st);threeState.upgrades[14]=1;

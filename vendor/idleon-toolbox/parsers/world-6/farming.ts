@@ -1,3 +1,4 @@
+import { getJellyReward } from '@parsers/world-7/jellyRewards';
 import { notateNumber, tryToParse } from '@utility/helpers';
 import { exoticMarketInfo, marketInfo, ninjaExtraInfo, research as researchData, seedInfo } from '@website-data';
 import { getCharmBonus, isJadeBonusUnlocked } from '@parsers/world-6/sneaking';
@@ -251,7 +252,7 @@ const parseFarming = (rawFarmingUpgrades: any, rawFarmingPlot: any, rawFarmingCr
     rankMulti,
     hasLandRank,
     totalRanks: farmingRanks?.reduce((sum: any, rank: any) => sum + rank, 0),
-    exoticMarkeMaxPurchases: Math.round(4 + (getMineheadBonusQTY(account, 8) + 8 * getEventShopBonus(account, 43)
+    exoticMarkeMaxPurchases: Math.round(4 + getJellyReward(account, 34) + (getMineheadBonusQTY(account, 8) + 8 * getEventShopBonus(account, 43)
       + getSushiBonus(account, 33) + 3 * (account?.equinox?.challenges?.[66]?.current === -1 ? 1 : 0))),
     pctExoticPurchasesFree: Math.min(80, 30 * getEventShopBonus(account, 43)) + Math.min(25, 25 * getMineheadBonusQTY(account, 8)),
     exoticMarketUpgradesPurchased: account?.accountOptions?.[416]

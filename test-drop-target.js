@@ -2,7 +2,7 @@ const fs=require('fs'),vm=require('vm'),assert=require('assert/strict');
 const c={console};vm.createContext(c);
 // Keep JSON-save arrays in the engine realm so its Array helpers survive clones.
 vm.runInContext('structuredClone=value=>JSON.parse(JSON.stringify(value))',c);
-for(const f of ['prayer-math-engine.js','stat-todo-model.js','drop-rate-model.js','drop-source-info.js','drop-target-sources.js','drop-target-model.js','drop-rate.js'])vm.runInContext(fs.readFileSync(f,'utf8'),c);
+for(const f of ['prayer-math-engine.js','stat-todo-model.js','drop-rate-model.js','drop-source-info.js','drop-target-sources.js','drop-target-model.js','upgrade-icons.js','drop-rate.js'])vm.runInContext(fs.readFileSync(f,'utf8'),c);
 const app=fs.readFileSync('app.js','utf8');for(const match of fs.readFileSync('drop-target-sources.js','utf8').matchAll(/page:'([^']+)'/g))assert(match[1]==='jelly'||app.includes(match[1]+':')||app.includes('SKILL_PAGES.'+match[1]+'='),'Valid upgrade navigation: '+match[1]);
 const raw=JSON.parse(fs.readFileSync('../example json.txt','utf8')),original=JSON.stringify(raw),M=c.PrayerMath,S=c.DropTargetSources;
 const parse=data=>M.parseData(c.structuredClone(data),raw.charNames,raw.companion,raw.guildData,raw.serverVars||{},raw.accountCreateTime,raw.tournament);
@@ -87,7 +87,7 @@ const escaped=c.DropRate.targetResultHtml({...plan,notes:['<script>bad()</script
 // Exercise paths absent in the mature fixture (already maxed bags/artifacts/bribes).
 function compareOnly(data,candidate){
  const build=S.build;S.build=(...args)=>({...build(...args),candidates:[candidate]});
- try{const result=c.DropTargetModel.plan({...raw,data},0,1);assert.equal(result.issues.length,0);return result.options[0];}finally{S.build=build;}
+ try{const result=c.DropTargetModel.plan({...raw,data},0,Number.MAX_VALUE);assert.equal(result.issues.length,0);return result.options[0];}finally{S.build=build;}
 }
 const smallerBag=structuredClone(raw.data);S.set(smallerBag,['MaxCarryCap_0','Foods'],2000);S.set(smallerBag,fill.path,1);
 const bagParsed=parse(smallerBag),bagCandidate=S.build(bagParsed,smallerBag,0,M).candidates.find(s=>s.path[0]==='MaxCarryCap_0');

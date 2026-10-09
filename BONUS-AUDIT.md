@@ -26,13 +26,13 @@ Source: `q._customBlock_JellyOperation` (`MainAtkCD`, `MainAtkDMG`, `UnitSumAtk`
 Write Qn for the quantity (level times upgrade strength) of Jelly upgrade n.
 
 - Account damage = [1 + (Q18 + Q19 + Q20 + Palette1)/100] * (1 + Q21/100) * (1 + Q22/100) * (1 + Grid185/100) * [1 + Q32 * floor(cached total cell levels / 100)/100] * Fever damage.
-- Individual level damage = 1 + level * (1 + Q17)/100. Runtime levels update; the total-level term remains cached.
+- Individual level damage = 1 + level * (1 + Q17)/100. Levels stay fixed during combat; the total-level term remains cached.
 - Base hit = 5 * cell base damage * account damage * passive damage * individual level damage * infection * proximity * weakening.
 - Global passive damage = (1 + 2*Gigacyst) * (1 + 0.5*Ribosome + 0.1*Amoeba).
 - Global passive speed = (1 + 0.5*Mito) * (1 + 0.25*Organelle + 0.15*Plasmid).
 - Attack threshold = 1.5 * base cooldown / global passive speed / Fever speed. Each 60 Hz update adds 0.65 * adjacency * proximity * active Steroid to attack progress. Initial progress is randomized; excess charge is discarded on firing.
 - Proximity upgrade Q13 applies to the client's specified core positions, as 1 + Q13/100 for damage and charge progress.
-- EXP per landed shot = (1 + Fever EXP/100) * [1 + (Q30 + Q31 + Q10)/100] * (1 + Q11/100), with Biology required to earn EXP. Level-up checks run on a 20-update gate.
+- EXP per landed shot = (1 + Fever EXP/100) * [1 + (Q30 + Q31 + Q10)/100] * (1 + Q11/100), with Biology required to earn EXP. Level-up checks run on a 20-update gate only while the level panel is visible (x > -5); operations move it to -135. Earned EXP is banked until idle.
 - Stronkroid is one five-second activation per operation with client decrement-before-attack ordering; the optimizer searches its start time. Revives are direct clicks on a dead square, so the best-outcome default restores it in the same logical update. A reaction delay remains available for conservative tests. Revives do not rebuild passive caches or reset attack charge.
 - Fever: COLD gains +1% damage per actor one-second callback, **only with DPS Biometrics (upgrade 12)**; RASH doubles damage; SEPSIS doubles Bloodcells; NAUSEA doubles cell EXP; RABIES gives 1.5x damage and 1.25x speed; PLAGUE gives 1.4x speed. Callback phase is randomized relative to operation start.
 
@@ -89,4 +89,126 @@ proxy score too early.
 
 `npm test` checks 40 upgrade rows, all 72 bosses, all eight cell formulas, all six Fevers, mixed passive stacking, geometry, timed combat, search changes, and account decoding edge cases. The client formula test executes only an extracted pure function in a Node VM; external hooks are mocked. Dependency formulas above were traced in source, but this is not an automated full-client replay equivalence test.
 
-The UI reports missing exported inputs explicitly. Bloodcell factors are informational at saved DPS; the simulator does not forecast total operation income. Search is stochastic and heuristic, not proof of a global optimum. Save freshness, actual client update cadence and manual action timing can change results. The last full-save browser check completed 96 runs with no clear found; this does not establish that clearing is impossible.
+The UI reports missing exported inputs explicitly. The simulator forecasts total Bloodcells per attempt, including failed attempts and overkill, and updates the DPS record multiplier. Search is stochastic and heuristic, not proof of a global optimum. Save freshness, actual client update cadence and manual action timing can change results. A run with no successful samples does not establish that clearing is impossible.
+
+## 2026-10-09: occupancy, skills and board-setup audit
+
+Rechecked against the same supplied client hash above. This audit does not assert
+that the supplied September client is the latest live game build.
+
+- The previous saved-example result was already full: 57 occupied squares out of
+  57 unlocked. Locked squares and the center obstruction are not usable space.
+  The generator did deliberately stop early for about 20% of random boards;
+  these partial trials also appeared in the live preview.
+- New clear-search candidates fill empty unlocked squares with Amoebas. The
+  original saved board and remembered incumbent remain controls, and their full
+  counterparts are always validated. Exact-score ties prefer greater occupancy.
+  A partial control can still win if its measured score is strictly better;
+  fullness does not override the clear objective. DPS/Bloodcell searches retain
+  partial trials. The UI now shows occupied/unlocked squares.
+- Cells of Three was correct: n + floor(n/3), independently for each non-Virus
+  type. It adds passive counts, not extra attackers or doubled damage for every
+  cell. For example 4 gives 5 effective counts; counts need not end at a multiple
+  of three. Explicit 3/6/9 construction seeds improve search coverage without
+  forcing every type onto a breakpoint at the expense of stronger mixtures.
+- Filling candidates must not freeze placement refinement. Large shapes can
+  exchange positions with Amoeba fillers while preserving the exact cell mix,
+  legality and full occupancy.
+- Shield-count lanes previously could consume almost the entire timed shortlist.
+  They now share it with support layouts, static-DPS leaders and explicit Amoeba
+  count lanes when Immuno Weakening is owned. This protects stack-building mixes
+  whose eventual damage is understated by the static proxy. Previously found
+  boards are revalidated as incumbents rather than trusting their old scores.
+- Corrected an actual simulation error: level-ups were being processed during
+  combat. The shipped level-panel condition prevents them. Attacks still bank
+  EXP, but damage and Cell Dialysis use the starting levels for this attempt.
+  Old-model playbook scores are kept in storage under their old context and do
+  not compete with newly calculated scores.
+- Expanded Stronkroid timing beyond the normal timer into the measured Critical
+  lifetime, with bounded extra candidates. It remains a single activation.
+- Trial-board mechanics now use the tested Fever instead of the saved Fever.
+
+`test-client-audit.js` now executes the shipped `_customEvent_JellyStuff` setup
+event with graphics calls stubbed. It verifies 208 upgrade/count combinations
+(0 through 12 cells, all eight types, upgrade on/off), then compares the resulting
+passive, adjacency, infection, Proximity, damage and charge-progress values on 96
+legal layouts across all six Fevers. It also executes the shipped level-up block
+with hidden and visible panel positions. Earlier formula tests supplied the
+model's own count/adjacency cache to the client, so they could not independently
+validate that setup; this closes that gap.
+
+`test-jelly-clear-search.js` covers complete candidates, partial baseline controls,
+breakpoint seeds, full-board relocation, Critical Stronkroid timing, equal-sample
+refinement, shared Fever calibration, replay agreement and save preservation.
+Run `npm run test:jelly-clear` for these and the engine/browser regression suite.
+Projectile animation cadence and human skill-click timing remain approximations;
+this is not a full graphical-client replay equivalence proof.
+
+The final corrected-model example run retained the previously discovered full
+board after revalidating it: 18 Amoebas, 6 Plasmids, 4 Ribosomes and 3 Organelles,
+covering all 57 unlocked squares. Effective counts are 24, 8, 5 and 4 respectively.
+RASH won, with Stronkroid at 15 seconds. On 500 fresh holdout simulations, median
+remaining HP was 51.10%, versus 54.76% for the saved board; neither cleared.
+This is evidence of improvement, not evidence that a clear is impossible or that
+the global optimum was found. Detailed results are in
+`../audit/jelly-clear-audit-2026-10-09.json`; the earlier verification file used
+the superseded model and must not be used as current-model evidence.
+
+### Stronkroid follow-up
+
+Stronkroid was enabled throughout the optimizer, but early screening and
+refinement always used the default immediate activation. Only finalists searched
+activation times. This could eliminate a layout that needed a delayed burst.
+Screening now tries up to five early/mid/late/ Critical timings per board;
+refinement selects a full timing plan on training seeds, then scores it on the
+independent refinement seeds. Final validation and replay use that same plan.
+
+Simulation summaries report the scheduled time and actual activation count;
+trace events record the single activation, multiplier and duration. A planned
+activation after an attempt ends is correctly counted as unused. Disabled and
+locked cases are also tested. `test-jelly-stronkroid.js` verified 12/12 activations
+at 15 seconds on the example's saved board, with its 1.51x speed burst: mean damage
+rose from 32,612,789 without the ability to 34,431,256 with it on matched seeds.
+The browser summary now exposes this information for both saved and winning
+boards. The Deep-run figures above predate this screening improvement.
+
+
+## Account calculator audit fixes — 2026-10-09
+
+Applied the confirmed calculator findings against the supplied `../audit/N.js`
+client and example account export:
+
+- Corrected fighting and skill AFK base percentage units, account-aware gear
+  bonuses, character family amplification, Divinity activation, and Clamworks /
+  Crystal Glunko Cove map rules.
+- Added missing Jelly reward inputs to Research EXP, Insight, kaleidoscopes,
+  maximum observation rolls, artifact chance, Class EXP, damage, exotic market
+  purchases, crown odds, Spelunking power/discoveries/shop costs, and deity caps.
+  Research lens planning carries the same reward context as the displayed rates.
+- Applied character-specific Meritocracy eligibility to review metrics and
+  character calculations. Removed cached vial, sigil, statue, Dragon statue,
+  and slab-artifact amplification when the character has not unlocked it.
+- Crystal Steak now reads reconstructed current primary stats instead of saved
+  artifact tooltip snapshots. Character family consumers use the same ordered
+  provider calculation, including skill AFK, efficiency, damage, HP, weapon power,
+  kill credit, and sampling.
+- Refreshed the early Hole and Equinox consumers after final Spelunking lore is
+  available. This avoids adding whole-account parser passes. Fixed-clock tests
+  compare these results with six passes at both low and high Jelly progression.
+- Removed the phantom coral card bonus and retained the native card-level cap.
+
+`npm run test:calculator-audit` exercises native AFK and Jelly functions, every
+Jelly reward boundary, stale-stat invariance across the roster, downstream reward
+consumers, family ordering, Meritocracy eligibility, Doot/W7 god activation,
+coral card values, and parser dependency closure. The broader local regression
+run passes 105 test files (`audit-fix-tests.log`, ignored by Git). Browser checks
+cover All Stats, all target tabs, route replay, serial/parallel parity, worker
+selection, cancellation, and mobile layout. Generated calculation bundles and
+the static site have been rebuilt.
+
+These checks are against the supplied client and account fixture; they do not
+assert compatibility with unexamined future game updates.
+
+Final exhaustive replay: 1465 upgrade scenarios across 52 metrics
+(76,180 evaluations), with zero errors and no save mutation.
+Shard reports: ../audit/review-target-scan-0.json and review-target-scan-1.json.

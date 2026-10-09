@@ -1,3 +1,4 @@
+import { getJellyReward } from '@parsers/world-7/jellyRewards';
 import { kFormatter, lavaLog, notateNumber, tryToParse } from '@utility/helpers';
 import { artifacts, captainsBonuses, classFamilyBonuses, islands } from '@website-data';
 import {
@@ -680,7 +681,7 @@ export const getBoatArtifactChance = (artifacts: any, captain: any, account: any
   const spelunkSuperbit = isSuperbitUnlocked(account, 'Artifacto_Discoveries')
     ? Math.pow(1.02, discoveriesCount) : 0;
 
-  const total = Math.max(1, (1 + additive / 100))
+  const total = (1 + getJellyReward(account, 19) / 100) * Math.max(1, (1 + additive / 100))
     * (1 + starSignBonus / 100)
     * glimboCompanion
     * killroyBonus
@@ -741,6 +742,7 @@ export const getBoatArtifactChance = (artifacts: any, captain: any, account: any
           { name: 'Palette Bonus', value: 1 + paletteBonus / 100 },
           { name: 'Spelunking Discoveries', value: Math.max(1, spelunkSuperbit) },
           { name: 'Button Bonus', value: 1 + getButtonBonus(account, 3) / 100 },
+          { name: 'Jelly artifact chance', value: 1 + getJellyReward(account, 19) / 100 },
         ]
       }
     ]
