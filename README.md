@@ -265,3 +265,15 @@ Missing data is shown explicitly. Run `npm run test:dashboard` for coverage,
 real-save calculations and browser checks, and `npm run build:dashboard-math`
 to regenerate the calculation bundle. GPL calculation-source attribution and
 local modifications are documented in `vendor/idleon-toolbox/README.md`.
+
+## Reproducible builds and release checks
+
+Run `npm ci`, then `npx playwright install chromium` to install the locked build and browser-test dependencies. The local server itself still uses only Node. Run `npm run build` followed by `npm run test:release` before deploying. GitHub Pages runs those checks before uploading the built site and checks the deployed HTML afterward. The release checks use synthetic data and need no private account export or game client.
+
+Production loads a small versioned JS/CSS shell on Home and Credits. A shared calculator JS/CSS bundle loads when a tool is opened or a save is imported, with retry UI on failure. The account engine and its cache load on the first valid import or cloud connection. Calculators currently share one deferred bundle; they are not yet split by world. Workers and lazy resources share the release version. Stamp formula data and images are checked in; refresh the formula data when upgrading the bundled account engine.
+
+The broader local regression suite uses the private `../example json.txt` fixture, and some game-client parity checks use `IDLEON_CLIENT_PATH`. Keep those private files outside the published build. Run `node audit-all-tests.cjs` for the normal suite. Run `npm run test:scenarios` separately for the exhaustive eight-shard scenario audit; `AUDIT_JOBS` controls concurrency. It is intentionally excluded from the normal per-test timeout.
+
+Direct GitHub Pages does not apply `_headers`. The published HTML applies the supported CSP directives through an early meta element and sets the referrer policy. Inline HTML event handlers are blocked, while delegated image fallbacks preserve functionality. Production builds additionally hash approved script entry points, attach integrity metadata, and enforce hash-based script trust with strict-dynamic. Unexpected parser-inserted inline scripts are blocked. Trusted scripts can load calculator modules and external integrations. unsafe-eval remains for third-party compatibility; external service authentication/delivery is not verified by local smoke tests. The development server retains the simpler policy. Frame-ancestor protection, X-Frame-Options, nosniff and Permissions-Policy require HTTP headers: the local server supplies these, and `_headers` is available for compatible hosting, but GitHub Pages cannot apply them directly. A proxy or hosting change is needed for those remaining protections.
+
+The production script policy follows the static-site hash approach described at https://web.dev/articles/strict-csp and retains the evaluation allowance described in Google AdSense guidance at https://support.google.com/adsense/answer/16283098. Script trust does not add the HTTP-only framing protections missing on GitHub Pages.

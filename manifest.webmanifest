@@ -1,7 +1,7 @@
 {
   "name": "Sovixxa’s Idleon Planner",
   "short_name": "Sovixxa Planner",
-  "description": "Sovixxa’s private browser-based IdleOn account planner and optimizer.",
+  "description": "Explore your IdleOn account and compare upgrades with browser-based planning tools. Imported saves are processed on your device.",
   "start_url": ".",
   "display": "standalone",
   "background_color": "#0b1018",

@@ -3,8 +3,8 @@ const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/st
 const source=fs.readFileSync('app.js','utf8');
 const navigation=source.slice(source.indexOf('  function selectSideNav('),source.indexOf("  $('tabOptimizer').addEventListener"));
 const nodes=new Map();
-const $=id=>{if(!nodes.has(id))nodes.set(id,{classList:{values:new Set(),toggle(key,on){on?this.values.add(key):this.values.delete(key);},add(key){this.values.add(key);},remove(key){this.values.delete(key);}}});return nodes.get(id);};
-const context={$,state:null,practice:null,SKILL_PAGES:{},document:{querySelector:()=>null,querySelectorAll:()=>[]},renderWorldPage(){},selectWorkspaceTab(){}};
+const $=id=>{if(!nodes.has(id))nodes.set(id,{classList:{values:new Set(),toggle(key,on){on?this.values.add(key):this.values.delete(key);},add(key){this.values.add(key);},remove(key){this.values.delete(key);}}});const node=nodes.get(id);node.setAttribute=()=>{};node.removeAttribute=()=>{};return node;};
+const context={$,state:null,updateRoute(){},practice:null,SKILL_PAGES:{},document:{querySelector:()=>null,querySelectorAll:()=>[]},renderWorldPage(){},selectWorkspaceTab(){}};
 context.window=context;
 vm.createContext(context);vm.runInContext(navigation,context);
 for(const name of ['communitySheets','credits','shadowCaps','loadouts']){
@@ -14,7 +14,7 @@ for(const name of ['communitySheets','credits','shadowCaps','loadouts']){
 }
 context.selectSideNav('home');assert(!$('inputPanel').classList.values.has('hidden'));
 const html=fs.readFileSync('dist/index.html','utf8');
-const release=html.match(/app\.js\?v=([a-f0-9]{12})/)[1];
+const release=html.match(/planner\.bundle\.js\?v=([a-f0-9]{12})/)[1];
 for(const [,file] of html.matchAll(/(?:src|href)="([^"?]+\.(?:js|css))\?/g))if(!/^(?:https?:)?\/\//.test(file))assert(html.includes(file+"?v="+release));
 for(const name of ['drop-rate','combat-stat-tabs']){
  const script=fs.readFileSync(`dist/${name}.js`,'utf8');

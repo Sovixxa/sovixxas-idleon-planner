@@ -1,6 +1,6 @@
 'use strict';
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),D=require('./dailies');
-const {chromium}=require(process.env.PLAYWRIGHT_PATH||'C:/Users/Sofia/AppData/Local/npm-cache/_npx/e41f203b7505f1fb/node_modules/playwright');
+const {chromium}=require(process.env.PLAYWRIGHT_PATH||'playwright');
 const fixture={charNames:['DailyTester'],data:{CauldronP2W:[[],[],[],[],[],[2]],Research:[[],[],[],[],[],[],[],[0,0,3]],OptLacc:Array(411).fill(null)}};
 fixture.data.OptLacc[96]=7;fixture.data.OptLacc[98]=6;fixture.data.OptLacc[225]=7;fixture.data.OptLacc[226]=0;
 assert.equal(D.classify({ready:null}),'unknown');assert.equal(D.classify({ready:true}),'ready');assert.equal(D.classify({ready:true,autoHidden:'Locked'}),'settled');

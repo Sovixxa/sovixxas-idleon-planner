@@ -3,6 +3,7 @@ const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/st
 const quiet={log(){},warn(){},error(){}};
 function modules(extra={}){
  const c={console:quiet,structuredClone,localStorage:{getItem(){return null;}},fetch:()=>new Promise(()=>{}),...extra};c.window=c;vm.createContext(c);
+ vm.runInContext(fs.readFileSync('beanstalk-engine.js','utf8'),c,{filename:'beanstalk-engine.js'});vm.runInContext(fs.readFileSync('decoder-cache.js','utf8'),c,{filename:'decoder-cache.js'});
  for(const [,src] of fs.readFileSync('index.html','utf8').matchAll(/<script src="([^"]+)"/g)){const file=src.split('?')[0];if(file==='app.js')break;vm.runInContext(fs.readFileSync(file,'utf8'),c,{filename:file});}
  return c;
 }

@@ -5,6 +5,7 @@
   let state=null,loadedExport=null,lastResult=null,currentArrangement=null,currentStats=null,calibration=null,lastNextMove=null,practice=null;
   let jellyReadyState=null,homeRosterSave=null,homeDecodedPlayers=[];
   let initialUpgradesPending=false,initialPracticePending=false;
+  let importRequest=0,routeFromHistory=false,activePage='home';
   const SESSION_KEY='idleon-jelly-json-session-v3';
   const OBS_KEY='idleon-jelly-observed-clear-v1';
   const REVIVE_KEY='idleon-jelly-revive-delay-v1';
@@ -18,28 +19,36 @@
   function initializeQuickNotes(){
     const panel=$('quickNotes'),input=$('quickNotesInput'),toggle=$('quickNotesToggle');
     if(!panel||!input||!toggle)return;
-    const header=panel.querySelector('.quick-notes-head');
+    const header=panel.querySelector('.quick-notes-head'),status=panel.querySelector('.quick-notes-status'),recovery=$('quickNotesRecovery');
+    let unsaved=false;
+    function saveNote(){
+      try{localStorage.setItem(QUICK_NOTES_KEY,input.value);unsaved=false;status.textContent='Saved locally';recovery.hidden=true;}
+      catch(_){unsaved=true;status.textContent='Not saved — browser storage is unavailable. Keep this tab open or download your note.';recovery.hidden=false;}
+    }
+    $('quickNotesRetry').addEventListener('click',saveNote);
+    $('quickNotesDownload').addEventListener('click',()=>{const url=URL.createObjectURL(new Blob([input.value],{type:'text/plain;charset=utf-8'})),link=document.createElement('a');link.href=url;link.download='idleon-notes.txt';link.click();setTimeout(()=>URL.revokeObjectURL(url),0);});
+    window.addEventListener('beforeunload',event=>{if(unsaved){event.preventDefault();event.returnValue='';}});
     const place=({x,y},save=false)=>{
       const maxX=Math.max(0,window.innerWidth-panel.offsetWidth),maxY=Math.max(0,window.innerHeight-panel.offsetHeight);
       const position={x:Math.round(Math.min(Math.max(0,x),maxX)),y:Math.round(Math.min(Math.max(0,y),maxY))};
       panel.style.left=position.x+'px';panel.style.top=position.y+'px';panel.style.right='auto';
       if(save)try{localStorage.setItem(QUICK_NOTES_POSITION_KEY,JSON.stringify(position));}catch(_){/* storage is optional */}
     };
-    const setCollapsed=collapsed=>{
+    const setCollapsed=(collapsed,persist=true)=>{
       panel.classList.toggle('collapsed',collapsed);
       toggle.setAttribute('aria-expanded',String(!collapsed));
       toggle.title=collapsed?'Expand notes':'Collapse notes';
       toggle.querySelector('[aria-hidden]').textContent=collapsed?'+':'−';
       toggle.querySelector('.sr-only').textContent=collapsed?'Expand notes':'Collapse notes';
       if(panel.style.left){const bounds=panel.getBoundingClientRect();place({x:bounds.left,y:bounds.top});}
-      try{localStorage.setItem(QUICK_NOTES_COLLAPSED_KEY,String(collapsed));}catch(_){/* storage is optional */}
+      if(persist)try{localStorage.setItem(QUICK_NOTES_COLLAPSED_KEY,String(collapsed));}catch(_){/* storage is optional */}
     };
     try{
-      input.value=localStorage.getItem(QUICK_NOTES_KEY)||'';setCollapsed(localStorage.getItem(QUICK_NOTES_COLLAPSED_KEY)==='true');
+      input.value=localStorage.getItem(QUICK_NOTES_KEY)||'';const preference=localStorage.getItem(QUICK_NOTES_COLLAPSED_KEY);setCollapsed(preference===null?window.innerWidth<=900:preference==='true',false);
       const position=JSON.parse(localStorage.getItem(QUICK_NOTES_POSITION_KEY)||'null');
       if(Number.isFinite(position?.x)&&Number.isFinite(position?.y))place(position);
-    }catch(_){/* storage is optional */}
-    input.addEventListener('input',()=>{try{localStorage.setItem(QUICK_NOTES_KEY,input.value);}catch(_){/* storage is optional */}});
+    }catch(_){setCollapsed(window.innerWidth<=900,false);status.textContent='Browser storage is unavailable.';}
+    input.addEventListener('input',saveNote);
     toggle.addEventListener('click',()=>setCollapsed(!panel.classList.contains('collapsed')));
     let drag=null;
     header?.addEventListener('pointerdown',event=>{
@@ -157,6 +166,14 @@ SKILL_PAGES.holeFloors={title:'Floors',world:'World 5',copy:'All 18 Hole caverns
     {label:'Hole',keys:['holeAllBonuses','holeFloors','holeWell','holeResources','holeDawgDen','holeBravery','holeBell','holeHarp','holeLamp','holeJustice','holeJars','holeWisdom','holeGambit','holeSanctum','holeFountain','holeCove']}
   ];
   const HOLE_VILLAGER_ICONS={hole:0,holeSchematics:1,holeMajik:2,holeMeasurements:3,holeStudies:4};
+  function routeName(){try{const key=decodeURIComponent(location.hash.slice(1).replace(/^\//,''));return key==='home'||key==='jelly'||Object.hasOwn(SKILL_PAGES,key)?key:null;}catch{return null;}}
+  function updateRoute(name){
+    const title=name==='home'?'Home':name==='jelly'?'Jelly Operator':SKILL_PAGES[name]?.title||'Home';
+    const changed=name!==activePage;activePage=name;
+    document.title=title+' — Sovixxa’s Idleon Planner';$('pageHeading').textContent=title;
+    if(!routeFromHistory&&routeName()!==name)history.pushState(null,'','#/'+encodeURIComponent(name));
+    if(changed){$('routeStatus').textContent=title+' page';if(document.activeElement?.matches('.side-link,.skill-tab'))$('pageHeading').focus({preventScroll:true});}
+  }
   function selectSideNav(name){
     window.StatConnections?.dispose();
     window.LibraryPage?.dispose();
@@ -165,13 +182,20 @@ SKILL_PAGES.holeFloors={title:'Floors',world:'World 5',copy:'All 18 Hole caverns
     window.SailingTrade?.dispose();
     window.Dashboard?.dispose();
     if(name==='coral')name='coralReef';
+    if(name==='jelly'&&state?.hasJelly===false)name='classExp';
+    updateRoute(name);
     window.plannerQoL?.onNavigate(name);
     if(name!=='jelly'&&practice?.playing)stopPracticePlayback();
     if(name==='jelly'&&state?.hasJelly===false){selectSideNav('classExp');return;}
     if(!state)$('workspace').classList.toggle('hidden',!['library','dailies','classExp','accountReview','loadouts','statConnections','shadowCaps','trueDr','communitySheets','credits','connectedBonuses'].includes(name));
     if(!state)$('inputPanel').classList.toggle('hidden',['loadouts','statConnections','shadowCaps','trueDr','communitySheets','credits'].includes(name));
     const selected=SKILL_PAGES[name]?.parent||name;
-    for(const id of ['navHome','navJelly',...Object.keys(SKILL_PAGES).map(key=>'nav'+key[0].toUpperCase()+key.slice(1))])$(id)?.classList.toggle('active',id===('nav'+selected[0].toUpperCase()+selected.slice(1)));
+    for(const id of ['navHome','navJelly',...Object.keys(SKILL_PAGES).map(key=>'nav'+key[0].toUpperCase()+key.slice(1))]){const button=$(id);if(!button)continue;const active=id===('nav'+selected[0].toUpperCase()+selected.slice(1));button.classList.toggle('active',active);if(active)button.setAttribute('aria-current','page');else button.removeAttribute('aria-current');}
+    if(!['home','credits'].includes(name)&&window.PlannerFeatures?.toolsReady?.()===false){
+      $('workspace').classList.remove('hidden');document.querySelectorAll('.tab-panel').forEach(panel=>panel.classList.add('hidden'));$('panelWorld').classList.remove('hidden');$('worldContent').replaceChildren();$('worldContent').dataset.page=name;
+      const message=document.createElement('p');message.setAttribute('role','status');message.textContent='Loading page tools…';$('worldContent').append(message);
+      window.PlannerFeatures.loadTools().then(()=>{if(activePage===name)selectSideNav(name);}).catch(error=>{if(activePage!==name)return;message.textContent=error.message;const retry=document.createElement('button');retry.type='button';retry.textContent='Retry loading';retry.onclick=()=>selectSideNav(name);$('worldContent').append(retry);});return;
+    }
     const jelly=name==='jelly';$('operationStatePanel').classList.toggle('hidden',!jelly);$('jellyTabs').classList.toggle('hidden',!jelly);
     document.querySelector('.hero')?.classList.toggle('hidden',name!=='home'&&!jelly);
     if(name==='home'){selectWorkspaceTab('home');return;}
@@ -396,7 +420,7 @@ SKILL_PAGES.holeFloors={title:'Floors',world:'World 5',copy:'All 18 Hole caverns
     const rows=characterRows();
     const fighting=rows.filter(x=>x.activity.kind==='fighting').length,skills=rows.length-fighting;
     $('homeRosterSummary').innerHTML=rows.length?`<span><strong>${rows.length}</strong> characters</span><span><strong>${fighting}</strong> fighting</span><span><strong>${skills}</strong> elsewhere</span>`:'<span>No roster loaded</span>';
-    $('characterDashboard').innerHTML=rows.map(row=>`<article class="character-card activity-${row.activity.kind}" style="--card-index:${row.id}"><header><div class="character-avatar" title="Class ${esc(row.classId??'—')}"><img src="assets/ClassIcons${esc(row.classId??0)}.png" alt="" onerror="this.hidden=true;this.nextElementSibling.hidden=false"><span hidden>${row.classIcon}</span></div><div class="character-identity"><h3>${esc(row.name)}</h3><strong>Lv. ${row.level??'—'}</strong></div>${row.world?`<span class="character-world">W${esc(row.world)}</span>`:''}</header><div class="character-timer"><span class="timer-icon">◷</span><strong>${esc(row.afk)}</strong><small>saved AFK</small></div><div class="character-assignment"><span class="assignment-icon">${row.activity.icon}</span><div><strong>${esc(row.activity.label)}</strong><small>${esc(row.target)}</small></div><span class="assignment-mark">${row.activity.kind==='fighting'?'⚔':row.activity.kind==='idle'?'—':'›'}</span></div></article>`).join('')||'<div class="home-empty"><strong>No character roster yet</strong><p>Load a full IdleOn save to populate this page.</p></div>';
+    $('characterDashboard').innerHTML=rows.map(row=>`<article class="character-card activity-${row.activity.kind}" style="--card-index:${row.id}"><header><div class="character-avatar" title="Class ${esc(row.classId??'—')}"><img src="assets/ClassIcons${esc(row.classId??0)}.png" alt="" data-image-fallback="avatar"><span hidden>${row.classIcon}</span></div><div class="character-identity"><h3>${esc(row.name)}</h3><strong>Lv. ${row.level??'—'}</strong></div>${row.world?`<span class="character-world">W${esc(row.world)}</span>`:''}</header><div class="character-timer"><span class="timer-icon">◷</span><strong>${esc(row.afk)}</strong><small>saved AFK</small></div><div class="character-assignment"><span class="assignment-icon">${row.activity.icon}</span><div><strong>${esc(row.activity.label)}</strong><small>${esc(row.target)}</small></div><span class="assignment-mark">${row.activity.kind==='fighting'?'⚔':row.activity.kind==='idle'?'—':'›'}</span></div></article>`).join('')||'<div class="home-empty"><strong>No character roster yet</strong><p>Load a full IdleOn save to populate this page.</p></div>';
   }
   function stampLevels(){
     const raw=state?.rawData?.StampLv;if(!Array.isArray(raw))return [[],[],[]];
@@ -810,18 +834,27 @@ SKILL_PAGES.holeFloors={title:'Floors',world:'World 5',copy:'All 18 Hole caverns
   }
 
   function loadText(text,restored=false,live=false){
+    const request=++importRequest;
     clearFail();
+    $('parseBtn').disabled=false;$('parseBtn').textContent='Parse JSON';
+    if(window.PlannerFeatures&&!window.PlannerFeatures.engineReady()){
+      try{E.parseInput(text);}catch(error){fail(error.message);return false;}
+      if(!restored&&!live)window.PlannerLiveConnection?.disconnect();
+      $('parseBtn').disabled=true;$('parseBtn').textContent='Loading account tools…';
+      return window.PlannerFeatures.loadEngine().then(()=>{if(request!==importRequest)return false;$('parseBtn').disabled=false;$('parseBtn').textContent='Parse JSON';return loadText(text,restored,live);}).catch(error=>{if(request===importRequest)fail(error.message);return false;}).finally(()=>{if(request===importRequest){$('parseBtn').disabled=false;$('parseBtn').textContent='Parse JSON';}});
+    }
     try{
       const nextState=E.parseInput(text),nextExport=nextState.rawRoot;
       if(!restored&&!live)window.PlannerLiveConnection?.disconnect();
       const returnPage=typeof window!=='undefined'?window.plannerQoL?.lastPage():null;
-      state=nextState;loadedExport=nextExport;window.OutpostETA?.observe(nextExport);$('workspace').classList.remove('hidden');$('jsonInput').value='';persistInput();$('inputPanel').classList.add('hidden');$('changeJsonBtn').classList.remove('hidden');selectSideNav('home');renderHome();
+      state=nextState;loadedExport=nextExport;window.OutpostETA?.observe(nextExport);$('workspace').classList.remove('hidden');$('jsonInput').value='';persistInput();$('inputPanel').classList.add('hidden');$('changeJsonBtn').classList.remove('hidden');routeFromHistory=true;selectSideNav('home');renderHome();
       $('navJelly').disabled=state.hasJelly===false;$('navJelly').title=state.hasJelly===false?'Jelly Operator data is not available in this export. Other account pages still work.':'';
       if(!live)$('workspace').scrollIntoView({behavior:'smooth',block:'start'});
       if(typeof window!=='undefined'){window.plannerQoL?.onImport(nextExport);if(returnPage&&returnPage!=='home')selectSideNav(returnPage);}
+      routeFromHistory=false;history.replaceState(null,'','#/'+encodeURIComponent(activePage));
       if(!restored)window.PlannerAnalytics?.event('save_import_succeeded');
       return true;
-    }catch(e){if(!restored)window.PlannerAnalytics?.event('save_import_failed');fail(e?.message||String(e));return false;}
+    }catch(e){routeFromHistory=false;if(!restored)window.PlannerAnalytics?.event('save_import_failed');fail(e?.message||String(e));return false;}
   }
 
   window.PlannerLiveBridge={
@@ -831,11 +864,11 @@ SKILL_PAGES.holeFloors={title:'Floors',world:'World 5',copy:'All 18 Hole caverns
   };
 
   $('parseBtn').addEventListener('click',()=>loadText($('jsonInput').value));
-  $('clearBtn').addEventListener('click',()=>{window.OutpostETA?.clear();window.PlannerLiveConnection?.disconnect();window.Dashboard?.dispose();stopPracticePlayback();practice=null;$('worldContent').decodeRequest=null;$('worldContent').dataset.page='';$('worldContent').innerHTML='';state=null;loadedExport=null;lastResult=null;currentArrangement=null;$('jsonInput').value='';$('workspace').classList.add('hidden');$('inputPanel').classList.remove('hidden');$('changeJsonBtn').classList.add('hidden');clearFail();try{sessionStorage.removeItem(SESSION_KEY);}catch(_){}});
+  $('clearBtn').addEventListener('click',()=>{importRequest++;$('parseBtn').disabled=false;$('parseBtn').textContent='Parse JSON';window.OutpostETA?.clear();window.PlannerLiveConnection?.disconnect();window.Dashboard?.dispose();stopPracticePlayback();practice=null;$('worldContent').decodeRequest=null;$('worldContent').dataset.page='';$('worldContent').innerHTML='';state=null;loadedExport=null;lastResult=null;currentArrangement=null;$('jsonInput').value='';$('workspace').classList.add('hidden');$('inputPanel').classList.remove('hidden');$('changeJsonBtn').classList.add('hidden');clearFail();try{sessionStorage.removeItem(SESSION_KEY);}catch(_){}});
   $('changeJsonBtn').addEventListener('click',()=>{$('inputPanel').classList.remove('hidden');$('changeJsonBtn').classList.add('hidden');$('jsonInput').focus();});
   $('rememberTab').addEventListener('change',persistInput);
   $('jsonInput').addEventListener('input',()=>{if($('rememberTab').checked)persistInput();});
-  $('fileInput').addEventListener('change',async e=>{const f=e.target.files?.[0];try{if(!f)return;const text=await f.text();$('jsonInput').value=text;loadText(text);}catch(err){fail(err?.message||String(err));}finally{window.dispatchEvent(new Event('idleon:import-finished'));}});
+  $('fileInput').addEventListener('change',async e=>{const f=e.target.files?.[0];try{if(!f)return;const text=await f.text();$('jsonInput').value=text;await loadText(text);}catch(err){fail(err?.message||String(err));}finally{window.dispatchEvent(new Event('idleon:import-finished'));}});
   $('searchQuality').addEventListener('change',()=>{if(state){$('solverStatus').textContent='Search quality changed. Re-run Optimize for a new timed search.';}});
   $('objectiveMode').addEventListener('change',()=>{
     const mode=$('objectiveMode').value;
@@ -1109,6 +1142,12 @@ SKILL_PAGES.holeFloors={title:'Floors',world:'World 5',copy:'All 18 Hole caverns
   // Background tabs must not occupy the browser's limited localhost connections.
   window.plannerQoL=window.PlannerQoL?.init({pages:SKILL_PAGES,navigate:selectSideNav});
   $('clearBtn').addEventListener('click',()=>window.plannerQoL?.clear());
+  function restoreRoute(){const name=routeName()||'home';routeFromHistory=true;try{selectSideNav(name);}finally{routeFromHistory=false;}}
+  window.addEventListener('popstate',restoreRoute);
+  window.addEventListener('hashchange',()=>{if(routeName()!==activePage)restoreRoute();});
+  document.querySelector('.skip-link').addEventListener('click',event=>{event.preventDefault();$('pageHeading').focus();$('pageHeading').scrollIntoView({block:'start'});});
+  const initialPage=routeName()||window.plannerQoL?.lastPage()||'home';
+  history.replaceState(null,'','#/'+encodeURIComponent(initialPage));restoreRoute();
   window.PlannerLiveReload?.start({badge:$('liveBadge'),beforeReload:persistInput,canReload:()=>!(window.plannerQoL?.lastPage()==='royalArmory'&&document.querySelector('[data-mc-tab=outpostEta][aria-selected=true], [data-mc-tab=talentPlan][aria-selected=true]'))});
 
   try{

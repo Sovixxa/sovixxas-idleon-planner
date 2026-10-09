@@ -2,7 +2,7 @@
 // Build-time instrumentation only. Browser calculations use the same expressions
 // as the normal engine; hooks observe their values without replacing formulas.
 const fs=require('fs'),path=require('path'),esbuild=require('esbuild');
-const playwright=process.env.PLAYWRIGHT_PATH||'C:/Users/Sofia/AppData/Local/npm-cache/_npx/e41f203b7505f1fb/node_modules/playwright';
+const playwright=process.env.PLAYWRIGHT_PATH||'playwright';
 const {babelParse,traverse}=require(path.join(playwright,'lib/transform/babelBundle.js'));
 const root=__dirname,vendor=path.join(root,'vendor/idleon-toolbox');
 const wanted=new Set(('parseGaming parseSailing parseFarming parseFlags parseEquinox scorePlacement getMaxHp getMaxMp getAccuracy getCritChance getCritDamage getMastery getHitChance getSurvivability getMiningEff getAllEff getAllBaseSkillEff getCookingEff getLabEfficiency getSpelunkingEfficiency getAllSkillsExp getAllSkillExpMultiplier getPrinterSampleRate getPlayerFoodBonus getPlayerSpeedBonus getMaxCharge getChargeRate getPlayerConstructionSpeed getArmyHealth getArmyDamage getFarming getResearch getResearchEXPmulti getResearchEXPrateObj getEquinox getSailing getUnlockedSailing getNewMutationChance getConstruction evaluateBoard getSkillExpMulti getAfkGain getItemCapacity').split(' '));

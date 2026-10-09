@@ -3,8 +3,9 @@
 const fs=require('node:fs'),{spawnSync}=require('node:child_process');
 const build=spawnSync(process.execPath,['build-static.js'],{cwd:__dirname,stdio:'inherit',windowsHide:true});
 if(build.status!==0)process.exit(build.status||1);
+console.log('Optional exhaustive scenario scan: npm run test:scenarios (eight independent shards).');
 const results=[];
-const files=fs.readdirSync(__dirname).filter(file=>/^test-.*\.js$/.test(file)).sort();
+const files=fs.readdirSync(__dirname).filter(file=>/^test-.*\.js$/.test(file)&&file!=='test-review-target-scan.js').sort();
 for(const file of files){
  const start=Date.now();
  const result=spawnSync(process.execPath,[file],{cwd:__dirname,encoding:'utf8',timeout:240000,maxBuffer:8*1024*1024,windowsHide:true});

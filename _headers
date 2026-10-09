@@ -1,9 +1,9 @@
 /*
+  Content-Security-Policy: object-src 'none'; base-uri 'self'; form-action 'self'; script-src-attr 'none'; frame-ancestors 'none'
+  X-Frame-Options: DENY
   X-Content-Type-Options: nosniff
   Referrer-Policy: no-referrer
-  X-Frame-Options: DENY
   Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=()
-  Content-Security-Policy: default-src 'self'; script-src 'self' https://www.gstatic.com/firebasejs/; style-src 'self' 'unsafe-inline'; img-src 'self' data:; worker-src 'self' blob:; connect-src 'self' https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://firestore.googleapis.com https://idlemmo.firebaseio.com https://*.firebaseio.com wss://*.firebaseio.com https://us-central1-idlemmo.cloudfunctions.net; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
 
 /assets/*
   Cache-Control: public, max-age=3600

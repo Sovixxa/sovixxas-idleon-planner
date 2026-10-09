@@ -28,7 +28,7 @@
     if(status.connected){session(true);if(dialog.open)dialog.close();}
     if(status.phase==='disconnected'&&!resume)session(false);
   }
-  const controller=api.createController({loadAdapter:api.createFirebaseAdapter,apply:bridge.apply,
+  const controller=api.createController({loadAdapter:async()=>{await window.PlannerFeatures?.loadEngine();return api.createFirebaseAdapter();},apply:bridge.apply,
     canApply:()=>!paused&&bridge.canAutoApply(),onStatus:draw,onReceive:raw=>{if(!paused)window.OutpostETA?.observe(raw);}});
   window.PlannerLiveConnection={disconnect:()=>{session(false);return controller.disconnect();}};
   $('cloudSteamLink').href=api.STEAM_LOGIN;

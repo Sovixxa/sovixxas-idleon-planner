@@ -249,7 +249,7 @@ function resolveDetails(rows,raw){
   if(row.source==='Sailing Artifacts'&&row.name==='Deathskull'){const artifact=root.World5?.decodeSailing(data,root.WORLD5_CATALOG)?.artifacts.find(a=>a.name==='Deathskull'),tier=artifact?.tier||0,entry=root.WORLD5_CATALOG.ArtifactInfo.find(a=>a[0]==='Deathskull');row.effect=tier<2?'+1 Gallery slot when owned.':'+2 Gallery slots.';for(let t=3;t<=Math.min(tier,6);t++)row.effect+=' '+String(entry?.[2*t+1]||'').replaceAll('_',' ');}
   if(row.source==='The Hole · Engineer'&&row.name==='Variety Effect')row.effect=row.effect.split(/I see|I_see/)[0].replace(/\.\.\.$/,'.');
   if(row.source==='The Hole · Engineer'&&row.name==='Hiring the Hounds from Beyond')row.effect=row.effect.split('尬')[0]+(row.effect.includes('Total Bonus:')?' Total Bonus:'+row.effect.split('Total Bonus:')[1]:'');
-  if(row.source==='The Hole · Bonuses'&&row.name==='Equal Spread'){const x=Object.values(hole.majiks).flat().find(x=>String(x.data.name).replaceAll('_',' ')===row.name),amount=x?.getBonus?.();if(Number.isFinite(amount))row.effect=`+${fmt(amount)}% villager EXP per five opals invested in the villager with the fewest opals. Total: +${fmt(amount*Math.floor(Math.min(...hole.villagers.map(v=>v.opals))/5))}%.`;}
+  if(row.source==='The Hole · Bonuses'&&row.name==='Equal Spread'&&hole?.majiks&&hole?.villagers?.length){const x=Object.values(hole.majiks).flat().find(x=>String(x.data.name).replaceAll('_',' ')===row.name),amount=x?.getBonus?.();if(Number.isFinite(amount))row.effect=`+${fmt(amount)}% villager EXP per five opals invested in the villager with the fewest opals. Total: +${fmt(amount*Math.floor(Math.min(...hole.villagers.map(v=>v.opals))/5))}%.`;}
   if(row.source==='The Hole · Gambit'&&/Summoning Doublers/.test(row.name))row.effect='Use the star button on a Summoning upgrade to double it. More Gambit Points unlock more doublers; reset their assignments at the Lamp.';
   if(row.source==='Royal Armory'){
    const model=royalModel,u=model.upgrades.find(x=>x.name===row.name),b=u?.bonus;
@@ -365,6 +365,23 @@ function organized(sources){
  return sources.map(source=>({source,...organization(source)})).sort((a,b)=>a.rank-b.rank||a.system.localeCompare(b.system,undefined,{numeric:true})||a.tierRank-b.tierRank||String(a.source.key??a.source.name).localeCompare(String(b.source.key??b.source.name),undefined,{numeric:true}));
 }
 
-root.StatMapSources={organization,organized,catalog,hydrate,relevantSkill,merge,areas,matchesEffect,classify,effectTargets,wording,resolveDetails};
+
+function areaWorld(area){
+ const id=area.id.split(':').slice(1).join(':');
+ if(area.id.startsWith('system:'))return organization({type:decodeURIComponent(id)}).world;
+ const groups=[
+ ['mining','chopping','smithing','statues','stamp-cost','star-signs','dungeons','forge-speed','anvil-speed'],
+ ['fishing','catching','alchemy','post-office','brew-speed','liquid','sigil-speed'],
+ ['trapping','worship','construction','equinox','shrines','library','build-speed','printing','refinery-speed','multikill'],
+ ['cooking','breeding','lab','cooking-speed','egg-speed','pet-power','shiny-speed','lab-range'],
+ ['sailing','gaming','divinity','hole','artifact-find','sailing-speed','divinity-gain','gaming-bits','gaming-speed','hole-production','villagers'],
+ ['farming','sneaking','summoning','crop-speed','crop-evolution','overgrowth','jade','stealth','summoning-essence','summoning-power'],
+ ['minehead','amber','clamworks','sushi','legend','meritocracy','hoops','darts','zenith','research','spelunking','coral']
+ ];
+ const world=groups.findIndex(ids=>ids.includes(id));
+ return world>=0?'World '+(world+1):['royal','grimoire','compass','tesseract'].includes(id)?'Masterclasses':'Account';
+}
+
+root.StatMapSources={areaWorld,organization,organized,catalog,hydrate,relevantSkill,merge,areas,matchesEffect,classify,effectTargets,wording,resolveDetails};
 
 })(window);

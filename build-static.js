@@ -23,7 +23,7 @@ const scripts=fs.readdirSync(out).filter(name=>/\.(js|css)$/.test(name)).sort();
 const hash=crypto.createHash('sha256');
 // The build recipe changes emitted worker URLs too; include it so cached scripts
 // cannot survive a change to the release-rewriting rules.
-hash.update(fs.readFileSync(__filename));
+hash.update(fs.readFileSync(__filename));hash.update(fs.readFileSync(path.join(root,'build-script-policy.js')));hash.update(fs.readFileSync(path.join(root,'build-bundles.js')));
 for(const name of fs.readdirSync(out).filter(name=>name.endsWith('.html')).sort())hash.update(name).update(fs.readFileSync(path.join(out,name)));
 for(const name of scripts)hash.update(name).update(fs.readFileSync(path.join(out,name)));
 const version=hash.digest('hex').slice(0,12);
@@ -37,4 +37,6 @@ for(const name of scripts.filter(name=>name.endsWith('.js'))){
  const revised=source.replace(/\b(?:new\s+(?:[\w$]+\.)*Worker|importScripts|fetch)\s*\([^)]*\)/g,versionRefs);
  if(revised!==source)fs.writeFileSync(file,revised);
 }
+require('./build-bundles')(out,version);
+require('./build-script-policy')(out);
 console.log(`Static site built at ${out} (release ${version})`);

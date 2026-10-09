@@ -170,3 +170,6 @@ body .alchemy-board .alchemy-bubble>span{display:block;width:100%;min-width:0;te
 .jelly-optimizer-buttons button{min-height:44px}
 @media(max-width:1100px){.optimize-panel .jelly-optimizer-settings{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.jelly-optimizer-settings .jelly-goal{grid-column:1/-1}}
 @media(max-width:600px){.optimize-panel .jelly-optimizer-settings{gap:14px}.jelly-optimizer-settings .jelly-quality{grid-column:1/-1}.jelly-optimizer-actions{align-items:stretch;flex-direction:column}.jelly-optimizer-buttons{display:grid;grid-template-columns:1fr 1.5fr}.jelly-optimizer-settings select{font-size:.72rem;padding:0 6px}}
+
+/* Navigation and note recovery */
+.skip-link{position:fixed;top:8px;left:8px;z-index:10000;padding:12px 18px;background:#fff;color:#171020;border-radius:6px;transform:translateY(-160%)}.skip-link:focus{transform:none}.page-heading{font-size:1.25rem;margin:0 0 16px;color:var(--text,#edf2fa)}.page-heading:focus-visible{outline:2px solid #c99bec;outline-offset:4px}.quick-notes [hidden]{display:none!important}#quickNotesRecovery{display:flex;flex-wrap:wrap;gap:6px}#quickNotesRecovery button{font-size:.8rem}.quick-notes-status{overflow-wrap:anywhere}@media(max-width:900px){.quick-notes:not(.dragging){max-width:calc(100vw - 20px)}.quick-notes.collapsed{width:auto;min-width:110px}}

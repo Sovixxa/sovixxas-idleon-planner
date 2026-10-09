@@ -2,7 +2,7 @@
 const fs=require('fs'),path=require('path'),assert=require('node:assert/strict');
 const phoneWidth=Number(process.env.AUDIT_WIDTH||390);
 const siteRoot=process.env.AUDIT_DIST==='1'?path.join(__dirname,'dist'):__dirname;
-const {chromium}=require(process.env.PLAYWRIGHT_PATH||'C:/Users/Sofia/AppData/Local/npm-cache/_npx/e41f203b7505f1fb/node_modules/playwright');
+const {chromium}=require(process.env.PLAYWRIGHT_PATH||'playwright');
 (async()=>{const browser=await chromium.launch({headless:true});const report={pages:[],errors:[],missing:[]};try{
 const page=await browser.newPage({viewport:{width:1440,height:1000}});let current='boot';page.on('pageerror',e=>report.errors.push({page:current,error:e.message}));
 await page.route('http://localhost:7331/**',async route=>{const pathname=decodeURIComponent(new URL(route.request().url()).pathname);if(pathname.startsWith('/__'))return route.fulfill({contentType:'application/json',body:'{}'});const file=path.resolve(siteRoot,'.'+(pathname==='/'?'/index.html':pathname));if(!file.startsWith(siteRoot+path.sep)||!fs.existsSync(file)||fs.statSync(file).isDirectory()){report.missing.push({page:current,path:pathname});return route.fulfill({status:404,body:''});}return route.fulfill({contentType:({'.js':'text/javascript','.css':'text/css','.html':'text/html','.png':'image/png','.json':'application/json','.svg':'image/svg+xml'})[path.extname(file)]||'application/octet-stream',body:fs.readFileSync(file)});});

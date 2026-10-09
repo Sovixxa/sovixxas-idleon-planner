@@ -50,11 +50,20 @@ function render(host,raw={}){
 
  host.innerHTML=`<section class="stat-map"><div class="section-head compact"><div><p class="eyebrow">Explore Idleon · Prototype</p><h2>Game Connections</h2><p>Explore how Idleon connects. Start with the four basic stats, then follow their effects into other systems.</p></div></div><div class="stat-map-tools"><label class="map-scope">Explore <select data-map-area><option value="core">Full game</option>${areas.map(a=>`<option value="${a.id}">${esc(a.name)}</option>`).join('')}</select></label><label class="map-scope">Source <select data-map-system><option value="all">All sources</option></select></label><input class="map-source-search" type="search" data-map-search aria-label="Find a bonus" placeholder="Find a bonus…"><label class="map-scope">View <select data-map-scope><option value="account">Account-wide</option></select></label><label class="map-scope">Skill <select data-map-skill><option value="all">All skills</option><option>Mining</option><option>Chopping</option><option>Fishing</option><option>Catching</option><option>Trapping</option><option>Worship</option><option>Cooking</option><option>Laboratory</option><option value="spelunk">Spelunking</option></select></label><button type="button" class="secondary" data-map-all>Expand all</button><button type="button" class="secondary" data-map-reset>Reset map</button><span>Click a bubble to expand its bonuses or open a deep dive.</span></div><div class="stat-map-scroll" tabindex="0" aria-label="Game connection map; drag to pan and use the mouse wheel to zoom"><div class="stat-map-canvas"><div class="stat-map-columns"><span style="position:absolute;left:70px">ALCHEMY BUBBLES</span><span style="position:absolute;left:315px">STAMPS</span><span style="position:absolute;left:560px">MEALS</span><span style="position:absolute;left:890px">STATS → EFFECTS → SYSTEMS</span></div><svg class="stat-map-lines" viewBox="0 0 1120 720" aria-hidden="true"></svg><div class="stat-map-nodes"></div></div></div><div class="stat-map-depth" hidden></div><aside class="stat-map-detail" aria-live="polite"></aside></section>`;
 
- const positions={};stats.forEach((s,i)=>positions[s[0]]=[930,140+i*220]);['damage','accuracy','efficiency','drops'].forEach((s,i)=>positions[s]=[1320,140+i*220]);Object.assign(positions,{combat:[1720,250],resources:[1720,580],loot:[1720,850]});
+ const positions={};
 
  function paint(focus){
 
-  overviewAreas.forEach((a,i)=>positions[a.id]=[180+(i%8)*210,1060+Math.floor(i/8)*200]);
+  const areaHeadings=[];let overviewBottom=60;
+  for(const world of ['World 1','World 2','World 3','World 4','World 5','World 6','World 7','Masterclasses','Clickers','Account']){
+   const members=overviewAreas.filter(a=>root.StatMapSources.areaWorld(a)===world).sort((a,b)=>a.name.localeCompare(b.name,undefined,{numeric:true}));
+   if(world==='Account'){members.unshift(...[...stats.map(s=>s[0]),'damage','accuracy','efficiency','drops'].map(id=>({id})));['combat','resources','loot'].forEach((id,i)=>positions[id]=[1800,overviewBottom+125+i*200]);}
+   if(!members.length)continue;
+   const title=world==='Account'?'Shared & account-wide':world;
+   areaHeadings.push(`<span data-map-area-world="${esc(world)}" style="position:absolute;left:100px;top:${overviewBottom-20}px;width:1630px;text-align:center;font-size:24px;font-weight:700">${esc(title)}</span>`);
+   members.forEach((a,i)=>positions[a.id]=[180+(i%8)*210,overviewBottom+125+Math.floor(i/8)*200]);
+   overviewBottom+=Math.ceil(members.length/8)*200+150;
+  }
 
   const visible=new Set(focusArea==='core'?[...stats.map(s=>s[0]),'damage','accuracy','efficiency','drops',...overviewAreas.map(a=>a.id)]:[focusArea]),edges=[];
 
@@ -62,34 +71,16 @@ function render(host,raw={}){
 
   const shownSources=sources.filter(s=>s.targets.some(t=>visible.has(t)&&(expanded.has(t)||opened.has(t)))&&root.StatMapSources.relevantSkill(s,skill)&&(sourceFilter==='all'||s.type===sourceFilter)&&(!sourceQuery||`${s.name} ${s.description}`.toLowerCase().includes(sourceQuery)));
 
-  const organized=root.StatMapSources.organized(shownSources),headings=[];
-  const worlds=[...new Set(organized.map(s=>s.world))],startX=focusArea==='core'?2000:470;
-  let worldY=60,right=startX+600;
-  for(const world of worlds){
-   const entries=organized.filter(s=>s.world===world),types=[...new Set(entries.map(s=>s.source.type))];
-   headings.push(`<span data-map-world="${esc(world)}" style="position:absolute;left:${startX-65}px;top:${worldY-20}px;font-size:18px;font-weight:700">${esc(world)}</span>`);
-   let rowY=worldY+130,rowHeight=0;
-   types.forEach((type,ti)=>{
-    if(ti&&ti%4===0){rowY+=rowHeight+100;rowHeight=0;}
-    const items=entries.filter(s=>s.source.type===type),tiers=[...new Set(items.map(s=>s.tier))],x=startX+(ti%4)*650;
-    const columns=Math.min(3,Math.max(...tiers.map(t=>Math.ceil(items.filter(s=>s.tier===t).length/10))));
-    headings.push(`<span data-map-column="${esc(type)}" style="position:absolute;left:${x-75}px;top:${rowY-110}px;width:${150+(columns-1)*180}px;text-align:center">${esc(items[0].system)}</span>`);
-    let y=rowY;
-    for(const tier of tiers){
-     const members=items.filter(s=>s.tier===tier);
-     if(tier){headings.push(`<span data-map-tier="${esc(tier)}" style="position:absolute;left:${x-75}px;top:${y-75}px;width:${150+(columns-1)*180}px;text-align:center;opacity:.8">${esc(tier)}</span>`);y+=20;}
-     members.forEach(({source:s},i)=>{positions[s.id]=[x+(i%columns)*180,y+Math.floor(i/columns)*155];});
-     y+=Math.ceil(members.length/columns)*155+35;
-    }
-    rowHeight=Math.max(rowHeight,y-rowY);right=Math.max(right,x+(columns-1)*180+100);
-   });
-   worldY=rowY+rowHeight+110;
-  }
-  mapHeight=Math.max(focusArea==='core'?1160+Math.floor((overviewAreas.length-1)/8)*200:950,worldY);mapWidth=Math.max(1000,right);
+  const types=[...new Set(shownSources.map(s=>s.type))],extras=types.filter(t=>!['Bubble','Stamp','Meal'].includes(t)).sort(),sourceRows=Object.fromEntries(types.map(t=>[t,0]));
+  const columnTypes=focusArea==='core'?['Bubble','Stamp','Meal',...extras]:types;
+  const layout={};let nextColumn=focusArea==='core'?2000:470;
+  columnTypes.forEach(type=>{const count=shownSources.filter(s=>s.type===type).length,columns=Math.min(4,Math.max(1,Math.ceil(count/10)));layout[type]={x:nextColumn,columns};nextColumn+=columns*180+80;});
+  const sourceX=type=>layout[type].x;
+  mapHeight=Math.max(focusArea==='core'?overviewBottom:950,...types.map(t=>Math.ceil(shownSources.filter(s=>s.type===t).length/(layout[t]?.columns||1))*155+100));mapWidth=Math.max(1000,nextColumn);
   const canvas=host.querySelector('.stat-map-canvas');canvas.style.width=mapWidth+'px';canvas.style.height=mapHeight+'px';
   host.querySelector('.stat-map-lines').setAttribute('viewBox',`0 0 ${mapWidth} ${mapHeight}`);
-  host.querySelector('.stat-map-columns').innerHTML=headings.join('');
-  shownSources.forEach(s=>s.targets.filter(t=>visible.has(t)&&(expanded.has(t)||opened.has(t))).forEach(t=>edges.push({from:s.id,to:t,label:'',color:s.type==='Bubble'?'#91c8ff':s.type==='Stamp'?'#f4d378':'#9cdea4',lane:0})));
+  host.querySelector('.stat-map-columns').innerHTML=(focusArea==='core'?areaHeadings.join(''):'')+(focusArea!=='core'?types.map(t=>[t,t]):[['Bubble','Alchemy Bubbles'],['Stamp','Stamps'],['Meal','Meals'],...extras.map(t=>[t,t])]).map(([type,title])=>`<span style="position:absolute;left:${sourceX(type)-110}px;width:${220+((layout[type]?.columns||1)-1)*180}px;text-align:center" data-map-column="${esc(type)}">${esc(title)}</span>`).join('');
+  shownSources.forEach(s=>{const index=sourceRows[s.type]++,columns=layout[s.type]?.columns||1;positions[s.id]=[sourceX(s.type)+(index%columns)*180,110+Math.floor(index/columns)*155];s.targets.filter(t=>visible.has(t)&&(expanded.has(t)||opened.has(t))).forEach(t=>edges.push({from:s.id,to:t,label:'',color:s.type==='Bubble'?'#91c8ff':s.type==='Stamp'?'#f4d378':'#9cdea4',lane:0}));});
 
   stats.forEach(([id,,,color],index)=>{if(!expanded.has(id)||!visible.has(id))return;links[id].forEach(([to,label])=>{visible.add(to);edges.push({from:id,to,label,color,lane:index});});});
 
