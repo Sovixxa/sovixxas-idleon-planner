@@ -56,6 +56,10 @@ non-finite pet records are excluded. The released species/ability catalogs agree
 with the installed game. Species availability also respects the saved breeding-world unlock count, so placeholder pets in locked worlds are excluded. Teams remain conditional templates, not battle or
 spice-per-hour simulations.
 
-Validation: `npm run audit:breeding-client` runs 1,485 native comparisons plus EXP
+Validation: `npm run audit:breeding-client` runs 1,605 native comparisons plus EXP
 handler tests. `npm run test:breeding` covers presentation, imports, recommendation
 constraints, navigation and desktop/mobile browser behavior.
+
+Repeat audit: all five breeding multipliers now have native parity checks with gates on/off across four worlds and multiple progress values. All released ability classifications are checked against the game catalog. Incomplete species unlock data now displays Availability unknown instead of instructing the player to unlock a species that may already be unlocked.
+
+Partial-save follow-up: blank, malformed, negative or fractional arena/species/territory progress remains unknown instead of being presented as locked. Inventory completeness requires both assigned and stored pet arrays; otherwise the arena planner explains that additional copies may be missing. Valid empty arrays still count as a complete, empty inventory.

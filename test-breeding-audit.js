@@ -77,6 +77,16 @@ for(let trial=0;trial<16;trial++){
   near(result.territories[i].reqProgress,native('TotalTrekkingREQ',i));
  }
 }
+// Independently exercise all five breeding multipliers, not only their gates.
+attrs.CustomLists.h.PetStats=catalog('na.PetStats');
+for(const enabled of [false,true])for(let world=0;world<4;world++)for(const progress of [0,10,1000]){
+ b[1]=[17,17,18,16];b[0][0]=7;b[4+world][0]=progress;b[13+world][0]=progress;
+ for(const id of [3,5,7,10])b[2][id]=enabled?5:0;
+ gen[44]=world;gen[53]=Array(4).fill(enabled?1:0);attrs.OptionsListAccount[86]=progress;
+ const breeding=parsed(),account={breeding,accountOptions:attrs.OptionsListAccount};
+ const result=parser.addBreedingChance({Breeding:JSON.stringify(b)},account).pets[world][0].breedingMultipliers;
+ for(const [key,name] of [['first','1stMulti'],['second','2ndMulti'],['third','3rdMulti'],['fourth','4thMulti'],['fifth','5thMulti']])near(result[key],env.p._customBlock_Breeding(name,'0',world,0));
+}
 // Recipe planners must preserve Miasma when considering an Opticular swap.
 const slot=(gene,power,key)=>({gene,state:'owned',pet:{gene,power,key}});
 const early=[slot('Opticular',100,'o'),slot('Miasma',200,'m'),slot('Forager',100,'f'),slot('Fleeter',100,'l')];
@@ -86,6 +96,13 @@ const c={window:{}};vm.runInNewContext(fs.readFileSync('world4-data.js','utf8'),
 assert.equal(JSON.stringify(c.window.WORLD4_CATALOG.PetGenes),JSON.stringify(genes));
 assert.equal(JSON.stringify(c.window.WORLD4_CATALOG.PetUpgradeINFO),JSON.stringify(upgrades));
 const catalogPets=c.window.WORLD4_CATALOG.PetStats,decodedPets=parsed().pets;
+assert.equal(JSON.stringify(catalogPets),JSON.stringify(attrs.CustomLists.h.PetStats));
+// The planner's combat classification must match every released native gene.
+for(const gene of genes.slice(0,34)){
+ const check=Teams.auditSpiceRow([slot('Flashy',100,'flash'),slot(gene[0],100,'test')]);
+ assert.equal(check.warnings.some(w=>w.includes('Flashy')),Number(gene[1])===0,'Flashy with '+gene[0]);
+}
+
 for(let world=0;world<4;world++)for(let index=0;index<catalogPets[world].length;index++){
  const pet=catalogPets[world][index],decoded=decodedPets[world][index],passive=Number(random[90][Number(pet[5])]);
  assert.equal(decoded.monsterRawName,pet[0]);

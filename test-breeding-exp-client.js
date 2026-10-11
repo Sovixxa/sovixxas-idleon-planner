@@ -46,6 +46,12 @@ attrs.GemItemsPurchased=parseSaved(saved.GemItemsPurchased);
 attrs.Tasks=Array.from({length:6},(_,i)=>parseSaved(saved['TaskZZ'+i]));
 assert.equal(M.fromSave(raw).capacity,15);
 assert.equal(M.fromSave(raw).capacity,breedHandler('TotalEggCapacity','0',0,0),'Real exported save matches native egg capacity');
+// A stack-use consumes the empty-slot count, or a full capacity when full.
+// Therefore the per-opportunity estimate is not a bulk-use batch size.
+for(const occupied of [0,1,14,15]){
+ attrs.Breeding[0]=Array.from({length:20},(_,i)=>i<occupied?1:0);
+ assert.equal(breedHandler('TotalEggCapacity','UsingEggInv',0,0),occupied===15?15:15-occupied);
+}
 // The client timer has no occupancy term; item use adds one timer interval per item consumed.
 const timer=source.slice(source.indexOf('"TotalTimeForEgg"==e'),source.indexOf('if("SpecialPassives"==e'));
 assert(!timer.includes('Breeding"'));assert(timer.includes('7200/'));
@@ -54,3 +60,18 @@ const options={capacity:10,rarity:10,pets:50,multi:1,shatter:0};
 assert(M.simulate({...options,mode:'natural',legend:900},4,20000).perEgg>M.simulate({...options,mode:'natural',legend:0},4,20000).perEgg);
 assert.deepEqual(M.simulate({...options,mode:'catchup',legend:900},4,20000),M.simulate({...options,mode:'catchup',legend:0},4,20000));
 console.log('Breeding client audit: EXP pool, all 11 hatch tiers, capacity, rarity, Shattershell, timer and item consumption passed.');
+
+// Extract the actual probability expressions from both game processing paths.
+let probabilityChecks=0;
+for(const [mode,prefix] of [['natural','Math.pow(.29+.005'],['catchup','Math.pow(.3+.005']]){
+ const start=source.indexOf(prefix);assert(start>=0);
+ const expression=source.slice(start,source.indexOf('){a.engine',start));
+ const evaluate=vm.runInNewContext('(function(){return '+expression+';})',Object.assign(env,{u:0,o:0}));
+ for(const level of [0,1,5,10])for(const achievement of [false,true])for(const legend of [0,900])for(let tier=1;tier<=11;tier++){
+  attrs.Breeding[0][0]=tier;attrs.Breeding[2][5]=level;
+  env.p._customBlock_AchieveStatus=()=>achievement?1:0;
+  env.m._customBlock_Thingies=()=>legend;
+  near(M.rarityChance({mode,rarity:level,achievement,legend},tier),Math.min(1,evaluate()));probabilityChecks++;
+ }
+}
+console.log('Rarity audit: '+probabilityChecks+' native probability comparisons across tiers, upgrades, achievement and Purebred Eggs.');

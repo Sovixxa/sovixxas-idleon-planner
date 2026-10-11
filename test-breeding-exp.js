@@ -25,3 +25,13 @@ for(const exported of [splitTask,JSON.stringify(splitTask)]){
  assert.equal(m.fromSave({Breeding:[[0],[1],[0,0,5]],GemItemsPurchased:Array.from({length:120},(_,i)=>i===119?5:0),TaskZZ2:exported}).capacity,15);
 }
 assert.equal(m.fromSave({Tasks:[[],[],splitTask],TaskZZ2:[[],[],[],[0,0,9]]}).capacity,5,'Canonical Tasks takes precedence');
+
+// Independent expectations: one Normal hatch per item without refunds; with
+// refund probability p, expected hatches/item is (1+p)/(1-p).
+assert.equal(m.eggEstimate(m.simulate(o,1,20000)),1);
+assert(Math.abs(m.eggEstimate(refunds)-(1-chance)/(1+chance))<.01);
+assert.equal(m.eggEstimate(a),m.eggEstimate(b),'EXP multipliers cannot change item cost');
+for(const row of [{locked:true},{steps:150000,hatches:0},{steps:150000,hatches:99}])assert.equal(m.eggEstimate(row),null);
+// At capacity 1, guaranteed Copper upgrades take fill + upgrade = 2 items.
+assert.equal(m.eggEstimate(m.simulate({...o,capacity:1,mode:'natural',legend:1e6},2,20000)),2);
+console.log('Egg estimate audit: independent item-cost expectations, refund chains, low samples and EXP independence passed.');

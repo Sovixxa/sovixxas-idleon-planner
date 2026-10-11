@@ -16,3 +16,8 @@ tv.amount=0;
 assert.equal(c.DashboardMath.getBreedingExpBonuses(p.account,p.characters).values[4],0,'Unowned TV card gives no EXP');
 const catalog=require('./breeding-exp-bonuses');assert.equal(catalog.rows.length,14);assert(catalog.rows.every(r=>r.where&&r.limit&&r.formula));
 console.log('Breeding bonus sources: save purity, 14 terms, total reconciliation, boosted caps and uncapped sources passed.');
+
+const purebred=p.account.legendTalents.talents.find(t=>t.originalIndex===32),savedBonus=purebred.bonus;
+purebred.bonus=0;
+assert.equal(c.DashboardMath.getBreedingExpBonuses(p.account,p.characters).legendRarity,0,'Unlearned Purebred Eggs gives no rarity bonus');
+purebred.bonus=savedBonus;

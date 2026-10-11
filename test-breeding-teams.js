@@ -27,3 +27,7 @@ const opticSlots=[owned('Opticular',100,'o'),owned('Miasma',200),owned('Flashy',
 const improved=improveOpticular({inventory:[{gene:'Forager',power:80,key:'f'}]},opticSlots,opticUsed);assert.equal(improved[0].gene,'Forager');assert(!opticUsed.has('o'));assert(opticUsed.has('f'));
 const activeOptic=[owned('Opticular',300),owned('Miasma',200),owned('Flashy'),owned('Converter')];assert.equal(improveOpticular({inventory:[{gene:'Forager',power:400,key:'f'}]},activeOptic,new Set())[0].gene,'Opticular','900 Opticular contribution beats 800 Forager');
 console.log('Spice audit: chain seeding, actual support, distinct abilities, combat restrictions and power-aware Opticular selection pass.');
+
+const missingUnlocks={inventory:[],species:[{id:'locked',gene:'Refiller',unlocked:false,world:1},{id:'unknown',gene:'Refiller',unlocked:null,world:2}]};
+const unknownSlot=assign(missingUnlocks,['Refiller'])[0];
+assert.equal(unknownSlot.state,'unknown');assert.equal(unknownSlot.target.id,'unknown');

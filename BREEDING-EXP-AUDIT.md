@@ -34,3 +34,7 @@ power without a Hunter-family character, arena thresholds, shiny boundaries,
 68 species mappings, and foraging math for all 26 territories.
 
 Egg capacity export correction: read World 3 merit purchases from `TaskZZ2[3][2]` when canonical `Tasks[2]` is absent. The example export has 3 base + 5 Incubator + 5 gem-shop + 2 merit slots = 15, previously reported as 13. Regression checks now use the real exported save against the native handler and assert 15 in the browser.
+
+Egg-use estimate audit: estimates are opportunities divided by hatches, conditional on supplying each opportunity with one consumed egg item and hatching between opportunities. They are not stack-use predictions or time-to-next-hatch estimates from the saved tray. The UI now states these assumptions beside the number and suppresses estimates below 100 hatches. Independent checks cover the no-refund Normal case, the geometric Shattershell refund expectation, guaranteed Copper upgrades, and EXP-multiplier independence.
+
+Additional probability audit: 352 comparisons execute the live and catch-up chance expressions extracted directly from the installed client, covering all 11 egg tiers, four Rarity of the Egg levels, achievement on/off, and Purebred Eggs on/off. Both processing paths match.

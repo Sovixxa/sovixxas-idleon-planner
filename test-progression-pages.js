@@ -35,3 +35,15 @@ console.log('Breeding presentation: unknown arena data, shiny threshold equality
 const lockedWorld=b.ProgressionModels.build(breedingModels,{Breeding:breedRaw,OptLacc:opts});
 assert(lockedWorld.breedingTeams[0].species.filter(p=>p.world===4).every(p=>p.unlocked===false));
 assert(lockedWorld.shinyPets.flatMap(g=>g.pets).filter(p=>p.world===4).every(p=>p.unlocked===false));
+
+for(const bad of ['', ' ', 'invalid', -1, 1.5]){
+ const invalidOptions=[];invalidOptions[85]=bad;invalidOptions[89]=bad;
+ const invalidBreeding=[];invalidBreeding[1]=[bad,bad,bad,bad];
+ const result=b.ProgressionModels.build(breedingModels,{Breeding:invalidBreeding,OptLacc:invalidOptions});
+ assert(result.petArena.every(r=>r.status==='unknown'));
+ assert(result.breedingTeams[0].territories.every(t=>t.unlocked===null));
+ assert(result.breedingTeams[0].species.every(p=>p.unlocked===null));
+}
+for(const partial of [{Pets:[]},{PetsStored:[]},{Pets:'broken',PetsStored:[]}])assert.equal(b.ProgressionModels.build(breedingModels,partial).breedingTeams[0].inventoryKnown,false);
+assert.equal(b.ProgressionModels.build(breedingModels,{Pets:[],PetsStored:[]}).breedingTeams[0].inventoryKnown,true);
+console.log('Partial-save audit: invalid progress stays unknown and both inventory collections are required.');

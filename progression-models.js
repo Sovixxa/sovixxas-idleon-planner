@@ -17,9 +17,10 @@
     const arena=['Unlocks 3rd mob battle slot','+25% Library VIP membership','1.20x total damage','New Post Office upgrade crate','Unlocks 4th mob battle slot','1.5x monster cash','New Post Office upgrade crate','−50% kitchen upgrade costs','Unlocks 5th mob battle slot','New Post Office upgrade crate','+60% Library VIP membership','Equip a 3rd large bubble','Unlocks 6th mob battle slot','+20% line width for all players','2x monster cash','1.40x total damage'];
     if(breeding){
       const parse=v=>{try{return typeof v==='string'?JSON.parse(v):v;}catch{return null;}},saved=parse(raw?.data)||raw||{},b=parse(saved.Breeding),opts=parse(saved.OptionsListAccount??saved.OptLacc),rawPets=parse(saved.Pets),stored=parse(saved.PetsStored),rawTerritory=parse(saved.Territory);
-      const arenaWave=opts?.[89]!=null&&Number.isFinite(Number(opts[89]))?Number(opts[89]):null;
+      const savedCount=value=>value!=null&&String(value).trim()!==''&&Number.isInteger(Number(value))&&Number(value)>=0?Number(value):null;
+      const arenaWave=savedCount(opts?.[89]),territoryCount=savedCount(opts?.[85]);
       const breedingWorlds=Math.max(3,Number(opts?.[117])||0);
-      const petUnlocked=p=>b?.[1]?.[p.data.world]==null?null:p.data.world<breedingWorlds&&p.indexInWorld<Number(b[1][p.data.world]);
+      const petUnlocked=p=>{const count=savedCount(b?.[1]?.[p.data.world]);return count===null?null:p.data.world<breedingWorlds&&p.indexInWorld<count;};
       const species=(breeding.basePets||[]).filter(p=>p.data.world<4&&p.data.petId!=='_').map(p=>({id:p.data.petId,world:p.data.world+1,order:p.indexInWorld,gene:p.gene.data.name,unlocked:petUnlocked(p)}));
       const inventory=[];
       for(const [zone,values] of [['Assigned',rawPets],['Storage',stored]])for(const [slot,rawPet] of Object.entries(values||{})){
@@ -27,7 +28,7 @@
         if(!Array.isArray(p)||!species.some(s=>s.id===p[0])||!g||!Number.isFinite(power)||power<=0)continue;
         inventory.push({key:zone+slot,id:p[0],gene:g.data.name,power,slot:Number(slot),location:zone==='Storage'?'Storage #'+(Number(slot)+1):Number(slot)<27?'Fenceyard #'+(Number(slot)+1):'Territory '+(Math.floor((Number(slot)-27)/4)+1)+' · slot '+((Number(slot)-27)%4+1)});
       }
-      out.breedingTeams=[{arenaWave,inventoryKnown:rawPets!=null||stored!=null,species,inventory,genes:(breeding.genes||[]).map(g=>({name:g.data.name,active:clean(g.data.description),passive:clean(g.data.combatDescription)})),territories:(breeding.territory||[]).filter(t=>t.index!==14&&t.data.battleName!=='Filler Filler').map((t,i)=>({index:i,name:clean(t.data.battleName),unlocked:opts?.[85]==null?null:i<Number(opts[85]),requirement:t.data.fightPower,rounds:rawTerritory?.[i]?.[1]??null,pets:inventory.filter(p=>p.location.startsWith('Territory '+(i+1)+' ·'))}))}];
+      out.breedingTeams=[{arenaWave,inventoryKnown:Array.isArray(rawPets)&&Array.isArray(stored),species,inventory,genes:(breeding.genes||[]).map(g=>({name:g.data.name,active:clean(g.data.description),passive:clean(g.data.combatDescription)})),territories:(breeding.territory||[]).filter(t=>t.index!==14&&t.data.battleName!=='Filler Filler').map((t,i)=>({index:i,name:clean(t.data.battleName),unlocked:territoryCount===null?null:i<territoryCount,requirement:t.data.fightPower,rounds:rawTerritory?.[i]?.[1]??null,pets:inventory.filter(p=>p.location.startsWith('Territory '+(i+1)+' ·'))}))}];
       const waves=[2,5,8,12,15,20,25,35,50,65,80,100,125,150,175,200];
       out.petArena=arena.map((text,i)=>{
         const wave=waves[i],owned=arenaWave!==null&&arenaWave>=wave;

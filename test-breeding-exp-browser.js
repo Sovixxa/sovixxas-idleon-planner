@@ -37,11 +37,13 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'playwright');
  await page.locator('#quickNotesToggle').click();
  assert.equal(await page.locator('[name="capacity"]').inputValue(),'15','Imported merit-shop egg slots are included');
  const estimate=await page.locator('[data-breed-egg-estimate]').innerText();
- assert(/ESTIMATE: Use [\d,.]+ eggs per \w+ hatch/.test(estimate),estimate);
- assert((await page.locator('.breed-exp-table thead').innerText()).includes('Est. eggs / hatch'));
+ assert(/ESTIMATE: Use about [\d,.]+ egg items per \w+ hatch on average/.test(estimate),estimate);
+ assert((await page.locator('.breed-exp-table thead').innerText()).includes('Est. egg items / hatch'));
  const bestRow=page.locator('.breed-exp-winner');
  const eggCost=await bestRow.locator('td').nth(3).innerText();
- assert(estimate.includes('Use '+eggCost+' eggs'));
+ assert(estimate.includes('Use about '+eggCost+' egg items'));
+ assert(estimate.includes('not a stack size'));
+ assert(estimate.includes('free incubation lowers item use'));
 
  await page.locator('.breeding-exp').screenshot({path:'../audit/breeding-exp-desktop.png'});
  await page.setViewportSize({width:390,height:844});assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
