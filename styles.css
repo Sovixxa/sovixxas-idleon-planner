@@ -173,3 +173,9 @@ body .alchemy-board .alchemy-bubble>span{display:block;width:100%;min-width:0;te
 
 /* Navigation and note recovery */
 .skip-link{position:fixed;top:8px;left:8px;z-index:10000;padding:12px 18px;background:#fff;color:#171020;border-radius:6px;transform:translateY(-160%)}.skip-link:focus{transform:none}.page-heading{font-size:1.25rem;margin:0 0 16px;color:var(--text,#edf2fa)}.page-heading:focus-visible{outline:2px solid #c99bec;outline-offset:4px}.quick-notes [hidden]{display:none!important}#quickNotesRecovery{display:flex;flex-wrap:wrap;gap:6px}#quickNotesRecovery button{font-size:.8rem}.quick-notes-status{overflow-wrap:anywhere}@media(max-width:900px){.quick-notes:not(.dragging){max-width:calc(100vw - 20px)}.quick-notes.collapsed{width:auto;min-width:110px}}
+
+.alchemy-cost-estimates{border-top:1px solid #493956;margin-top:14px;padding-top:12px}.alchemy-cost-estimates h4{margin:0 0 8px}.alchemy-cost-checkpoint{padding:8px 0}.alchemy-cost-checkpoint p{margin:4px 0}.alchemy-cost-checkpoint ul{padding-left:18px;margin:4px 0;overflow-wrap:anywhere}
+
+.alchemy-cost-estimates>summary{display:list-item;width:fit-content;cursor:pointer;padding:6px 12px;border:1px solid #9473b1;border-radius:8px;color:#eae5f3;background:#292036;font-weight:600}.alchemy-cost-estimates>summary:focus-visible{outline:2px solid #cfa5ef;outline-offset:3px}.alchemy-cost-estimates[open]>summary{margin-bottom:12px}
+
+.alchemy-cost-checkpoint ul{list-style:none;padding-left:0}.alchemy-cost-checkpoint li{display:flex;align-items:center;gap:8px;margin:4px 0}.alchemy-cost-checkpoint li img{flex:0 0 24px;object-fit:contain;image-rendering:pixelated}

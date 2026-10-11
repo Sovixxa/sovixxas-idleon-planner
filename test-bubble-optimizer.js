@@ -79,3 +79,19 @@ assert.equal(B.bonusLevelTarget({cap:{shared:true},shared:null},catalog[3].bubbl
 assert.equal(B.bonusLevelTarget({cap:null},catalog[0].bubbles[11]).level,null);
 assert.equal(B.bonusLevelTarget({cap:{limit:35},effective:null},catalog[3].bubbles[23]).level,null);
 console.log('Hover level targets: exact caps, selected checkpoints, unbounded bonuses and missing context pass.');
+
+// Checkpoint budgets include every liquid and stochastic extra levels.
+{
+ const bubble={formula:'decay',base:100,scale:1,bonus:'{% bonus',itemReq:[{rawName:'Copper',name:'Copper',baseCost:1e9},{rawName:'Liquid1',name:'Water',baseCost:2},{rawName:'Liquid2',name:'Nitrogen',baseCost:3}]};
+ const r={id:'O2',level:17,multi:1,effective:100*17/18,base:100*17/18,ceiling:100,ceilingBaseOnly:false};
+ const context={spending:{discounts:[{all:1}],larry:50}};
+ const e=B.checkpointCosts(r,bubble,context,95);
+ assert.equal(e.target,19);assert.equal(e.clicks,1.5);
+ assert.equal(e.totals.Copper,1.5e9);assert.equal(e.totals.Liquid1,3);assert.equal(e.totals.Liquid2,4.5);
+ assert.equal(B.checkpointCosts({...r,level:18},bubble,context,95).clicks,1);
+ assert.equal(B.checkpointCosts({...r,level:19},bubble,context,95).reached,true);
+ assert.equal(B.checkpointCosts(r,bubble,{},95).totals,null);
+ assert.equal(B.checkpointCosts({...r,conditional:'Multi-ore'},bubble,context,95).target,null);
+ assert.equal(B.checkpointCosts(r,bubble,context,99).target,99);
+ assert.match(B.checkpointCostsHtml(r,bubble,context),/Estimated remaining costs/);
+}

@@ -85,6 +85,7 @@
     statConnections:{title:'Game Connections',world:'Misc',copy:''},
     shadowCaps:{title:'Shadow Caps',world:'Misc',copy:''},
     communitySheets:{title:"Community Sheets",world:'Misc',copy:''},
+    pocketWatches:{title:'PocketWatches',world:'Misc',copy:''},
     accountReview:{title:'Account Review',world:'Optimizers',copy:'Review saved progress and plan your next account milestones.'},
     bribes:{title:"Bribes",world:"World 1",copy:"Purchased bribes and account bonuses."},
     classExp:{title:'Class EXP Optimizer',world:'Optimizers',copy:'Find Class EXP upgrades and compare measured EXP per hour.'},
@@ -187,8 +188,8 @@ SKILL_PAGES.holeFloors={title:'Floors',world:'World 5',copy:'All 18 Hole caverns
     window.plannerQoL?.onNavigate(name);
     if(name!=='jelly'&&practice?.playing)stopPracticePlayback();
     if(name==='jelly'&&state?.hasJelly===false){selectSideNav('classExp');return;}
-    if(!state)$('workspace').classList.toggle('hidden',!['library','dailies','classExp','accountReview','loadouts','statConnections','shadowCaps','trueDr','communitySheets','credits','connectedBonuses'].includes(name));
-    if(!state)$('inputPanel').classList.toggle('hidden',['loadouts','statConnections','shadowCaps','trueDr','communitySheets','credits'].includes(name));
+    if(!state)$('workspace').classList.toggle('hidden',!['library','dailies','classExp','accountReview','loadouts','statConnections','shadowCaps','trueDr','communitySheets','pocketWatches','credits','connectedBonuses'].includes(name));
+    if(!state)$('inputPanel').classList.toggle('hidden',['loadouts','statConnections','shadowCaps','trueDr','communitySheets','pocketWatches','credits'].includes(name));
     const selected=SKILL_PAGES[name]?.parent||name;
     for(const id of ['navHome','navJelly',...Object.keys(SKILL_PAGES).map(key=>'nav'+key[0].toUpperCase()+key.slice(1))]){const button=$(id);if(!button)continue;const active=id===('nav'+selected[0].toUpperCase()+selected.slice(1));button.classList.toggle('active',active);if(active)button.setAttribute('aria-current','page');else button.removeAttribute('aria-current');}
     if(!['home','credits'].includes(name)&&window.PlannerFeatures?.toolsReady?.()===false){
@@ -535,7 +536,7 @@ SKILL_PAGES.holeFloors={title:'Floors',world:'World 5',copy:'All 18 Hole caverns
   let alchemyThreshold=0;
   function renderAlchemy(){
     const host=$('worldContent'),catalog=window.ALCHEMY_CATALOG||[],raw=loadedExport||state?.rawRoot||{},prisma=savedPrismaBubbles();
-    let report=window.BubbleOptimizer.model(raw,catalog),rows=new Map(report.rows.map(row=>[row.id,row])),activeTile=null,pinnedTile=null,hideTimer;
+    let costContext={},report=window.BubbleOptimizer.model(raw,catalog),rows=new Map(report.rows.map(row=>[row.id,row])),activeTile=null,pinnedTile=null,hideTimer;
     const live=group=>group.bubbles.filter(b=>b.name!=='BUBBLE');
     const owned=report.rows.filter(row=>row.level>0).length;
     const prismaCount=report.rows.filter(row=>row.prisma).length;
@@ -560,7 +561,7 @@ SKILL_PAGES.holeFloors={title:'Floors',world:'World 5',copy:'All 18 Hole caverns
     function content(tile){
       const row=rows.get(tile.dataset.bubbleId),bubble=catalog[Number(tile.dataset.bubbleGroup)].bubbles[Number(tile.dataset.bubbleIndex)],summary=window.BubbleOptimizer.bonusSummary(row,bubble,alchemyThreshold||99);
       const percent=summary.ratio===null?null:summary.ratio*100;
-      return `<div class="alchemy-bonus-title"><img src="${esc(bubble.icon)}" width="44" height="44" alt=""><div><h3>${esc(bubble.name)}</h3><p>${esc(row.group)} · ${row.level===null?'Level unavailable':`Lv ${row.level.toLocaleString()}`}${row.prisma?' · Prisma':''}</p></div></div>${row.level===0?'<p class="alchemy-bonus-value">Locked</p><p>Discover this bubble to start gaining its bonus.</p>':`<p class="alchemy-bonus-label">You have · ${esc(summary.label)}</p><p class="alchemy-bonus-value">${esc(summary.headline)}</p>${percent!==null?`<div class="alchemy-bonus-meter" role="meter" aria-label="Share of ${esc(summary.label)}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${percent.toFixed(3)}"><span style="width:${percent}%"></span></div><p class="alchemy-bonus-percent">${percent.toLocaleString(undefined,{maximumFractionDigits:2})}% of ${esc(summary.label)}</p>`:''}<p class="alchemy-bonus-target">${esc(summary.target.text)}</p><p class="alchemy-bonus-effect">${esc(summary.effect)}</p><p class="alchemy-bonus-scope">${esc(summary.scope)}</p><p class="alchemy-bonus-note">${esc(summary.note)}</p>`}${bubble.active?'<p class="alchemy-bonus-note">Large bubble: must be active through equipment or account unlocks.</p>':''}`;
+      return `<div class="alchemy-bonus-title"><img src="${esc(bubble.icon)}" width="44" height="44" alt=""><div><h3>${esc(bubble.name)}</h3><p>${esc(row.group)} · ${row.level===null?'Level unavailable':`Lv ${row.level.toLocaleString()}`}${row.prisma?' · Prisma':''}</p></div></div>${row.level===0?'<p class="alchemy-bonus-value">Locked</p><p>Discover this bubble to start gaining its bonus.</p>':`<p class="alchemy-bonus-label">You have · ${esc(summary.label)}</p><p class="alchemy-bonus-value">${esc(summary.headline)}</p>${percent!==null?`<div class="alchemy-bonus-meter" role="meter" aria-label="Share of ${esc(summary.label)}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${percent.toFixed(3)}"><span style="width:${percent}%"></span></div><p class="alchemy-bonus-percent">${percent.toLocaleString(undefined,{maximumFractionDigits:2})}% of ${esc(summary.label)}</p>`:''}<p class="alchemy-bonus-target">${esc(summary.target.text)}</p>${window.BubbleOptimizer.checkpointCostsHtml(row,bubble,costContext)}<p class="alchemy-bonus-effect">${esc(summary.effect)}</p><p class="alchemy-bonus-scope">${esc(summary.scope)}</p><p class="alchemy-bonus-note">${esc(summary.note)}</p>`}${bubble.active?'<p class="alchemy-bonus-note">Large bubble: must be active through equipment or account unlocks.</p>':''}`;
     }
     function position(tile){
       const rect=tile.getBoundingClientRect(),width=tooltip.offsetWidth,height=tooltip.offsetHeight;
@@ -580,19 +581,20 @@ SKILL_PAGES.holeFloors={title:'Floors',world:'World 5',copy:'All 18 Hole caverns
     }
     host.querySelectorAll('.alchemy-bubble').forEach(tile=>{
       tile.onpointerenter=e=>{if(e.pointerType!=='touch')preview(tile);};
-      tile.onpointerleave=()=>{if(activeTile===tile&&document.activeElement!==tile)hideTimer=setTimeout(hide,140);};
+      tile.onpointerleave=()=>{if(activeTile===tile&&document.activeElement!==tile)hideTimer=setTimeout(()=>{if(!tooltip.matches(':hover')&&!activeTile?.matches(':hover'))hide();},140);};
       tile.onfocus=()=>{preview(tile);requestAnimationFrame(()=>{if(document.activeElement===tile&&host.contains(tile))preview(tile);});};tile.onblur=hide;
       tile.onkeydown=e=>{if(e.key==='Escape')hide();};tile.onclick=()=>pin(tile);
     });
-    tooltip.onpointerenter=()=>clearTimeout(hideTimer);tooltip.onpointerleave=hide;
+    tooltip.addEventListener('toggle',()=>{if(activeTile&&!tooltip.hidden)position(activeTile);},true);
+    tooltip.onpointerenter=()=>clearTimeout(hideTimer);tooltip.onpointerleave=()=>{hideTimer=setTimeout(()=>{if(!tooltip.matches(':hover')&&!activeTile?.matches(':hover'))hide();},140);};
     const events=new AbortController();
-    window.addEventListener('scroll',()=>{if(activeTile===document.activeElement&&activeTile)position(activeTile);else hide();},{capture:true,passive:true,signal:events.signal});
+    window.addEventListener('scroll',event=>{if(tooltip.contains(event.target))return;if(activeTile===document.activeElement&&activeTile)position(activeTile);else hide();},{capture:true,passive:true,signal:events.signal});
     window.addEventListener('resize',hide,{signal:events.signal});
     document.addEventListener('keydown',e=>{if(e.key==='Escape')hide();},{signal:events.signal});
     const observer=new MutationObserver(()=>{if(!host.contains(tooltip)){hide();events.abort();observer.disconnect();}});observer.observe(host,{childList:true});
     window.BubbleOptimizer.prepare(raw).then(context=>{
       if(!host.contains(tooltip))return;
-      report=window.BubbleOptimizer.model(raw,catalog,context);rows=new Map(report.rows.map(row=>[row.id,row]));
+      costContext=context;report=window.BubbleOptimizer.model(raw,catalog,context);rows=new Map(report.rows.map(row=>[row.id,row]));
       applyThreshold();
       if(pinnedTile)pin(pinnedTile);else if(activeTile)preview(activeTile);
     });
@@ -690,6 +692,7 @@ SKILL_PAGES.holeFloors={title:'Floors',world:'World 5',copy:'All 18 Hole caverns
       window.ShadowCaps.render($('worldContent'));
       return;
     }
+    if(name==='pocketWatches'){window.PocketWatches.render($('worldContent'));return;}
     if(name==='communitySheets'){
       window.CommunitySheets.render($('worldContent'));
       return;

@@ -43,6 +43,56 @@ function materialCost(req,index,level,discount){
  const rate=index>14?1.37-.28*level/(60+level):1.35-.3*level/(50+level);
  return Math.round(Math.max(1,Math.min(1e9,req.baseCost*Math.pow(rate,level)*discount)));
 }
+// Integrate prices over average levels per purchase; bound work for distant targets.
+function checkpointCosts(row,bubble,context={},percent=95){
+ const summary=bonusSummary(row,bubble,percent),unavailable=reason=>({percent,target:null,reason,totals:null});
+ if(row.level===null||row.level===0)return unavailable('Import an unlocked bubble to estimate costs.');
+ if(row.conditional||row.cap?.shared)return unavailable('Target depends on character or shared bonuses.');
+ if(row.cap&&row.effective===null)return unavailable('Account multipliers unavailable.');
+ const target=summary.maximum!==null?levelFor(bubble,summary.maximum*percent/100,row.ceilingBaseOnly?1:row.multi):null;
+ if(target===null)return unavailable('No verified finite target.');
+ if(row.level>=target)return {percent,target,reached:true,totals:{},clicks:0};
+ const info=context.spending,discount=info?.discounts?.['OGPY'.indexOf(row.id[0])]?.all;
+ if(!info||num(info.larry)===null)return unavailable('Account cost data unavailable.');
+ const reqs=bubble.itemReq||[],index=Number(row.id.slice(1));
+ if(!reqs.length)return unavailable('Resource costs unavailable.');
+ const levels=target-row.level,gain=1+info.larry/100,totals={};
+ let clicks=0;
+ if(levels<=200000){
+  const probability=new Float64Array(levels);probability[0]=1;
+  const guaranteed=Math.floor(gain),extra=gain-guaranteed;
+  for(let offset=0;offset<levels;offset++){
+   const chance=probability[offset];if(!chance)continue;
+   clicks+=chance;
+   for(const req of reqs){
+    const price=materialCost(req,index,row.level+offset,discount);
+    if(price===null||!Number.isFinite(price))return unavailable('Special-resource price unavailable.');
+    totals[req.rawName]=(totals[req.rawName]||0)+price*chance;
+   }
+   if(offset+guaranteed<levels)probability[offset+guaranteed]+=chance*(1-extra);
+   if(extra&&offset+guaranteed+1<levels)probability[offset+guaranteed+1]+=chance*extra;
+  }
+ }else{
+  const steps=8192,width=levels/steps;clicks=levels/gain;
+  for(const req of reqs){
+   let total=0;
+   for(let i=0;i<steps;i++){
+    const price=materialCost(req,index,Math.floor(row.level+(i+.5)*width),discount);
+    if(price===null||!Number.isFinite(price))return unavailable('Special-resource price unavailable.');
+    total+=price*width/gain;
+   }
+   totals[req.rawName]=total;
+  }
+ }
+ return {percent,target,totals,clicks,gain};
+}
+function checkpointCostsHtml(row,bubble,context){
+ const compact=n=>Number(n).toLocaleString(undefined,{notation:n>=1e6?'compact':'standard',maximumFractionDigits:1});
+ return `<details class="alchemy-cost-estimates"><summary>More info</summary><h4>Estimated remaining costs</h4>${[95,99].map(percent=>{
+  const e=checkpointCosts(row,bubble,context,percent);
+  return `<div class="alchemy-cost-checkpoint"><strong>${percent}%${e.target!==null?' · Lv '+fmt(e.target):''}</strong>${e.reached?'<p>Reached · no additional resources needed</p>':e.totals?`<p>≈ ${compact(e.clicks)} upgrades on average</p><ul>${bubble.itemReq.map(req=>`<li><img src="assets/${esc(req.rawName)}${/^Liquid[1-4]$/.test(req.rawName)?'_x1':''}.png" width="24" height="24" alt="" loading="lazy"><span>≈ ${compact(e.totals[req.rawName])} ${esc((req.name||req.rawName).replaceAll('_',' '))}</span></li>`).join('')}</ul>`:`<p>${esc(e.reason)}</p>`}</div>`;
+ }).join('')}<p class="alchemy-bonus-note">Approximate manual-upgrade spend from your saved level, including LAAARRRRYYYY. Current discounts stay fixed. Excludes atoms, free levels and Bargain Tags; saved stock is not subtracted. Actual costs vary.</p></details>`;
+}
 function spendingPlan(row,requirements,context={},settings={}){
  if(!['Underleveled','No finite cap'].includes(row.state))return {method:'Hold',reason:row.reason,cost:null,eligible:false,farmable:false,clicks:0,target:row.level,totals:{},particles:0,gain:1,stop:row.reason};
  const info=context.spending,reqs=requirements||[],material=reqs.find(r=>!/^Liquid/.test(r.rawName));
@@ -199,5 +249,5 @@ function bonusSummary(row,bubble,threshold=99){
   label,effect,scope:effective?'Account bonus · before matching-class boosts':'Base bonus · account multipliers unavailable',
   note:row.cap?.shared?'This effect shares a cap with other bonuses. The combined total must be checked separately.':row.conditional?'The usable bonus depends on your character and other bonuses.':hard?'Further levels do not improve this effect once capped.':maximum!==null?'This is a theoretical ceiling, approached as levels increase.':'This bonus keeps growing with levels.'};
 }
-const api={model,value,levelFor,render,prepare,bonusSummary,bonusLevelTarget,CAPS,materialCost,spendingPlan,candyMaterial};if(typeof module!=='undefined')module.exports=api;else root.BubbleOptimizer=api;
+const api={model,value,levelFor,render,prepare,bonusSummary,bonusLevelTarget,CAPS,materialCost,spendingPlan,candyMaterial,checkpointCosts,checkpointCostsHtml};if(typeof module!=='undefined')module.exports=api;else root.BubbleOptimizer=api;
 })(typeof window!=='undefined'?window:globalThis);
