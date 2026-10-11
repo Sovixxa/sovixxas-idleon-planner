@@ -1,4 +1,4 @@
-import { arenaBonuses, monsters, petGenes, petStats, petUpgrades, randomList, territory } from '@website-data';
+import { arenaBonuses, monsters, petGenes, petStats, petUpgrades, randomList, territory as territoryList } from '@website-data';
 import { createRange, notateNumber, tryToParse } from '@utility/helpers';
 import { getBubbleBonus, getVialsBonusByEffect } from '@parsers/world-2/alchemy';
 import { getStampsBonusByEffect } from '@parsers/world-1/stamps';
@@ -10,9 +10,8 @@ import { getWinnerBonus } from '@parsers/world-6/summoning';
 import { getLampBonus } from '@parsers/world-5/caverns/the-lamp';
 import { getUpgradeVaultBonus } from '@parsers/misc/upgradeVault';
 import { getCharacterByHighestSkillLevel } from '@parsers/misc';
-import { CLASSES, getBestActiveCharacter, getHighestTalentAcrossCharacters } from '@parsers/talents';
+import { getBestActiveCharacter, getHighestTalentAcrossCharacters } from '@parsers/talents';
 import { getArcadeBonus } from '@parsers/world-2/arcade';
-import { getSushiBonus } from '@parsers/world-7/sushiStation';
 import { getMineheadBonusQTY } from '@parsers/world-7/minehead';
 
 export const getBreeding = (idleonData: any, account: any, processedData: any) => {
@@ -41,10 +40,10 @@ const parseBreeding = (breedingRaw: any, territoryRaw: any, petsRaw: any, petsSt
     }
   })
   const unlockedBreedingMulti = {
-    second: petUpgradesList?.[2]?.level > 0,
-    third: petUpgradesList?.[4]?.level > 0,
-    fourth: petUpgradesList?.[6]?.level > 0,
-    fifth: petUpgradesList?.[9]?.level > 0
+    second: petUpgradesList?.[3]?.level > 0,
+    third: petUpgradesList?.[5]?.level > 0,
+    fourth: petUpgradesList?.[7]?.level > 0,
+    fifth: petUpgradesList?.[10]?.level > 0
   }
   const storedPets = petsStoredRaw?.map(([name, level, power]: any) => {
     return { name, level, power }
@@ -78,23 +77,24 @@ const parseBreeding = (breedingRaw: any, territoryRaw: any, petsRaw: any, petsSt
     const realName = monsters?.[name]?.Name;
     return { name, realName, x1, power: x2, x3, gene };
   })?.toChunks(4);
-  const terri = territory.filter((_, index) => index !== 14);
+  const terri = territoryList.filter((_, index) => index !== 14);
   const territories = terri?.map((territory, index) => {
     const team = teams?.[index] || [];
     const previousTeam = teams?.[index - 1] || [];
     const nextTeam = teams?.[index + 1] || [];
     const vaultBonus = 1 + getUpgradeVaultBonus(account?.upgradeVault?.upgrades, 56) / 100;
-    const forageSpeed = team?.reduce((sum: any, teamMember: any, position: any) => sum + getForageSpeed({
+    const baseForageSpeed = team?.reduce((sum: any, teamMember: any, position: any) => sum + getForageSpeed({
       team,
       previousTeam,
       teamMember,
       position
-    }), 0) * vaultBonus;
+    }), 0);
+    const forageSpeed = baseForageSpeed * vaultBonus;
     const teamPower = team?.reduce((sum: any, teamMember: any) => sum + getFightPower(teamMember), 0);
-    const anyCombats = team?.some((teamMember: any) => teamMember?.gene?.abilityType === 0);
+    const anyCombats = team?.some((teamMember: any) => teamMember?.name !== 'none' && teamMember?.gene?.abilityType === 0);
     const flashies = anyCombats ? 0 : team?.filter((teamMember: any) => teamMember?.gene?.name === 'Flashy')?.length;
     const fleeters = team?.filter((teamMember: any) => teamMember?.gene?.name === 'Fleeter')?.length;
-    const fasidiouses = team?.filter((teamMember: any) => teamMember?.gene?.name === 'Fasidious')?.length;
+    const fastidiouses = anyCombats ? team?.filter((teamMember: any) => teamMember?.gene?.name === 'Fastidious')?.length : 0;
     let miasmas = team?.filter((teamMember: any) => teamMember?.gene?.name === 'Miasma');
     if (miasmas?.length) {
       const geneNames = team?.map(({ gene }: any) => gene?.name);
@@ -106,15 +106,19 @@ const parseBreeding = (breedingRaw: any, territoryRaw: any, petsRaw: any, petsSt
     }
     const topAndBottomRows = [...team, ...previousTeam, ...nextTeam];
     const badumdums = topAndBottomRows?.filter((teamMember) => teamMember?.gene?.name === 'Badumdum')?.length;
-    const tsars = topAndBottomRows?.filter((teamMember) => teamMember?.gene?.name === 'Tsar')?.length;
-    const math = forageSpeed * Math.pow(1.3, fleeters) * Math.pow(1.2, badumdums) * Math.pow(1.5, flashies) * Math.pow(1.5, fasidiouses) * miasmas;
-    const teamFightPower = (teamPower + forageSpeed * index) * Math.pow(1.5, tsars) * (1 + getSushiBonus(account, 10) / 100);
+    // The client scans three rows starting at max(index - 1, 0), including
+    // the second row below for the first territory. Vault affects speed only.
+    const tsars = teams?.slice(Math.max(index - 1, 0), Math.max(index - 1, 0) + 3).flat().filter((member: any) => member?.gene?.name === 'Tsar').length ?? 0;
+    const math = forageSpeed * Math.pow(1.3, fleeters) * Math.pow(1.2, badumdums) * Math.pow(1.5, flashies) * Math.pow(1.5, fastidiouses) * miasmas;
+    const bloomingAxe = 6 * (petUpgradesList?.[6]?.level ?? 0) / 100;
+    const teamFightPower = (teamPower + baseForageSpeed * bloomingAxe) * Math.pow(1.5, tsars);
     const totalForageSpeed = teamFightPower < territory.fightPower ? 0 : math;
     const bonus = 1 + .02 / (team?.filter((teamMember: any) => teamMember?.gene?.name === 'Monolithic')?.length / 5 + 1);
-    const powerReq = index > 14 ? terri?.[index - 1]?.powerReq : territory?.powerReq;
+    // Trekking indexes do not skip the arena catalog row; battle indexes do.
+    const powerReq = territoryList[index]?.powerReq;
     const roundsForTerritory = foragingRounds?.[index] ?? 0;
     const reqProgress = (powerReq + roundsForTerritory) * Math.pow(bonus, roundsForTerritory);
-    return { ...territory, team, forageSpeed: totalForageSpeed, reqProgress, currentProgress: currentProgress?.[index] }
+    return { ...territory, team, forageSpeed: totalForageSpeed, teamFightPower, reqProgress, currentProgress: currentProgress?.[index] }
   });
 
   const fencePets: any[] = [], passivesTotals: Record<string, any> = {};
@@ -180,6 +184,8 @@ const parseBreeding = (breedingRaw: any, territoryRaw: any, petsRaw: any, petsSt
 }
 
 const getShinyLevel = (shinyPetsLevels: any, worldIndex: any, petIndex: any) => {
+  const progress = Number(shinyPetsLevels?.[worldIndex]?.[petIndex]);
+  if (!Number.isFinite(progress) || progress <= 0) return 0;
   const shinyLevel = new Array(19).fill(1)?.reduce((sum, _, index) => shinyPetsLevels?.[worldIndex]?.[petIndex] > Math.floor((1 + Math.pow(index + 1, 1.6)) * Math.pow(1.7, index + 1))
     ? index + 2
     : sum, 0)
@@ -230,7 +236,7 @@ const getBaseBreedChance = (breedingRaw: any, worldIndex: any, petIndex: any) =>
 const getBreedingMulti = (account: any, breedingRaw: any, worldIndex: any, petIndex: any, unlockedBreedingMulti: any, totalKitchenLevels: any) => {
   const first = 1 + Math.ceil(100 * Math.pow((breedingRaw?.[(4 + worldIndex) | 0]?.[petIndex] ?? 0) / 10, 1.9)) / 100;
   const second = (unlockedBreedingMulti?.second
-    ? 1 + Math.log(Math.max(1, Math.pow(breedingRaw?.[(worldIndex + 13) | 0][petIndex] + 1, 0.725)))
+    ? 1 + Math.log(Math.max(1, Math.pow((breedingRaw?.[(worldIndex + 13) | 0]?.[petIndex] ?? 0) + 1, 0.725)))
     : 1)
   const third = (unlockedBreedingMulti?.third
     ? 1 + (0.25 * Math.pow(breedingRaw?.[0]?.[0], 1.4) + Math.pow(breedingRaw?.[0]?.[0] / 3, 6))
@@ -472,8 +478,9 @@ export const calcShinyLvMulti = (account: any, characters: any) => {
 }
 
 export const getEggsPowerRange = (characters: any) => {
-  const highestBreedingBM = getCharacterByHighestSkillLevel(characters, CLASSES.Wind_Walker, 'breeding');
-  const breedingLevel = highestBreedingBM?.skillsInfo?.breeding?.level ?? 0;
+  // Breeding level is account-wide; hatching does not require a Hunter-family character.
+  const highestBreeding = getCharacterByHighestSkillLevel(characters, null, 'breeding');
+  const breedingLevel = highestBreeding?.skillsInfo?.breeding?.level ?? 0;
   // Game maxes this talent across all characters (getbonus2(1, 373, -1)); decayMulti already includes the base 1
   const baseTalentBonus = getHighestTalentAcrossCharacters(characters, 'CURVITURE_OF_THE_PAW', getBestActiveCharacter(characters));
   const base = Math.pow(4 * breedingLevel + Math.pow(breedingLevel / 2, 3), 0.85);

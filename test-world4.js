@@ -4,3 +4,5 @@ assert.equal(decode('rift',{Rift:[39]},c).filter(r=>r.value===1).length,7);asser
 const pets=decode('breeding',{Pets:[['mushG',0,100],['Blank',0,0]],PetsStored:JSON.stringify([['frogG',2,200]])},c);assert.equal(pets.length,2);assert.equal(pets[0].name,'Green Mushroom');assert.equal(pets[1].ability,'Forager');assert.equal(pets[1].value,200);
 for(let i=0;i<c.MealINFO.length;i++)assert(fs.existsSync('assets/CookingM'+i+'.png'));
 console.log('World 4: meal levels and icons, Rift thresholds, pet records and missing saves OK');
+
+assert.equal(decode('breeding',{Pets:[['none',0,10],['mushG',0,'invalid'],['mushG',0,null],['mushG',0,Infinity]]},c).length,0,'Empty and invalid pet records are excluded');

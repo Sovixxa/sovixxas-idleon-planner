@@ -38,3 +38,24 @@ Sources reviewed September 24, 2026:
 Tests cover arena slot thresholds, unique combat species, inventory allocation,
 missing copies, adjacent-row dependencies, worker save mapping, navigation,
 lineup/strategy controls and desktop/mobile overflow.
+
+## Full breeding audit — October 11, 2026
+
+Compared local game catalogs and executed N.js Breeding/PetStuff handlers against
+the shared parser. Corrected multiplier unlock slots to 3/5/7/10; fight power now
+uses Blooming Axe's 6% per level rather than territory index. Vault affects
+foraging speed, and Sushi's pet combat damage does not multiply foraging fight
+power. Fastidious requires a combat pet; empty slots do not count as combat pets
+for Flashy. The top territory uses the client's exact three-row Tsar scan.
+Trekking requirements use the unshifted catalog index, including the first row
+after the arena. Egg power uses the shared skill level for any character class.
+
+Opticular substitution now preserves Miasma's distinct-ability condition instead
+of introducing a second Forager. Missing arena records show Unknown. Empty or
+non-finite pet records are excluded. The released species/ability catalogs agree
+with the installed game. Species availability also respects the saved breeding-world unlock count, so placeholder pets in locked worlds are excluded. Teams remain conditional templates, not battle or
+spice-per-hour simulations.
+
+Validation: `npm run audit:breeding-client` runs 1,485 native comparisons plus EXP
+handler tests. `npm run test:breeding` covers presentation, imports, recommendation
+constraints, navigation and desktop/mobile browser behavior.

@@ -52,6 +52,8 @@
   function improveOpticular(data,slots,used){
     const index=slots.findIndex(s=>s.gene==='Opticular');if(index<0)return slots;
     const current=slots[index],others=slots.filter((_,i)=>i!==index);
+    // A second Forager would break Miasma's distinct-ability requirement.
+    if(others.some(s=>s.gene==='Miasma')&&others.some(s=>s.gene==='Forager'))return slots;
     const active=current.pet&&others.every(s=>s.pet&&s.pet.power<=current.pet.power);
     const score=current.pet?current.pet.power*(active?3:1):0;
     const candidate=data.inventory.filter(p=>p.gene==='Forager'&&!used.has(p.key)).sort((a,b)=>b.power-a.power)[0];

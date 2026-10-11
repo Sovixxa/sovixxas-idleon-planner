@@ -13,3 +13,15 @@ const chance=Math.ceil(12*10**.698)/100;
 assert(Math.abs(refunds.hatches/150000-(1+chance)/(1-chance))<.06);
 assert.equal(m.optimize({...o,rarity:0},1000).best.target,1);
 console.log('Breeding EXP: formula, imports, locked rarities, multiplier invariance and Shattershell expected return passed.');
+
+assert.equal(m.fromSave({Breeding:[[],[17,17,18,16,1,0,0,0]],OptLacc:Array.from({length:118},(_,i)=>i===117?4:0)}).pets,68,'Unreleased world placeholder is not a discovered pet');
+assert.equal(m.fromSave({Breeding:[[],[17,17,18,1,0,0,0,0]]}).pets,52,'Only the three available worlds count before W4 pet breeding unlocks');
+
+// Firebase exports split Tasks into TaskZZ0, TaskZZ1, TaskZZ2, etc.
+const capacityFixture=JSON.parse(require('node:fs').readFileSync('../example json.txt','utf8'));
+assert.equal(m.fromSave(capacityFixture).capacity,15,'3 base + 5 upgrade + 5 gem shop + 2 merit');
+const splitTask=[[],[],[],[0,0,2]];
+for(const exported of [splitTask,JSON.stringify(splitTask)]){
+ assert.equal(m.fromSave({Breeding:[[0],[1],[0,0,5]],GemItemsPurchased:Array.from({length:120},(_,i)=>i===119?5:0),TaskZZ2:exported}).capacity,15);
+}
+assert.equal(m.fromSave({Tasks:[[],[],splitTask],TaskZZ2:[[],[],[],[0,0,9]]}).capacity,5,'Canonical Tasks takes precedence');

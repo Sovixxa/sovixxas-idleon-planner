@@ -14,3 +14,24 @@ assert.equal(Object.keys(b.ProgressionModels.build(new Map())).length,0);
 const models=b.BonusSystems.systems(save),emp=models.get('emperor');for(let kill=0;kill<96;kill++){const clone={...emp,emperorKills:kill};const rows=b.ProgressionModels.build(new Map([['emperor',clone]])).emperorBonuses;assert.equal(rows.filter(x=>x.next).length,1,'exactly one next-kill reward at '+kill);assert.equal(rows.filter(x=>x.second).length,1,'exactly one second-kill reward at '+kill);for(const r of rows){assert.equal(r.levelTwo,r.levelOne+(r.second?1:0));assert(!/undefined|NaN|[{}$]/.test(r.afterTwo));if(!r.second)assert.equal(r.afterTwo,r.afterOne);}}
 const shell=fs.readFileSync('index.html','utf8');assert(shell.includes('progression-pages.js'));assert(!shell.includes('id="navRefinery"'));assert(shell.indexOf('id="navUpgradeVault"')>shell.indexOf('<span>Misc</span>'));assert(shell.indexOf('id="navUpgradeVault"')<shell.indexOf('<span>World 1</span>'));
 console.log('Progression pages: syntax, worker rows, Tome caps, Slab discovery, 96 Emperor projections, sprites and navigation pass.');
+
+const breedingModels=new Map([['breeding',models.get('breeding')]]),unknown=b.ProgressionModels.build(breedingModels,{});
+assert(unknown.petArena.every(r=>r.status==='unknown'&&r.level==='Unknown'));
+assert(unknown.shinyPets.every(r=>r.status==='unknown'&&r.pets.every(p=>p.level===null)));
+const rawData=structuredClone(save.data||save),breedRaw=typeof rawData.Breeding==='string'?JSON.parse(rawData.Breeding):rawData.Breeding;
+breedRaw[22][0]=3;rawData.Breeding=breedRaw;
+const boundary=b.ProgressionModels.build(breedingModels,{data:rawData});
+assert.equal(boundary.shinyPets.flatMap(g=>g.pets).find(p=>p.id==='mushG').level,1,'At the threshold the client still reports Lv 1');
+const group=boundary.shinyPets.find(g=>g.pets.some(p=>p.id==='mushG'));
+assert(group.effect.includes('183%'),'Combined shiny speed recalculates from corrected individual levels');
+delete breedRaw[22][0];
+const incomplete=b.ProgressionModels.build(breedingModels,{data:rawData}).shinyPets.find(g=>g.bonusId===16);
+assert.equal(incomplete.status,'unknown');assert(incomplete.effect.includes('incomplete'));
+const opts=Array(90).fill(0);opts[89]=15;
+const aliasRows=b.ProgressionModels.build(breedingModels,{OptLacc:JSON.stringify(opts)});
+assert.equal(aliasRows.petArena.filter(r=>r.status==='maxed').length,5);
+console.log('Breeding presentation: unknown arena data, shiny threshold equality, aggregate reconciliation, missing records and option aliases pass.');
+
+const lockedWorld=b.ProgressionModels.build(breedingModels,{Breeding:breedRaw,OptLacc:opts});
+assert(lockedWorld.breedingTeams[0].species.filter(p=>p.world===4).every(p=>p.unlocked===false));
+assert(lockedWorld.shinyPets.flatMap(g=>g.pets).filter(p=>p.world===4).every(p=>p.unlocked===false));

@@ -2,12 +2,15 @@
 
 Breeding → Shiny Pets shows species-level saved levels, current/per-level bonuses,
 general progression tiers and a staged recommendation. The existing aggregate
-bonuses remain available below the list. Tiers and levels 2/5/10/15 are editorial
+bonuses appear above the list. Tiers and levels 2/5/10/15 are editorial
 planning benchmarks, not game unlocks or a calculated return-on-time optimizer.
-The existing breeding engine models shiny levels through level 20.
+Shiny levels are calculated from raw progress through level 20. A level advances
+only after progress is strictly greater than its threshold, matching the client.
 
 Data: `ProgressionModels` serializes pet records from the existing breeding model.
 Raw `Breeding[22 + world][indexInWorld]` presence distinguishes unknown from zero;
+combined bonuses are recomputed from these same levels. Incomplete groups show
+an unavailable total rather than silently counting missing records as zero;
 `Breeding[1][world]` is the species unlock count. Released W1–W4 species only:
 the upstream catalog also includes `_` placeholders, which are excluded.
 No save is modified. No ETA or verified talent readiness is claimed.
@@ -23,3 +26,8 @@ and active farming from an offline AFK kill estimate.
 
 Validation: `node test-shiny-planner.js`, `node test-shiny-browser.js`,
 `node test-progression-pages.js`, `node test-world4.js`.
+
+October 11 recheck: all 19 level boundaries tested below, at and above the exact
+threshold against the game handler. Missing progress grants no phantom shiny
+levels in shared calculations. The kill-trigger guide matches MonsterKill's
+50% roll and AFKcode("Pets", 3) call, gated by Whale Wallop and its enhancement.

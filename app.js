@@ -85,7 +85,7 @@
     statConnections:{title:'Game Connections',world:'Misc',copy:''},
     shadowCaps:{title:'Shadow Caps',world:'Misc',copy:''},
     communitySheets:{title:"Community Sheets",world:'Misc',copy:''},
-    pocketWatches:{title:'PocketWatches',world:'Misc',copy:''},
+    pocketWatches:{title:'Pocket Watches',world:'Misc',copy:''},
     accountReview:{title:'Account Review',world:'Optimizers',copy:'Review saved progress and plan your next account milestones.'},
     bribes:{title:"Bribes",world:"World 1",copy:"Purchased bribes and account bonuses."},
     classExp:{title:'Class EXP Optimizer',world:'Optimizers',copy:'Find Class EXP upgrades and compare measured EXP per hour.'},
