@@ -67,7 +67,8 @@
     "test:release": "node test-release.js && node test-release-browser.js && node test-release-import-races.js && node test-live-sync-release.js",
     "test:scenarios": "node run-scenario-audit.cjs",
     "test:breeding": "node test-world4.js && node test-breeding-exp.js && node test-breeding-exp-bonuses.js && node test-breeding-teams.js && node test-shiny-planner.js && node test-progression-pages.js && node test-breeding-exp-browser.js && node test-breeding-teams-browser.js && node test-shiny-browser.js",
-    "audit:breeding-client": "node test-breeding-audit.js && node test-breeding-exp-client.js"
+    "audit:breeding-client": "node test-breeding-audit.js && node test-breeding-exp-client.js",
+    "test:clamworks": "node test-clamworks-optimizer.js && node test-clamworks-browser.js"
   },
   "devDependencies": {
     "esbuild": "0.28.1",
