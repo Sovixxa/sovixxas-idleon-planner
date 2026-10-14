@@ -4,7 +4,7 @@ const source=fs.readFileSync('app.js','utf8');
 const navigation=source.slice(source.indexOf('  function selectSideNav('),source.indexOf("  $('tabOptimizer').addEventListener"));
 const nodes=new Map();
 const $=id=>{if(!nodes.has(id))nodes.set(id,{classList:{values:new Set(),toggle(key,on){on?this.values.add(key):this.values.delete(key);},add(key){this.values.add(key);},remove(key){this.values.delete(key);}}});const node=nodes.get(id);node.setAttribute=()=>{};node.removeAttribute=()=>{};return node;};
-const context={$,state:null,updateRoute(){},practice:null,SKILL_PAGES:{},document:{querySelector:()=>null,querySelectorAll:()=>[]},renderWorldPage(){},selectWorkspaceTab(){}};
+const context={$,location:{hash:""},history:{replaceState(){}},state:null,updateRoute(){},practice:null,SKILL_PAGES:{},document:{querySelector:()=>null,querySelectorAll:()=>[]},renderWorldPage(){},selectWorkspaceTab(){}};
 context.window=context;
 vm.createContext(context);vm.runInContext(navigation,context);
 for(const name of ['communitySheets','credits','shadowCaps','loadouts']){

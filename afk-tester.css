@@ -1,0 +1,12 @@
+.afk-controls,.afk-fields{display:flex;flex-wrap:wrap;gap:14px;align-items:end}.afk-tester label{display:grid;gap:6px;flex:1;min-width:130px}.afk-tester input,.afk-tester select{box-sizing:border-box;width:100%;min-width:0;padding:10px;border:1px solid var(--border,#42516a);border-radius:8px;background:var(--panel,#172131);color:inherit}.afk-roster{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,360px),1fr));gap:14px;margin:18px 0}.afk-character{padding:16px;border:1px solid var(--border,#42516a);border-radius:12px}.afk-character h4{margin:0 0 14px}.afk-fields label{min-width:90px}.afk-tester [data-afk-summary]{padding:8px 14px;margin-top:16px;border-left:3px solid #69ceb2;background:#69ceb210}.afk-tester details{margin-top:18px}.afk-tester input:focus-visible{outline:2px solid #69ceb2;outline-offset:2px}
+
+.afk-tester select option{background:#172131;color:#fff}.afk-note{padding:10px 12px;border-left:3px solid #b29ade;background:#b29ade10}
+/* Keep shared form styles from offsetting the calculator controls. */
+.afk-controls>label{flex:1 1 200px;min-width:0;margin:0;padding:0;gap:8px;line-height:1.35}
+.afk-controls>label>input,.afk-controls>label>select,.afk-controls>[data-afk-reset]{height:44px;min-height:44px;margin:0;font:inherit;line-height:1.25}
+.afk-controls>label>input,.afk-controls>label>select{display:block;padding:10px 12px}
+.afk-controls>label>select{appearance:none;padding-right:36px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cpath d='m4 6 4 4 4-4' fill='none' stroke='%23c9bdd3' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center}
+.afk-controls>[data-afk-reset]{align-self:flex-end;padding:10px 14px;white-space:nowrap}
+@media(max-width:600px){.afk-controls>label{flex-basis:100%}.afk-controls>[data-afk-reset]{width:100%}}
+
+.afk-node-label{margin:0 0 14px}.afk-node-label select{margin:0;max-width:100%;font:inherit}

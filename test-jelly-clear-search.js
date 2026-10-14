@@ -86,6 +86,23 @@ assert(E.isLegalLayout(unlocked,improved));assert.deepEqual(E.rawCounts(improved
 assert(E.layoutScore(unlocked,improved).withJellyUpgrades>=E.layoutScore(unlocked,seed).withJellyUpgrades);
 console.log('Jelly occupancy audit: full clear candidates, preserved baseline/save, 3/6/9 seeds and full-board relocation pass.');
 
+// Packed boards need coordinated replacement: ordinary relocation cannot move
+// anything on a board tiled entirely with non-Amoeba pieces.
+let packed=[];
+for(const p of idx.placements.filter(p=>p.type===1))if(!packed.some(q=>q.cells.some(c=>p.cells.includes(c))))packed.push(p);
+packed=E.fillEmptySlots(unlocked,packed);
+const packedBefore=JSON.stringify(packed),mixes=new Set(),patchKeys=new Set();
+for(let n=1;n<=60;n++){
+ const next=E.fillEmptySlots(unlocked,E.rebuildLayoutPatch(unlocked,idx,E.seededRng(n*7919),packed));
+ assert(E.isLegalLayout(unlocked,next),'patch replacement respects footprints, unlocks and Virus cap');
+ assert.equal(E.layoutScore(unlocked,next).filledSlots,idx.slots.length);
+ mixes.add(JSON.stringify(E.rawCounts(next)));patchKeys.add(E.arrangementKey(next));
+}
+assert.equal(JSON.stringify(packed),packedBefore,'patch search preserves its parent');
+assert(mixes.size>5&&patchKeys.size>10,'crowded parents explore multiple mixes and placements');
+assert.deepEqual(E.rebuildLayoutPatch(unlocked,idx,E.seededRng(17),packed),E.rebuildLayoutPatch(unlocked,idx,E.seededRng(17),packed));
+console.log('Jelly patch search: diverse crowded-board replacements, legality, occupancy and reproducibility pass.');
+
 // The ability remains usable in Critical Condition, beyond the normal timer.
 const critical=E.cloneState(state);critical.upgrades[36]=1;
 const starts=E.steroidStartCandidates(critical,100);

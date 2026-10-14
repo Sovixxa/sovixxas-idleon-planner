@@ -1,0 +1,15 @@
+const fs=require('fs'),vm=require('vm'),assert=require('node:assert/strict');
+const A=require('./afk-tester'),S=require('./afk-save-model');
+const ctx={console,structuredClone};vm.createContext(ctx);vm.runInContext(fs.readFileSync('prayer-math-engine.js','utf8'),ctx);
+const raw=JSON.parse(fs.readFileSync('../example json.txt','utf8')),before=JSON.stringify(raw),result=S.calculate(raw,ctx.PrayerMath);
+assert.equal(JSON.stringify(raw),before,'Must not mutate imported save');
+for(const skill of A.skills.filter(s=>s.balloons))assert(result[0][skill.id].multiplier>0,skill.name+' multiplier');
+assert(result[0][20].rate>0);
+assert(result[0][0].rate>0);assert(result[0][1].multiplier>1);assert.equal(result[0][17].multiplier,undefined);assert.equal(result[0][19].rate,undefined);
+const plan={rows:[{id:0,rate:'42',multiplier:'',overrides:{rate:true}}]};A.applyAuto(plan,0,{auto:result});assert.equal(plan.rows[0].rate,'42');assert.equal(Number(plan.rows[0].multiplier),result[0][0].multiplier);
+const reset={rows:[{id:0,rate:'',multiplier:''}]};A.applyAuto(reset,0,{auto:result});assert.equal(Number(reset.rows[0].rate),result[0][0].rate);
+const stub={parseData:()=>({characters:[{playerId:0,afkType:'FIGHTING',targetMonster:'test',mapIndex:1,currentMap:'Test'}],account:{}}),getClassExpMulti:()=>({value:2}),getSkillExpMulti:()=>({value:3}),getMaxDamage:()=>({killsPerHour:10,afkGains:.5,survivability:80}),monsters:{test:{ExpGiven:100}}};
+const d=Object.fromEntries(['CharacterClass_','PVStatList_','EquipOrder_','Lv0_','Prayers_','CardEquip_'].map(k=>[k+'0',[]]));
+assert.equal(S.calculate({data:d},stub)[0][0].rate,800);
+delete d.PVStatList_0;assert.match(S.calculate({data:d},stub)[0][0].error,/PVStatList/);
+console.log('AFK save calculations: real save, combat formula, missing fields, unsupported balloons, immutability, manual overrides and reset passed.');

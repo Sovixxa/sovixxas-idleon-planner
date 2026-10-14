@@ -24,7 +24,7 @@ function draw(host,key,raw,model){const cfg=M.configs[key],royal=key==='royalArm
 }
 function mountTabs(host,key,nav,raw,model){
  const page=host.querySelector('.mc-page'),tabs=document.createElement('nav');tabs.className='mc-subtabs';tabs.setAttribute('role','tablist');tabs.setAttribute('aria-label',M.configs[key].title+' sections');
- const sections=[['upgrades','Upgrades'],['optimizer','Next Purchase Optimizer'],['bonuses','Bonuses & multipliers'],...(key==='royalArmory'?[['verminous','Verminous'],['outpostEta','Outpost ETA'],['talentPlan','Talent plan']]:[])],panels={};
+ const sections=[['upgrades','Upgrades'],['optimizer','Next Purchase Optimizer'],['bonuses','Bonuses & multipliers'],...(key==='royalArmory'?[['rankRewards','Rank rewards'],['verminous','Verminous'],['outpostEta','Outpost ETA'],['talentPlan','Talent plan']]:[])],panels={};
  for(const [id,label] of sections){const panel=document.createElement('section');panel.className='mc-tab-panel';panel.id='mc-'+key+'-'+id+'-panel';panel.setAttribute('role','tabpanel');panel.setAttribute('aria-labelledby','mc-'+key+'-'+id+'-tab');panel.tabIndex=0;panels[id]=panel;page.append(panel);
  const button=document.createElement('button');button.type='button';button.id='mc-'+key+'-'+id+'-tab';button.dataset.mcTab=id;button.textContent=label;button.setAttribute('role','tab');button.setAttribute('aria-controls',panel.id);tabs.append(button);}
  nav.after(tabs);
@@ -32,11 +32,26 @@ function mountTabs(host,key,nav,raw,model){
  const planner=host.querySelector('.mc-planner');if(planner)panels.optimizer.append(planner);
  const empty=host.querySelector('.mc-empty');if(empty){panels.upgrades.append(empty);panels.optimizer.append(empty.cloneNode(true));}
  if(panels.verminous)renderVerminous(panels.verminous,raw);
+ if(panels.rankRewards)renderRankRewards(panels.rankRewards,raw);
  let outpostMounted=false,talentsMounted=false,bonusesMounted=false;
  const buttons=[...tabs.querySelectorAll('button')];
  function select(id){if(id==='bonuses'&&!bonusesMounted){bonusesMounted=true;renderBonuses(panels.bonuses,key,raw,model);}if(id==='talentPlan'&&!talentsMounted){talentsMounted=true;root.OutpostETA.renderTalents(panels.talentPlan,raw);}if(id==='outpostEta'&&!outpostMounted){outpostMounted=true;root.OutpostETA.render(panels.outpostEta,raw);}selectedTabs[key]=id;for(const button of buttons){const active=button.dataset.mcTab===id;button.setAttribute('aria-selected',String(active));button.tabIndex=active?0:-1;panels[button.dataset.mcTab].hidden=!active;}}
  buttons.forEach((button,index)=>{button.onclick=()=>select(button.dataset.mcTab);button.onkeydown=event=>{let next;if(event.key==='ArrowRight')next=(index+1)%buttons.length;else if(event.key==='ArrowLeft')next=(index+buttons.length-1)%buttons.length;else if(event.key==='Home')next=0;else if(event.key==='End')next=buttons.length-1;else return;event.preventDefault();buttons[next].focus();select(buttons[next].dataset.mcTab);};});
  select(selectedTabs[key]||'upgrades');
+}
+function renderRankRewards(panel,raw){
+ const upgrades=root.RoyalArmory.model(raw).upgrades;
+ const bonus=id=>upgrades.find(x=>x.id===id)?.bonus;
+ const perRank=(id,unit)=>bonus(id)==null?'Bonus per rank unknown':`+${fmt(bonus(id))}${unit} per rank`;
+ const trade=bonus(71),interval=trade>=1?Math.round(11-trade):null;
+ const rows=[
+  ['Trading','Trader','+1 upgrade point per rank',interval?`Extra +1 point every ${interval} ranks.`:trade==null?'Import a save to see extra-point milestones.':'Armory upgrades unlock extra-point milestones.','Spend on Barracks, Logistics, or Education.'],
+  ['Intel','Surveyor',perRank(72,'% rank EXP'),'All five rank bars gain EXP faster.','Applies to this outpost.'],
+  ['Command','Commander',perRank(73,'% collection rate'),'Also adds permanent units that use no assigned-unit slots.','Worker: rank 1 · Trader: rank 2 · Guard: rank 3 · Surveyor: rank 4. Repeat every 4 ranks.'],
+  ['Military','Knight',perRank(74,'px range'),'Connect to resources and outposts farther away.','Total connection range is capped at 999px.'],
+  ['Purity','Priest','Rank 1 → map purified',`+${fmt(200+(bonus(1)??0))}% collection rate${bonus(1)==null?' before Armory boosts':''} · +10 Regal mobs.`,'One-time unlock. Higher Purity ranks give no extra purification. See Purified Bonuses in game for all rewards.']
+ ];
+ panel.innerHTML=`<header><p class="eyebrow">Royal Guardian · Outposts</p><h3>Rank rewards</h3><p>Rewards for each outpost, using your saved Armory bonuses.</p></header><div class="mc-rank-rewards">${rows.map(([name,unit,effect,current,note],index)=>`<article class="mc-rank-reward" data-rank-type="${index}"><h4>${name}</h4><div><p><strong>${esc(unit)}</strong> → ${esc(name)} rank EXP</p><strong class="mc-rank-effect">${esc(effect)}</strong><p>${esc(current)}</p><p class="mc-rank-note">${esc(note)}</p></div></article>`).join('')}</div><p class="mc-rank-note"><strong>Other units:</strong> Workers boost collection rate. Guards increase connection range. Militia clear monsters from uncontrolled maps. After unlocking Peacetime Militia, each Militia stationed at a built outpost earns 50% of a Knight’s EXP/hr on that same outpost, credited to its highest rank. This scales with Kingsman Knights, Stronk Rank, and outpost EXP bonuses such as Intel rank, Greater Education, Glorification, Support Camps, and Jelly bonuses.</p><details class="mc-rank-formulas"><summary>How rank totals are calculated</summary><p>Trading: 1 point × rank${interval?`, plus 1 extra point for every ${interval} completed ranks`:''}.</p><p>Intel: EXP multiplier = 1 + (rank × bonus per rank ÷ 100).</p><p>Command: collection bonus = rank × bonus per rank. Units start at ranks 1 / 2 / 3 / 4, then 5 / 6 / 7 / 8, and so on.</p><p>Military: added range = rank × pixels per rank.</p></details>`;
 }
 function bonusIcon(row,key){
  const sources=[[/bubble|vial|alchemy/i,'Alchemy'],[/gaming/i,'Gaming'],[/emperor/i,'EmperorBonuses'],[/killroy/i,'Killroy'],[/merit/i,'Meritocracy'],[/button/i,'Button'],[/lab|jewel/i,'Lab'],[/spelunk/i,'Spelunking']];

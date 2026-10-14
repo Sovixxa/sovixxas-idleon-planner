@@ -131,3 +131,5 @@ export {ninjaExtraInfo as dropBeanstalkOrder, vials as dropVialCatalog, summonin
 export {carryBags as dropCarryBags} from "./vendor/idleon-toolbox/data/website-data";
 
 export {getCharacterStatAccount} from './vendor/idleon-toolbox/parsers/world-2/voteBallot';
+
+export {getGatheringRates,harvestChance,gatheringSpeed,gatheringActions,fishingPercentages} from './afk-gathering-math';

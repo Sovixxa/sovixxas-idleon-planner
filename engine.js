@@ -834,6 +834,27 @@ const VERSION='0.9.9-alchemy-bubbles';
     const moved=[...rest.filter(p=>!replacement.cells.includes(p.anchor)),{type:replacement.type,anchor:replacement.anchor,cells:replacement.cells.slice()}];
     return full?fillEmptySlots(state,moved):moved.sort((a,b)=>a.anchor-b.anchor);
   }
+  function rebuildLayoutPatch(state,index,rng,arr){
+    // Force a new shape into a crowded region, evicting whole overlapping
+    // pieces. Unlike scattered deletion this always opens a usable footprint.
+    const choices=index.placements.filter(p=>!arr.some(q=>q.type===p.type&&q.anchor===p.anchor));
+    if(!choices.length)return arr;
+    const target=choices[Math.floor(rng()*choices.length)],patch=new Set(target.cells);
+    // Sometimes rebuild its neighbours as well to escape a local optimum in
+    // support placement. Use coordinates so a row edge never wraps around.
+    if(rng()<.5)for(const c of target.cells){
+      const col=c%COLS,row=Math.floor(c/COLS);
+      if(col>0)patch.add(c-1);if(col<COLS-1)patch.add(c+1);
+      if(row>0)patch.add(c-COLS);if(row<ROWS-1)patch.add(c+COLS);
+    }
+    let kept=arr.filter(p=>!p.cells.some(c=>patch.has(c)));
+    if(target.type===5&&kept.filter(p=>p.type===5).length>=virusLimit(state)){
+      const viruses=kept.filter(p=>p.type===5),remove=viruses[Math.floor(rng()*viruses.length)];
+      kept=kept.filter(p=>p!==remove);
+    }
+    kept=[...kept,{type:target.type,anchor:target.anchor,cells:target.cells.slice()}];
+    return rng()<.5?generateRoleAwareLayout(state,index,rng,kept):generateLayout(state,index,rng,kept);
+  }
   function localImproveLayout(state,index,rng,arr,maxSteps=6,deadline=Infinity){
     // A random layout is good at discovering a cell mix, but poor at arranging a
     // discovered mix around Organelle, Virus and Proximity cells.  This bounded
@@ -943,7 +964,7 @@ const VERSION='0.9.9-alchemy-bubbles';
       const removeCount=1+Math.floor(rng()*Math.max(2,parent.arr.length*.15));
       const removed=new Set();for(let n=0;n<removeCount;n++)removed.add(Math.floor(rng()*parent.arr.length));
       const kept=parent.arr.filter((_,i)=>!removed.has(i));
-      let child=i%2===0?relocateLayout(state,index,rng,parent.arr):generateLayout(state,index,rng,kept);
+      let child=i%3===0?rebuildLayoutPatch(state,index,rng,parent.arr):i%3===1?relocateLayout(state,index,rng,parent.arr):generateLayout(state,index,rng,kept);
       if(i%3!==0)child=localImproveLayout(state,index,rng,child,2,start+timeMs);
       const c=add(child);screen(c);
       if(i%10===0)report('refining',{tested:simulated,bestClearRate:screened[0].stats.clearRate});
@@ -1131,5 +1152,5 @@ const VERSION='0.9.9-alchemy-bubbles';
   return {VERSION,COMBAT_MODEL_VERSION,bonusAudit,bloodcellBonuses,arcadeBloodcellBonus,dpsBloodcellMultiplier,researchGridBonus,cellDetails,CELL_PASSIVES,CELL_ABILITIES,FEVER_NAMES,optimizeOperation,clearConfidence,COLS,ROWS,BOARD_SIZE,FPS,UNIT_NAMES,UNIT_IMG_DIMS,UNIT_VISUAL_OFFSET,UPGRADE_META,UPGRADE_ORDER,PLOTS,SHAPE_OFFSETS,SHAPE_COORDS,BULLET_LAUNCH,PROXIMITY_CORES,BLOCKED_CENTER,SUSHI_ROG_BONUS,
     parseInput,makeState,cloneState,upgradeQty,unitsOwned,virusLimit,feverUnlocked,critUnlocked,steroidUnlocked,reviveCount,bossHP,bossTime,bossAtkCD,cellExpReq,cellExpMultiplier,canLevelCells,obstructionTier,bundleFlag,slotPurchasesLeft,plotCells,plotLabel,
     unlockedSlots,footprint,placementsForState,arrangementFromBoard,rawCounts,effectiveCounts,rawArray,paletteCellDamageBonus,companionGridBonus,dreamCloudBonus,gridAllMultiplier,gridCellDamageBonus,externalDamageStatus,sushiUniqueCount,sushiRogBonus,organelleSpeedMultiplier,organelleBoosted,infectedSlots,combatModel,jellyDamageMultiplier,layoutScore,backInEase,projectileLaunchPosition,projectileHitDelayFrames,simulateOne,simulateMany,autoDamageScale,calibrateToObservedClearTime,steroidStartCandidates,optimizeSteroidStart,optimizeTimed,
-    upgradeCost,upgradeLevelReq,upgradeCandidates,upgradeRoadmap,planUpgradePurchases,findUpgradeTarget,recommendNextPlot,arrangementGrid,formatNumber,formatTime,arrangementKey,isLegalLayout,fillEmptySlots,relocateLayout,localImproveLayout,generateLayout,generateRoleAwareLayout,generateSupportLayout,generateBreakpointLayout,enumerateMixes,buildPlacementIndex,tileMix,timedObjective,seededRng};
+    upgradeCost,upgradeLevelReq,upgradeCandidates,upgradeRoadmap,planUpgradePurchases,findUpgradeTarget,recommendNextPlot,arrangementGrid,formatNumber,formatTime,arrangementKey,isLegalLayout,fillEmptySlots,relocateLayout,rebuildLayoutPatch,localImproveLayout,generateLayout,generateRoleAwareLayout,generateSupportLayout,generateBreakpointLayout,enumerateMixes,buildPlacementIndex,tileMix,timedObjective,seededRng};
 });

@@ -1,0 +1,21 @@
+const assert=require('node:assert/strict'),fs=require('node:fs'),A=require('./afk-tester');
+const row={level:10,progress:0,rate:100,savedLevel:10,savedRequirement:250,map:1,candyCap:Number.MAX_VALUE};
+const calc=(r=row,candy='Timecandy1',skill=0)=>A.calculate(r,11,{mode:'candy',skill,candy});
+assert.equal(calc().candies,3);assert.equal(calc().candyExp,100);assert.equal(calc().wasted,.5);
+assert.equal(calc(row,'Timecandy3').candies,1);
+assert.equal(calc({...row,savedRequirement:2500,candyCap:10},'Timecandy6').candies,3);
+assert.equal(calc({...row,savedRequirement:2500,candyCap:10},'Timecandy6').candyExp,1000);
+for(const skill of [10,12,14,17,19,20])assert(calc(row,'Timecandy1',skill).error);
+for(const map of [120,166,200,216,299,300])assert(calc({...row,map}).error);
+for(const map of [1,51,101,151,201,251])assert(!calc({...row,map}).error);
+const random=calc(row,'Timecandy7');assert.equal(random.candyBest,1);assert.equal(random.candyWorst,16);assert.equal(random.candyRandom,true);
+assert(calc({...row,candyCap:undefined}).error);assert(calc({...row,rate:0}).error);
+assert.equal(A.candyStock({rawData:{ChestOrder:['Timecandy1'],ChestQuantity:[4],InventoryOrder_0:JSON.stringify(['Timecandy1','Timecandy6']),ItemQuantity_0:JSON.stringify([2,3])}}).Timecandy1,6);
+assert.equal(A.candyStock({}),null);
+const source=fs.readFileSync('../audit/N.js','utf8');
+for(const c of A.candyTypes){const at=source.indexOf('P.addNewQuest("'+c.id+'",e)');assert(at>0);const item=source.slice(source.lastIndexOf('t.h.displayName=',at),at);if(c.min===c.max)assert(item.includes('t.h.ID='+c.min*60+','),c.id+' duration');}
+const handler=source.slice(source.indexOf('"TIME_CANDY"=='),source.indexOf('"TIME_CANDY"==')+8500);
+for(const map of [216,200,166,120])assert(handler.includes(map+'!=a.engine.getGameAttribute("CurrentMap")'));
+assert(handler.includes('299>a.engine.getGameAttribute("CurrentMap")'));assert(handler.includes('"Cooking"!=a.engine.getGameAttribute("AFKtarget")'));assert(handler.includes('"Laboratory"!=a.engine.getGameAttribute("AFKtarget")'));
+assert(handler.includes('c.randomInt(10,1440)'));assert(handler.includes('c.randomInt(20,720)'));assert(handler.includes('-18e5'));assert(handler.includes('c.randomInt(5,10)'));
+console.log('Candy: rounding, overflow, prayer cap, saved-map restrictions, unsupported skills, random bounds, stock totals and client item definitions passed.');

@@ -1,5 +1,38 @@
 # Sovixxa’s Idleon Planner
 
+Account Review → **AFK Tester** has a skill dropdown for Class EXP and all
+20 skills. It imports the selected skill's saved levels, current EXP and current
+requirements. Combat EXP/hour is calculated for each saved combat map and loadout
+in a background worker. Mining, Chopping, Fishing and Catching calculate hourly rates
+from saved stats, equipment and bonuses, with a per-character node selector. Selecting
+a candy or balloon type recalculates the count immediately. Research also imports its
+calculated hourly rate. Other skills currently need a measured average hourly
+rate; the UI distinguishes missing save data from formulas not yet implemented.
+Sneaking shows derived EXP per successful action, and Spelunking shows its saved
+EXP multiplier, without mislabeling either as an hourly rate.
+Shared skills appear once at account level; Research uses the saved A_ResXP server
+factor. Locked skills and unavailable data are not treated as level one.
+
+Eligible skills also offer small, medium and large EXP balloon counts. Enter the
+effective EXP multiplier only if the save calculation is unavailable. Supported
+multipliers auto-fill from saved equipment, cards, talents and account bonuses; counts adjust as
+levels increase. Balloons are disabled for Construction and every skill from
+Breeding onward, including Laboratory, Sneaking and Spelunking. The UI explains
+map restrictions. Estimates exclude future rate/multiplier changes, EXP conversion
+and extra EXP awarded on level-up. Saved reductions apply to the current level.
+Each skill retains its own inputs while switching tabs, until refresh/new import.
+Manual overrides survive asynchronous calculation; reset restores save-derived
+values. Saved calculations describe the current loadout, not an optimized one.
+
+Time candy mode covers direct combat, Mining, Chopping, Fishing and Catching EXP.
+It calculates whole-item counts, EXP per item, excess time and account-wide stock
+from storage plus character inventories. Fixed candies and random duration bounds
+are supported; saved map restrictions and the 10-hour prayer cap are checked.
+Passive system gains and changing rates/food depletion are not simulated.
+
+Run `npm run test:afk-tester` for calculator and browser checks, and
+`npm run test:afk-client` for formula/balloon comparisons against `../audit/N.js`.
+
 A local account planner with compact pages for world systems, account bonuses,
 characters, quests and collections. Load a full export on Home, then select a
 system from the sidebar. Related systems use internal tabs. Jelly Operator in
@@ -277,3 +310,7 @@ The broader local regression suite uses the private `../example json.txt` fixtur
 Direct GitHub Pages does not apply `_headers`. The published HTML applies the supported CSP directives through an early meta element and sets the referrer policy. Inline HTML event handlers are blocked, while delegated image fallbacks preserve functionality. Production builds additionally hash approved script entry points, attach integrity metadata, and enforce hash-based script trust with strict-dynamic. Unexpected parser-inserted inline scripts are blocked. Trusted scripts can load calculator modules and external integrations. unsafe-eval remains for third-party compatibility; external service authentication/delivery is not verified by local smoke tests. The development server retains the simpler policy. Frame-ancestor protection, X-Frame-Options, nosniff and Permissions-Policy require HTTP headers: the local server supplies these, and `_headers` is available for compatible hosting, but GitHub Pages cannot apply them directly. A proxy or hosting change is needed for those remaining protections.
 
 The production script policy follows the static-site hash approach described at https://web.dev/articles/strict-csp and retains the evaluation allowance described in Google AdSense guidance at https://support.google.com/adsense/answer/16283098. Script trust does not add the HTTP-only framing protections missing on GitHub Pages.
+
+The old Class EXP page and redundant EXP Planning sections have been removed.
+Old `#/classExp` links redirect to Account Review. AFK Tester remains available.
+Shared EXP calculations still support Post Office and world-page information.
