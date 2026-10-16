@@ -1,4 +1,4 @@
-import {getBoatArtifactChance,getAncientChances,getEldritchChances,getSovereignChances,getOmnipotentChances,getTranscendentChances} from './vendor/idleon-toolbox/parsers/world-5/sailing';
+import {getBoatArtifactChance,getAncientChances,getEldritchChances,getSovereignChances,getOmnipotentChances,getTranscendentChances,getVerisimilitudeChances} from './vendor/idleon-toolbox/parsers/world-5/sailing';
 import {isCompanionBonusActive,getEventShopBonus} from './vendor/idleon-toolbox/parsers/misc';
 import {getSushiBonus} from './vendor/idleon-toolbox/parsers/world-7/sushiStation';
 import {getLegendTalentBonus} from './vendor/idleon-toolbox/parsers/world-7/legendTalents';
@@ -19,8 +19,8 @@ export function sailingChestChance(raw:any,artifacts:any[],a:any){
  const [treasure,islandIndex,power]=raw,island=islands[islandIndex];if(!island)return null;
  const count=(x:any)=>x.name==='The_Edge'&&isJadeBonusUnlocked(a,'Brighter_Lighthouse_Bulb')?4:x.numberOfArtifacts;
  const start=islands.slice(0,islandIndex).reduce((n:number,x:any)=>n+count(x),0),vars=a.serverVars||{};
- const thresholds=[0,getAncientChances(islandIndex,vars),getEldritchChances(islandIndex,vars),getSovereignChances(islandIndex,vars),getOmnipotentChances(islandIndex,vars),getTranscendentChances(islandIndex,vars)];
- const unlocked=[true,true,(a.rift?.[0]||0)>29,isJadeBonusUnlocked(a,'Sovereign_Artifacts'),(a.spelunking?.cavesUnlocked||0)>=1,(a.research?.gridSquares?.[109]?.level||0)>0];
+ const thresholds=[0,getAncientChances(islandIndex,vars),getEldritchChances(islandIndex,vars),getSovereignChances(islandIndex,vars),getOmnipotentChances(islandIndex,vars),getTranscendentChances(islandIndex,vars),getVerisimilitudeChances(islandIndex,vars)];
+ const unlocked=[true,true,(a.rift?.[0]||0)>29,isJadeBonusUnlocked(a,'Sovereign_Artifacts'),(a.spelunking?.cavesUnlocked||0)>=1,(a.research?.gridSquares?.[109]?.level||0)>0,(a.menagerie?.[2]?.[0]||0)>=1];
  const targets=artifacts.slice(start,start+count(island)).filter(x=>unlocked[x.acquired||0]).map(x=>{const threshold=x.acquired?thresholds[x.acquired]:x.baseFindChance;return {name:x.name.replaceAll('_',' '),tier:(x.acquired||0)+1,chance:Number.isFinite(threshold)&&threshold>0?Math.max(0,Math.min(1,power/threshold)):null};});
  const known=targets.every(x=>x.chance!==null),chance=!known?null:targets.some(x=>x.chance===1)?100:-100*Math.expm1(targets.reduce((n,x)=>n+Math.log1p(-x.chance!),0));
  return {island:island.name.replaceAll('_',' '),chance:targets.length?chance:0,done:!targets.length,targets,treasure};

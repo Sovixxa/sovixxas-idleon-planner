@@ -1,3 +1,4 @@
+import { hasMenagerieUnlock } from '@parsers/world-7/menagerie';
 import type { IdleonData, Account } from '../types';
 import { commaNotation, notateNumber, tryToParse } from '@utility/helpers';
 import { generalSpelunky, legendTalents, researchGridSquares } from '@website-data';
@@ -48,7 +49,7 @@ const parseLegendTalents = (spelunkingRaw: any, accountData: Account = {} as Acc
     const level = legendTalentsRaw?.[index] || 0;
     const bonus = legendTalent.x2 * level;
     const fever = getLegendTalentFever(index, accountData);
-    const maxLevel = Math.floor(legendTalent.x1 + (fever?.level ?? 0));
+    const maxLevel = Math.floor(legendTalent.x1 + (fever?.level ?? 0) + (hasMenagerieUnlock(accountData, 19) && [35,33,36,0,20,31,15,32,6].includes(index) ? 3 : 0));
 
     // Process description with placeholders
     const processedDescription = processLegendTalentDescription(

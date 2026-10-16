@@ -1,3 +1,4 @@
+import { getMenagerieBonus } from '@parsers/world-7/menagerie';
 import { tryToParse } from '@utility/helpers';
 import { atomsInfo } from '@website-data';
 import { getBubbleBonus } from '@parsers/world-2/alchemy';
@@ -28,7 +29,7 @@ const parseAtoms = (divinityRaw: any, atomsRaw: any, account: Account) => {
     const stampBonusReduction = getStampsBonusByEffect(account, 'Lower_Atom_Upgrade_Costs');
     const compassBonus = getCompassBonus(account, 53);
     const eventShopBonus = getEventShopBonus(account, 28) ? 20 : 0;
-    const maxLevel = Math.round(20 + (10 * (maxLevelSuperbit ? 1 : 0) + compassBonus + eventShopBonus));
+    const maxLevel = Math.round(20 + getMenagerieBonus(account, 17) + (10 * (maxLevelSuperbit ? 1 : 0) + compassBonus + eventShopBonus));
     
 
     const costObject = {

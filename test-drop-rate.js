@@ -40,7 +40,7 @@ if(fs.existsSync('../audit/N.js')){
  const attrs={DNSM:{h:{FamBonusQTYs:{h:{66:foodMulti}},AlchBubbles:{h:{GFoodz:0}},StarSigns:{h:{69:0}},CalcTalentMAP:{h:{209:0}}}},FoodSlotsOwned:1,EquipmentOrder:[[],[],['cake']],EquipmentQuantity:[[],[],[cake.amount]],ItemDefinitionsGET:{h:{cake:{h:cake}}},Ninja:Array.from({length:105},()=>[]),CustomLists:{h:{NinjaInfo:Array.from({length:30},()=>[])}}};
  attrs.Ninja[104]=[3];attrs.CustomLists.h.NinjaInfo[29]=['unused','unused','cake'];
  const zeros=overrides=>new Proxy(overrides,{get:(o,k)=>o[k]||(()=>0)});
- const game={Math,c:{asNumber:v=>Number(v)||0},h:{string:String},a:{engine:{getGameAttribute:k=>attrs[k]}},k:zeros({_customBlock_getLOG:v=>Math.log(Math.max(v,1))/2.30259}),x:zeros({}),w:zeros({}),p:zeros({}),m:zeros({_customBlock_Ninja:key=>key==='EmporiumBonus'?1:0}),q:zeros({})};
+ const game={Math,c:{asNumber:v=>Number(v)||0},h:{string:String},a:{engine:{getGameAttribute:k=>attrs[k]}},k:zeros({_customBlock_getLOG:v=>Math.log(Math.max(v,1))/2.30259}),x:zeros({}),w:zeros({}),v:zeros({}),p:zeros({}),m:zeros({_customBlock_Ninja:key=>key==='EmporiumBonus'?1:0}),q:zeros({})};
  vm.createContext(game);vm.runInContext('gold='+source.slice(start,end),game);
  const expected=game.gold('DropRatez'),actual=M.getGoldenFoodBonus('Golden_Cake',ch,account,p.characters);
  assert(Math.abs(expected-actual)<Math.abs(expected)*1e-12,'Equipped food and Beanstalk match the original client parentheses');

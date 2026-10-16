@@ -1,0 +1,17 @@
+'use strict';
+const fs=require('node:fs'),{catalogs}=require('./inspect-bonus-freshness');
+const v=catalogs(fs.readFileSync('../audit/N.js','utf8')).values,base='vendor/idleon-toolbox/data/website-data/';
+const read=n=>JSON.parse(fs.readFileSync(base+n+'.json','utf8')),write=(n,d)=>fs.writeFileSync(base+n+'.json',JSON.stringify(d,null,2)+'\n');
+const map=(rows,fields)=>rows.map(r=>Object.fromEntries(fields.flatMap((f,i)=>!f?[]:[[f.replace(/^\+/,''),f.startsWith('+')?Number(r[i]):r[i]]])));
+const shared=read('shared-data');
+for(const [key,name] of Object.entries({research:'Research',generalSpelunky:'Spelunky',ninjaExtraInfo:'NinjaInfo'}))shared[key]=v.get(name);
+const specs={arcadeShop:['ArcadeShopInfo',['effect','+x1','+x2','func',null,'bonusName']],atomsInfo:['AtomInfo',['name','+x1','+x2','+x3','+baseBonus','desc']],jadeUpgrades:['JadeUpg',['name','+x1','+x2','+x3','filler1','filler2','description']],ninjaUpgrades:['NinjaUpg',['+x0','+x1','+x2','+x3','name','+modifier','description','+x7','+x8','+x9','+x10','+x11']],legendTalents:['LegendTalents',['name','+x1','+x2',null,'bonus','description']],zenithMarket:['ZenithMarket',['name','+x1','+x2','+x3','+x4','+x5','description']],coralReef:['CoralReef',['name','+x1','+x2','+exponent',...Array.from({length:9},(_,i)=>'+x'+(i+4))]]};
+for(const [key,[name,fields]] of Object.entries(specs))shared[key]=map(v.get(name),fields);
+shared.spelunkingChapters=v.get('SpelunkChapters').map(rows=>map(rows,['name','+x1','+x2','func','+x4','+x5','+x6','+x7']));
+write('shared-data',shared);
+write('researchGridSquares',map(v.get('ResGridSquares'),['name','+maxLv','+baseBonus','+x4','+x5','description']));
+const vials=read('vials'),items=v.get('AlchemyVialItems'),chance=v.get('AlchemyVialItemsPCT');
+v.get('AlchemyDescription')[4].forEach((r,i)=>{vials[i]={...vials[i],name:r[0],mainItem:items[i],discoveryScore:Number(chance[i]),desc:r[9],func:r[3],stat:r[11],x1:+r[1],x2:+r[2],itemReq:r.slice(5,9).map(code=>({rawName:code,...(vials[i]?.itemReq?.find(x=>x.rawName===code)||{})}))};});write('vials',vials);
+const arts=read('artifacts');v.get('ArtifactInfo').forEach((r,i)=>{arts[i]={...arts[i],name:r[0],x1:r[1],baseFindChance:+r[2],baseBonus:+r[3],description:r[4]};['ancient','eldritch','sovereign','omnipotent','transcendent','verisimilitude'].forEach((tier,j)=>{arts[i][tier+'FormDescription']=r[5+2*j];arts[i][tier+'Multiplier']=+r[6+2*j];});});write('artifacts',arts);
+const arm=read('armoryUpgrades');v.get('ArmoryUpg').forEach((r,i)=>arm[i]={index:i,...map([r],['name','+baseCost','+costScaling','+costResourceIndex','+maxLevel','+bonusPerLevel','+unlockTotalLevels','+x7','+x8','description'])[0]});write('armoryUpgrades',arm);
+console.log('Refreshed calculation source catalogs.');

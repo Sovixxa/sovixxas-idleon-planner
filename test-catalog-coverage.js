@@ -12,6 +12,7 @@ for(const [,src] of fs.readFileSync('index.html','utf8').matchAll(/<script src="
  const file=src.split('?')[0];if(file==='app.js')break;
  vm.runInContext(fs.readFileSync(file,'utf8'),c,{filename:file});
 }
+vm.runInContext(fs.readFileSync('beanstalk-engine.js','utf8'),c,{filename:'beanstalk-engine.js'});
 let count=0;
 function same(actual,expected,label){assert.equal(JSON.stringify(actual),JSON.stringify(expected),label+' diverged from client');count++;}
 for(const [global,catalog] of Object.entries(c).filter(([key,value])=>/CATALOG$/.test(key)&&value&&typeof value==='object'&&!Array.isArray(value)))

@@ -61,7 +61,7 @@ const VERSION='0.9.9-alchemy-bubbles';
   const OBSERVATION_BONUS=[25,15,50,20,20,35,25,30,35,60];
   // Only the companion entries needed by Grid_Bonus_Allmulti. Values are [normal, level-1 upgraded].
   // CompanionDB[0] babaMummy: 1 / 1. CompanionDB[55] w7b11: 15 / 20.
-  const GRID_COMPANION_BONUS={0:[1,1],27:[1,1.5],55:[15,20]};
+  const GRID_COMPANION_BONUS={0:[1,1],27:[1,1.5],55:[15,25]};
   const UPGRADE_META=[
     ['Amoeba Cell Cultivation',1,1.0,1,0,'Unlock Amoeba; +10% all Cell DMG passive per effective Amoeba.'],
     ['Plasmid Cell Cultivation',1,1.0,1,2,'Unlock Plasmid; +15% all Cell SPD passive per effective Plasmid.'],
@@ -143,7 +143,7 @@ const VERSION='0.9.9-alchemy-bubbles';
     };
   }
   function cloneState(state){return {...state,board:state.board.slice(),cellExp:state.cellExp.slice(),cellLevels:state.cellLevels.slice(),upgrades:state.upgrades.slice(),plots:state.plots.slice()};}
-  function upgradeQty(state,id){ const m=UPGRADE_META[id]; return m?m.perLevel*asNum(state.upgrades[id]):0; }
+  function upgradeQty(state,id){ const m=UPGRADE_META[id],doubled=rawArray(state,'Spelunk')?.[53]?.includes(id); return m?m.perLevel*asNum(state.upgrades[id])*(doubled?2:1):0; }
   function unitsOwned(state){let n=0;for(let i=0;i<8;i++)n+=upgradeQty(state,i);return Math.round(Math.min(8,n));}
   function virusLimit(state){return Math.round(1+upgradeQty(state,15));}
   function feverUnlocked(state){return upgradeQty(state,16)>=1;}
@@ -277,7 +277,7 @@ const VERSION='0.9.9-alchemy-bubbles';
     const level=asNum(levels[72]);
     // Shipped branch is equality to 1, not 1+companionValue. Preserve the upgraded
     // Reindeer mismatch: value 1.5 does not pass this equality check.
-    return {known:true,value:5*level/(level+100)*(level===101?2:1)*(comp.value===1?2:1),level,companion:comp};
+    return {known:true,value:5*level/(level+100)*(level===102?6:level===101?2:1)*(comp.value===1?2:1),level,companion:comp};
   }
   function dpsBloodcellMultiplier(bestDps){
     const log10=x=>Math.log(Math.max(x,1))/2.30259,log2=x=>Math.log(Math.max(x,1))/Math.log(2);
@@ -373,7 +373,8 @@ const VERSION='0.9.9-alchemy-bubbles';
     // `levels` is intentionally ignored for that combined total. During combat
     // the level panel is hidden, so individual levels also stay fixed.
     const cachedTotalLv=state.cellLevels.reduce((a,b)=>a+asNum(b),0);
-    return (1+(q(18)+q(19)+q(20)+ext.palette)/100)*(1+ext.grid/100)*(1+q(21)/100)*(1+q(22)/100)*(1+q(32)*Math.floor(cachedTotalLv/100)/100)*feverDamageMultiplier(state,elapsedSeconds,coldFirstTick);
+    const legend=50*asNum(rawArray(state,'Spelunk')?.[18]?.[41]),artifact=10*asNum(rawArray(state,'Sailing')?.[3]?.[40]);
+    return (1+(q(18)+q(19)+q(20)+ext.palette)/100)*(1+legend/100)*(1+artifact/100)*(1+ext.grid/100)*(1+q(21)/100)*(1+q(22)/100)*(1+q(32)*Math.floor(cachedTotalLv/100)/100)*feverDamageMultiplier(state,elapsedSeconds,coldFirstTick);
   }
   function jellyDamageMultiplier(state,elapsedSeconds=0,coldFirstTick=1){return jellyDamageMultiplierForLevels(state,state.cellLevels,elapsedSeconds,coldFirstTick);}
   function cellExpReq(level){return 20*Math.pow(1.3,Math.max(0,asNum(level,0)));}

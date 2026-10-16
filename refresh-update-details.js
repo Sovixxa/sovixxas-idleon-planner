@@ -1,0 +1,14 @@
+'use strict';
+const fs=require('node:fs'),vm=require('node:vm'),{catalogs}=require('./inspect-bonus-freshness'),{expressionEnd}=require('./client-source-utils');
+const values=catalogs(fs.readFileSync('../audit/N.js','utf8')).values,clean=x=>String(x).replaceAll('_',' ');
+let source=fs.readFileSync('beanstalk-engine.js','utf8');
+const dance=source.indexOf('[new uo(0,'),danceEnd=expressionEnd(source,dance);
+const old=vm.runInNewContext(source.slice(dance,danceEnd),{uo:class{constructor(index,data){this.index=index;this.data=data;}}});
+source=source.slice(0,dance)+'['+old.map(({index,data})=>{data.desc=clean(values.get('Spelunky')[23][index]);data.bonus=Number(values.get('Spelunky')[24][index]);data.cost=Number(values.get('Spelunky')[22][index]);if(index===6)data.itemSource='Dropped by Magni Pufferfin';return `new uo(${index},${JSON.stringify(data)})`;}).join(',')+']'+source.slice(danceEnd);
+const liquid=source.indexOf('new Bo("Liquid Shop",')+'new Bo("Liquid Shop",'.length,end=expressionEnd(source,liquid),obj=vm.runInNewContext('('+source.slice(liquid,end)+')');
+const row=values.get('AlchemyDescription')[5][16];obj.bubbles[16]={cauldron:'Liquid Shop',name:clean(row[0]),x1:+row[1],x2:+row[2],func:row[3],description:clean(row[9]),requirements:[{liquidNo:'4',quantity:+row[11]}],bonusKey:'0'};
+source=source.slice(0,liquid)+JSON.stringify(obj)+source.slice(end);
+source=source.replace('this.data.name=="filler"?0:t*this.data.bonusValue','this.data.name=="filler"&&this.index>41?0:t*this.data.bonusValue');
+fs.writeFileSync('beanstalk-engine.js',source);
+const p='vendor/idleon-toolbox/data/website-data/shared-data.json',shared=JSON.parse(fs.readFileSync(p));shared.liquidsShop[16]={...shared.liquidsShop[16],name:row[0],x1:+row[11],x2:+row[4]};shared.mapNames[324]=values.get('MapDispName')[324];fs.writeFileSync(p,JSON.stringify(shared,null,2)+'\n');
+console.log('Refreshed Dancing Coral, Luminous Shell, map name and white talent support.');

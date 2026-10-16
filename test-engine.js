@@ -136,7 +136,7 @@ console.log('Live layout search regressions OK');
  s.rawRoot.companion.l=['27,0,0,0,0'];near(E.arcadeBloodcellBonus(s).value,20*101/201);
  s.rawRoot.companion.l=['27,0,0,0,1'];near(E.arcadeBloodcellBonus(s).value,10*101/201);
  s.rawData.OptionsListAccount[606]='27';near(E.arcadeBloodcellBonus(s).value,20*101/201);
- s.rawRoot.companion.l=['55,0,0,0,1'];near(E.companionGridBonus(s,55).value,20);
+ s.rawRoot.companion.l=['55,0,0,0,1'];near(E.companionGridBonus(s,55).value,25);
  s.rawData.OptionsListAccount[606]='55';near(E.companionGridBonus(s,55).value,15);
  s.rawRoot.companion.l=['0,0,0,0,0'];assert(!E.companionGridBonus(s,0).known,'unknown active character gate');
  s.rawData.Lv0=Array(15).fill(0);near(E.companionGridBonus(s,0).value,0);s.rawData.Lv0[14]=2;near(E.companionGridBonus(s,0).value,1);

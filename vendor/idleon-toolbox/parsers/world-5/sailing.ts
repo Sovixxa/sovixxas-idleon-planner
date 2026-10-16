@@ -305,6 +305,12 @@ export const getTranscendentChances = (islandsUnlocked: any, serverVars: any) =>
       * ((1e4 + 5e3 * (islandsUnlocked - 5) * (serverVars?.AncientOddPerIsland / 960)) / (1 + serverVars?.AncientArtiPCT / 100));
 }
 
+export const getVerisimilitudeChances = (island: number, serverVars: any) => island < 6
+  ? 5e14 * Math.pow(3, island)
+  : 1e16 * (1 + .1 * (island - 5)) * Math.max(1, Math.pow(1.4, Math.max(0, island - 7)))
+    * (1 + .1 * Math.max(0, island - 9))
+    * ((1e4 + 1e3 * (island - 5) * (serverVars?.AncientOddPerIsland / 960)) / (1 + serverVars?.AncientArtiPCT / 100));
+
 export const isArtifactAcquired = (artifacts: any[] = [], artifactName: any) => {
   return artifacts?.find(({ name, acquired }) => name === artifactName && acquired);
 }
@@ -779,9 +785,9 @@ const getLootPile = (lootPile: any) => {
 
 const getArtifact = (artifact: any, acquired: any, lootPile: any, index: any, charactersData: any, account: any) => {
   let additionalData, bonus = artifact?.baseBonus, baseBonus = artifact?.baseBonus,
-    upgradedForm = acquired === 2 || acquired === 3 || acquired === 4 || acquired === 5 || acquired === 6, formMultiplier = acquired,
+    upgradedForm = acquired >= 2 && acquired <= 7, formMultiplier = acquired,
     multiplierType = acquired === 2 ? 'ancientMultiplier' : acquired === 3 ? 'eldritchMultiplier' : acquired === 4
-      ? 'sovereignMultiplier' : acquired === 5 ? 'omnipotentMultiplier' : acquired === 6 ? 'transcendentMultiplier'
+      ? 'sovereignMultiplier' : acquired === 5 ? 'omnipotentMultiplier' : acquired === 6 ? 'transcendentMultiplier' : acquired === 7 ? 'verisimilitudeMultiplier'
         : 'baseBonus';
 
   let fixedDescription = artifact?.description;

@@ -104,7 +104,7 @@ assert.deepEqual(currency.coins(0),[{tier:1,amount:'0'}]);
 assert.deepEqual(currency.coins('1e-3'),[{tier:1,amount:'0'}]);
 for(const value of [null,undefined,'',NaN,Infinity,-1,'<script>'])assert.equal(currency.coins(value),null);
 const coinHtml=currency.html('4611042935328405600000000000000000000000000000000000000');
-assert((coinHtml.match(/<img /g)||[]).length<=3);assert(coinHtml.includes('Coins25.png'));assert(coinHtml.includes('≈'));
+assert((coinHtml.match(/<img /g)||[]).length<=3);assert(coinHtml.includes('Coins28.png'));assert(coinHtml.includes('≈'));
 assert(!coinHtml.includes('4,611,042,935'));assert(currency.html(null).includes('Unknown'));
 assert(currency.richText('<img src=x> [[nextCoinCost]]',{nextCoinCost:100}).includes('&lt;img src=x&gt;'));
 assert(currency.richText('Price [[nextCoinCost]]',{nextCoinCost:'<script>'}).includes('Unknown coin cost'));

@@ -1,3 +1,4 @@
+import { getMenagerieBonus } from '@parsers/world-7/menagerie';
 import { getJellyReward } from '@parsers/world-7/jellyRewards';
 import { notateNumber, tryToParse } from '@utility/helpers';
 import { exoticMarketInfo, marketInfo, ninjaExtraInfo, research as researchData, seedInfo } from '@website-data';
@@ -611,6 +612,7 @@ const getLandRankExpBreakdown = (account: any, characters: any) => {
     categories: [{
       name: 'Multiplicative',
       sources: [
+        { name: 'Menagerie', value: 1 + getMenagerieBonus(account, 19) / 100 },
         { name: 'Talent (Ag. Appreciation)', value: 1 + talentBonus / 100 },
         { name: 'Rank Boost (Market)', value: 1 + marketBonus / 100 },
         { name: 'Stableroot I (Exotic)', value: 1 + exotic9 / 100 },

@@ -6,7 +6,7 @@ for(const key of ['spelunking','research','researchObservations','sushi','button
 for(const group of ['Floors & Discoveries','Upgrades','Daily Lore'])assert(g.spelunking.some(x=>x.group===group),group);
 assert(g.spelunking.find(x=>x.floorKind==='tunnel').icon.includes('CaveDoor'));
 assert(g.spelunking.some(x=>x.group==='Daily Lore'&&x.detail.includes('99% of scaling component')));
-assert.equal(g.legendTalents.length,40);assert.equal(g.zenithMarket.length,11);assert(g.button.some(x=>x.group==='Tasks & next presses'));assert(g.sushi.length>100);
+assert.equal(g.legendTalents.length,42);assert.equal(g.zenithMarket.length,12);assert(g.button.some(x=>x.group==='Tasks & next presses'));assert(g.sushi.length>100);
 const nav=fs.readFileSync('index.html','utf8');assert(nav.includes('navMinigames'));for(const id of ['navCoralKid','navDarts','navHoops'])assert(!nav.includes('id="'+id+'"'));
 console.log('Endgame: complete page groups, lore breakpoints, actual sprites, Button tasks, Sushi stations and navigation pass.');
 

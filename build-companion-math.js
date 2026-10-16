@@ -30,7 +30,7 @@ function build(){
  const call='by(s,n,l?.charNames||n.fakePlayerNames(),r,l?.serverVars||{},!0)';
  replace(call,'(s.set("arcadeCompanionMultiplier",hu(e,27,1,1.5)===1?2:1),'+call+')',2);
  replace('t.find(d=>d.id===27)?.owned&&s.bonuses.forEach(d=>{d.hasCompanion27=!0})','s.bonuses.forEach(d=>{d.hasCompanion27=l.get("arcadeCompanionMultiplier")===2})');
- replace('e>=101&&(r*=2),this.hasCompanion27','e===101&&(r*=2),this.hasCompanion27');
+ replace('e>=101&&(r*=2),this.hasCompanion27','e===101&&(r*=2),e===102&&(r*=6),this.hasCompanion27');
  replace('String(s?.[606]??s?.h?.[606]??"").split(",").map(Number)','String(s?.[606]??s?.h?.[606]??"").split(",").filter(v=>v.trim()!=="").map(Number)');
  replace('let p=String(c).split(","),M=Number(p[0]);if(!Number.isFinite(M))continue;','let p=String(c).split(","),M=Number(p[0]);if(!p[0].trim()||!Number.isInteger(M)||M<0)continue;');
  replace('y.copies++,y.upgraded||(y.upgraded=Number(p[4])===1),m.set(M,y)','y.copies++,y.level=Math.max(y.level??0,Number(p[4])||0),y.upgraded=y.level===1,m.set(M,y)');

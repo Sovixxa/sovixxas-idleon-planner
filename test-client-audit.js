@@ -24,10 +24,10 @@ state.research[0][185]=2;state.research[1][185]=2;state.rawRoot={companion:{l:[]
 state.rawData={WeeklyBoss:{},Spelunk:Array.from({length:19},()=>[])};state.rawData.Spelunk[9][1]=25;
 const arr=[{type:0,anchor:19,cells:[19]},{type:1,anchor:20,cells:[20,21]},{type:3,anchor:38,cells:E.footprint(3,38)},{type:4,anchor:72,cells:E.footprint(4,72)},{type:6,anchor:108,cells:E.footprint(6,108)}];
 const info=[];info[233]=E.effectiveCounts(state,E.rawCounts(arr));info[234]=Array.from(E.organelleBoosted(arr));info[235]=Array.from(E.infectedSlots(arr));info[240]=0;info[241]=0;
-const attrs={Research:state.research,DNSM:{h:{}},CustomLists:{h:{JellyUPG:rows}},PixelHelperActor:Array(28)};
+const attrs={Spelunk:Array.from({length:54},()=>[]),Sailing:Array.from({length:4},()=>Array(41).fill(0)),Research:state.research,DNSM:{h:{}},CustomLists:{h:{JellyUPG:rows}},PixelHelperActor:Array(28)};
 attrs.PixelHelperActor[27]={behaviors:{getBehavior:()=>({_GenINFO:info})}};
 const context={a:{engine:{getGameAttribute:k=>attrs[k]}},c:{asNumber:Number},n:{__cast:x=>x},md:{},D:{contains:(a,x)=>a.includes(x)},q:{},m:{
- _customBlock_GamingStatType:()=>E.paletteCellDamageBonus(state),
+ _customBlock_Thingies:()=>0,_customBlock_GamingStatType:()=>E.paletteCellDamageBonus(state),
  _customBlock_ResearchStuff:()=>E.gridCellDamageBonus(state).value,
  _customBlock_SushiStuff:()=>E.sushiRogBonus(state,63)
 }};

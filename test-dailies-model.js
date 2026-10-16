@@ -12,7 +12,7 @@ assert.equal(row('vials').autoHidden,'All vials unlocked');
 raw.data.CauldronInfo[4][0]=0;assert(!row('vials').autoHidden);
 raw.data.CauldronInfo[4][0]=null;assert(!row('vials').autoHidden);
 raw.data.CauldronInfo[4]=[13];assert(!row('vials').autoHidden);
-raw.data.CauldronInfo=JSON.stringify([[],[],[],[],Array(86).fill(13)]);assert(row('vials').autoHidden);
+raw.data.CauldronInfo=JSON.stringify([[],[],[],[],Array(87).fill(13)]);assert(row('vials').autoHidden);
 assert(D.hiddenReason(row('vials'),{}));assert(!D.hiddenReason(row('vials'),{autoHide:false}));
 assert.equal(D.hiddenReason(row('vials'),{autoHide:false,hidden:{vials:true}}),'Hidden by you');
 const wed=Date.UTC(2026,8,23,23,59),thu=Date.UTC(2026,8,24,0,0);
@@ -58,7 +58,7 @@ const low={extraData:{currentWorld:2},data:{Research:[[],[],[],[],[],[],[],[0,0,
 const examplePath=path.join(__dirname,'../example json.txt');
 if(fs.existsSync(examplePath)){
  const example=JSON.parse(fs.readFileSync(examplePath,'utf8').replace(/^\uFEFF/,'')),rows=D.model(example),find=id=>rows.find(x=>x.id===id);
- assert.match(find('research').autoHidden,/All 38/);for(const id of ['vials','lore','jewelCogs','killroyWeekly','weeklyBattle','weeklyBattleDaily','tournament','petGems','raid','slush','mush','magmus','spiritlord'])assert(find(id).autoHidden,id);
+ assert.match(find('research').autoHidden,/All 38/);for(const id of ['lore','jewelCogs','killroyWeekly','weeklyBattle','weeklyBattleDaily','tournament','petGems','raid','slush','mush','magmus','spiritlord'])assert(find(id).autoHidden,id);
  for(const id of ['keys','trapping','sailing','familiars','tinyCog','sneakingRolls'])assert(find(id).autoHidden,id);
  assert.match(find('guilds').status,/3 unfinished/);assert.match(find('guildWeekly').status,/3 unfinished/);assert.match(find('picnic').status,/10 characters/);assert.match(find('library').status,/624 books/);
  console.log('Workspace save regression: research eligibility and 13 other redundant tasks correctly filtered.');

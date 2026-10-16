@@ -1,7 +1,7 @@
 (function(root){
 'use strict';
 const parse=v=>{if(typeof v==='string'){try{return JSON.parse(v);}catch{}}return v;};
-const factors=new Set(['Siege Breaker','Crystal Glunko','Mama Troll','Glimbo DR','Mallay','Glunko The Massive','Santa Snake']);
+const factors=new Set(['Menagerie','Siege Breaker','Crystal Glunko','Mama Troll','Glimbo DR','Mallay','Glunko The Massive','Santa Snake']);
 function ledger(result){
  const [add,multi]=result.breakdown.categories, rows=[];
  const row=(name,operation,value,detail='')=>rows.push({name,operation,value,detail,active:operation==='multiply'?value!==1:value!==0});

@@ -5,7 +5,7 @@
   const fmt=v=>{if(v===null)return'?';const n=Number(v),a=Math.abs(n);if(a>=1e18)return n.toExponential(2).replace('e+','e');for(const [d,s] of [[1e15,'Q'],[1e12,'T'],[1e9,'B'],[1e6,'M'],[1e3,'K']])if(a>=d)return(n/d).toLocaleString(undefined,{maximumFractionDigits:2})+s;return n.toLocaleString(undefined,{maximumFractionDigits:2});};
   const plantNames=['Empty','Sprout','FunGi','Bonsai','Cactus','Blossom','Voraci','Berri Bush','EverGreen','Chemical'];
   const captainBonus=(id,value,level)=>id==null||id<0?'':pretty(root.WORLD5_CATALOG.CaptainBonuses[id]?.[3]||'').replace('{',fmt(Math.round((value||0)*(level||0)*10)/10));
-  const tiers=['Missing','Normal','Ancient','Eldritch','Sovereign','Omnipotent','Transcendent'];
+  const tiers=['Missing','Normal','Ancient','Eldritch','Sovereign','Omnipotent','Transcendent','Verisimilitude'];
   function decodeSailing(data,c=root.WORLD5_CATALOG){
     const sailing=parse(data.Sailing),boats=parse(data.Boats)||[],captains=parse(data.Captains)||[],chests=parse(data.SailChests)||[],levels=sailing?.[3]||[];
     const artifacts=c.ArtifactInfo.map((row,id)=>({id,name:pretty(row[0]),tier:num(levels[id])??0,tierName:tiers[num(levels[id])??0]||`Tier ${levels[id]}`,effect:pretty(row[4]),icon:id<35?`assets/SailT${id}.png`:null}));

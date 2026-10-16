@@ -153,6 +153,7 @@ const getStaticData = (idleonData: IdleonData, charNames: string[], companion: C
     bundles: safeSection<any>('bundles', [], () => getBundles(idleonData)),
     serverVars,
     accountOptions,
+    menagerie: tryToParse((idleonData as any)?.Menagerie) || [],
     gemShopPurchases: safeSection<any>('gemShopPurchases', [], () => getGemShop(idleonData)),
     bribes: safeSection<any>('bribes', [], () => getBribes(idleonData)),
     timeAway: tryToParse(idleonData?.TimeAway),

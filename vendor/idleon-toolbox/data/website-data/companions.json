@@ -174,7 +174,7 @@
     "z": "-30",
     "filler": "1",
     "tourPower": 10,
-    "upgradeCost": null,
+    "upgradeCost": 9999,
     "upgradedTourPower": 11,
     "upgradedEffect": "Only_100_of_these_exist_in_IdleOn...",
     "upgradedBonus": 10
@@ -834,25 +834,25 @@
     "z": "-28",
     "filler": "1",
     "tourPower": 200,
-    "upgradeCost": 4900,
+    "upgradeCost": 4100,
     "upgradedTourPower": 300,
-    "upgradedEffect": "Multiplies_ALL_Research_Grid_bonuses_by_1.20x_(World_7_feature)",
-    "upgradedBonus": 20
+    "upgradedEffect": "Multiplies_ALL_Research_Grid_bonuses_by_1.25x_(World_7_feature)",
+    "upgradedBonus": 25
   },
   {
     "name": "Magni_Pufferfin",
     "rawName": "w7b10",
-    "effect": "Not_officially_in_the_game_and_may_never_be",
-    "bonus": 1,
+    "effect": "25x_Sailing_Loot,_100x_Captain_EXP,_and_5x_Artifact_Find_Chance",
+    "bonus": 25,
     "x": "-43",
     "y": "0",
     "z": "-30",
     "filler": "1",
     "tourPower": 260,
-    "upgradeCost": 5400,
-    "upgradedTourPower": 370,
-    "upgradedEffect": "Not_officially_in_the_game_and_may_never_be",
-    "upgradedBonus": 1
+    "upgradeCost": 4750,
+    "upgradedTourPower": 400,
+    "upgradedEffect": "100x_Sailing_Loot,_400x_Captain_EXP,_and_20x_Artifact_Find_Chance",
+    "upgradedBonus": 100
   },
   {
     "name": "Dreadnaught_Captain",
@@ -894,7 +894,7 @@
     "z": "0",
     "filler": "1",
     "tourPower": 60,
-    "upgradeCost": null,
+    "upgradeCost": 9999,
     "upgradedTourPower": 99,
     "upgradedEffect": "Not_officially_in_the_game_and_may_never_be",
     "upgradedBonus": 1
@@ -909,7 +909,7 @@
     "z": "0",
     "filler": "1",
     "tourPower": 150,
-    "upgradeCost": null,
+    "upgradeCost": 9999,
     "upgradedTourPower": 99,
     "upgradedEffect": "Not_officially_in_the_game_and_may_never_be",
     "upgradedBonus": 1
@@ -924,7 +924,7 @@
     "z": "0",
     "filler": "1",
     "tourPower": 150,
-    "upgradeCost": null,
+    "upgradeCost": 9999,
     "upgradedTourPower": 99,
     "upgradedEffect": "Not_officially_in_the_game_and_may_never_be",
     "upgradedBonus": 1
@@ -939,7 +939,7 @@
     "z": "0",
     "filler": "1",
     "tourPower": 55,
-    "upgradeCost": null,
+    "upgradeCost": 9999,
     "upgradedTourPower": 99,
     "upgradedEffect": "Not_officially_in_the_game_and_may_never_be",
     "upgradedBonus": 1
@@ -954,7 +954,7 @@
     "z": "0",
     "filler": "1",
     "tourPower": 80,
-    "upgradeCost": null,
+    "upgradeCost": 9999,
     "upgradedTourPower": 99,
     "upgradedEffect": "Not_officially_in_the_game_and_may_never_be",
     "upgradedBonus": 1
@@ -969,7 +969,7 @@
     "z": "0",
     "filler": "1",
     "tourPower": 100,
-    "upgradeCost": null,
+    "upgradeCost": 9999,
     "upgradedTourPower": 99,
     "upgradedEffect": "Not_officially_in_the_game_and_may_never_be",
     "upgradedBonus": 1
@@ -984,7 +984,7 @@
     "z": "0",
     "filler": "1",
     "tourPower": 100,
-    "upgradeCost": null,
+    "upgradeCost": 9999,
     "upgradedTourPower": 99,
     "upgradedEffect": "Not_officially_in_the_game_and_may_never_be",
     "upgradedBonus": 1
@@ -999,7 +999,7 @@
     "z": "0",
     "filler": "1",
     "tourPower": 60,
-    "upgradeCost": null,
+    "upgradeCost": 9999,
     "upgradedTourPower": 99,
     "upgradedEffect": "Not_officially_in_the_game_and_may_never_be",
     "upgradedBonus": 1
@@ -1014,7 +1014,7 @@
     "z": "0",
     "filler": "1",
     "tourPower": 100,
-    "upgradeCost": null,
+    "upgradeCost": 9999,
     "upgradedTourPower": 99,
     "upgradedEffect": "Not_officially_in_the_game_and_may_never_be",
     "upgradedBonus": 1
@@ -1029,7 +1029,7 @@
     "z": "0",
     "filler": "1",
     "tourPower": 105,
-    "upgradeCost": null,
+    "upgradeCost": 9999,
     "upgradedTourPower": 99,
     "upgradedEffect": "Not_officially_in_the_game_and_may_never_be",
     "upgradedBonus": 1
@@ -1044,7 +1044,7 @@
     "z": "0",
     "filler": "1",
     "tourPower": 105,
-    "upgradeCost": null,
+    "upgradeCost": 9999,
     "upgradedTourPower": 99,
     "upgradedEffect": "Not_officially_in_the_game_and_may_never_be",
     "upgradedBonus": 1
@@ -1059,7 +1059,7 @@
     "z": "0",
     "filler": "1",
     "tourPower": 100,
-    "upgradeCost": null,
+    "upgradeCost": 9999,
     "upgradedTourPower": 99,
     "upgradedEffect": "Not_officially_in_the_game_and_may_never_be",
     "upgradedBonus": 1
@@ -1074,7 +1074,7 @@
     "z": "0",
     "filler": "1",
     "tourPower": 100,
-    "upgradeCost": null,
+    "upgradeCost": 9999,
     "upgradedTourPower": 99,
     "upgradedEffect": "Not_officially_in_the_game_and_may_never_be",
     "upgradedBonus": 1
@@ -1089,7 +1089,7 @@
     "z": "0",
     "filler": "1",
     "tourPower": 100,
-    "upgradeCost": null,
+    "upgradeCost": 9999,
     "upgradedTourPower": 99,
     "upgradedEffect": "Not_officially_in_the_game_and_may_never_be",
     "upgradedBonus": 1
@@ -1104,7 +1104,7 @@
     "z": "0",
     "filler": "1",
     "tourPower": 125,
-    "upgradeCost": null,
+    "upgradeCost": 9999,
     "upgradedTourPower": 99,
     "upgradedEffect": "Not_officially_in_the_game_and_may_never_be",
     "upgradedBonus": 1
@@ -1119,7 +1119,7 @@
     "z": "0",
     "filler": "1",
     "tourPower": 120,
-    "upgradeCost": null,
+    "upgradeCost": 9999,
     "upgradedTourPower": 99,
     "upgradedEffect": "Not_officially_in_the_game_and_may_never_be",
     "upgradedBonus": 1
@@ -1134,7 +1134,7 @@
     "z": "0",
     "filler": "1",
     "tourPower": 110,
-    "upgradeCost": null,
+    "upgradeCost": 9999,
     "upgradedTourPower": 99,
     "upgradedEffect": "Not_officially_in_the_game_and_may_never_be",
     "upgradedBonus": 1
@@ -1149,7 +1149,7 @@
     "z": "0",
     "filler": "1",
     "tourPower": 100,
-    "upgradeCost": null,
+    "upgradeCost": 9999,
     "upgradedTourPower": 99,
     "upgradedEffect": "Not_officially_in_the_game_and_may_never_be",
     "upgradedBonus": 1
@@ -1164,7 +1164,7 @@
     "z": "0",
     "filler": "1",
     "tourPower": 45,
-    "upgradeCost": null,
+    "upgradeCost": 9999,
     "upgradedTourPower": 99,
     "upgradedEffect": "Not_officially_in_the_game_and_may_never_be",
     "upgradedBonus": 1
@@ -1179,7 +1179,7 @@
     "z": "0",
     "filler": "1",
     "tourPower": 100,
-    "upgradeCost": null,
+    "upgradeCost": 9999,
     "upgradedTourPower": 99,
     "upgradedEffect": "Not_officially_in_the_game_and_may_never_be",
     "upgradedBonus": 1
@@ -1194,7 +1194,7 @@
     "z": "0",
     "filler": "1",
     "tourPower": 40,
-    "upgradeCost": null,
+    "upgradeCost": 9999,
     "upgradedTourPower": 99,
     "upgradedEffect": "Not_officially_in_the_game_and_may_never_be",
     "upgradedBonus": 1
@@ -1209,7 +1209,7 @@
     "z": "0",
     "filler": "1",
     "tourPower": 70,
-    "upgradeCost": null,
+    "upgradeCost": 9999,
     "upgradedTourPower": 99,
     "upgradedEffect": "Not_officially_in_the_game_and_may_never_be",
     "upgradedBonus": 1
@@ -1224,7 +1224,7 @@
     "z": "0",
     "filler": "1",
     "tourPower": 40,
-    "upgradeCost": null,
+    "upgradeCost": 9999,
     "upgradedTourPower": 99,
     "upgradedEffect": "Not_officially_in_the_game_and_may_never_be",
     "upgradedBonus": 1
@@ -1239,7 +1239,7 @@
     "z": "0",
     "filler": "1",
     "tourPower": 100,
-    "upgradeCost": null,
+    "upgradeCost": 9999,
     "upgradedTourPower": 99,
     "upgradedEffect": "Not_officially_in_the_game_and_may_never_be",
     "upgradedBonus": 1
@@ -1254,7 +1254,7 @@
     "z": "0",
     "filler": "1",
     "tourPower": 95,
-    "upgradeCost": null,
+    "upgradeCost": 9999,
     "upgradedTourPower": 99,
     "upgradedEffect": "Not_officially_in_the_game_and_may_never_be",
     "upgradedBonus": 1
@@ -1269,7 +1269,7 @@
     "z": "0",
     "filler": "1",
     "tourPower": 50,
-    "upgradeCost": null,
+    "upgradeCost": 9999,
     "upgradedTourPower": 99,
     "upgradedEffect": "Not_officially_in_the_game_and_may_never_be",
     "upgradedBonus": 1
@@ -1284,7 +1284,7 @@
     "z": "0",
     "filler": "1",
     "tourPower": 110,
-    "upgradeCost": null,
+    "upgradeCost": 9999,
     "upgradedTourPower": 99,
     "upgradedEffect": "Not_officially_in_the_game_and_may_never_be",
     "upgradedBonus": 1
@@ -1299,7 +1299,7 @@
     "z": "0",
     "filler": "1",
     "tourPower": 90,
-    "upgradeCost": null,
+    "upgradeCost": 9999,
     "upgradedTourPower": 99,
     "upgradedEffect": "Not_officially_in_the_game_and_may_never_be",
     "upgradedBonus": 1
@@ -1344,7 +1344,7 @@
     "z": "0",
     "filler": "1",
     "tourPower": 100,
-    "upgradeCost": null,
+    "upgradeCost": 9999,
     "upgradedTourPower": 99,
     "upgradedEffect": "Not_officially_in_the_game_and_may_never_be",
     "upgradedBonus": 1
@@ -1359,7 +1359,7 @@
     "z": "0",
     "filler": "1",
     "tourPower": 45,
-    "upgradeCost": null,
+    "upgradeCost": 9999,
     "upgradedTourPower": 99,
     "upgradedEffect": "Not_officially_in_the_game_and_may_never_be",
     "upgradedBonus": 1
@@ -1374,7 +1374,7 @@
     "z": "0",
     "filler": "1",
     "tourPower": 105,
-    "upgradeCost": null,
+    "upgradeCost": 9999,
     "upgradedTourPower": 99,
     "upgradedEffect": "Not_officially_in_the_game_and_may_never_be",
     "upgradedBonus": 1
@@ -1389,7 +1389,7 @@
     "z": "0",
     "filler": "1",
     "tourPower": 50,
-    "upgradeCost": null,
+    "upgradeCost": 9999,
     "upgradedTourPower": 99,
     "upgradedEffect": "Not_officially_in_the_game_and_may_never_be",
     "upgradedBonus": 1
@@ -1403,7 +1403,7 @@
     "z": "0",
     "filler": "1",
     "tourPower": 100,
-    "upgradeCost": null,
+    "upgradeCost": 9999,
     "upgradedTourPower": 99,
     "upgradedEffect": "Not_officially_in_the_game_and_may_never_be",
     "upgradedBonus": 1
@@ -1418,7 +1418,7 @@
     "z": "0",
     "filler": "1",
     "tourPower": 100,
-    "upgradeCost": null,
+    "upgradeCost": 9999,
     "upgradedTourPower": 99,
     "upgradedEffect": "Not_officially_in_the_game_and_may_never_be",
     "upgradedBonus": 1
@@ -1433,7 +1433,7 @@
     "z": "0",
     "filler": "1",
     "tourPower": 100,
-    "upgradeCost": null,
+    "upgradeCost": 9999,
     "upgradedTourPower": 99,
     "upgradedEffect": "Not_officially_in_the_game_and_may_never_be",
     "upgradedBonus": 1
@@ -1448,7 +1448,7 @@
     "z": "0",
     "filler": "1",
     "tourPower": 100,
-    "upgradeCost": null,
+    "upgradeCost": 9999,
     "upgradedTourPower": 99,
     "upgradedEffect": "Not_officially_in_the_game_and_may_never_be",
     "upgradedBonus": 1
@@ -1462,7 +1462,7 @@
     "z": "0",
     "filler": "1",
     "tourPower": 100,
-    "upgradeCost": null,
+    "upgradeCost": 9999,
     "upgradedTourPower": 99,
     "upgradedEffect": "Not_officially_in_the_game_and_may_never_be",
     "upgradedBonus": 1
@@ -1477,7 +1477,7 @@
     "z": "0",
     "filler": "1",
     "tourPower": 115,
-    "upgradeCost": null,
+    "upgradeCost": 9999,
     "upgradedTourPower": 99,
     "upgradedEffect": "Not_officially_in_the_game_and_may_never_be",
     "upgradedBonus": 1
@@ -1507,7 +1507,7 @@
     "z": "0",
     "filler": "1",
     "tourPower": 100,
-    "upgradeCost": null,
+    "upgradeCost": 9999,
     "upgradedTourPower": 99,
     "upgradedEffect": "Not_officially_in_the_game_and_may_never_be",
     "upgradedBonus": 1
@@ -1522,7 +1522,7 @@
     "z": "0",
     "filler": "1",
     "tourPower": 100,
-    "upgradeCost": null,
+    "upgradeCost": 9999,
     "upgradedTourPower": 99,
     "upgradedEffect": "Not_officially_in_the_game_and_may_never_be",
     "upgradedBonus": 1
@@ -1537,7 +1537,7 @@
     "z": "0",
     "filler": "1",
     "tourPower": 100,
-    "upgradeCost": null,
+    "upgradeCost": 9999,
     "upgradedTourPower": 99,
     "upgradedEffect": "Not_officially_in_the_game_and_may_never_be",
     "upgradedBonus": 1
@@ -1552,7 +1552,7 @@
     "z": "0",
     "filler": "1",
     "tourPower": 85,
-    "upgradeCost": null,
+    "upgradeCost": 9999,
     "upgradedTourPower": 99,
     "upgradedEffect": "Not_officially_in_the_game_and_may_never_be",
     "upgradedBonus": 1
@@ -1567,7 +1567,7 @@
     "z": "0",
     "filler": "1",
     "tourPower": 100,
-    "upgradeCost": null,
+    "upgradeCost": 9999,
     "upgradedTourPower": 99,
     "upgradedEffect": "Not_officially_in_the_game_and_may_never_be",
     "upgradedBonus": 1
@@ -1582,7 +1582,7 @@
     "z": "0",
     "filler": "1",
     "tourPower": 100,
-    "upgradeCost": null,
+    "upgradeCost": 9999,
     "upgradedTourPower": 99,
     "upgradedEffect": "Not_officially_in_the_game_and_may_never_be",
     "upgradedBonus": 1
@@ -1597,7 +1597,7 @@
     "z": "0",
     "filler": "1",
     "tourPower": 100,
-    "upgradeCost": null,
+    "upgradeCost": 9999,
     "upgradedTourPower": 99,
     "upgradedEffect": "Not_officially_in_the_game_and_may_never_be",
     "upgradedBonus": 1
@@ -1612,7 +1612,7 @@
     "z": "0",
     "filler": "1",
     "tourPower": 100,
-    "upgradeCost": null,
+    "upgradeCost": 9999,
     "upgradedTourPower": 99,
     "upgradedEffect": "Not_officially_in_the_game_and_may_never_be",
     "upgradedBonus": 1
@@ -1627,7 +1627,7 @@
     "z": "0",
     "filler": "1",
     "tourPower": 100,
-    "upgradeCost": null,
+    "upgradeCost": 9999,
     "upgradedTourPower": 99,
     "upgradedEffect": "Not_officially_in_the_game_and_may_never_be",
     "upgradedBonus": 1
@@ -1635,17 +1635,17 @@
   {
     "name": "Gelatinous_Cuboid",
     "rawName": "w4b3",
-    "effect": "Not_officially_in_the_game_and_may_never_be",
-    "bonus": 1,
+    "effect": "10x_Farming_Sticker_find_chance",
+    "bonus": 9,
     "x": "0",
     "y": "0",
     "z": "0",
     "filler": "1",
-    "tourPower": 100,
-    "upgradeCost": null,
-    "upgradedTourPower": 99,
-    "upgradedEffect": "Not_officially_in_the_game_and_may_never_be",
-    "upgradedBonus": 1
+    "tourPower": 180,
+    "upgradeCost": 2500,
+    "upgradedTourPower": 270,
+    "upgradedEffect": "20x_Farming_Sticker_find_chance",
+    "upgradedBonus": 19
   },
   {
     "name": "Choccie",
@@ -1657,7 +1657,7 @@
     "z": "0",
     "filler": "1",
     "tourPower": 100,
-    "upgradeCost": null,
+    "upgradeCost": 9999,
     "upgradedTourPower": 99,
     "upgradedEffect": "Not_officially_in_the_game_and_may_never_be",
     "upgradedBonus": 1
@@ -1687,7 +1687,7 @@
     "z": "0",
     "filler": "1",
     "tourPower": 100,
-    "upgradeCost": null,
+    "upgradeCost": 9999,
     "upgradedTourPower": 99,
     "upgradedEffect": "Not_officially_in_the_game_and_may_never_be",
     "upgradedBonus": 1
@@ -1702,7 +1702,7 @@
     "z": "0",
     "filler": "1",
     "tourPower": 100,
-    "upgradeCost": null,
+    "upgradeCost": 9999,
     "upgradedTourPower": 99,
     "upgradedEffect": "Not_officially_in_the_game_and_may_never_be",
     "upgradedBonus": 1
@@ -1717,7 +1717,7 @@
     "z": "0",
     "filler": "1",
     "tourPower": 100,
-    "upgradeCost": null,
+    "upgradeCost": 9999,
     "upgradedTourPower": 99,
     "upgradedEffect": "Not_officially_in_the_game_and_may_never_be",
     "upgradedBonus": 1
@@ -1732,7 +1732,7 @@
     "z": "0",
     "filler": "1",
     "tourPower": 100,
-    "upgradeCost": null,
+    "upgradeCost": 9999,
     "upgradedTourPower": 99,
     "upgradedEffect": "Not_officially_in_the_game_and_may_never_be",
     "upgradedBonus": 1
@@ -1747,7 +1747,7 @@
     "z": "0",
     "filler": "1",
     "tourPower": 100,
-    "upgradeCost": null,
+    "upgradeCost": 9999,
     "upgradedTourPower": 99,
     "upgradedEffect": "Not_officially_in_the_game_and_may_never_be",
     "upgradedBonus": 1
@@ -1762,7 +1762,7 @@
     "z": "0",
     "filler": "1",
     "tourPower": 100,
-    "upgradeCost": null,
+    "upgradeCost": 9999,
     "upgradedTourPower": 99,
     "upgradedEffect": "Not_officially_in_the_game_and_may_never_be",
     "upgradedBonus": 1
@@ -1777,7 +1777,7 @@
     "z": "0",
     "filler": "1",
     "tourPower": 100,
-    "upgradeCost": null,
+    "upgradeCost": 9999,
     "upgradedTourPower": 99,
     "upgradedEffect": "Not_officially_in_the_game_and_may_never_be",
     "upgradedBonus": 1
@@ -1792,7 +1792,7 @@
     "z": "0",
     "filler": "1",
     "tourPower": 100,
-    "upgradeCost": null,
+    "upgradeCost": 9999,
     "upgradedTourPower": 99,
     "upgradedEffect": "Not_officially_in_the_game_and_may_never_be",
     "upgradedBonus": 1
@@ -1807,7 +1807,7 @@
     "z": "0",
     "filler": "1",
     "tourPower": 100,
-    "upgradeCost": null,
+    "upgradeCost": 9999,
     "upgradedTourPower": 99,
     "upgradedEffect": "Not_officially_in_the_game_and_may_never_be",
     "upgradedBonus": 1
@@ -1822,7 +1822,7 @@
     "z": "0",
     "filler": "1",
     "tourPower": 100,
-    "upgradeCost": null,
+    "upgradeCost": 9999,
     "upgradedTourPower": 99,
     "upgradedEffect": "Not_officially_in_the_game_and_may_never_be",
     "upgradedBonus": 1
@@ -1837,7 +1837,7 @@
     "z": "0",
     "filler": "1",
     "tourPower": 100,
-    "upgradeCost": null,
+    "upgradeCost": 9999,
     "upgradedTourPower": 99,
     "upgradedEffect": "Not_officially_in_the_game_and_may_never_be",
     "upgradedBonus": 1
@@ -1852,7 +1852,7 @@
     "z": "0",
     "filler": "1",
     "tourPower": 100,
-    "upgradeCost": null,
+    "upgradeCost": 9999,
     "upgradedTourPower": 99,
     "upgradedEffect": "Not_officially_in_the_game_and_may_never_be",
     "upgradedBonus": 1
@@ -1867,7 +1867,7 @@
     "z": "0",
     "filler": "1",
     "tourPower": 100,
-    "upgradeCost": null,
+    "upgradeCost": 9999,
     "upgradedTourPower": 99,
     "upgradedEffect": "Not_officially_in_the_game_and_may_never_be",
     "upgradedBonus": 1
@@ -1882,7 +1882,7 @@
     "z": "0",
     "filler": "1",
     "tourPower": 100,
-    "upgradeCost": null,
+    "upgradeCost": 9999,
     "upgradedTourPower": 99,
     "upgradedEffect": "Not_officially_in_the_game_and_may_never_be",
     "upgradedBonus": 1
@@ -1912,7 +1912,7 @@
     "z": "0",
     "filler": "1",
     "tourPower": 100,
-    "upgradeCost": null,
+    "upgradeCost": 9999,
     "upgradedTourPower": 99,
     "upgradedEffect": "Not_officially_in_the_game_and_may_never_be",
     "upgradedBonus": 1
@@ -1942,7 +1942,7 @@
     "z": "0",
     "filler": "1",
     "tourPower": 100,
-    "upgradeCost": null,
+    "upgradeCost": 9999,
     "upgradedTourPower": 99,
     "upgradedEffect": "Not_officially_in_the_game_and_may_never_be",
     "upgradedBonus": 1
@@ -1957,7 +1957,7 @@
     "z": "0",
     "filler": "1",
     "tourPower": 100,
-    "upgradeCost": null,
+    "upgradeCost": 9999,
     "upgradedTourPower": 99,
     "upgradedEffect": "Not_officially_in_the_game_and_may_never_be",
     "upgradedBonus": 1
@@ -1972,7 +1972,7 @@
     "z": "0",
     "filler": "1",
     "tourPower": 100,
-    "upgradeCost": null,
+    "upgradeCost": 9999,
     "upgradedTourPower": 99,
     "upgradedEffect": "Not_officially_in_the_game_and_may_never_be",
     "upgradedBonus": 1
@@ -2002,7 +2002,7 @@
     "z": "0",
     "filler": "1",
     "tourPower": 100,
-    "upgradeCost": null,
+    "upgradeCost": 9999,
     "upgradedTourPower": 99,
     "upgradedEffect": "Not_officially_in_the_game_and_may_never_be",
     "upgradedBonus": 1
@@ -2017,7 +2017,7 @@
     "z": "0",
     "filler": "1",
     "tourPower": 100,
-    "upgradeCost": null,
+    "upgradeCost": 9999,
     "upgradedTourPower": 99,
     "upgradedEffect": "Not_officially_in_the_game_and_may_never_be",
     "upgradedBonus": 1
@@ -2047,7 +2047,7 @@
     "z": "0",
     "filler": "1",
     "tourPower": 100,
-    "upgradeCost": null,
+    "upgradeCost": 9999,
     "upgradedTourPower": 99,
     "upgradedEffect": "Not_officially_in_the_game_and_may_never_be",
     "upgradedBonus": 1
@@ -2062,7 +2062,7 @@
     "z": "0",
     "filler": "1",
     "tourPower": 100,
-    "upgradeCost": null,
+    "upgradeCost": 9999,
     "upgradedTourPower": 99,
     "upgradedEffect": "Not_officially_in_the_game_and_may_never_be",
     "upgradedBonus": 1
@@ -2077,7 +2077,7 @@
     "z": "0",
     "filler": "1",
     "tourPower": 100,
-    "upgradeCost": null,
+    "upgradeCost": 9999,
     "upgradedTourPower": 99,
     "upgradedEffect": "Not_officially_in_the_game_and_may_never_be",
     "upgradedBonus": 1
@@ -2092,7 +2092,7 @@
     "z": "0",
     "filler": "1",
     "tourPower": 100,
-    "upgradeCost": null,
+    "upgradeCost": 9999,
     "upgradedTourPower": 99,
     "upgradedEffect": "Not_officially_in_the_game_and_may_never_be",
     "upgradedBonus": 1
@@ -2107,7 +2107,7 @@
     "z": "0",
     "filler": "1",
     "tourPower": 100,
-    "upgradeCost": null,
+    "upgradeCost": 9999,
     "upgradedTourPower": 99,
     "upgradedEffect": "Not_officially_in_the_game_and_may_never_be",
     "upgradedBonus": 1
@@ -2137,7 +2137,7 @@
     "z": "0",
     "filler": "1",
     "tourPower": 100,
-    "upgradeCost": null,
+    "upgradeCost": 9999,
     "upgradedTourPower": 99,
     "upgradedEffect": "Not_officially_in_the_game_and_may_never_be",
     "upgradedBonus": 1
@@ -2167,7 +2167,7 @@
     "z": "0",
     "filler": "1",
     "tourPower": 100,
-    "upgradeCost": null,
+    "upgradeCost": 9999,
     "upgradedTourPower": 99,
     "upgradedEffect": "Not_officially_in_the_game_and_may_never_be",
     "upgradedBonus": 1
@@ -2197,7 +2197,7 @@
     "z": "0",
     "filler": "1",
     "tourPower": 100,
-    "upgradeCost": null,
+    "upgradeCost": 9999,
     "upgradedTourPower": 99,
     "upgradedEffect": "Not_officially_in_the_game_and_may_never_be",
     "upgradedBonus": 1
@@ -2229,8 +2229,8 @@
     "tourPower": 185,
     "upgradeCost": 3500,
     "upgradedTourPower": 280,
-    "upgradedEffect": "Both_+350_and_1.35x_Max_Stamina_for_Spelunking!",
-    "upgradedBonus": 35
+    "upgradedEffect": "Both_+500_and_1.50x_Max_Stamina_for_Spelunking!",
+    "upgradedBonus": 50
   },
   {
     "name": "Ancientfish",
@@ -2257,7 +2257,7 @@
     "z": "-19",
     "filler": "1",
     "tourPower": 10,
-    "upgradeCost": null,
+    "upgradeCost": 9999,
     "upgradedTourPower": 12,
     "upgradedEffect": "Congratulations_on_winning_the_Tournament!",
     "upgradedBonus": 1
@@ -2272,7 +2272,7 @@
     "z": "-19",
     "filler": "1",
     "tourPower": 10,
-    "upgradeCost": null,
+    "upgradeCost": 9999,
     "upgradedTourPower": 12,
     "upgradedEffect": "Congratulations_on_winning_the_Tournament!",
     "upgradedBonus": 1
@@ -2287,7 +2287,7 @@
     "z": "-24",
     "filler": "1",
     "tourPower": 10,
-    "upgradeCost": null,
+    "upgradeCost": 9999,
     "upgradedTourPower": 12,
     "upgradedEffect": "Congratulations_on_winning_the_Tournament!",
     "upgradedBonus": 1
@@ -2467,7 +2467,7 @@
     "z": "-5",
     "filler": "1",
     "tourPower": 10,
-    "upgradeCost": null,
+    "upgradeCost": 9999,
     "upgradedTourPower": 12,
     "upgradedEffect": "Congratulations_on_winning_the_Tournament!",
     "upgradedBonus": 1
@@ -2482,7 +2482,7 @@
     "z": "-5",
     "filler": "1",
     "tourPower": 10,
-    "upgradeCost": null,
+    "upgradeCost": 9999,
     "upgradedTourPower": 12,
     "upgradedEffect": "Congratulations_on_winning_the_Tournament!",
     "upgradedBonus": 1
@@ -2497,7 +2497,7 @@
     "z": "-5",
     "filler": "1",
     "tourPower": 10,
-    "upgradeCost": null,
+    "upgradeCost": 9999,
     "upgradedTourPower": 12,
     "upgradedEffect": "Congratulations_on_winning_the_Tournament!",
     "upgradedBonus": 1

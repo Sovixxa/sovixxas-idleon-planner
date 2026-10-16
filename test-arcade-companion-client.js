@@ -40,11 +40,11 @@ if(fs.existsSync('../example json.txt')){
   const raw=structuredClone(original);raw.companion=caseIndex%2?JSON.stringify({l:item.rows}):{l:item.rows};const d=raw.data||raw;
   let options=d.OptionsListAccount??d.OptLacc;options=typeof options==='string'?JSON.parse(options):options;options[606]=item.borrowed;
   d.OptionsListAccount=caseIndex%2?JSON.stringify(options):options;d.OptLacc=d.OptionsListAccount;
-  d.ArcadeUpg=Array.from({length:73},(_,i)=>[0,1,9,10,99,100,101,102][(i+caseIndex)%8]);const snapshot=JSON.stringify(raw);
-  const systems=ctx.BeanValueEngine.systems(raw),arcade=systems.get('arcade');assert.equal(arcade.bonuses.length,73);assert.equal(systems.get('companions')[0].owned,!!item.doot,item.name+' Doot ownership');
+  d.ArcadeUpg=Array.from({length:ctx.ARCADE_CATALOG.length},(_,i)=>[0,1,9,10,99,100,101,102][(i+caseIndex)%8]);const snapshot=JSON.stringify(raw);
+  const systems=ctx.BeanValueEngine.systems(raw),arcade=systems.get('arcade');assert.equal(arcade.bonuses.length,ctx.ARCADE_CATALOG.length);assert.equal(systems.get('companions')[0].owned,!!item.doot,item.name+' Doot ownership');
   for(const row of arcade.bonuses){const expected=oracle?oracle(row.index,row.level,item.strength):A.bonus(ctx.ARCADE_CATALOG[row.index],row.level,{multiplier:item.strength===1?2:1}).total;near(row.getBonus(),expected,item.name+' bundled '+row.index);checks++;}
   near(systems.get('gaming').arcadeBonusToShovelSpeed,arcade.bonuses[31].getBonus(),item.name+' dependent Gaming calculation');
   assert.equal(JSON.stringify(raw),snapshot,'Imported save must not be mutated');
  }
 }else console.log('Full-save integration skipped: local sample unavailable.');
-console.log(`Arcade/companions: ${checks} formula comparisons, all 73 records, eight ownership scenarios, Gaming propagation, empty-loan decoding and save immutability pass.`);
+console.log(`Arcade/companions: ${checks} formula comparisons, all current records, eight ownership scenarios, Gaming propagation, empty-loan decoding and save immutability pass.`);

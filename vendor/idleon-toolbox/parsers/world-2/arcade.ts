@@ -19,7 +19,7 @@ const parseArcade = (arcadeRaw: any, account: Account, serverVars: ServerVars) =
     const { x1, x2, func } = upgrade;
     const level = arcadeRaw?.[index] ?? 0;
     const bonus = growth(func, level, x1, x2, false);
-    const superBonus = level === 101 ? 2 : 1;
+    const superBonus = level === 102 ? 6 : level === 101 ? 2 : 1;
     // Supplied client: ArcadeBonus doubles only when Companions(27) == 1.
     // Borrowed tokens overwrite the companion cache with its base value, even
     // if an upgraded copy is owned. Upgraded-only value 1.5 does not pass that check.

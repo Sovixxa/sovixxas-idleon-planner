@@ -1,3 +1,4 @@
+import { getMenagerieBonus, hasMenagerieUnlock } from '@parsers/world-7/menagerie';
 import { isMajorDivinityActive } from './world-5/divinity';
 import { getCharacterFamilyBonus } from './family';
 import { getCharacterStatAccount } from './world-2/voteBallot';
@@ -1374,7 +1375,7 @@ export const getSkillExpMulti = (skillName: string, character: any, characters: 
   else if (skillName === 'sneaking') {
     const playerFloor = account?.sneaking?.players?.[character?.playerId]?.floor;
     const baseExp = ninjaExtraInfo[11]?.[playerFloor];
-    const ninjaUpgradeBonus = getNinjaUpgradeBonus(account, 'Respect_for_the_Art');
+    const ninjaUpgradeBonus = getNinjaUpgradeBonus(account, 'Respectful_Minded');
     const arcadeBonus = getArcadeBonus(account?.arcade?.shop, 'Sneaking_XP_multi')?.bonus;
     const ninjaEquip = getInventoryNinjaItem(account, 'Gold_Eye');
     const compassBonus = getCompassBonus(account, 49);
@@ -2084,7 +2085,7 @@ export const getClassExpMulti = (character: any, account: any, characters: any) 
   const talentBonus3 = getHighestTalentAcrossCharacters(characters, 'ARCHLORD_OF_THE_PIRATES', character);
   const workbenchBonus = 1 + talentBonus3 * lavaLog(account?.accountOptions?.[139] ?? 0) / 100;
 
-  const value = workbenchBonus
+  const value = (1 + getMenagerieBonus(account, 23) / 100) * workbenchBonus
     * (1 + expGainLUK3 / 100)
     * expGainLUK5
     * (1 + equipBonus78 / 100)
@@ -2200,6 +2201,7 @@ export const getClassExpMulti = (character: any, account: any, characters: any) 
         {
           name: "Multiplicative",
           sources: [
+            { name: "Menagerie", value: 1 + getMenagerieBonus(account, 23) / 100 },
             { name: "Workbench (Siege Breaker)", value: workbenchBonus },
             { name: "Jelly class EXP I", value: 1 + getJellyReward(account, 30) / 100 },
             { name: "Jelly class EXP II", value: 1 + getJellyReward(account, 62) / 100 },
@@ -2514,7 +2516,7 @@ export const getDropRate = (character: any, account: any, characters: any) => {
   // Game: *= (1+tesseract/100) * (1+royalStatue/100) * (1+cardMulti/100) * (1+famBonus32/100) * (1+0.3*comp168)
   //       * (1+min(0.5,comp132)+0.2*compLV2(132)) * (1+sushi48/100) * max(1,glimboDR) * (1+tomeMulti/100)
   //       * (1+equip99/100) * (1+mineheadQTY0/100) * (1+5*cloud69/100)
-  final *= (1 + (tesseractMapBonus || 0) / 100)
+  final *= (1 + getMenagerieBonus(account, 24) / 100) * (1 + (tesseractMapBonus || 0) / 100)
     * (1 + royalStatueDropRateBonus / 100)
     * (1 + cardMulti / 100)
     * (1 + familyDropRateMulti / 100)
@@ -2623,6 +2625,7 @@ export const getDropRate = (character: any, account: any, characters: any) => {
       {
         name: 'Multiplicative',
         sources: [
+          { name: 'Menagerie', value: 1 + getMenagerieBonus(account, 24) / 100 },
           { name: 'Siege Breaker', value: extraDropRate },
           { name: 'Gem Bundle', value: hasDrBundle ? 0.2 : 0 },
           { name: 'Tesseract Map', value: (tesseractMapBonus || 0) / 100 },

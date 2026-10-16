@@ -8,7 +8,7 @@ vm.runInContext(fs.readFileSync('bonus-worker.js','utf8'),box,{filename:'bonus-w
 const save=JSON.parse(fs.readFileSync('../example json.txt','utf8'));
 box.onmessage({data:save});assert(!response.error,response.error);
 const groups=response.groups;
-for(const [key,count] of Object.entries({bribes:41,dungeons:92,vials:86,sigils:24,killroy:9,atomCollider:16,prayers:19,saltLick:11,deathNote:113,armorSets:19}))assert.equal(groups[key].length,count,key);
+for(const [key,count] of Object.entries({bribes:41,dungeons:92,vials:87,sigils:24,killroy:9,atomCollider:17,prayers:19,saltLick:11,deathNote:113,armorSets:19}))assert.equal(groups[key].length,count,key);
 for(const key of ['bribes','dungeons','vials','sigils','killroy','atomCollider','prayers','saltLick','deathNote','armorSets'])for(const row of groups[key]){
   assert(row.name&&row.effect,`${key}: empty tile`);
   assert(!/undefined|NaN|[{}]/.test(row.effect),`${key}: ${row.effect}`);

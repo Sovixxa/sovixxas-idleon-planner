@@ -1,5 +1,13 @@
 # Project changelog
 
+## 2026-10-17 - Luminous Menagerie v1.23
+
+- Refresh catalogs and sprites from the supplied Steam archive. Add the Menagerie page with 33 mission definitions, 25 unlocks, 25 boosts, jellyfish, Singularity, Scurge, Nightmariners, and a Lumi source checklist.
+- Add Omega Arcade support, Verisimilitude artifact tiers, Bloodclot, Gilded Coral, the Luminous Shell purchase, new Research/Jade/Zenith/Gaming entries, the seventh lore chapter, two white Legend Talents, new collection items, and five coin denominations.
+- Apply Jelly/Sushi doublers, Summoning cost discounts, Scurge pearl modifiers, and Menagerie factors in the shared Research, cooking, mastery, class EXP, drop-rate, Spelunking-power, and land-rank calculations. Include the new meal, atom, and Legend Talent caps in the shared parsers.
+- Preserve missing save fields as unknown in the Menagerie tracker. Some missions need live game state; target reached is not a claimability guarantee.
+- Menagerie progress tracking is broader than simulation coverage: Lumi is currently a source checklist, Crucible and the side-jelly interactions are tracked through unlocks, and not every new effect is propagated through every older bundled calculator. See UPDATE-2026-10-17.md for validation and limits.
+
 ## 2026-10-06 - Bubble and stamp material filters
 
 - Add an Upgrade material selector to both upgrade planners, filtering recommendations and full tables together while preserving existing status, search, and spending filters.

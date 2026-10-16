@@ -1,3 +1,4 @@
+import { getMenagerieBonus, hasMenagerieUnlock } from '@parsers/world-7/menagerie';
 import { getJellyReward } from '@parsers/world-7/jellyRewards';
 import { atomsInfo, cookingMenu, monsters, randomList, randomList2, bonuses } from '@website-data';
 import { liveEntries } from '@parsers/catalog';
@@ -414,7 +415,7 @@ export const getCookingMastery = (cookMasterRaw: any, mealsRaw: any, account: an
   // EXP rate excludes category index 3 from the multiplicative product (matches the game).
   const expRateCategoryKeys = [0, 1, 2, 4, 5];
   const expRateCategoryProduct = expRateCategoryKeys.reduce((prod, k) => prod * (1 + bonusAmount(k) / 100), 1);
-  const expRate = 2
+  const expRate = 2 * (1 + getMenagerieBonus(account, 21) / 100)
     * expRateCategoryProduct
     * (1 + gridBonusExp / 100)
     * (1 + (40 * superbit68) / 100)
@@ -439,6 +440,7 @@ export const getCookingMastery = (cookMasterRaw: any, mealsRaw: any, account: an
         name: 'Multiplicative',
         sources: [
           { name: 'Base', value: 2 },
+          { name: 'Menagerie', value: 1 + getMenagerieBonus(account, 21) / 100 },
           ...expRateCategoryKeys.map((k) => ({
             name: `${categoryNames?.[k] ?? `Category ${k}`} bonus`,
             value: 1 + bonusAmount(k) / 100
@@ -522,7 +524,7 @@ export const parseKitchens = (cookingRaw: any, atomsRaw: any, characters: any, a
     const secondAchievement = getAchievementStatus(account?.achievements, 224);
     const marshmallowBonus = getMealsBonusByEffectOrStat(account, null, 'zMealFarm');
     const cardCookingMulti = getCardBonusByEffect(account?.cards, 'Cooking_Spd_Multi_(Passive)');
-    const arcadeBonus = getArcadeBonus(account?.arcade?.shop, 'Cook_SPD_multi')?.bonus ?? 0;
+    const arcadeBonus = getArcadeBonus(account?.arcade?.shop, 'Cooking_Speed')?.bonus ?? 0;
     const winnerBonus = getWinnerBonus(account, '<x Cooking SPD');
     const highestFarming = getHighestCharacterSkill(characters, 'farming');
     let starSignBonus;
@@ -568,7 +570,7 @@ export const parseKitchens = (cookingRaw: any, atomsRaw: any, characters: any, a
     const marshmallowMultiplier = marshmallowBonus * Math.ceil((highestFarming + 1) / 50);
     const achievementBonus = Math.min(6 * trollBonus + (20 * firstAchievement + 10 * secondAchievement), 100);
 
-    const mealSpeed = 10
+    const mealSpeed = 10 * (1 + getMenagerieBonus(account, 4) / 100)
       * (1 + voidWalkerBonusTalent / 100)
       * Math.max(1, account?.farming?.cropDepot?.cookingSpeed?.value)
       * Math.max(1, voidWalkerApocalypseBonus)
@@ -608,6 +610,7 @@ export const parseKitchens = (cookingRaw: any, atomsRaw: any, characters: any, a
           name: "Multiplicative",
           sources: [
             { name: "Base", value: 10 },
+            { name: "Menagerie", value: 1 + getMenagerieBonus(account, 4) / 100 },
             { name: "Blood Marrow (Talent)", value: 1 + voidWalkerBonusTalent / 100 },
             { name: "Crop Depot", value: Math.max(1, account?.farming?.cropDepot?.cookingSpeed?.value) },
             { name: "Enhancement Eclipse", value: Math.max(1, voidWalkerApocalypseBonus) },
@@ -791,7 +794,7 @@ export const getMealMaxLevel = (account: any) => {
   const secondJadeUnlocked = isJadeBonusUnlocked(account, 'Chef_Geustloaf\'s_Cutting_Edge_Philosophy');
   const grimoireBonus = getGrimoireBonus(account?.grimoire?.upgrades, 26);
   const loreBoss = account?.spelunking?.loreBosses?.[5]?.defeated ? 1 : 0;
-  return DEFAULT_MEAL_MAX_LEVEL
+  return DEFAULT_MEAL_MAX_LEVEL + (hasMenagerieUnlock(account, 20) ? 10 : 0)
     + (Math.min(20, grimoireBonus))
     + (causticolumnArtifact?.bonus ?? 0)
     + (firstJadeUnlocked ? 10 : 0)
@@ -850,6 +853,7 @@ export const getNoMealLeftBehindQueue = (meals: any[], mealMaxLevel: any, procCo
   overflowMulti = 1
 }: any = {}): NoMealLeftBehindProc[] => {
   const levelsPerProc = getNoMealLeftBehindLevels(account);
+  mealMaxLevel = Math.min(150, mealMaxLevel);
   if (levelsPerProc === 0) return [];
   const state = meals
     ?.filter((meal: any) => meal?.level >= NO_MEAL_LEFT_BEHIND_MIN_LEVEL && meal?.level < mealMaxLevel)

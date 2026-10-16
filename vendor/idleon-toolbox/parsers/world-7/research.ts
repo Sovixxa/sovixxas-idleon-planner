@@ -1,3 +1,4 @@
+import { getMenagerieBonus, hasMenagerieUnlock } from '@parsers/world-7/menagerie';
 import { getJellyReward } from '@parsers/world-7/jellyRewards';
 import { commaNotation, notateNumber, tryToParse } from '@utility/helpers';
 import {
@@ -646,7 +647,7 @@ function getResearchEXPmulti(account: any, research: any) {
   const cglunkoFactor = 1 + getCglunkoBonus(account, 11) / 100; // Researchy (Crystal Glunko Cove)
   const outpostRogFactor = Math.max(1, getOutpostRogBonus(account, 1));
   const jellyFactor = [0, 23, 46, 54].reduce((factor, index) => factor * (1 + getJellyReward({ research }, index) / 100), 1);
-  const value = jellyFactor * additiveFactor * grid70Factor * nonstopFactor * companionFactor * (1 + getSushiBonus(account, 0) / 100) * (1 + getButtonBonus(account, 0) / 100) * killroyResearchBonus * greenWaterFactor * cglunkoFactor * outpostRogFactor;
+  const value = (1 + getMenagerieBonus(account, 3) / 100) * jellyFactor * additiveFactor * grid70Factor * nonstopFactor * companionFactor * (1 + getSushiBonus(account, 0) / 100) * (1 + getButtonBonus(account, 0) / 100) * killroyResearchBonus * greenWaterFactor * cglunkoFactor * outpostRogFactor;
 
   const breakdown = {
     statName: 'Research EXP Multi',
@@ -686,6 +687,7 @@ function getResearchEXPmulti(account: any, research: any) {
           { name: 'Button Bonus', value: 1 + getButtonBonus(account, 0) / 100 },
           { name: 'Killroy Research', value: killroyResearchBonus },
           { name: 'Royal Guardian Outpost', value: outpostRogFactor },
+          { name: 'Menagerie', value: 1 + getMenagerieBonus(account, 3) / 100 },
           { name: 'Jelly rewards', value: jellyFactor }
         ]
       }

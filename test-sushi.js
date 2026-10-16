@@ -33,9 +33,9 @@ if(fs.existsSync(clientPath)){
  for(const scale of [0,1,5])for(const fire of [0,1,3,4]){
    const state=structuredClone(s);state.levels=state.levels.map(x=>Math.floor(x*scale));state.fires=state.fires.map(()=>fire);
    const su=[state.tiers,state.plates,state.levels,state.fires,state.misc,state.tracking,state.xp,state.knowledge];
-   const attrs={Sushi:su,CustomLists:{h:{Research:catalog.Research,SushiUPG:catalog.SushiUPG}},DNSM:{h:{}},BundlesReceived:{h:{bon_v:state.bundle-1}},Sailing:[[],[],[],Array(40).fill(0)]};
+   const attrs={Spelunk:Array.from({length:54},()=>[]),Sushi:su,CustomLists:{h:{Research:catalog.Research,SushiUPG:catalog.SushiUPG}},DNSM:{h:{}},BundlesReceived:{h:{bon_v:state.bundle-1}},Sailing:[[],[],[],Array(40).fill(0)]};
    const m={_customBlock_AtomCollider:()=>0,_customBlock_Summoning:()=>0,_customBlock_GamingStatType:()=>1,_customBlock_Minehead:()=>0,_customBlock_Thingies:()=>state.jellyBundle-1,_customBlock_ResearchStuff:()=>0};
-   const env={Math,Object,m,a:{engine:{getGameAttribute:key=>attrs[key]}},c:{asNumber:Number},k:{_customBlock_Log2:x=>Math.log2(Math.max(1,x)),_customBlock_getLOG:x=>Math.log(Math.max(1,x))/2.302585},p:{_customBlock_ArcadeBonus:()=>20,_customBlock_AtomCollider:()=>0},q:{_customBlock_JellyOperation:()=>state.jellyDiscount}};
+   const env={D:{contains:(a,x)=>a.includes(x)},Math,Object,m,a:{engine:{getGameAttribute:key=>attrs[key]}},c:{asNumber:Number},k:{_customBlock_Log2:x=>Math.log2(Math.max(1,x)),_customBlock_getLOG:x=>Math.log(Math.max(1,x))/2.302585},p:{_customBlock_ArcadeBonus:()=>20,_customBlock_AtomCollider:()=>0},q:{_customBlock_JellyOperation:()=>state.jellyDiscount}};
    m._customBlock_SushiStuff=vm.runInNewContext('('+handler+')',env);const game=(name,t=0,i=0)=>m._customBlock_SushiStuff(name,t,i),actual=M.calculate(state);
    game('OrangeFireSum',-1);
    const near=(a,b,label)=>{assert(Math.abs(a-b)<=1e-10*Math.max(1,Math.abs(b)),label+': '+a+' vs '+b);checks++;};

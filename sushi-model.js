@@ -5,8 +5,8 @@ const words=v=>String(v??'').replaceAll('_',' '),product=xs=>xs.reduce((v,x)=>v*
 function decode(raw,catalog,context){
   const data=parse(raw?.data)||raw||{},s=parse(data.Sushi);
   if(!Array.isArray(s)||s.length<8||s.slice(0,8).some(x=>!Array.isArray(x)))return null;
-  const research=parse(data.Research)||[],bundles=parse(data.BundlesReceived)||{};
-  return {catalog,context,tiers:Array.from({length:120},(_,i)=>num(s[0][i]??-1)),plates:Array.from({length:120},(_,i)=>num(s[1][i]??-1)),fires:Array.from({length:15},(_,i)=>num(s[3][i]??-1)),levels:s[2].map(num),misc:s[4].map(num),tracking:s[5].map(num),xp:s[6].map(num),knowledge:s[7].map(num),bundle:num(bundles.bon_v)>0?2:1,jellyBundle:num(bundles.ban_j)===1?2:1,jellyDiscount:num(research[7]?.[9])>18?num(catalog.Research[47]?.[18]):0};
+  const research=parse(data.Research)||[],bundles=parse(data.BundlesReceived)||{},doublers=parse(data.Spelunk)?.[52]||[];
+  return {catalog,context,doublers,tiers:Array.from({length:120},(_,i)=>num(s[0][i]??-1)),plates:Array.from({length:120},(_,i)=>num(s[1][i]??-1)),fires:Array.from({length:15},(_,i)=>num(s[3][i]??-1)),levels:s[2].map(num),misc:s[4].map(num),tracking:s[5].map(num),xp:s[6].map(num),knowledge:s[7].map(num),bundle:num(bundles.bon_v)>0?2:1,jellyBundle:num(bundles.ban_j)===1?2:1,jellyDiscount:num(research[7]?.[9])>18?num(catalog.Research[47]?.[18]):0};
 }
 function knowledge(s){
   const r=s.catalog.Research;
@@ -20,7 +20,7 @@ function knowledge(s){
 function formatEffect(template,value){return words(template).replaceAll('{',String(Number(value.toPrecision(5)))).replaceAll('^',String(Number(value.toPrecision(5)))).replaceAll('}',String(Number((1+value/100).toPrecision(5)))).replaceAll('@',' · ');}
 function calculate(s){
   const ks=knowledge(s),totals=Array(11).fill(0);ks.forEach(k=>totals[k.category]+=k.bonus);
-  const lv=i=>num(s.levels[i]),q=i=>lv(i)*num(s.catalog.SushiUPG[i]?.[3]),sum=ids=>ids.reduce((n,i)=>n+q(i),0),t=i=>num(totals[i]);
+  const lv=i=>num(s.levels[i]),q=i=>lv(i)*num(s.catalog.SushiUPG[i]?.[3])*(s.doublers?.includes(i)?2:1),sum=ids=>ids.reduce((n,i)=>n+q(i),0),t=i=>num(totals[i]);
   let unique=0;while(unique<ks.length&&ks[unique].discovered)unique++;
   const spark=Math.max(0,num(s.misc[2])),sparkPct=.2*Math.log2(Math.max(1,spark))+Math.log(Math.max(1,spark))/2.302585;
   const fireBase=(1+t(9)/100)*(1+sparkPct/100),plateBase=1+t(8)/100;

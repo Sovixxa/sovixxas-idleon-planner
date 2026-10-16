@@ -7,7 +7,7 @@ function coins(value){
  const exponent=Number(match[3]||0);if(!Number.isSafeInteger(exponent)||Math.abs(exponent)>1000)return null;
  const digits=match[1]+(match[2]||''),point=match[1].length+exponent;
  let remaining=BigInt(point<=0?'0':point>=digits.length?digits+'0'.repeat(point-digits.length):digits.slice(0,point));
- const out=[];let tier=1;while(remaining>0n&&tier<=25){const amount=tier===25?remaining:remaining%100n;if(amount>0n)out.push({tier,amount:String(amount)});remaining=tier===25?0n:remaining/100n;tier++;}
+ const out=[];let tier=1;while(remaining>0n&&tier<=30){const amount=tier===30?remaining:remaining%100n;if(amount>0n)out.push({tier,amount:String(amount)});remaining=tier===30?0n:remaining/100n;tier++;}
  return out.length?out.reverse():[{tier:1,amount:'0'}];
 }
 const esc=v=>String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));

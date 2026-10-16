@@ -23,7 +23,7 @@ if(fs.existsSync(clientPath)){
  for(let trial=0;trial<5;trial++){
   const input=raw(Array.from({length:82},(_,i)=>(i*3+trial)%20));input.Holes[28]=[0,49,57,72,75];input.KRbest={SummzTrz0:2,SummzTrz5:3,SummzTrz6:1};const state=make(input),info=[];info[170]=Math.floor(state.levels.reduce((a,b)=>a+b,0)/100);
   const attrs={Summon:input.Summon,Holes:input.Holes,CustomLists:{h:{SummonUPG:catalog.SummonUPG}},DNSM:{h:{CalcTalentMAP:{h:{595:0}}}},OptionsListAccount:Array(400).fill(0),PixelHelperActor:Array.from({length:25},()=>({behaviors:{getBehavior:()=>({_GenINFO:info})}}))};
-  const m={_customBlock_Thingies:(_,c)=>state.stones[c],_customBlock_SushiStuff:()=>0,_customBlock_ArcaneType:()=>0},env={a:{engine:{getGameAttribute:k=>attrs[k]}},c:{asNumber:Number},p:{_customBlock_getbonus2:()=>0},q:{_customBlock_JellyOperation:()=>0},D:{contains:(a,v)=>a.includes(v)},n:{__cast:x=>x},wa:{},m,Math};
+  const m={_customBlock_Thingies:(_,c)=>state.stones[c],_customBlock_SushiStuff:()=>0,_customBlock_ArcaneType:()=>0},env={a:{engine:{getGameAttribute:k=>attrs[k]}},c:{asNumber:Number},p:{_customBlock_getbonus2:()=>0},q:{_customBlock_JellyOperation:()=>0,_customBlock_MenagerieStuff:action=>action==='SumCostReduxMena'?1:0},D:{contains:(a,v)=>a.includes(v)},n:{__cast:x=>x},wa:{},za:{},m,Math};
   const call=vm.runInNewContext('('+source.slice(start,end)+')',env);m._customBlock_Summoning=call;
   for(const u of state.upgrades){near(M.bonus(state,u.id),call('SummUpgBonus',u.id,0));near(M.cost(state,u),call('UpgCost',u.id,0));}
  }

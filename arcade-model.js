@@ -17,7 +17,7 @@ function companion(raw={}){
 function bonus(item,level,pet){
  level=known(level);if(level==null)return{base:null,total:null};
  const value=item.formula==='add'?item.base*level:item.formula==='decay'?item.base*level/(level+item.scale):item.formula==='intervalAdd'?item.base+Math.floor(level/item.scale):null;
- const base=value==null?null:value*(level===101?2:1);
+ const base=value==null?null:value*(level===102?6:level===101?2:1);
  return{base,total:base==null||pet?.multiplier==null?null:base*pet.multiplier};
 }
 const api={known,companion,bonus};if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.ArcadeModel=api;
