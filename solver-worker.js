@@ -32,22 +32,37 @@ let state;
     moves.sort((a,b)=>E.timedObjective(b.stats,q.objectiveMode)-E.timedObjective(a.stats,q.objectiveMode));return moves[0]||E.findUpgradeTarget(state,res.arrangement,{damageScale:res.damageScale,reviveDelaySeconds:reviveDelay,steroidStartSeconds:res.steroidStart});
   }
 
+  // Keep the strongest pending preview and send at most one board per 150ms.
+  // Status messages flush pending improvements; completion flushes the last one.
+  function progressReporter(objectiveMode){
+    let best=null,pending=null,last=-Infinity;
+    function flush(force=false){if(pending&&(force||Date.now()-last>=150)){postMessage({type:'progress',progress:pending});pending=null;last=Date.now();}}
+    return {flush,report(p){
+      if(p.arrangement&&p.stats){
+        const validated=p.stage.includes('validated layout'),objective=E.timedObjective(p.stats,objectiveMode),filled=p.arrangement.reduce((n,x)=>n+x.cells.length,0);
+        if(best&&(best.validated&&!validated||best.validated===validated&&(objective<best.objective||objective===best.objective&&filled<=best.filled)))return;
+        best={validated,objective,filled};pending=p;flush();
+      }else{flush();postMessage({type:'progress',progress:p});}
+    }};
+  }
+
   function trainPlaybook(options={}){
     const generations=Math.max(1,Math.min(60,Math.round(Number(options.generations)||3))),untilReliable=generations>=60;
     const remembered=(Array.isArray(options.memory)?options.memory:[])
       .map(x=>x?.arrangement).filter(arr=>Array.isArray(arr)&&E.isLegalLayout(state,arr));
     let best=null,incumbent=remembered[0]||options.incumbentArr||null;
     const perGeneration=Math.max(900,Math.min(4200,Math.round(Number(options.timeMs)||2200)));
-    let solved=false,completed=0;
+    let solved=false,completed=0;const progress=progressReporter(options.objectiveMode);
     for(let generation=0;generation<generations;generation++){
       postMessage({type:'progress',progress:{stage:'self-play generation '+(generation+1)+'/'+generations,remembered:remembered.length}});
       const trialState=E.cloneState(state);if(best?.fever!=null)trialState.fever=best.fever;
-      const value=E.optimizeOperation(trialState,{...options,timeMs:perGeneration,searchFever:generation===0?options.searchFever:false,incumbentArr:incumbent,searchSeed:(Number(options.searchSeed)||0x71A1)+generation*7919,onProgress:p=>postMessage({type:'progress',progress:{...p,stage:'training '+(generation+1)+'/'+generations+' · '+p.stage}})});
+      const value=E.optimizeOperation(trialState,{...options,timeMs:perGeneration,searchFever:generation===0?options.searchFever:false,incumbentArr:incumbent,incumbentFever:best?.fever??options.memory?.[0]?.fever,incumbentSteroidStart:best?.steroidStart??options.memory?.[0]?.steroidStart,searchSeed:(Number(options.searchSeed)||0x71A1)+generation*7919,onProgress:p=>progress.report({...p,stage:'training '+(generation+1)+'/'+generations+' · '+p.stage})});
       if(!best||E.timedObjective(value.stats,options.objectiveMode)>E.timedObjective(best.stats,options.objectiveMode))best=value;
       incumbent=best.arrangement;
       completed=generation+1;
       if(untilReliable&&best.stats.clearRate>=.99){solved=true;break;}
     }
+    progress.flush(true);
     return {best,generations:completed,cap:generations,solved,remembered:remembered.length};
   }
 
@@ -57,7 +72,7 @@ self.onmessage=event=>{
     const {job,options,result}=event.data;state=event.data.state;
     if(job==='practice'){
       state=E.cloneState(state);state.fever=options.fever;
-      postMessage({type:'result',value:E.simulateOne(state,options.arrangement,options)});
+      postMessage({type:'result',value:E.simulateOne(state,options.arrangement,{...options,damageScale:options.damageScale??E.autoDamageScale(event.data.state,E.arrangementFromBoard(event.data.state)).scale})});
     }else if(job==='upgrades'){
       postMessage({type:'result',value:E.planUpgradePurchases(state,options.arrangement,options)});
     }else if(job==='initial'||job==='calibrate'){
@@ -70,7 +85,9 @@ self.onmessage=event=>{
       const value=job==='calibrate'?calibration:{calibration,stats:E.simulateMany(state,arrangement,{runs:options.runs,damageScale:calibration.scale,seed:0xCAFE,useSteroid:true,reviveDelaySeconds:options.reviveDelaySeconds})};
       postMessage({type:'result',value});
     }else if(job==='optimize'){
-      const value=E.optimizeOperation(state,{...options,onProgress:progress=>postMessage({type:'progress',progress})});
+      const progress=progressReporter(options.objectiveMode);
+      const value=E.optimizeOperation(state,{...options,onProgress:p=>progress.report(p)});
+      progress.flush(true);
       const chosen=E.cloneState(state);chosen.fever=value.fever;
       value.replay=E.simulateOne(chosen,value.arrangement,{damageScale:value.damageScale,seed:0xD00D,useSteroid:options.useSteroid!==false,steroidStartSeconds:value.steroidStart??0,reviveDelaySeconds:value.reviveDelaySeconds,trace:true});
       postMessage({type:'result',value});

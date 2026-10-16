@@ -647,15 +647,15 @@ const VERSION='0.9.9-alchemy-bubbles';
     const runs=Math.max(1,Math.min(500,Math.round(asNum(options.runs,24))));
     const sample=start=>simulateMany(state,arr,{...options,runs,useSteroid:true,steroidStartSeconds:start,seed:Math.round(asNum(options.seed,0x57E2))});
     const initial=sample(0),allCandidates=steroidStartCandidates(state,initial.medianElapsed);
-    // Screening needs more than an immediate burst, but testing every possible
-    // time for every mutation is too costly. Cover early/mid/late normal combat
-    // and two Critical timings; surviving candidates get the full timing search.
+    // Quick finalists use a small timing grid; deeper searches try every
+    // supported activation time. Preserve a remembered exact start in either mode.
     const timer=bossTime(state.obstruction),dur=300/FPS;
     const coarse=[0,Math.max(0,(timer-dur)/2),Math.max(0,timer-dur)];
     if(critUnlocked(state)&&initial.medianElapsed>timer){
       const last=Math.max(timer,initial.medianElapsed-dur);coarse.push((timer+last)/2,last);
     }
     const candidates=options.timingSearch==='coarse'?[...new Set(coarse)]:allCandidates;
+    if(Number.isFinite(options.incumbentSteroidStart)&&options.incumbentSteroidStart>=0&&!candidates.includes(options.incumbentSteroidStart))candidates.push(options.incumbentSteroidStart);
     let best=null;
     for(const start of candidates){
       const stats=start===0?initial:sample(start);
@@ -919,6 +919,7 @@ const VERSION='0.9.9-alchemy-bubbles';
   }
   function optimizeTimed(state,options={}){
     const start=performanceNow(),timeMs=Math.max(500,asNum(options.timeMs,3500)),current=arrangementFromBoard(state);
+    const deadline=Math.min(start+timeMs,asNum(options.deadline,Infinity)),screenDeadline=start+Math.max(0,deadline-start)*.7;
     const cal=options.damageScale?{scale:asNum(options.damageScale,1),source:'custom'}:autoDamageScale(state,current),damageScale=cal.scale;
     const reviveDelaySeconds=Math.max(0,asNum(options.reviveDelaySeconds,0)),index=buildPlacementIndex(state);
     const rng=seededRng(asNum(options.searchSeed,0xB00B5)),candidates=new Map(),currentKey=arrangementKey(current);
@@ -933,13 +934,26 @@ const VERSION='0.9.9-alchemy-bubbles';
         supportKey:[shields>0,score.organelleBoosted>0,score.infectedSlots>0,prox>0,counts.some((n,t)=>t!==5&&n>=3&&upgradeQty(state,14)>=1)].join(':')};candidates.set(key,c);return c;}
     add(current,true);add(current);
     if(options.incumbentArr&&isLegalLayout(state,options.incumbentArr)){add(options.incumbentArr,true);add(options.incumbentArr);}
-    for(let n=0;n<60;n++)add(relocateLayout(state,index,rng,current));
+    const constructionDeadline=Math.min(screenDeadline,start+Math.max(0,deadline-start)*.15);
+    const incumbent=options.incumbentArr&&isLegalLayout(state,options.incumbentArr)?options.incumbentArr:current;
+    // Seed every usable type even when the construction budget has expired.
+    // Replace whole overlapping pieces, so large shapes can enter packed boards.
+    const coverageTypes=[];
+    for(let type=0;type<unitsOwned(state);type++){
+      if(type===5&&virusLimit(state)<1)continue;
+      const target=index.placements.find(p=>p.type===type);if(!target)continue;
+      coverageTypes.push(type);
+      if([...candidates.values()].some(c=>c.counts[type]>0&&isLegalLayout(state,c.arr)))continue;
+      const occupied=new Set(target.cells);
+      const kept=incumbent.filter(p=>!p.cells.some(c=>occupied.has(c))&&!(type===5&&p.type===5));
+      add(fillEmptySlots(state,[...kept,{type,anchor:target.anchor,cells:target.cells.slice()}]));
+    }
+    for(let n=0;n<12&&performanceNow()<constructionDeadline;n++)add(n%2?rebuildLayoutPatch(state,index,rng,incumbent):relocateLayout(state,index,rng,incumbent));
     // Deterministic bounded construction; no exponential mix enumeration on the hot path.
     const generationCount=Math.max(100,Math.min(1200,Math.round(asNum(options.mixLimit,300)*2)));
-    for(let i=0;i<generationCount;i++)add(i%6===0?generateBreakpointLayout(state,index,rng):i%5===0?generateSupportLayout(state,index,rng):i%4===0?generateRoleAwareLayout(state,index,rng):generateLayout(state,index,rng));
+    for(let i=0;i<generationCount&&performanceNow()<constructionDeadline;i++)add(i%6===0?generateBreakpointLayout(state,index,rng):i%5===0?generateSupportLayout(state,index,rng):i%4===0?generateRoleAwareLayout(state,index,rng):generateLayout(state,index,rng));
     // Spend a small, predictable share of the search budget turning the strongest
     // mixes into coordinated support layouts before the costly timed screening.
-    const constructionDeadline=start+timeMs*.28;
     const constructionElites=[...candidates.values()].sort((a,b)=>b.proxy-a.proxy).slice(0,Math.max(8,Math.min(28,Math.ceil(shortlistTarget*.6))));
     for(const c of constructionElites){
       if(performanceNow()>=constructionDeadline)break;
@@ -948,6 +962,9 @@ const VERSION='0.9.9-alchemy-bubbles';
     const ranked=[...candidates.values()].sort((a,b)=>b.proxy-a.proxy),shortlist=new Map();
     const keep=(c,required=false)=>{if(c&&(required||shortlist.size<shortlistTarget))shortlist.set(c.key,c);};
     keep(candidates.get(currentKey),true);
+    keep(candidates.get(arrangementKey(incumbent)),true);
+    keep(add(incumbent),true);
+    keep(ranked.find(c=>c.key!==currentKey&&c.key!==arrangementKey(incumbent)),true);
     // Round-robin shield-count lanes ensure defense is actually simulated.
     const lanes=new Map();for(const c of ranked){if(!lanes.has(c.shields))lanes.set(c.shields,[]);lanes.get(c.shields).push(c);}
     const supportLanes=new Map();for(const c of ranked){if(!supportLanes.has(c.supportKey))supportLanes.set(c.supportKey,[]);supportLanes.get(c.supportKey).push(c);}
@@ -965,28 +982,63 @@ const VERSION='0.9.9-alchemy-bubbles';
     for(const c of ranked)if(shortlist.size<shortlistTarget)keep(c);
     if(options.incumbentArr)keep(candidates.get(arrangementKey(options.incumbentArr)),true);
     const common={damageScale,useSteroid:options.useSteroid!==false,reviveDelaySeconds,objectiveMode:options.objectiveMode};
-    const screenRuns=Math.max(3,Math.min(12,Math.round(asNum(options.screenRuns,4)))),screened=[];let simulated=0,lastPreview=-Infinity;
+    const screenRuns=Math.max(1,Math.min(12,Math.round(asNum(options.screenRuns,2)))),screened=[];let simulated=0;
+    let preview=null,lastPreview=-Infinity,pendingPreview=null;
+    const showBest=(c,stats,validated=false,flush=false)=>{
+      const obj=timedObjective(stats,options.objectiveMode),filled=c.score.filledSlots;
+      if(!preview||validated&&!preview.validated||validated===preview.validated&&(obj>preview.obj||obj===preview.obj&&filled>preview.filled)){
+        preview={obj,filled,validated};pendingPreview={stage:validated?'validated layout':'testing layouts',arrangement:c.arr,stats};
+      }
+      if(pendingPreview&&(flush||performanceNow()-lastPreview>=150)){
+        report(pendingPreview.stage,{tested:simulated,candidates:candidates.size,arrangement:pendingPreview.arrangement,stats:pendingPreview.stats});pendingPreview=null;lastPreview=performanceNow();
+      }
+    };
     function screen(c){
       if(c.stats)return c;
-      const timing=optimizeSteroidStart(state,c.arr,{...common,runs:screenRuns,seed:0x51A7,timingSearch:'coarse'});
-      c.stats=timing.stats;c.obj=timedObjective(c.stats,options.objectiveMode);screened.push(c);simulated++;
-      if(performanceNow()-lastPreview>100){report('testing layouts',{tested:simulated,candidates:candidates.size,arrangement:c.arr,stats:c.stats});lastPreview=performanceNow();}
+      // A small fixed schedule preserves late-burst boards without optimizing
+      // every candidate's activation time. Full timing search is finalists-only.
+      const sample=t=>simulateMany(state,c.arr,{...common,runs:screenRuns,seed:0x51A7,steroidStartSeconds:t});
+      c.stats=sample(0);c.screenStart=0;c.obj=timedObjective(c.stats,options.objectiveMode);
+      if(common.useSteroid&&steroidUnlocked(state)){
+        const timer=bossTime(state.obstruction),starts=[Math.max(0,timer-5)];
+        if(critUnlocked(state)&&c.stats.medianElapsed>timer)starts.push(Math.max(timer,c.stats.medianElapsed-5));
+        for(const t of new Set(starts)){
+          if(performanceNow()>=screenDeadline)break;
+          const stats=sample(t),obj=timedObjective(stats,options.objectiveMode);
+          if(obj>c.obj){c.stats=stats;c.obj=obj;c.screenStart=t;}
+        }
+      }
+      screened.push(c);simulated++;showBest(c,c.stats);
       return c;
     }
+    // Coverage is mandatory; only optional exploration is deadline-limited.
+    // Reuse multi-type layouts to cover several types with one simulation batch.
+    const uncovered=new Set(coverageTypes);
+    while(uncovered.size){
+      const coverage=[...candidates.values()].filter(c=>isLegalLayout(state,c.arr)).map(c=>({c,gain:[...uncovered].filter(t=>c.counts[t]>0).length})).filter(x=>x.gain>0)
+        .sort((a,b)=>b.gain-a.gain||b.c.proxy-a.c.proxy)[0];
+      if(!coverage)throw new Error('Unable to construct a legal cell-type coverage board.');
+      report('testing unlocked cell types',{index:coverageTypes.length-uncovered.size+1,total:coverageTypes.length});
+      screen(coverage.c);
+      for(const type of [...uncovered])if(coverage.c.counts[type]>0)uncovered.delete(type);
+    }
     report('screening',{candidates:candidates.size});
-    for(const c of shortlist.values())screen(c);
+    for(const c of shortlist.values()){
+      if(screened.length>=Math.min(2,shortlist.size)&&performanceNow()>=screenDeadline)break;
+      screen(c);
+    }
     // Mutate multiple timed elites. Deleting whole cells leaves legal empty squares;
     // refilling can relocate cores, change mixes, or add shielding.
     const mutations=Math.max(16,Math.min(240,Math.round(timeMs/35)));
     for(let i=0;i<mutations;i++){
-      if(i>=16&&performanceNow()>start+timeMs)break;
+      if(performanceNow()>=screenDeadline)break;
       screened.sort((a,b)=>b.obj-a.obj);
       const parent=screened[Math.floor(rng()*Math.min(8,screened.length))];
       const removeCount=1+Math.floor(rng()*Math.max(2,parent.arr.length*.15));
       const removed=new Set();for(let n=0;n<removeCount;n++)removed.add(Math.floor(rng()*parent.arr.length));
       const kept=parent.arr.filter((_,i)=>!removed.has(i));
       let child=i%3===0?rebuildLayoutPatch(state,index,rng,parent.arr):i%3===1?relocateLayout(state,index,rng,parent.arr):generateLayout(state,index,rng,kept);
-      if(i%3!==0)child=localImproveLayout(state,index,rng,child,2,start+timeMs);
+      if(i%3!==0)child=localImproveLayout(state,index,rng,child,2,screenDeadline);
       const c=add(child);screen(c);
       if(i%10===0)report('refining',{tested:simulated,bestClearRate:screened[0].stats.clearRate});
     }
@@ -998,17 +1050,18 @@ const VERSION='0.9.9-alchemy-bubbles';
     const refineCount=Math.max(0,Math.min(screened.length,Math.round(asNum(options.refineCount,Math.min(12,shortlistTarget)))));
     let finalistPool=screened;
     if(refineRuns>screenRuns&&refineCount){
-      finalistPool=screened.slice(0,refineCount);
-      for(let i=0;i<finalistPool.length;i++){
-        const c=finalistPool[i];report('deep rechecking',{index:i+1,total:finalistPool.length,runs:refineRuns});
-        c.plan=optimizeSteroidStart(state,c.arr,{...common,runs:6,seed:0x57E2});
-        c.stats=simulateMany(state,c.arr,{...common,runs:refineRuns,seed:0x9EED,steroidStartSeconds:c.plan.start});c.obj=timedObjective(c.stats,options.objectiveMode);simulated++;
+      const cohort=screened.slice(0,refineCount);finalistPool=[];
+      for(let i=0;i<cohort.length;i++){
+        if(i&&performanceNow()>=deadline)break;
+        const c=cohort[i];report('deep rechecking',{index:i+1,total:cohort.length,runs:refineRuns});
+        c.stats=simulateMany(state,c.arr,{...common,runs:refineRuns,seed:0x9EED,steroidStartSeconds:c.screenStart});c.obj=timedObjective(c.stats,options.objectiveMode);simulated++;
+        finalistPool.push(c);
       }
     }
     // Once rechecked, compare only that cohort. A lucky screening score from
     // outside it must not displace a board tested on the larger seed set.
     finalistPool.sort((a,b)=>b.obj-a.obj);
-    const finalists=finalistPool.slice(0,Math.max(4,Math.min(12,asNum(options.finalists,8))));
+    const finalists=finalistPool.slice(0,Math.max(1,Math.min(12,asNum(options.finalists,4))));
     if(options.incumbentArr){const prior=candidates.get(arrangementKey(options.incumbentArr));if(prior&&!finalists.includes(prior))finalists.push(prior);}
     if(!finalists.some(c=>c.key===currentKey))finalists.push(candidates.get(currentKey));
     // Preserve an honest saved-board baseline, but always validate its filled
@@ -1021,12 +1074,13 @@ const VERSION='0.9.9-alchemy-bubbles';
     for(let i=0;i<finalists.length;i++){
       const c=finalists[i];report('validating',{index:i+1,total:finalists.length,runs:fullRuns});
       // Timing selection uses training seeds; final comparison uses independent seeds.
-      const plan=c.plan||optimizeSteroidStart(state,c.arr,{...common,runs:6,seed:0x57E2});
+      const plan=optimizeSteroidStart(state,c.arr,{...common,runs:Math.max(1,asNum(options.timingRuns,3)),timingSearch:options.timingSearch,incumbentSteroidStart:c.key===arrangementKey(incumbent)?options.incumbentSteroidStart:undefined,seed:0x57E2});
       const stats=simulateMany(state,c.arr,{...common,runs:fullRuns,seed:0xD00D,steroidStartSeconds:plan.start});
-      report('validated layout',{tested:simulated,candidates:candidates.size,arrangement:c.arr,stats});
+      showBest(c,stats,true);
       plans.push({c,plan,stats,obj:timedObjective(stats,options.objectiveMode)});simulated++;
     }
     plans.sort((a,b)=>b.obj-a.obj||b.c.score.filledSlots-a.c.score.filledSlots);const best=plans[0],baseline=plans.find(p=>p.c.key===currentKey);
+    showBest(best.c,best.stats,true,true);
     report('complete',{clearRate:best.stats.clearRate,runs:fullRuns});
     return {arrangement:best.c.arr,stats:best.stats,current,currentStats:baseline.stats,damageScale,calibration:cal,
       mixesTested:generationCount,tilings:candidates.size,candidates:candidates.size,simulated,timeMs:performanceNow()-start,
@@ -1042,18 +1096,20 @@ const VERSION='0.9.9-alchemy-bubbles';
     if(options.objectiveMode==='bloodcells'&&!bloodcellBonuses(state).known)throw new Error('Bloodcell optimization needs a full account export. Missing: '+bloodcellBonuses(state).missing.join(', '));
     if(options.objectiveMode==='dps'&&upgradeQty(state,12)<1)throw new Error('Unlock DPS Biometrics before optimizing the recorded DPS bloodcell multiplier.');
     const fevers=options.searchFever===false||!feverUnlocked(state)?[state.fever]:[...new Set([state.fever,...Array.from({length:Math.min(6,Math.floor(upgradeQty(state,16)))},(_,i)=>i)])];
-    const begin=performanceNow();let best=null,baseline=null;const feverResults=[];
+    const begin=performanceNow(),deadline=begin+Math.max(500,asNum(options.timeMs,4200));let best=null,baseline=null;const feverResults=[];
     // Calibrate against the saved board and Fever once. Re-fitting each Fever
     // to the same historical DPS record would cancel its real damage effect.
     const calibration=options.damageScale?{scale:asNum(options.damageScale,1),source:'custom'}:autoDamageScale(state,arrangementFromBoard(state));
+    if(options.incumbentFever!=null&&fevers.includes(options.incumbentFever)&&options.incumbentFever!==state.fever){fevers.splice(fevers.indexOf(options.incumbentFever),1);fevers.splice(1,0,options.incumbentFever);}
     for(const fever of fevers){
+      if(best&&performanceNow()>=deadline&&fever!==options.incumbentFever)break;
       const st=cloneState(state);st.fever=fever;
-      const result=optimizeTimed(st,{...options,damageScale:calibration.scale,timeMs:Math.max(500,asNum(options.timeMs,4200)/fevers.length),onProgress:p=>options.onProgress?.({...p,fever:FEVER_NAMES[fever]||'None',feverIndex:fever})});
+      const result=optimizeTimed(st,{...options,deadline,damageScale:calibration.scale,timeMs:Math.max(500,(deadline-performanceNow())/(fevers.length-feverResults.length)),onProgress:p=>options.onProgress?.({...p,fever:FEVER_NAMES[fever]||'None',feverIndex:fever})});
       if(fever===state.fever)baseline=result;
       feverResults.push({fever,stats:result.stats});
       if(!best||timedObjective(result.stats,options.objectiveMode)>timedObjective(best.stats,options.objectiveMode))best={...result,fever};
     }
-    return {...best,calibration,currentStats:baseline.currentStats,currentSteroidStart:baseline.currentSteroidStart,currentFever:state.fever,feverResults,timeMs:performanceNow()-begin};
+    return {...best,calibration,currentStats:baseline.currentStats,currentSteroidStart:baseline.currentSteroidStart,currentFever:state.fever,feversRequested:fevers.length,feverResults,timeMs:performanceNow()-begin};
   }
   function clearConfidence(stats){
     const n=stats.runs,p=stats.clearRate,z=1.96,den=1+z*z/n;

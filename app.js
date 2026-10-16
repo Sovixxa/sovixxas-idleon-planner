@@ -76,7 +76,7 @@
     }
     if(name!=='practice'&&practice?.playing)stopPracticePlayback();
     for(const job of ['practice','upgrades'])if(name!==job&&jellyPanelJobs.has(job)){jellyPanelJobs.get(job)();if(job==='practice')initialPracticePending=true;else initialUpgradesPending=true;}
-    if(name==='upgrades'&&initialUpgradesPending){initialUpgradesPending=false;renderUpgrades(currentArrangement,currentStats,calibration.scale);}
+    if(name==='upgrades'&&initialUpgradesPending){initialUpgradesPending=false;renderUpgrades(currentArrangement,currentStats,calibration?.scale);}
     if(name==='practice'&&initialPracticePending){initialPracticePending=false;refreshPracticeFevers();refreshPracticeCells();runPractice(true,true);}
   }
   const SKILL_PAGES={
@@ -228,9 +228,9 @@ SKILL_PAGES.holeFloors={title:'Floors',world:'World 5',copy:'All 18 Hole caverns
   function stat(k,v,sub=''){return `<div class="stat"><div class="k">${esc(k)}</div><div class="v">${esc(v)}</div>${sub?`<div class="m-sub">${esc(sub)}</div>`:''}</div>`;}
   function quality(){
     const q=$('searchQuality').value,objectiveMode=$('objectiveMode')?.value||'chance';
-    if(q==='quick')return {timeMs:1800,runs:32,mixLimit:190,shortlist:32,screenRuns:4,refineRuns:8,objectiveMode};
-    if(q==='deep')return {timeMs:15000,runs:384,mixLimit:1050,shortlist:104,screenRuns:8,refineRuns:32,refineCount:24,finalists:12,objectiveMode};
-    return {timeMs:5200,runs:128,mixLimit:480,shortlist:64,screenRuns:5,refineRuns:16,refineCount:16,objectiveMode};
+    if(q==='quick')return {timeMs:1800,runs:16,mixLimit:100,shortlist:20,screenRuns:1,refineRuns:4,refineCount:4,finalists:2,timingRuns:1,timingSearch:'coarse',objectiveMode};
+    if(q==='deep')return {timeMs:15000,runs:384,mixLimit:1050,shortlist:104,screenRuns:3,refineRuns:32,refineCount:24,finalists:12,objectiveMode};
+    return {timeMs:5200,runs:128,mixLimit:480,shortlist:64,screenRuns:2,refineRuns:12,refineCount:8,finalists:4,timingRuns:3,objectiveMode};
   }
   function currentReviveDelay(){return Math.max(0,Number($('reviveDelay')?.value)||0);}
   function persistInput(){
@@ -733,9 +733,9 @@ SKILL_PAGES.holeFloors={title:'Floors',world:'World 5',copy:'All 18 Hole caverns
     $('worldContent').querySelectorAll('[data-skill-tab]').forEach(button=>button.addEventListener('click',()=>selectSideNav(button.dataset.skillTab)));
   }
 
-  function trainingContext(){
+  function trainingContext(goal=$('objectiveMode').value){
     if(!state)return null;
-    return JSON.stringify({model:E.COMBAT_MODEL_VERSION,goal:$('objectiveMode').value,boss:state.obstruction,plots:(state.plots||[]).slice().sort((a,b)=>a-b),cells:E.unitsOwned(state),virus:E.virusLimit(state)});
+    return JSON.stringify({model:E.COMBAT_MODEL_VERSION,goal,boss:state.obstruction,plots:(state.plots||[]).slice().sort((a,b)=>a-b),cells:E.unitsOwned(state),virus:E.virusLimit(state)});
   }
   function readPlaybook(){
     try{const value=JSON.parse(localStorage.getItem(TRAINING_KEY)||'[]');return Array.isArray(value)?value.filter(x=>x&&Array.isArray(x.arrangement)):[];}catch(_){return [];}
@@ -744,11 +744,11 @@ SKILL_PAGES.holeFloors={title:'Floors',world:'World 5',copy:'All 18 Hole caverns
     try{localStorage.setItem(TRAINING_KEY,JSON.stringify(entries.slice(0,48)));}catch(_){/* browser storage is optional */}
   }
   function memoryForBoard(){const key=trainingContext();return key?readPlaybook().filter(x=>x.context===key&&E.isLegalLayout(state,x.arrangement)):[];}
-  function saveTraining(value){
+  function saveTraining(value,goal=$('objectiveMode').value){
     if(!value?.best||!state)return;
-    const context=trainingContext(),entry={context,arrangement:value.best.arrangement,fever:value.best.fever,steroidStart:value.best.steroidStart,stats:value.best.stats,objective:E.timedObjective(value.best.stats,$('objectiveMode').value),savedAt:Date.now(),generations:value.generations};
+    const context=trainingContext(goal),entry={context,arrangement:value.best.arrangement,fever:value.best.fever,steroidStart:value.best.steroidStart,stats:value.best.stats,objective:E.timedObjective(value.best.stats,goal),savedAt:Date.now(),generations:value.generations};
     const others=readPlaybook().filter(x=>x.context!==context&&Date.now()-Number(x.savedAt||0)<1000*60*60*24*90);
-    const board=memoryForBoard().concat(entry).sort((a,b)=>Number(b.objective||-Infinity)-Number(a.objective||-Infinity));
+    const board=readPlaybook().filter(x=>x.context===context&&E.isLegalLayout(state,x.arrangement)).concat(entry).sort((a,b)=>Number(b.objective||-Infinity)-Number(a.objective||-Infinity));
     const unique=[],seen=new Set();for(const candidate of board){const key=E.arrangementKey(candidate.arrangement);if(!seen.has(key)){seen.add(key);unique.push(candidate);}}
     writePlaybook(others.concat(unique.slice(0,8)));
   }
@@ -832,36 +832,20 @@ SKILL_PAGES.holeFloors={title:'Floors',world:'World 5',copy:'All 18 Hole caverns
   }
   $('jellyUpgradeControls').addEventListener('change',()=>renderUpgradePlan(lastResult?.arrangement||currentArrangement));
 
-  async function renderInitial(){
+  function renderInitial(){
     if(state.hasJelly===false){currentArrangement=null;currentStats=null;lastResult=null;renderHome();return;}
     currentArrangement=E.arrangementFromBoard(state);
-    const snapshot=state;
+    currentStats=null;calibration=null;
     $('alternativesPanel').classList.add('hidden');$('layoutChanges').textContent='';$('replayPanel').classList.add('hidden');$('planBtn').disabled=true;lastResult=null;lastNextMove=null;$('nextMove').innerHTML='<p class="subtitle">Run Optimize Jelly to calculate the next purchase.</p>';
     stopPracticePlayback();practice=null;
-    initialUpgradesPending=false;initialPracticePending=false;
-    $('optimizeBtn').disabled=true;$('trainBtn').disabled=true;
-    $('solverStatus').textContent='Timing current layout…';
-    renderBoard($('currentBoard'),currentArrangement);renderBoard($('bestBoard'),currentArrangement);
-    for(const id of ['currentSummary','bestSummary','currentTimeline','bestTimeline','currentVerdict','bestVerdict'])$(id).textContent='Calculating…';
-    try{
-      const prepared=await workerJob('initial',{observed:Number($('observedTime').value),runs:Math.max(18,quality().runs),reviveDelaySeconds:currentReviveDelay()});
-      if(state!==snapshot)return;
-      calibration=prepared.calibration;currentStats=prepared.stats;
-    }catch(error){
-      if(state===snapshot){jellyReadyState=null;$('solverStatus').textContent=error.message;}
-      return;
-    }finally{
-      if(state===snapshot){$('optimizeBtn').disabled=false;$('trainBtn').disabled=false;}
-    }
-
     renderStateStats();renderBoard($('currentBoard'),currentArrangement);renderBoard($('bestBoard'),currentArrangement);
-    renderSummary($('currentSummary'),currentStats);renderSummary($('bestSummary'),currentStats);renderTimeline($('currentTimeline'),currentStats);renderTimeline($('bestTimeline'),currentStats);
-    $('currentVerdict').innerHTML=verdict(currentStats);$('bestVerdict').innerHTML=verdict(currentStats);
+    for(const id of ['currentSummary','bestSummary'])$(id).textContent='Not simulated yet. Click Optimize Jelly to calculate results.';
+    for(const id of ['currentTimeline','bestTimeline','currentVerdict','bestVerdict'])$(id).textContent='';
     renderCellMix(currentArrangement);renderTrainer();renderHome();
     initialUpgradesPending=true;initialPracticePending=true;
-    $('solverStatus').textContent='Loaded. Current layout has been timed. Hit Optimize Jelly to search legal arrangements.';
-    $('calibrationNote').textContent=calibrationText(calibration);
-    if(activePage==='jelly'){if(!$('panelUpgrades').classList.contains('hidden'))selectWorkspaceTab('upgrades');else if(!$('panelPractice').classList.contains('hidden'))selectWorkspaceTab('practice');}
+    $('optimizeBtn').disabled=false;$('trainBtn').disabled=false;
+    $('solverStatus').textContent='Loaded. Saved board ready. Click Optimize Jelly to start calculations.';
+    $('calibrationNote').textContent='Damage calibration runs when you start Optimize Jelly or Train playbook.';
   }
 
   function loadText(text,restored=false,live=false){
@@ -973,7 +957,7 @@ SKILL_PAGES.holeFloors={title:'Floors',world:'World 5',copy:'All 18 Hole caverns
     practice.run=null;
     $('practiceStatus').textContent='Simulating practice…';
     let run;
-    try{run=await jellyPanelJob('practice',{arrangement:arr,fever:simState.fever,damageScale:calibration?.scale||1,seed:0xFACADE,useSteroid:practice.steroidStart!=null,steroidStartSeconds:practice.steroidStart??0,autoRevive:false,manualRevives:practice.revives,trace:true});}
+    try{run=await jellyPanelJob('practice',{arrangement:arr,fever:simState.fever,damageScale:calibration?.scale,seed:0xFACADE,useSteroid:practice.steroidStart!=null,steroidStartSeconds:practice.steroidStart??0,autoRevive:false,manualRevives:practice.revives,trace:true});}
     catch(error){$('practiceStatus').textContent=error.message;return;}
     if(!run||!practice)return;
     practice.run=run;
@@ -1079,20 +1063,30 @@ SKILL_PAGES.holeFloors={title:'Floors',world:'World 5',copy:'All 18 Hole caverns
     stopSearch();
     return new Promise((resolve,reject)=>{
       const worker=new Worker('solver-worker.js');activeWorker=worker;
-      const finish=()=>{worker.terminate();if(activeWorker===worker){activeWorker=null;cancelActive=null;}$('cancelBtn').disabled=true;};
+      const started=performance.now();let bestPreview=null;
+      let stage=job==='calibrate'?'Calibrating saved board…':job==='train'?'Starting training…':job==='plan'?'Comparing purchases…':'Searching for the best board…';
+      $('bestBoard').setAttribute('aria-busy','true');
+      const tick=()=>{$('solverStatus').textContent=stage+' · '+Math.floor((performance.now()-started)/1000)+'s elapsed';};
+      tick();const timer=setInterval(tick,1000);
+      const finish=()=>{clearInterval(timer);worker.terminate();if(activeWorker===worker){activeWorker=null;cancelActive=null;$('bestBoard').setAttribute('aria-busy','false');}$('cancelBtn').disabled=true;};
       cancelActive=()=>{finish();reject(new Error('Search cancelled.'));};
       $('cancelBtn').disabled=false;
       worker.onmessage=({data})=>{
         if(data.type==='progress'){
-          const p=data.progress,detail=p.stage==='validating'?` ${p.index}/${p.total} · ${p.runs} runs each`:p.tested?` · ${p.tested} layouts tested`:'';
-          $('solverStatus').textContent=`${p.fever?p.fever+' · ':''}${p.stage}${detail}${p.candidates?' · '+p.candidates+' unique layouts generated':''}…`;
+          const p=data.progress,detail=p.total?` ${p.index}/${p.total}${p.runs?` · ${p.runs} runs each`:""}`:p.tested?` · ${p.tested} layouts tested`:'';
+          stage=`${p.fever?p.fever+' · ':''}${p.stage}${detail}${p.candidates?' · '+p.candidates+' unique layouts generated':''}…`;tick();
           if(job==='train')$('trainerStatus').textContent=`${p.fever?p.fever+' · ':''}${p.stage}${detail}…`;
-          if(job==='optimize'&&p.arrangement){
+          if((job==='optimize'||job==='train')&&p.arrangement&&p.stats){
+            const validated=p.stage.includes('validated layout'),objective=E.timedObjective(p.stats,options.objectiveMode);
             const previewState=E.cloneState(state);previewState.fever=p.feverIndex??state.fever;
-            renderBoard($('bestBoard'),p.arrangement,previewState);renderCellMix(p.arrangement,previewState);
-            renderSummary($('bestSummary'),p.stats);$('bestVerdict').textContent=p.stage==='validated layout'?'Finalist test':'Testing candidate · preliminary';
             const filled=E.layoutScore(previewState,p.arrangement).filledSlots,slots=E.unlockedSlots(previewState).size;
-            $('layoutChanges').textContent=`Trial board: ${p.arrangement.length} cells occupy ${filled}/${slots} unlocked squares. ${options.objectiveMode==='chance'?'New clear candidates fill every unlocked square; saved boards are also tested for comparison.':'Exploring cell types and placements.'}`;
+            // Validation supersedes noisy screening; later Fevers/generations cannot
+            // replace a validated leader with an unvalidated screening score.
+            if(bestPreview&&(bestPreview.validated&&!validated||bestPreview.validated===validated&&(objective<bestPreview.objective||objective===bestPreview.objective&&filled<=bestPreview.filled)))return;
+            bestPreview={validated,objective,filled};
+            renderBoard($('bestBoard'),p.arrangement,previewState);renderCellMix(p.arrangement,previewState);
+            renderSummary($('bestSummary'),p.stats);$('bestVerdict').textContent=validated?'Best validated so far · searching':'Best so far · preliminary';
+            $('layoutChanges').textContent=`Best board so far: ${p.arrangement.length} cells occupy ${filled}/${slots} unlocked squares. ${options.objectiveMode==='chance'?'New clear candidates fill every unlocked square; saved boards are also tested for comparison.':'Exploring cell types and placements.'}`;
           }
         }else if(data.type==='result'){finish();resolve(data.value);}
         else if(data.type==='error'){finish();reject(new Error(data.message));}
@@ -1105,13 +1099,13 @@ SKILL_PAGES.holeFloors={title:'Floors',world:'World 5',copy:'All 18 Hole caverns
   $('optimizeBtn').addEventListener('click',async()=>{
     if(!state||activeWorker)return;
     window.PlannerAnalytics?.event('optimizer_started',{tool:'jelly'});
-    const btn=$('optimizeBtn'),q=quality();q.searchSeed=crypto.getRandomValues(new Uint32Array(1))[0];q.incumbentArr=lastResult?.arrangement||memoryForBoard()[0]?.arrangement;btn.disabled=true;$('replayPanel').classList.add('hidden');$('planBtn').disabled=true;
+    const btn=$('optimizeBtn'),q=quality();q.searchSeed=crypto.getRandomValues(new Uint32Array(1))[0];const prior=lastResult||memoryForBoard()[0];q.incumbentArr=prior?.arrangement;q.incumbentFever=prior?.fever;q.incumbentSteroidStart=prior?.steroidStart;btn.disabled=true;$('replayPanel').classList.add('hidden');$('planBtn').disabled=true;
     $('parseBtn').disabled=true;$('fileInput').disabled=true;$('clearBtn').disabled=true;
     try{
       calibration=await chooseCalibration();$('calibrationNote').textContent=calibrationText(calibration);
       const res=await workerJob('optimize',{...q,damageScale:calibration.scale,useSteroid:true,reviveDelaySeconds:currentReviveDelay(),searchFever:$('searchFever').checked});
       window.PlannerAnalytics?.event('optimizer_completed',{tool:'jelly'});
-      lastResult=res;
+      lastResult=res;saveTraining({best:res,generations:0},q.objectiveMode);renderTrainer();
       const currentMap=new Map(res.current.map(p=>[p.anchor,p.type]));
       const removed=res.current.filter(p=>!res.arrangement.some(x=>x.anchor===p.anchor&&x.type===p.type)).length;
       const added=res.arrangement.filter(p=>currentMap.get(p.anchor)!==p.type).length;
@@ -1132,14 +1126,14 @@ SKILL_PAGES.holeFloors={title:'Floors',world:'World 5',copy:'All 18 Hole caverns
       const confidence=E.clearConfidence(res.stats);
       const outcome=q.objectiveMode==='cellExp'?`${E.formatNumber(res.stats.avgCellLevelsGained)} mean cell levels gained; ${E.formatNumber(res.stats.avgCellExp)} mean Cell EXP per attempt.`:q.objectiveMode==='dps'?`${E.formatNumber(res.stats.avgPeakDps)} mean peak DPS; projected DPS BC multiplier ${res.stats.avgDpsMultiplier.toFixed(3)}×.`:q.objectiveMode==='bloodcells'?`${E.formatNumber(res.stats.avgBloodcells)} mean Bloodcells per attempt.`:res.stats.clearRate>0?`${pct(res.stats.clearRate)} clear; median ${E.formatTime(res.stats.medianClearTime)}.`:`No clear found; median ${pct(res.stats.medianHpRemaining,1)} boss HP remains at the end.`;
       const steroid=res.steroidStart==null?'':` Press Stronkroid at ${res.steroidStart.toFixed(1)}s.`;
-      $('solverStatus').textContent=`Best found: ${outcome} Fever: ${E.FEVER_NAMES[res.fever]||'none'}.${steroid} ${same?'Your current layout won for this objective. ':''}${res.stats.runs} runs; approximate 95% clear-rate interval ${pct(confidence[0],1)}–${pct(confidence[1],1)}. Search ${(res.timeMs/1000).toFixed(1)}s. ${state.attemptsRemaining===0?'Your save has no operation attempts remaining. ':''}Heuristic search cannot prove a global optimum.`;
+      $('solverStatus').textContent=`Best found: ${outcome} Fever: ${E.FEVER_NAMES[res.fever]||'none'}.${steroid} ${same?'Your current layout won for this objective. ':''}${res.stats.runs} runs; approximate 95% clear-rate interval ${pct(confidence[0],1)}–${pct(confidence[1],1)}. Search ${(res.timeMs/1000).toFixed(1)}s; ${res.feverResults.length}/${res.feversRequested??res.feverResults.length} Fevers tested. ${state.attemptsRemaining===0?'Your save has no operation attempts remaining. ':''}Heuristic search cannot prove a global optimum.`;
       $('nextMove').textContent='Use Plan next purchase to compare progression options.';
       $('planBtn').disabled=false;
     }catch(e){
       window.PlannerAnalytics?.event(e.message==='Search cancelled.'?'optimizer_cancelled':'optimizer_failed',{tool:'jelly'});
       if(e.message!=='Search cancelled.')fail(e.message);
       const arr=lastResult?.arrangement||currentArrangement,stats=lastResult?.stats||currentStats;
-      renderBoard($('bestBoard'),arr);renderSummary($('bestSummary'),stats);renderCellMix(arr);$('bestVerdict').innerHTML=verdict(stats);
+      renderBoard($('bestBoard'),arr);if(stats)renderSummary($('bestSummary'),stats);else $('bestSummary').textContent='Not simulated yet. Click Optimize Jelly to calculate results.';renderCellMix(arr);$('bestVerdict').innerHTML=verdict(stats);
       $('layoutChanges').textContent='Showing the last completed result; preliminary candidates were not promoted.';
       $('solverStatus').textContent=e.message;$('planBtn').disabled=!lastResult;
     }
@@ -1161,7 +1155,7 @@ SKILL_PAGES.holeFloors={title:'Floors',world:'World 5',copy:'All 18 Hole caverns
       calibration=await chooseCalibration();
       const timeMs=generations>=60?900:q.timeMs<=1800?1200:q.timeMs>=15000?3400:2200;
       const trained=await workerJob('train',{...q,generations,timeMs,searchSeed:crypto.getRandomValues(new Uint32Array(1))[0],memory:memoryForBoard(),damageScale:calibration.scale,useSteroid:true,reviveDelaySeconds:currentReviveDelay(),searchFever:$('searchFever').checked});
-      saveTraining(trained);renderTrainer();
+      saveTraining(trained,q.objectiveMode);renderTrainer();
       const res=trained.best;lastResult=res;
       const projected=E.cloneState(state);projected.fever=res.fever;
       renderBoard($('bestBoard'),res.arrangement,projected);renderSummary($('bestSummary'),res.stats);renderTimeline($('bestTimeline'),res.stats);$('bestVerdict').innerHTML=verdict(res.stats);renderCellMix(res.arrangement,projected);
