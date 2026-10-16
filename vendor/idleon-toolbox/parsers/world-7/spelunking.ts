@@ -1,4 +1,4 @@
-import { getMenagerieBonus, hasMenagerieUnlock } from '@parsers/world-7/menagerie';
+import { getCrucibleBonus, getMenagerieBonus, hasMenagerieUnlock } from '@parsers/world-7/menagerie';
 import { getJellyReward } from '@parsers/world-7/jellyRewards';
 import { cleanUnderscore, commaNotation, growth, lavaLog, notateNumber, tryToParse } from '@utility/helpers';
 import { generalSpelunky, spelunkingChapters, spelunkingRocks, spelunkingUpgrades } from '@website-data';
@@ -753,7 +753,7 @@ const getPower = (account: any, _unused1?: any) => {
   const toolUpg16 = getSpelunkingBonus(account, 16);
   const toolUpg17 = getSpelunkingBonus(account, 17);
 
-  const powerMulti = (1 + getMenagerieBonus(account, 22) / 100) * (1 + getJellyReward(account, 21) / 100) * (1 + getJellyReward(account, 38) / 100) * (1 + winnerBonus / 100)
+  const powerMulti = (1 + 30 * getCrucibleBonus(account, 3) + 50 * getCrucibleBonus(account, 8)) * (1 + getMenagerieBonus(account, 22) / 100) * (1 + getJellyReward(account, 21) / 100) * (1 + getJellyReward(account, 38) / 100) * (1 + winnerBonus / 100)
     * (1 + meritBonus / 100)
     * gemItemBonus
     * chapterBonus1_2 * chapterBonus4_2 * chapterBonus5_0 * Math.max(1, companion143)
@@ -790,6 +790,7 @@ const getPower = (account: any, _unused1?: any) => {
           name: "Additive",
           sources: [
             { name: "Learning the POW", value: basePower },
+            { name: "Crucible", value: 100 * (30 * getCrucibleBonus(account, 3) + 50 * getCrucibleBonus(account, 8)) },
             { name: "Menagerie", value: getMenagerieBonus(account, 22) },
             { name: "Winner", value: winnerBonus },
             { name: "Jelly POW I", value: getJellyReward(account, 21) },

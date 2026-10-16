@@ -1,3 +1,4 @@
+import { getCrucibleBonus, getMenagerieBonus, getNightmarinerBonus } from '@parsers/world-7/menagerie';
 import { poppyBonuses, poppyTarBonuses } from '@website-data';
 import { commaNotation, notateNumber } from '@utility/helpers';
 import { getUpgradeVaultBonus } from '@parsers/misc/upgradeVault';
@@ -41,7 +42,7 @@ const parseKangaroo = (account: any) => {
   const fishmaxxing = getEventShopBonus(account, 52);
   const upgrades = poppyBonuses.map((upgrade, i) => {
     const base = i === 0 ? 1 + (account?.accountOptions?.[268] ?? 0) : 1;
-    const commonFactor = base
+    const commonFactor = (i === 0 ? 1 / (1 + getMenagerieBonus(account, 18) / 100) : 1) * base
       * (1 / (1 + (10 * (account?.accountOptions?.[272] ?? 0)) / 100))
       * (1 / (1 + 3 * fishmaxxing))
       * (1 / (1 + (15 * (account?.accountOptions?.[300] ?? 0)) / 100))
@@ -70,7 +71,7 @@ const parseKangaroo = (account: any) => {
   const nextLvReq = poppyBonuses?.[nextLvReqIndex]?.x3;
   const vaultUpgradeBonus = getUpgradeVaultBonus(account?.upgradeVault?.upgrades, 45);
   const fountainPoppyBonus = getFountainBonusTotal(account?.hole?.holesObject, 1, 18);
-  const baseFishRate = (1 + Math.min(5, account?.accountOptions?.[275] ?? 0))
+  const baseFishRate = (1 + 3 * getCrucibleBonus(account, 7)) * (1 + Math.min(5, account?.accountOptions?.[275] ?? 0))
     * Math.max(1, 1 + 0.5 * ((account?.accountOptions?.[275] ?? 0) - 5)
       * getMegaFish(account, 5)) * getResetBonuses(account, 0)
     * (1 + vaultUpgradeBonus / 100)

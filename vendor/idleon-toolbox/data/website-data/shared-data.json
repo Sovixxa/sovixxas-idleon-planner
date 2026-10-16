@@ -45396,7 +45396,7 @@
   ],
   "superbitsUpgrades": [
     {
-      "description": "x1.03_bits_per_Achievement_you've_unlocked_(}).___Total_bonus:_x{_bits",
+      "description": "x1.03₣_per_Achievement_you've_unlocked_(}).___Total_bonus:_x{₣",
       "index": 0,
       "x1": 1,
       "x2": 9,
@@ -45879,11 +45879,11 @@
       "name": "Cooking_Master"
     },
     {
-      "description": "You?_Buying_THIS??_YOU'RE_BROOOOKE!!!",
+      "description": "1.25x_hourly_Lumi_Gains_for_the_Menagerie",
       "index": 69,
-      "x1": 2,
-      "x2": 150,
-      "name": "Not_Happening"
+      "x1": 5,
+      "x2": 108,
+      "name": "Lumi_Gainz"
     },
     {
       "description": "Aint_no_way_I'm_lettin'_ya_buy_this_here_upgrade,_no_way_no_how.",

@@ -1,3 +1,4 @@
+import { getMenagerieBonus } from '@parsers/world-7/menagerie';
 import { number2letter, tryToParse } from '@utility/helpers';
 import { cogKeyMap, flagsReqs, randomList, towers } from '@website-data';
 import { createCogstructionData } from '@parsers/world-3/cogstrution';
@@ -111,7 +112,7 @@ const parseFlags = (flagsUnlockedRaw: any[], flagsPlacedRaw: any[], cogsMap: any
   const firstBoard = evaluateBoard(board, characters);
   const leftColumn = buildExtraColumn(flagsUnlockedRaw, flagsPlacedRaw, cogsMap, cogsOrder, LEFT_COL_INDEX, LEFT_FLAG_INDEX);
   const rightColumn = buildExtraColumn(flagsUnlockedRaw, flagsPlacedRaw, cogsMap, cogsOrder, RIGHT_COL_INDEX, RIGHT_FLAG_INDEX);
-  const expRateMulti = 1 + getSmallCogBonusTotal(cogsOrder, 2) / 100;
+  const expRateMulti = (1 + getSmallCogBonusTotal(cogsOrder, 2) / 100) * (1 + 15 * (Number(account?.menagerie?.[0]?.[12]) || 0) / 100);
   const finalFlaggyRate = firstBoard?.totalFlaggyRate * flaggyMulti;
   // ExtraBuildSPDmulti and ExtraFlaggyRatemulti are deliberately not applied to these totals. The
   // game's WorkbenchStuff("PlayerBuildSpd", ...) result gets multiplied by both and written into
@@ -458,8 +459,8 @@ export const getExtraMaxLevels = (account: any, maxLevel: any, atomBonus: any, i
     : 101 === maxLevel ? getConstructionMasteryBonus(account, totalConstruct, 4)
       : 100 === maxLevel
         ? (18 <= index && account?.coralReef?.unlockedCorals > index - 18
-          ? Math.round(getConstructionMasteryBonus(account, totalConstruct, 5) + 100 + getSushiBonus(account, 58))
-          : Math.round(getConstructionMasteryBonus(account, totalConstruct, 5) + getSushiBonus(account, 58)))
+          ? Math.round(getConstructionMasteryBonus(account, totalConstruct, 5) + 100 + getSushiBonus(account, 58) + getMenagerieBonus(account, 5))
+          : Math.round(getConstructionMasteryBonus(account, totalConstruct, 5) + getSushiBonus(account, 58) + getMenagerieBonus(account, 5)))
         : 15 === maxLevel ? getConstructionMasteryBonus(account, totalConstruct, 3) : 0;
 }
 

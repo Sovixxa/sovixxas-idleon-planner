@@ -1,3 +1,4 @@
+import { getMenagerieBonus, getNightmarinerBonus } from '@parsers/world-7/menagerie';
 import { items, traps as trapsInfo, trappingInfo } from '@website-data';
 import { getBubbleBonus, getVialsBonusByStat } from '@parsers/world-2/alchemy';
 import { getStampsBonusByStat } from '@parsers/world-1/stamps';
@@ -173,7 +174,7 @@ const calcShinyMultiplier = (character: any, account: any) => {
     onOpenMulti,
     prayerDivider,
     multiplier: placementMulti * onOpenMulti / prayerDivider,
-    bundleSize: Math.round((1 + (shinySnitch?.bonus ?? 0)) * (1 + meritocracyBonus / 100)),
+    bundleSize: Math.round((1 + (shinySnitch?.bonus ?? 0)) * (1 + meritocracyBonus / 100) * (1 + getMenagerieBonus(account, 13) / 100)),
     sources: {
       stampBonus,
       taskBonus,

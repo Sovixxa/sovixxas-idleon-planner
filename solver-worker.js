@@ -55,7 +55,21 @@ let state;
 self.onmessage=event=>{
   try{
     const {job,options,result}=event.data;state=event.data.state;
-    if(job==='optimize'){
+    if(job==='practice'){
+      state=E.cloneState(state);state.fever=options.fever;
+      postMessage({type:'result',value:E.simulateOne(state,options.arrangement,options)});
+    }else if(job==='upgrades'){
+      postMessage({type:'result',value:E.planUpgradePurchases(state,options.arrangement,options)});
+    }else if(job==='initial'||job==='calibrate'){
+      const arrangement=E.arrangementFromBoard(state);
+      let calibration;
+      if(Number.isFinite(options.observed)&&options.observed>0){
+        try{calibration=E.calibrateToObservedClearTime(state,arrangement,options.observed,{runs:10,useSteroid:true,reviveDelaySeconds:options.reviveDelaySeconds});}catch(_){}
+      }
+      calibration=calibration||E.autoDamageScale(state,arrangement);
+      const value=job==='calibrate'?calibration:{calibration,stats:E.simulateMany(state,arrangement,{runs:options.runs,damageScale:calibration.scale,seed:0xCAFE,useSteroid:true,reviveDelaySeconds:options.reviveDelaySeconds})};
+      postMessage({type:'result',value});
+    }else if(job==='optimize'){
       const value=E.optimizeOperation(state,{...options,onProgress:progress=>postMessage({type:'progress',progress})});
       const chosen=E.cloneState(state);chosen.fever=value.fever;
       value.replay=E.simulateOne(chosen,value.arrangement,{damageScale:value.damageScale,seed:0xD00D,useSteroid:options.useSteroid!==false,steroidStartSeconds:value.steroidStart??0,reviveDelaySeconds:value.reviveDelaySeconds,trace:true});

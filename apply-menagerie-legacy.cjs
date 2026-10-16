@@ -1,0 +1,18 @@
+'use strict';
+const fs=require('node:fs');
+function edit(file,pairs){let s=fs.readFileSync(file,'utf8').replaceAll('\r\n','\n');for(const [a,b] of pairs){if(s.includes(b))continue;if(!s.includes(a))throw Error(file+': '+a.slice(0,65));s=s.replace(a,b);}fs.writeFileSync(file,s);}
+const p='vendor/idleon-toolbox/parsers/',imp="import { getMenagerieBonus, getNightmarinerBonus } from '@parsers/world-7/menagerie';\n";
+for(const file of ['world-1/forge.ts','world-1/owl.ts','world-2/kangaroo.ts','world-3/traps.ts','world-5/sailing.ts','clickers/bubba.ts']){const name=p+file,s=fs.readFileSync(name,'utf8');if(!s.includes(imp))fs.writeFileSync(name,imp+s);}
+edit(p+'world-1/forge.ts',[["getSpeed(forgeSpeed, barrelItem, isBrimestone)","getSpeed(forgeSpeed, barrelItem, isBrimestone) * (1 + getMenagerieBonus(account, 11) / 100)"]]);
+edit(p+'world-1/owl.ts',[["const commonFactor = (1 /", "const commonFactor = (i === 0 ? 1 / (1 + getMenagerieBonus(account, 16) / 100) : 1) * (1 /"]]);
+edit(p+'world-2/kangaroo.ts',[["const commonFactor = base", "const commonFactor = (i === 0 ? 1 / (1 + getMenagerieBonus(account, 18) / 100) : 1) * base"]]);
+edit(p+'clickers/bubba.ts',[["cost: getUpgradeCost(rawBubba, index)","cost: getUpgradeCost(rawBubba, index) / (index === 0 ? 1 + getMenagerieBonus(account, 20) / 100 : 1)"]]);
+edit(p+'world-3/traps.ts',[["bundleSize: Math.round((1 + (shinySnitch?.bonus ?? 0)) * (1 + meritocracyBonus / 100))","bundleSize: Math.round((1 + (shinySnitch?.bonus ?? 0)) * (1 + meritocracyBonus / 100) * (1 + getMenagerieBonus(account, 13) / 100))"]]);
+edit(p+'world-5/sailing.ts',[
+ ["value: value,\n    nextLevelValue: nextLevelValue,\n    nextBreakpointValue", "value: value * (1 + getMenagerieBonus(account, 9) / 100),\n    nextLevelValue: nextLevelValue * (1 + getMenagerieBonus(account, 9) / 100),\n    nextBreakpointValue: nextBreakpointValue == null ? nextBreakpointValue : nextBreakpointValue * (1 + getMenagerieBonus(account, 9) / 100)"],
+ ["const total = (1 + getJellyReward(account, 19) / 100)","const total = getNightmarinerBonus(account, 0) * Math.max(1, (isCompanionBonusActive(account, 56) ? account?.companions?.list?.[56]?.bonus ?? 0 : 0) / 5) * (1 + getJellyReward(account, 19) / 100)"],
+ ["{ name: 'Star Sign - Artifosho', value: 1 + starSignBonus / 100 },","{ name: 'Nightmariners', value: getNightmarinerBonus(account, 0) },\n          { name: 'Companion 56', value: Math.max(1, (isCompanionBonusActive(account, 56) ? account?.companions?.list?.[56]?.bonus ?? 0 : 0) / 5) },\n          { name: 'Star Sign - Artifosho', value: 1 + starSignBonus / 100 },"],
+ ["return 1 * (1 + getSushiBonus(account, 45) / 100);","const companion = isCompanionBonusActive(account, 56) ? account?.companions?.list?.[56]?.bonus ?? 0 : 0;\n  return getDaveyJonesBonus(account, account?.rawBoats?.[0]?.[3] ?? 0, account?.rawBoats?.[0]?.[5] ?? 0)\n    * (1 + getVoteBonus(account, 24) / 100) * Math.max(1, 4 * companion)\n    * (1 + getSushiBonus(account, 45) / 100) * getNightmarinerBonus(account, 1)\n    * (1 + (20 * getAchievementStatus(account?.achievements, 301) + 3 * getAchievementStatus(account?.achievements, 310)\n      + getShinyBonus(account?.breeding?.pets, 'Captain_EXP') + getUpgradeVaultBonus(account?.upgradeVault?.upgrades, 75)) / 100);" ]
+]);
+edit('bubba-optimizer.js',[["costScale:1}","costScale:1,menagerieDiscount:1+(Number(parse(data.Menagerie)?.[3]?.[20])||0)*300/100}"],["return s.outside.minehead*s.costScale*u.base", "return (i===0?1/(s.menagerieDiscount||1):1)*s.outside.minehead*s.costScale*u.base"]]);
+console.log('Updated older Sailing, Forge, Trapping and clicker paths.');

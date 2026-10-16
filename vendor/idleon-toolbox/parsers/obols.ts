@@ -126,5 +126,6 @@ const calculateWeirdObolIndex = (index: number): number => {
 
 export const getObolsBonus = (obols: Record<string, any>, bonus: string): number => {
   const { personalBonus = 0, familyBonus = 0 } = obols?.stats?.[bonus] || {};
-  return !personalBonus && !familyBonus ? 0 : (personalBonus ?? 0) + (familyBonus ?? 0);
+  const multiplier = ['STR', 'AGI', 'WIS', 'LUK'].includes(bonus) ? 1 : (obols?.miscMultiplier ?? 1);
+  return ((personalBonus ?? 0) + (familyBonus ?? 0)) * multiplier;
 }

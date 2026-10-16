@@ -1,3 +1,4 @@
+import { getMenagerieBonus, getNightmarinerBonus } from '@parsers/world-7/menagerie';
 import { getJellyReward } from '@parsers/world-7/jellyRewards';
 import { kFormatter, lavaLog, notateNumber, tryToParse } from '@utility/helpers';
 import { artifacts, captainsBonuses, classFamilyBonuses, islands } from '@website-data';
@@ -541,7 +542,7 @@ const getFinalBoatLoot = ({
   treasureBoost
 }: any) => {
   return (5 + lootLevelMath * lootLevel)
-    * (1 + (lootPileSigil + ((firstCaptainBonus + secondCaptainBonus) + (artifactBonus + (25 * Math.min(30, 0)) + (arcadeBonus + vaultBonus67)))) / 100)
+    * (1 + (firstCaptainBonus + secondCaptainBonus) / 100) * (1 + (lootPileSigil + artifactBonus + arcadeBonus + vaultBonus67) / 100)
     * (1 + talentBonus / 100)
     * daveyJonesBonus
     * (1 + lampBonus / 100)
@@ -553,14 +554,14 @@ const getBoatLootValue = (characters: any, account: any, artifactsList: any, boa
   const talentBonus = unendingLootSearch;
   const nextBreakpoint = boat?.lootLevel + (8 - (boat?.lootLevel % 8));
   const frame = getBoatFrame(boat?.lootLevel + boat?.speedLevel, account);
-  const effectiveLootLevel = frame === 6 ? boat?.lootLevel + 1 : boat?.lootLevel;
+  const effectiveLootLevel = boat?.lootLevel;
   const nextLevelMath = 2 + Math.pow(Math.floor(((effectiveLootLevel) + 1) / 8), 2)
   const currentLevelMath = 2 + Math.pow(Math.floor((effectiveLootLevel) / 8), 2);
   const breakpointLevelMath = 2 + Math.pow(Math.floor((nextBreakpoint + (frame === 6 ? 1 : 0)) / 8), 2);
   const lootPileSigil = getSigilBonus(account?.alchemy?.p2w?.sigils, 'LOOT_PILE');
   const firstCaptainBonus = getCaptainBonus(1, captain, captain?.firstBonusIndex, captain?.firstBonusValue);
   const secondCaptainBonus = getCaptainBonus(1, captain, captain?.secondBonusIndex, captain?.secondBonusValue);
-  const artifactBonus = isArtifactAcquired(artifactsList, 'Genie_Lamp')?.bonus ?? 0;
+  const artifactBonus = (isArtifactAcquired(artifactsList, 'Genie_Lamp')?.bonus ?? 0) + 25 * (account?.rawCaptains || []).slice(0,30).filter((c: any) => Number(c[0]) === 6).length;
   const arcadeBonus = getArcadeBonus(account?.arcade?.shop, 'Sailing_Loot')?.bonus ?? 0;
   const vaultBonus67 = getUpgradeVaultBonus(account?.upgradeVault?.upgrades, 67);
   daveyJonesBonus = daveyJonesBonus ?? getDaveyJonesBonus(account, boat?.lootLevel, boat?.speedLevel);
@@ -617,9 +618,9 @@ const getBoatLootValue = (characters: any, account: any, artifactsList: any, boa
     });
   }
   return {
-    value: value,
-    nextLevelValue: nextLevelValue,
-    nextBreakpointValue
+    value: value * (1 + getMenagerieBonus(account, 9) / 100) * Math.max(1, isCompanionBonusActive(account, 56) ? account?.companions?.list?.[56]?.bonus ?? 0 : 0),
+    nextLevelValue: nextLevelValue * (1 + getMenagerieBonus(account, 9) / 100) * Math.max(1, isCompanionBonusActive(account, 56) ? account?.companions?.list?.[56]?.bonus ?? 0 : 0),
+    nextBreakpointValue: nextBreakpointValue == null ? nextBreakpointValue : nextBreakpointValue * (1 + getMenagerieBonus(account, 9) / 100) * Math.max(1, isCompanionBonusActive(account, 56) ? account?.companions?.list?.[56]?.bonus ?? 0 : 0)
   }
 }
 
@@ -629,8 +630,13 @@ const getCaptainExpReq = (captain: any, account?: any) => {
   return math * moreMath * Math.pow(1.5, Math.max(captain?.level - 10, 0));
 }
 
-export const getCaptainExpGain = (account: any) => {
-  return 1 * (1 + getSushiBonus(account, 45) / 100);
+export const getCaptainExpGain = (account: any, characters: any[] = []) => {
+  const companion = isCompanionBonusActive(account, 56) ? account?.companions?.list?.[56]?.bonus ?? 0 : 0;
+  return getDaveyJonesBonus(account, account?.rawBoats?.[0]?.[3] ?? 0, account?.rawBoats?.[0]?.[5] ?? 0)
+    * (1 + getVoteBonus(account, 24) / 100) * Math.max(1, 4 * companion)
+    * (1 + getSushiBonus(account, 45) / 100) * getNightmarinerBonus(account, 1)
+    * (1 + ((getHighestTalentAcrossCharacters(characters, 'CAPTAIN_PEPTALK', getBestActiveCharacter(characters)) ?? 0) + 20 * getAchievementStatus(account?.achievements, 301) + 3 * getAchievementStatus(account?.achievements, 310)
+      + getShinyBonus(account?.breeding?.pets, 'Captain_EXP') + getUpgradeVaultBonus(account?.upgradeVault?.upgrades, 75)) / 100);
 }
 
 const getCaptainDisplayBonus = (captain: any, value: any) => {
@@ -652,7 +658,8 @@ export const getBoatArtifactChance = (artifacts: any, captain: any, account: any
     ?.filter(({ effect }: any) => effect?.includes('+{%_Artifact_Find'))
     ?.reduce((sum: any, { bonus }: any) => sum + (bonus ?? 0), 0) ?? 0;
   const holeBuildingBonus = getSchematicBonus({ holesObject: account?.hole?.holesObject, t: 55, i: 0 });
-  const stickerBonus = getStickerBonus(account, 2);
+  const stickerBonus = getStickerBonus(account, 2, 99);
+  const stickerFactor = 1 + getStickerBonus(account, 2, 100) / 100;
   const researchGridBonus = getResearchGridBonus(account, 109, 0);
 
   const vaultBonus63 = getUpgradeVaultBonus(account?.upgradeVault?.upgrades, 63);
@@ -687,7 +694,7 @@ export const getBoatArtifactChance = (artifacts: any, captain: any, account: any
   const spelunkSuperbit = isSuperbitUnlocked(account, 'Artifacto_Discoveries')
     ? Math.pow(1.02, discoveriesCount) : 0;
 
-  const total = (1 + getJellyReward(account, 19) / 100) * Math.max(1, (1 + additive / 100))
+  const total = stickerFactor * getNightmarinerBonus(account, 0) * Math.max(1, (isCompanionBonusActive(account, 56) ? account?.companions?.list?.[56]?.bonus ?? 0 : 0) / 5) * (1 + getJellyReward(account, 19) / 100) * Math.max(1, (1 + additive / 100))
     * (1 + starSignBonus / 100)
     * glimboCompanion
     * killroyBonus
@@ -730,6 +737,9 @@ export const getBoatArtifactChance = (artifacts: any, captain: any, account: any
       {
         name: 'Multiplicative',
         sources: [
+          { name: 'Sticker multiplier', value: stickerFactor },
+          { name: 'Nightmariners', value: getNightmarinerBonus(account, 0) },
+          { name: 'Companion 56', value: Math.max(1, (isCompanionBonusActive(account, 56) ? account?.companions?.list?.[56]?.bonus ?? 0 : 0) / 5) },
           { name: 'Star Sign - Artifosho', value: 1 + starSignBonus / 100 },
           { name: 'Companion - Glimbo', value: glimboCompanion },
           { name: 'Killroy Bonus', value: killroyBonus },

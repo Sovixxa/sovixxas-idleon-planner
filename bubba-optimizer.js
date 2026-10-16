@@ -9,7 +9,7 @@ function decode(raw){let data=parse(raw);for(let i=0;i<4&&data&&!data.Bubba;i++)
  let unique=0;while(unique<40&&sushi[5]?.[unique]!=null&&Number(sushi[5][unique])>=0)unique++;
  const marble=integer(holes[32]?.[2]?.[18]),fountain=Math.round(integer(holes[31]?.[2]?.[18])*2*(marble?1.5+.5*marble:1));
  const outside={vault:1+n(vault[65])*D.vault65*(1+n(vault[89])*D.vault89/100)/100,sushi:1+(unique>39?D.sushi:0)/100,jelly:1+(n(research[7]?.[9])>58?D.jelly:0)/100,fountain:1+fountain/100,minehead:1/(1+(n(research[7]?.[4])>5?D.minehead:0)/100)};
- return {paid:row(1,28),free:row(2,28),traits:row(3,6),gifts:[integer(b[0][2]),integer(b[0][3])],dice:row(4,8),smoke:row(5,5),coins:Array.from({length:4},(_,i)=>n(b[0][9+i])),wallet:n(b[0][0]),happiness:n(b[0][1]),produced:n(b[0][4]),patsUsed:Number.isFinite(Number(b[0][5]))?Number(b[0][5]):0,training:integer(b[0][6]),trainingProgress:n(b[0][8]),hourElapsed:n(b[0][13]),smokeSeconds:n(b[0][14]),emulsified:integer(b[0][15]),poppy:n(options[267]),outside,productionScale:1,costScale:1};
+ return {paid:row(1,28),free:row(2,28),traits:row(3,6),gifts:[integer(b[0][2]),integer(b[0][3])],dice:row(4,8),smoke:row(5,5),coins:Array.from({length:4},(_,i)=>n(b[0][9+i])),wallet:n(b[0][0]),happiness:n(b[0][1]),produced:n(b[0][4]),patsUsed:Number.isFinite(Number(b[0][5]))?Number(b[0][5]):0,training:integer(b[0][6]),trainingProgress:n(b[0][8]),hourElapsed:n(b[0][13]),smokeSeconds:n(b[0][14]),emulsified:integer(b[0][15]),poppy:n(options[267]),outside,productionScale:1,costScale:1,menagerieDiscount:1+(Number(parse(data.Menagerie)?.[3]?.[20])||0)*300/100};
 }
 const level=(s,i)=>Math.round(s.paid[i]+s.free[i]);
 const bonus=(s,i)=>level(s,i)*D.upgrades[i].bonus;
@@ -22,7 +22,7 @@ function diceMulti(s){let v=0;for(const die of s.dice)if(die>0)v=Math.max(1,v)*(
 const smokeMulti=s=>s.smoke.reduce((v,q,i)=>v*(1+q*D.smoke[i]/100),1);
 const coinMulti=s=>1+s.coins.reduce((v,q,i)=>v+q*[1,5,25,100][i],0)/100;
 function rate(s,e=s.emulsified,h=s.happiness){return (bonus(s,0)+bonus(s,7)+bonus(s,23))*(1+(bonus(s,2)+bonus(s,11)+bonus(s,19)+bonus(s,24)*log(s.poppy))/100)*happiness(h)*diceMulti(s)*smokeMulti(s)*(1+trait(s,0,e)/100)*(1+(s.paid[8]>0?s.paid.reduce((v,x,i)=>v+level(s,i),0):0)/100)*(1+gift(s,0)/100)*coinMulti(s)*s.outside.vault*s.outside.sushi*s.outside.jelly*s.outside.fountain*s.productionScale;}
-function cost(s,i,e=s.emulsified){const u=D.upgrades[i],l=s.paid[i];return s.outside.minehead*s.costScale*u.base*(Math.pow(i+1,2)*l+Math.pow(2.4+i/3.65,i)*Math.pow(u.growth,l))/((1+bonus(s,4)/100)*(1+bonus(s,18)/100)*(1+bonus(s,26)/100)*(1+trait(s,1,e)/100));}
+function cost(s,i,e=s.emulsified){const u=D.upgrades[i],l=s.paid[i];return (i===0?1/(s.menagerieDiscount||1):1)*s.outside.minehead*s.costScale*u.base*(Math.pow(i+1,2)*l+Math.pow(2.4+i/3.65,i)*Math.pow(u.growth,l))/((1+bonus(s,4)/100)*(1+bonus(s,18)/100)*(1+bonus(s,26)/100)*(1+trait(s,1,e)/100));}
 const required=i=>i===0?0:50*Math.pow(2.8+i/3.55,i-Math.min(1,Math.floor(i/4)));
 const unlocked=(s,i)=>s.produced>=required(i);
 const buyable=(s,i)=>unlocked(s,i)&&(D.upgrades[i].cap===999||s.paid[i]<D.upgrades[i].cap);

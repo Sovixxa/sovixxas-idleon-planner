@@ -1924,8 +1924,8 @@
     "displayName": "Magni_Pufferfin",
     "cardIndex": "J22",
     "visualIndex": 21,
-    "effect": "+{%_Drop_Rate_Multi",
-    "bonus": 1,
+    "effect": "+{%_Lumi_Hourly_Gains_(Passive)",
+    "bonus": 5,
     "perTier": 30000000,
     "category": "Shimmerfin_Deep"
   },

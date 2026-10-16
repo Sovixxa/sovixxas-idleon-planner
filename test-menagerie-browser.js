@@ -10,7 +10,10 @@ const fs=require('node:fs'),path=require('node:path'),assert=require('node:asser
  await page.locator('.menagerie-page').waitFor({timeout:60000});
  assert.equal(await page.locator('.mena-tile').count(),33);
  for(const [tab,count] of [['Unlocks',25],['Boosts',25],['Jellyfish',6],['Singularity',6],['Scurge',9],['Nightmariners',2],['Lumi sources',18]]){await page.locator('[data-mena-tab="'+tab+'"]').click();assert.equal(await page.locator('.mena-tile').count(),count);for(const src of await page.locator('.mena-tile img').evaluateAll(nodes=>nodes.map(n=>n.getAttribute('src'))))assert(fs.existsSync(src),src);}
- await page.locator('[data-mena-tab="Boosts"]').click();await page.screenshot({path:'../audit/menagerie-desktop.png'});
+ await page.locator('.mena-analysis').waitFor({timeout:60000});
+ assert(!/Unknown Lumi \/ hour/.test(await page.locator('.mena-analysis').innerText()));
+ await page.locator('[data-mena-tab="Crucible"]').click();assert.equal(await page.locator('.mena-tile').count(),16);
+ await page.locator('[data-mena-tab="Lumi sources"]').click();await page.screenshot({path:'../audit/menagerie-desktop.png'});
  await page.setViewportSize({width:390,height:844});await page.screenshot({path:'../audit/menagerie-mobile.png',fullPage:true});assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
- assert.deepEqual(errors,[]);console.log('Menagerie browser: routing, missing save, eight tabs, saved data, desktop/mobile and no page errors pass.');
+ assert.deepEqual(errors,[]);console.log('Menagerie browser: routing, missing save, nine tabs, saved data, desktop/mobile and no page errors pass.');
  }finally{await browser.close();}})().catch(e=>{console.error(e);process.exitCode=1;});

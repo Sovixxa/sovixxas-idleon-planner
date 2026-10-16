@@ -1,3 +1,4 @@
+import { getCrucibleBonus, getMenagerieBonus, getNightmarinerBonus } from '@parsers/world-7/menagerie';
 import { owlData } from '@website-data';
 import { isCompanionBonusActive } from '@parsers/misc';
 import { getUpgradeVaultBonus } from '@parsers/misc/upgradeVault';
@@ -27,7 +28,7 @@ const parseOwl = (account: any) => {
   const feathers = account?.accountOptions?.[253];
   const progress = account?.accountOptions?.[263];
   const upgrades = owlData.map((upgrade, i) => {
-    const commonFactor = (1 / (1 + (10 * (account?.accountOptions?.[257] ?? 0)) / 100))
+    const commonFactor = (i === 0 ? 1 / (1 + getMenagerieBonus(account, 16) / 100) : 1) * (1 / (1 + (10 * (account?.accountOptions?.[257] ?? 0)) / 100))
       * (1 / (1 + (20 * (account?.accountOptions?.[261] ?? 0)) / 100))
       * (1 / (1 + (getMegaFeather(account, 2) * (account?.accountOptions?.[254] ?? 0)) / 100))
       * (upgrade?.x1);
@@ -81,7 +82,7 @@ const parseOwl = (account: any) => {
   const meritocracyBonus = getMeritocracyBonus(account, 12);
 
   const fountainOrionBonus = getFountainBonusTotal(account?.hole?.holesObject, 0, 18);
-  const featherRate = (
+  const featherRate = ( (1 + 4 * getCrucibleBonus(account, 1)) *
     (1 + 9 * getMegaFeather(account, 0)) *
     (1 + fountainOrionBonus / 100) *
     (1 + vaultUpgradeBonus / 100) *

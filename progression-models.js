@@ -4,11 +4,11 @@
   const clean=v=>String(v??'').replaceAll('_',' ').replaceAll('@',' ').trim();
   const effect=(text,value)=>clean(text).replace(/\}x/g,fmt(1+value/100)+'x').replace('$',fmt(Math.floor((value+4)/(value+100)*1000)/10)).replace(/[{}]/g,fmt(value));
   // The client advances only after progress is strictly greater than a threshold.
-  function shinyLevelFromProgress(value){
+  function shinyLevelFromProgress(value,maxLevel=20){
     if(value==null||value===''||!Number.isFinite(Number(value))||Number(value)<0)return null;
     const progress=Number(value);if(progress===0)return 0;
     let level=1;
-    for(let n=1;n<20;n++)if(progress>Math.floor((1+Math.pow(n,1.6))*Math.pow(1.7,n)))level=n+1;
+    for(let n=1;n<maxLevel;n++)if(progress>Math.floor((1+Math.pow(n,1.6))*Math.pow(1.7,n)))level=n+1;
     return level;
   }
   function build(systems,raw={}){
@@ -36,8 +36,9 @@
       });
       out.shinyPets=(breeding.shinyBonuses||[]).map(x=>{
         const pets=(x.pets||[]).filter(p=>p.data.world<4&&p.data.petId!=='_').map(p=>{
-          const level=shinyLevelFromProgress(b?.[22+p.data.world]?.[p.indexInWorld]);
-          return {id:p.data.petId,world:p.data.world+1,order:p.indexInWorld,level,unlocked:petUnlocked(p),bonus:level===null?'Saved progress unavailable':effect(x.data.text,level*x.data.bonusPerLevel),perLevel:effect(x.data.text,x.data.bonusPerLevel),icon:'assets/pets-static/'+(root.ARCADE_PAGE_ASSETS?.petSprites?.includes(p.data.petId)?p.data.petId:'mushG')+'.png'};
+          const maxLevel=Number(parse(saved.Menagerie)?.[2]?.[11])>=1?30:20;
+          const level=shinyLevelFromProgress(b?.[22+p.data.world]?.[p.indexInWorld],maxLevel);
+          return {id:p.data.petId,world:p.data.world+1,order:p.indexInWorld,level,maxLevel,unlocked:petUnlocked(p),bonus:level===null?'Saved progress unavailable':effect(x.data.text,level*x.data.bonusPerLevel),perLevel:effect(x.data.text,x.data.bonusPerLevel),icon:'assets/pets-static/'+(root.ARCADE_PAGE_ASSETS?.petSprites?.includes(p.data.petId)?p.data.petId:'mushG')+'.png'};
         });
         const complete=pets.every(p=>p.level!==null),totalLevels=pets.reduce((sum,p)=>sum+(p.level??0),0);
         return row(clean(x.data.text).replace(/^[+{}%x ]+/g,''),complete?effect(x.data.text,totalLevels*x.data.bonusPerLevel):'Bonus unavailable: incomplete shiny records',`${fmt(totalLevels)} ${complete?'combined':'known'} levels`+(complete?'':' · incomplete'),`pets-static/${pets.find(p=>root.ARCADE_PAGE_ASSETS?.petSprites?.includes(p.id))?.id||'mushG'}`,{status:!complete?'unknown':totalLevels?'active':'missing',bonusId:x.data.index,pets,detail:pets.map(p=>`${clean(p.id)}: shiny ${p.level===null?'unknown':'Lv '+p.level}`).join(' · ')});

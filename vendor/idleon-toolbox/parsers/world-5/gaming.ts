@@ -725,7 +725,8 @@ const getPalette = (account: any, ratKing: any, spelunkRaw: any, characters: any
     }
 
     // Apply global multipliers (legend talent + lore boss)
-    bonus *= paletteGlobalMulti;
+    const blackStars = Number(spelunkRaw?.[49]?.[i]) || 0;
+    bonus *= paletteGlobalMulti * Math.max(1, 1 + blackStars + Math.floor(blackStars / 2));
 
     let description = gamingPalette?.[i]?.description || '';
     if (description) {

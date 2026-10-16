@@ -1,4 +1,4 @@
-import { getMenagerieBonus, hasMenagerieUnlock } from '@parsers/world-7/menagerie';
+import { getCrucibleBonus, getMenagerieBonus, hasMenagerieUnlock } from '@parsers/world-7/menagerie';
 import { getJellyReward } from '@parsers/world-7/jellyRewards';
 import { commaNotation, notateNumber, tryToParse } from '@utility/helpers';
 import {
@@ -582,7 +582,8 @@ function getResearchGridCanWeUseButton(researchLevel: any, shapesOwned: any, but
 function getResearchEXPmulti(account: any, research: any) {
   const mealResearchXP = getMealsBonusByEffectOrStat(account, null, 'ResearchXP') ?? 0;
   const dancingCoral = getDancingCoralBonus(account, 4, 0) ?? 0;
-  const stickerBonus = getStickerBonus(account, 1);
+  const stickerBonus = getStickerBonus(account, 1, 99);
+  const stickerFactor = 1 + getStickerBonus(account, 1, 100) / 100;
   const cropDepot = account?.farming?.cropDepot?.researchExp?.value ?? 0;
   const grid50 = getResearchGridBonusInternal(account, research, 50, 0);
   const grid90 = getResearchGridBonusInternal(account, research, 90, 0);
@@ -611,7 +612,7 @@ function getResearchEXPmulti(account: any, research: any) {
   const killroyResearchBonus = 1 + getKillRoyShopBonus(account, 5) / 100;
   const companion52 = isCompanionBonusActive(account, 52) ? (account?.companions?.list?.at(52)?.bonus ?? 0) : 0;
 
-  const additive =
+  const additive = 25 * getCrucibleBonus(account, 2) + 35 * getCrucibleBonus(account, 8) +
     stickerBonus +
     mealResearchXP +
     dancingCoral +
@@ -647,7 +648,7 @@ function getResearchEXPmulti(account: any, research: any) {
   const cglunkoFactor = 1 + getCglunkoBonus(account, 11) / 100; // Researchy (Crystal Glunko Cove)
   const outpostRogFactor = Math.max(1, getOutpostRogBonus(account, 1));
   const jellyFactor = [0, 23, 46, 54].reduce((factor, index) => factor * (1 + getJellyReward({ research }, index) / 100), 1);
-  const value = (1 + getMenagerieBonus(account, 3) / 100) * jellyFactor * additiveFactor * grid70Factor * nonstopFactor * companionFactor * (1 + getSushiBonus(account, 0) / 100) * (1 + getButtonBonus(account, 0) / 100) * killroyResearchBonus * greenWaterFactor * cglunkoFactor * outpostRogFactor;
+  const value = stickerFactor * (1 + getMenagerieBonus(account, 3) / 100) * jellyFactor * additiveFactor * grid70Factor * nonstopFactor * companionFactor * (1 + getSushiBonus(account, 0) / 100) * (1 + getButtonBonus(account, 0) / 100) * killroyResearchBonus * greenWaterFactor * cglunkoFactor * outpostRogFactor;
 
   const breakdown = {
     statName: 'Research EXP Multi',
@@ -656,6 +657,7 @@ function getResearchEXPmulti(account: any, research: any) {
       {
         name: 'Additive %',
         sources: [
+          { name: 'Crucible', value: 25 * getCrucibleBonus(account, 2) + 35 * getCrucibleBonus(account, 8) },
           { name: 'Sticker', value: stickerBonus },
           { name: 'Meal', value: mealResearchXP },
           { name: 'Dancing Coral', value: dancingCoral },
@@ -680,6 +682,7 @@ function getResearchEXPmulti(account: any, research: any) {
       {
         name: 'Multiplicative',
         sources: [
+          { name: 'Sticker multiplier', value: stickerFactor },
           { name: '(1 + total additive % / 100)', value: additiveFactor },
           { name: 'Takin\' Notes', value: grid70Factor },
           { name: 'Nonstop Studies', value: nonstopFactor },

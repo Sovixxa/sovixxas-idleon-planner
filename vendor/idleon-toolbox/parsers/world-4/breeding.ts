@@ -24,6 +24,7 @@ export const getBreeding = (idleonData: any, account: any, processedData: any) =
 }
 
 const parseBreeding = (breedingRaw: any, territoryRaw: any, petsRaw: any, petsStoredRaw: any, cookingRaw: any, account: any, processedData: any) => {
+  const maxShinyLevel = Number(account?.menagerie?.[2]?.[11]) >= 1 ? 30 : 20;
   const eggs = breedingRaw?.[0];
   const genetics = breedingRaw?.[3]?.slice(0, 4)
   const deadCells = breedingRaw?.[3]?.[8];
@@ -126,7 +127,7 @@ const parseBreeding = (breedingRaw: any, territoryRaw: any, petsRaw: any, petsSt
   const pets = petStats?.map((petList, worldIndex) => {
     const speciesUnlocked = speciesUnlocks?.[worldIndex];
     return petList?.map((pet, petIndex) => {
-      const shinyLevel = getShinyLevel(shinyPetsLevels, worldIndex, petIndex);
+      const shinyLevel = getShinyLevel(shinyPetsLevels, worldIndex, petIndex, maxShinyLevel);
       // Tome calc
       totalShinyLevels += shinyLevel === 0 ? 1 : shinyLevel;
 
@@ -137,6 +138,7 @@ const parseBreeding = (breedingRaw: any, territoryRaw: any, petsRaw: any, petsSt
         world: 'World' + (worldIndex + 1),
         level: petsLevels?.[worldIndex]?.[petIndex] ?? 0,
         shinyLevel,
+        maxShinyLevel,
         shinyProgress: shinyPetsLevels?.[worldIndex]?.[petIndex] ?? 0,
         breedingProgress: breedingPetsLevels?.[worldIndex]?.[petIndex] ?? 0,
         shinyGoal,
@@ -183,10 +185,10 @@ const parseBreeding = (breedingRaw: any, territoryRaw: any, petsRaw: any, petsSt
   };
 }
 
-const getShinyLevel = (shinyPetsLevels: any, worldIndex: any, petIndex: any) => {
+const getShinyLevel = (shinyPetsLevels: any, worldIndex: any, petIndex: any, maxLevel = 20) => {
   const progress = Number(shinyPetsLevels?.[worldIndex]?.[petIndex]);
   if (!Number.isFinite(progress) || progress <= 0) return 0;
-  const shinyLevel = new Array(19).fill(1)?.reduce((sum, _, index) => shinyPetsLevels?.[worldIndex]?.[petIndex] > Math.floor((1 + Math.pow(index + 1, 1.6)) * Math.pow(1.7, index + 1))
+  const shinyLevel = new Array(maxLevel - 1).fill(1)?.reduce((sum, _, index) => shinyPetsLevels?.[worldIndex]?.[petIndex] > Math.floor((1 + Math.pow(index + 1, 1.6)) * Math.pow(1.7, index + 1))
     ? index + 2
     : sum, 0)
   return shinyPetsLevels?.[worldIndex]?.[petIndex] === 0 ? 0 : shinyLevel === 0 ? 1 : shinyLevel;
@@ -297,7 +299,7 @@ export const getShinyBonus = (pets: any, passiveName: any) => {
 export const getTimeToLevel = (pet: any, multi: any, copies: any, targetLevel: any, isShiny: any) => {
   const currentLevel = isShiny ? pet?.shinyLevel : pet?.breedingLevel;
   const currentProgress = isShiny ? pet?.shinyProgress : pet?.breedingProgress;
-  const target = Math.min(isShiny ? MAX_SHINY_LEVEL : MAX_BREEDABILITY_LEVEL, Number(targetLevel) || 0);
+  const target = Math.min(isShiny ? pet?.maxShinyLevel ?? MAX_SHINY_LEVEL : MAX_BREEDABILITY_LEVEL, Number(targetLevel) || 0);
 
   if (currentLevel >= target) return 0;
 
@@ -427,6 +429,7 @@ export const calcBreedabilityMulti = (account: any, characters: any) => {
   }
 }
 export const calcShinyLvMulti = (account: any, characters: any) => {
+  const overLevels = (account?.breeding?.pets || []).slice(0,4).flat().reduce((n: number, pet: any) => n + Math.max(0, (pet.shinyLevel || 0) - 20), 0);
   const spelunkerObolMulti = getLabBonus(account?.lab.labBonuses, 8); // gem multi
   const emeraldUlthuriteBonus = getJewelBonus(account?.lab.jewels, 15, spelunkerObolMulti);
   const fasterShinyLevelBonus = getShinyBonus(account?.breeding?.pets, 'Faster_Shiny_Mob_Lv_Up_Rate');
@@ -447,7 +450,7 @@ export const calcShinyLvMulti = (account: any, characters: any) => {
         + (cropDepotShinyBonus
           + starSign + breedingBonus))) / 100)
     * (1 + summoningBonus / 100)
-    * (1 + lampBonus / 100);
+    * (1 + lampBonus / 100) * (1 + 10 * overLevels / 100);
 
   return {
     value,
@@ -469,6 +472,7 @@ export const calcShinyLvMulti = (account: any, characters: any) => {
           name: 'Multiplicative',
           sources: [
             { name: 'Summoning bonus', value: summoningBonus / 100 },
+            { name: 'Shiny levels above 20', value: 10 * overLevels / 100 },
             { name: 'Lamp bonus', value: lampBonus / 100 }
           ]
         }

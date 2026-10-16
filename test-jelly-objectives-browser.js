@@ -4,7 +4,13 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'playwright');
  const page=await browser.newPage({viewport:{width:1440,height:1000}}),errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.route('http://localhost:7333/**',route=>{const n=new URL(route.request().url()).pathname,file=path.resolve(__dirname,'.'+(n==='/'?'/index.html':n));return route.fulfill(file.startsWith(__dirname+path.sep)&&fs.existsSync(file)&&fs.statSync(file).isFile()?{contentType:({'.js':'text/javascript','.css':'text/css','.html':'text/html','.png':'image/png'})[path.extname(file)]||'application/octet-stream',body:fs.readFileSync(file)}:{status:404,body:''});});
  await page.goto('http://localhost:7333/');await page.evaluate(raw=>{document.querySelector('#jsonInput').value=raw;document.querySelector('#parseBtn').click();},fs.readFileSync('../example json.txt','utf8'));
- await page.evaluate(()=>document.querySelector('#navJelly').click());
+ await page.evaluate(()=>window.PlannerFeatures.loadTools());
+ await page.evaluate(()=>{
+  // These calculations must run in solver-worker, never block browser input.
+  for(const name of ['simulateMany','autoDamageScale','calibrateToObservedClearTime'])window.JellyEngine[name]=()=>{throw new Error(name+' ran on the UI thread');};
+  document.querySelector('#navJelly').click();
+ });
+ await page.waitForFunction(()=>document.querySelector('#solverStatus').textContent.startsWith('Loaded.'),null,{timeout:60000});
  await page.evaluate(()=>{
   const NativeWorker=window.Worker;window.__jellyTrials=[];
   window.Worker=class extends NativeWorker{constructor(...args){super(...args);this.addEventListener('message',({data})=>{
@@ -16,7 +22,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'playwright');
  await page.locator('#searchQuality').selectOption('quick');await page.locator('#searchFever').uncheck();
  for(const goal of ['chance','dps','bloodcells']){
   await page.locator('#objectiveMode').selectOption(goal);await page.locator('#optimizeBtn').click();
-  await page.waitForFunction(()=>document.querySelector('#solverStatus').textContent.startsWith('Best found:'),null,{timeout:120000});
+  await page.waitForFunction(()=>document.querySelector('#solverStatus').textContent.startsWith('Best found:'),null,{timeout:120000}).catch(async error=>{console.error('Jelly status:',await page.locator('#solverStatus').textContent(),'Page errors:',errors);throw error;});
   const status=await page.locator('#solverStatus').innerText();assert(goal==='chance'||status.includes(goal==='dps'?'mean peak DPS':'mean Bloodcells per attempt'),status);
   assert((await page.locator('#bestSummary').textContent()).includes('Bloodcells / attempt'));
   assert((await page.locator('#bestSummary').textContent()).includes('Stronkroid'));

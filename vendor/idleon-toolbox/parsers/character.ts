@@ -1,4 +1,4 @@
-import { getMenagerieBonus, hasMenagerieUnlock } from '@parsers/world-7/menagerie';
+import { getCrucibleBonus, getMenagerieBonus, hasMenagerieUnlock } from '@parsers/world-7/menagerie';
 import { isMajorDivinityActive } from './world-5/divinity';
 import { getCharacterFamilyBonus } from './family';
 import { getCharacterStatAccount } from './world-2/voteBallot';
@@ -440,7 +440,8 @@ export const initializeCharacter = (char: any, charactersLevels: any, account: a
   const charObols = getObols(char, false);
   character.obols = {
     ...charObols,
-    stats: mergeCharacterAndAccountObols(charObols, account.obols)
+    stats: mergeCharacterAndAccountObols(charObols, account.obols),
+    miscMultiplier: 1 + (Number(account?.menagerie?.[0]?.[9]) || 0) / 100
   };
   character.worship = getPlayerWorship(character, account, char?.PlayerStuff?.[0]);
   character.quests = getPlayerQuests(char?.QuestComplete);
@@ -2085,7 +2086,7 @@ export const getClassExpMulti = (character: any, account: any, characters: any) 
   const talentBonus3 = getHighestTalentAcrossCharacters(characters, 'ARCHLORD_OF_THE_PIRATES', character);
   const workbenchBonus = 1 + talentBonus3 * lavaLog(account?.accountOptions?.[139] ?? 0) / 100;
 
-  const value = (1 + getMenagerieBonus(account, 23) / 100) * workbenchBonus
+  const value = (1 + 20 * getCrucibleBonus(account, 15)) * (1 + getMenagerieBonus(account, 23) / 100) * workbenchBonus
     * (1 + expGainLUK3 / 100)
     * expGainLUK5
     * (1 + equipBonus78 / 100)
@@ -2201,6 +2202,7 @@ export const getClassExpMulti = (character: any, account: any, characters: any) 
         {
           name: "Multiplicative",
           sources: [
+            { name: "Crucible", value: 1 + 20 * getCrucibleBonus(account, 15) },
             { name: "Menagerie", value: 1 + getMenagerieBonus(account, 23) / 100 },
             { name: "Workbench (Siege Breaker)", value: workbenchBonus },
             { name: "Jelly class EXP I", value: 1 + getJellyReward(account, 30) / 100 },

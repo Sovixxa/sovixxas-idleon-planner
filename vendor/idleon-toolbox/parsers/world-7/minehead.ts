@@ -2,7 +2,7 @@ import { tryToParse, commaNotation, notateNumber } from '@utility/helpers';
 import { mineheadUpgrades, upgradeVault, research as researchData, researchGridSquares, items } from '@website-data';
 import { getAtomBonus } from '@parsers/world-3/atomCollider';
 import { getMealsBonusByEffectOrStat } from '@parsers/world-4/cooking';
-import { isCompanionBonusActive, isCompanionLvl2Active, getEventShopBonus } from '@parsers/misc';
+import { isCompanionBonusActive, isCompanionLvl2Active, getEventShopBonus, isBundlePurchased } from '@parsers/misc';
 import { getResearchGridBonus } from '@parsers/world-7/research';
 import { getSushiBonus } from '@parsers/world-7/sushiStation';
 import { getButtonBonus } from '@parsers/world-7/button';
@@ -10,6 +10,8 @@ import { isArtifactAcquired } from '@parsers/world-5/sailing';
 import { isSuperbitUnlocked } from '@parsers/world-5/gaming';
 import { isJadeBonusUnlocked } from '@parsers/world-6/sneaking';
 import { getOutpostRogBonus } from '@parsers/class-specific/royalGuardian';
+import { getLegendTalentBonus } from '@parsers/world-7/legendTalents';
+import { getJellyReward } from '@parsers/world-7/jellyRewards';
 
 // The three mine currency gain upgrades (Miney Farmey I/II, Miney Damagey Synergy). The dashboard
 // alert filter and its `MineUpg{n}` config keys derive from this list; the currency formula below
@@ -88,7 +90,7 @@ export const getMinehead = (idleonData: any, account: any, serverVars: any) => {
     if (!upgrade) return 0;
     const bonusPerLevel = Number(upgrade.levelReq) || 0;
     const level = Number(upgradeLevels[idx]) || 0;
-    return bonusPerLevel * level;
+    return bonusPerLevel * level * (account?.rawSpelunk?.[51]?.includes(idx) ? 2 : 1);
   };
 
   // --- Opponent bonus reward helper ---
@@ -166,7 +168,9 @@ export const getMinehead = (idleonData: any, account: any, serverVars: any) => {
     (1 + getUpgradeQTY(0) + getUpgradeQTY(7) + getUpgradeQTY(25) + dancingCoral5)
     * (1 + (getUpgradeQTY(4) + getUpgradeQTY(21) + getUpgradeQTY(27)) / 100)
     * (1 + grid167Bonus / 100)
-    * (1 + (50 * nomenclatureAcquired) / 100);
+    * (1 + (50 * nomenclatureAcquired) / 100)
+    * (1 + (getLegendTalentBonus(account, 40) ?? 0) / 100)
+    * (1 + getJellyReward(account, 9) / 100);
 
   // Currency gain per hour:
   //   grid129 * (1+grid148/100) * companionMulti * min(3, 1+BonusQTY(6)/100)
@@ -206,15 +210,18 @@ export const getMinehead = (idleonData: any, account: any, serverVars: any) => {
         getUpgradeQTY(5)
         + getUpgradeQTY(22)
         + getUpgradeQTY(28) * Math.log10(Math.max(1, bestHit))
-        + arcade62Bonus
         + dancingCoral5
       ) / 100)
     * (1 + atom13Bonus / 100)
+    * (1 + arcade62Bonus / 100)
+    * (1 + (getLegendTalentBonus(account, 40) ?? 0) / 100)
+    * (1 + getJellyReward(account, 8) / 100)
+    * (1 + (isBundlePurchased(account?.bundles, 'ban_j') ? 1 : 0))
     * (1 + (grid147Bonus + grid166Bonus + mealMineCurrBonus) / 100)
     * (1 + getSushiBonus(account, 12) / 100)
     * (1 + getButtonBonus(account, 1) / 100);
 
-  // Currency/hr breakdown - each source shown as the multiplier it contributes. The Arcade Shop /
+  // Currency/hr breakdown - individual inputs are shown below. The
   // Miney Farmey I/II/III entries share one additive bracket in currencyGain (as do Cooking Meal
   // and Research Grid 147/166), so their product only reproduces currencyGain above when at most
   // one term per bracket is nonzero - otherwise the cross terms make this an approximation.
@@ -231,6 +238,9 @@ export const getMinehead = (idleonData: any, account: any, serverVars: any) => {
         { name: 'Royal Guardian Outpost', value: outpostRogBonus },
         { name: 'Opponent Bonus (capped 3x)', value: Math.min(3, 1 + getBonusQTY(6) / 100) },
         { name: 'Arcade Shop', value: 1 + arcade62Bonus / 100 },
+        { name: 'White Legend Talent', value: 1 + (getLegendTalentBonus(account, 40) ?? 0) / 100 },
+        { name: 'Jelly Operator', value: 1 + getJellyReward(account, 8) / 100 },
+        { name: 'Bundle', value: 1 + (isBundlePurchased(account?.bundles, 'ban_j') ? 1 : 0) },
         { name: 'Dancing Coral (Aegean)', value: 1 + dancingCoral5 / 100 },
         { name: 'Atom Collider (Silicon)', value: 1 + atom13Bonus / 100 },
         { name: 'Cooking Meal', value: 1 + mealMineCurrBonus / 100 },
@@ -273,7 +283,7 @@ export const getMinehead = (idleonData: any, account: any, serverVars: any) => {
     const maxLevel = Number(upgrade.baseCost);
     const isMaxed = maxLevel < 999 && level >= maxLevel;
     const bonusPerLevel = Number(upgrade.levelReq) || 0;
-    const upgradeQTY = bonusPerLevel * level;
+    const upgradeQTY = getUpgradeQTY(idx);
     const researchLvReq = getResearchLvReq(idx);
     const isLocked = researchLevel < researchLvReq;
     const cost = getUpgradeCost(idx);

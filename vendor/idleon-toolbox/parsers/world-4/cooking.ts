@@ -1,4 +1,4 @@
-import { getMenagerieBonus, hasMenagerieUnlock } from '@parsers/world-7/menagerie';
+import { getCrucibleBonus, getMenagerieBonus, hasMenagerieUnlock } from '@parsers/world-7/menagerie';
 import { getJellyReward } from '@parsers/world-7/jellyRewards';
 import { atomsInfo, cookingMenu, monsters, randomList, randomList2, bonuses } from '@website-data';
 import { liveEntries } from '@parsers/catalog';
@@ -570,7 +570,7 @@ export const parseKitchens = (cookingRaw: any, atomsRaw: any, characters: any, a
     const marshmallowMultiplier = marshmallowBonus * Math.ceil((highestFarming + 1) / 50);
     const achievementBonus = Math.min(6 * trollBonus + (20 * firstAchievement + 10 * secondAchievement), 100);
 
-    const mealSpeed = 10 * (1 + getMenagerieBonus(account, 4) / 100)
+    const mealSpeed = 10 * (1 + 9 * getCrucibleBonus(account, 5) + 20 * getCrucibleBonus(account, 12)) * (1 + getMenagerieBonus(account, 4) / 100)
       * (1 + voidWalkerBonusTalent / 100)
       * Math.max(1, account?.farming?.cropDepot?.cookingSpeed?.value)
       * Math.max(1, voidWalkerApocalypseBonus)
@@ -610,6 +610,7 @@ export const parseKitchens = (cookingRaw: any, atomsRaw: any, characters: any, a
           name: "Multiplicative",
           sources: [
             { name: "Base", value: 10 },
+            { name: "Crucible", value: 1 + 9 * getCrucibleBonus(account, 5) + 20 * getCrucibleBonus(account, 12) },
             { name: "Menagerie", value: 1 + getMenagerieBonus(account, 4) / 100 },
             { name: "Blood Marrow (Talent)", value: 1 + voidWalkerBonusTalent / 100 },
             { name: "Crop Depot", value: Math.max(1, account?.farming?.cropDepot?.cookingSpeed?.value) },

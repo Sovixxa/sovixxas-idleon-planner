@@ -1,4 +1,4 @@
-import { getMenagerieBonus } from '@parsers/world-7/menagerie';
+import { getMenagerieBonus, hasMenagerieUnlock } from '@parsers/world-7/menagerie';
 import { getJellyReward } from '@parsers/world-7/jellyRewards';
 import { notateNumber, tryToParse } from '@utility/helpers';
 import { exoticMarketInfo, marketInfo, ninjaExtraInfo, research as researchData, seedInfo } from '@website-data';
@@ -104,6 +104,9 @@ const parseFarming = (rawFarmingUpgrades: any, rawFarmingPlot: any, rawFarmingCr
       calculatedBonus = upgrade.baseValue * level;
     }
 
+    const organicMultiplier = account?.rawSpelunk?.[50]?.includes(index) ? 2 : 1;
+    calculatedBonus *= organicMultiplier;
+    if (index === 39) calculatedBonus = Math.min(50, calculatedBonus);
     let displayText;
     if (level === 0) {
       displayText = upgrade.bonus.replace(/[{}$]/g, '0');
@@ -126,8 +129,8 @@ const parseFarming = (rawFarmingUpgrades: any, rawFarmingPlot: any, rawFarmingCr
       ...upgrade,
       level,
       value: calculatedBonus,
-      maxValue: isCapped ? upgrade.baseValue : null,
-      percentOfCap: isCapped ? (calculatedBonus / upgrade.baseValue) * 100 : null,
+      maxValue: index === 39 ? 50 : isCapped ? upgrade.baseValue * organicMultiplier : null,
+      percentOfCap: isCapped ? (calculatedBonus / (index === 39 ? 50 : upgrade.baseValue * organicMultiplier)) * 100 : null,
       isCapped,
       thresholdLevel: isCapped ? thresholdLevel : null,
       thresholdMissingLevels,
@@ -426,7 +429,8 @@ const getMarketUpgradeBonusValue = (marketUpgrades: any, cropDepot: any, upgrade
   }
 }
 
-export const getStickerBonus = (account: any, index: any) => {
+export const getStickerBonus = (account: any, index: any, mode = 0) => {
+  if ((index === 1 || index === 2) && ((mode === 99 && hasMenagerieUnlock(account, 22)) || (mode === 100 && !hasMenagerieUnlock(account, 22)))) return 0;
   const stickerLevels = account?.research?.stickerLevels ?? [];
   const baseBonusValues = (researchData?.[25] ?? []).map(Number);
   const count = stickerLevels[index] ?? 0;

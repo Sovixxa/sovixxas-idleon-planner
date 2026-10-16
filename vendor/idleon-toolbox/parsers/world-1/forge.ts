@@ -1,4 +1,6 @@
+import { getMenagerieBonus, getNightmarinerBonus } from '@parsers/world-7/menagerie';
 import { items } from '@website-data';
+import { getCardLevel } from '@parsers/cards';
 import type { IdleonData, Account } from '../types';
 
 interface ForgeUpgradeData {
@@ -77,8 +79,8 @@ const parseForge = (forgeOrderRaw: any, forgeQuantityRaw: any, forgeLevels: any,
     const barrelItem = items?.[barrel];
     const oreItem = items?.[ore];
     const isBrimestone = index < brimestoneSlots;
-    const forgeSpeed = Math.round(100 + 5 * upgrades?.[2]?.level);
-    const slotSpeed = getSpeed(forgeSpeed, barrelItem, isBrimestone);
+    const forgeSpeed = Math.round(100 + 5 * upgrades?.[2]?.level + 30 * getCardLevel(account?.cards, 'Godshard'));
+    const slotSpeed = getSpeed(forgeSpeed, barrelItem, isBrimestone) * (1 + getMenagerieBonus(account, 11) / 100);
     const timeTillEmpty = Math.round(oreQuantity / (oreItem?.Amount ?? 1)) * ((oreItem?.Cooldown ?? 0) / (4 * slotSpeed));
     forge = [...forge, {
       isBrimestone,
