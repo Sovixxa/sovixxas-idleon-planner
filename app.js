@@ -328,6 +328,8 @@ SKILL_PAGES.holeFloors={title:'Floors',world:'World 5',copy:'All 18 Hole caverns
     const cr=stats?.clearRate??0, med=stats?.medianClearTime;
     return [
       ['Peak DPS',E.formatNumber(stats?.avgPeakDps??0),'mean three-second peak per attempt'],
+      ['Cell levels / attempt',E.formatNumber(stats?.avgCellLevelsGained??0),'mean total levels gained after combat'],
+      ['Cell EXP / attempt',E.formatNumber(stats?.avgCellExp??0),'across all cell types'],
       ['Bloodcells / attempt',stats?.avgBloodcells==null?'Unknown':E.formatNumber(stats.avgBloodcells),stats?.avgBloodcells==null?'full account bonuses required':'mean total, including failed attempts'],
       ['DPS BC multiplier',stats?.avgDpsMultiplier==null?'—':stats.avgDpsMultiplier.toFixed(3)+'×','mean projected best-ever multiplier'],
       ['Clear chance',pct(cr,0),`${stats?.runs||0} simulated runs`],
@@ -360,6 +362,7 @@ SKILL_PAGES.holeFloors={title:'Floors',world:'World 5',copy:'All 18 Hole caverns
   }
   function verdict(stats){
     if(!stats)return '';
+    if($('objectiveMode').value==='cellExp')return `<span class="good">${E.formatNumber(stats.avgCellLevelsGained??0)} cell levels</span><br>${E.formatNumber(stats.avgCellExp??0)} EXP / attempt`;
     if($('objectiveMode').value==='dps')return `<span class="good">${E.formatNumber(stats.avgPeakDps??0)} peak DPS</span><br>${pct(stats.clearRate,0)} clear`;
     if($('objectiveMode').value==='bloodcells')return `<span class="good">${stats.avgBloodcells==null?'Unknown':E.formatNumber(stats.avgBloodcells)} Bloodcells</span><br>per attempt · ${pct(stats.clearRate,0)} clear`;
     if(stats.clearRate>=.999&&stats.medianClearTime!=null)return `<span class="good">${E.formatTime(stats.medianClearTime)}</span><br>${pct(stats.clearRate,0)} clear`;
@@ -900,7 +903,7 @@ SKILL_PAGES.holeFloors={title:'Floors',world:'World 5',copy:'All 18 Hole caverns
   $('searchQuality').addEventListener('change',()=>{if(state){$('solverStatus').textContent='Search quality changed. Re-run Optimize for a new timed search.';}});
   $('objectiveMode').addEventListener('change',()=>{
     const mode=$('objectiveMode').value;
-    $('jellyObjectiveNote').textContent=mode==='dps'?'Maximizes the mean three-second peak reached during an actual operation, for DPS Biometrics. Boss clears, the timer and Critical deaths still apply.':mode==='bloodcells'?'Maximizes mean total Bloodcells per attempt, including failed attempts, Sepsis, cell level-ups and new DPS records. Uses your current obstruction and account bonuses; this is not Bloodcells per second.':'Prioritizes the highest simulated clear chance, then the fastest median successful clear among layouts tied on clear chance. Searches layouts, unlocked Fevers and Stronkroid timing.';
+    $('jellyObjectiveNote').textContent=mode==='cellExp'?'Maximizes mean total cell levels gained after one attempt, using your saved EXP and increasing level costs. Progress toward further levels breaks ties. Failed attempts count; levels remain fixed during combat.':mode==='dps'?'Maximizes the mean three-second peak reached during an actual operation, for DPS Biometrics. Boss clears, the timer and Critical deaths still apply.':mode==='bloodcells'?'Maximizes mean total Bloodcells per attempt, including failed attempts, Sepsis, cell level-ups and new DPS records. Uses your current obstruction and account bonuses; this is not Bloodcells per second.':'Prioritizes the highest simulated clear chance, then the fastest median successful clear among layouts tied on clear chance. Searches layouts, unlocked Fevers and Stronkroid timing.';
     if(state){$('solverStatus').textContent='Optimization goal changed. Re-run Optimize Jelly.';renderTrainer();}
   });
   $('observedTime').addEventListener('change',()=>{try{sessionStorage.setItem(OBS_KEY,$('observedTime').value||'');}catch(_){}if(state){$('solverStatus').textContent='Calibration changed. Re-run Optimize Jelly to apply it.';}});
@@ -1116,7 +1119,7 @@ SKILL_PAGES.holeFloors={title:'Floors',world:'World 5',copy:'All 18 Hole caverns
       const alternatives=$('alternatives');alternatives.innerHTML='';
       for(const [i,alt] of res.alternatives.entries()){
         const card=document.createElement('article');card.className='panel';
-        const heading=document.createElement('h3');heading.textContent=`Alternative ${i+1} · ${q.objectiveMode==='dps'?E.formatNumber(alt.stats.avgPeakDps)+' peak DPS':q.objectiveMode==='bloodcells'?E.formatNumber(alt.stats.avgBloodcells)+' Bloodcells / attempt':pct(alt.stats.clearRate)+' clear'}`;card.appendChild(heading);
+        const heading=document.createElement('h3');heading.textContent=`Alternative ${i+1} · ${q.objectiveMode==='cellExp'?E.formatNumber(alt.stats.avgCellLevelsGained)+' cell levels / attempt':q.objectiveMode==='dps'?E.formatNumber(alt.stats.avgPeakDps)+' peak DPS':q.objectiveMode==='bloodcells'?E.formatNumber(alt.stats.avgBloodcells)+' Bloodcells / attempt':pct(alt.stats.clearRate)+' clear'}`;card.appendChild(heading);
         const board=document.createElement('div');board.className='jelly-board';renderBoard(board,alt.arrangement);card.appendChild(board);alternatives.appendChild(card);
       }
       $('alternativesPanel').classList.remove('hidden');
@@ -1127,7 +1130,7 @@ SKILL_PAGES.holeFloors={title:'Floors',world:'World 5',copy:'All 18 Hole caverns
       $('replayPanel').classList.remove('hidden');$('replayFrame').max=String(res.replay.trace.length);$('replayFrame').value='0';renderReplay();
       const same=E.arrangementKey(res.arrangement)===E.arrangementKey(res.current)&&res.fever===state.fever;
       const confidence=E.clearConfidence(res.stats);
-      const outcome=q.objectiveMode==='dps'?`${E.formatNumber(res.stats.avgPeakDps)} mean peak DPS; projected DPS BC multiplier ${res.stats.avgDpsMultiplier.toFixed(3)}×.`:q.objectiveMode==='bloodcells'?`${E.formatNumber(res.stats.avgBloodcells)} mean Bloodcells per attempt.`:res.stats.clearRate>0?`${pct(res.stats.clearRate)} clear; median ${E.formatTime(res.stats.medianClearTime)}.`:`No clear found; median ${pct(res.stats.medianHpRemaining,1)} boss HP remains at the end.`;
+      const outcome=q.objectiveMode==='cellExp'?`${E.formatNumber(res.stats.avgCellLevelsGained)} mean cell levels gained; ${E.formatNumber(res.stats.avgCellExp)} mean Cell EXP per attempt.`:q.objectiveMode==='dps'?`${E.formatNumber(res.stats.avgPeakDps)} mean peak DPS; projected DPS BC multiplier ${res.stats.avgDpsMultiplier.toFixed(3)}×.`:q.objectiveMode==='bloodcells'?`${E.formatNumber(res.stats.avgBloodcells)} mean Bloodcells per attempt.`:res.stats.clearRate>0?`${pct(res.stats.clearRate)} clear; median ${E.formatTime(res.stats.medianClearTime)}.`:`No clear found; median ${pct(res.stats.medianHpRemaining,1)} boss HP remains at the end.`;
       const steroid=res.steroidStart==null?'':` Press Stronkroid at ${res.steroidStart.toFixed(1)}s.`;
       $('solverStatus').textContent=`Best found: ${outcome} Fever: ${E.FEVER_NAMES[res.fever]||'none'}.${steroid} ${same?'Your current layout won for this objective. ':''}${res.stats.runs} runs; approximate 95% clear-rate interval ${pct(confidence[0],1)}–${pct(confidence[1],1)}. Search ${(res.timeMs/1000).toFixed(1)}s. ${state.attemptsRemaining===0?'Your save has no operation attempts remaining. ':''}Heuristic search cannot prove a global optimum.`;
       $('nextMove').textContent='Use Plan next purchase to compare progression options.';

@@ -16,14 +16,18 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'playwright');
   window.Worker=class extends NativeWorker{constructor(...args){super(...args);this.addEventListener('message',({data})=>{
    if(data.type==='progress'&&data.progress?.arrangement)window.__jellyTrials.push(data.progress);
    if(data.type==='result'&&data.value?.arrangement&&data.value?.stats)window.__jellyResult=data.value;
-  });}};
+  });} postMessage(data,...args){
+   // Bound search breadth for UI coverage; retain the real solver and all result checks.
+   if(data.job==='optimize')data={...data,options:{...data.options,timeMs:500,runs:8,mixLimit:12,shortlist:4,screenRuns:1,refineRuns:1,finalists:4,searchSeed:12345}};
+   return super.postMessage(data,...args);
+  }};
  });
- assert.deepEqual(await page.locator('#objectiveMode option').evaluateAll(options=>options.map(x=>x.value)),['chance','dps','bloodcells']);
+ assert.deepEqual(await page.locator('#objectiveMode option').evaluateAll(options=>options.map(x=>x.value)),['chance','dps','bloodcells','cellExp']);
  await page.locator('#searchQuality').selectOption('quick');await page.locator('#searchFever').uncheck();
- for(const goal of ['chance','dps','bloodcells']){
+ for(const goal of ['chance','dps','bloodcells','cellExp']){
   await page.locator('#objectiveMode').selectOption(goal);await page.locator('#optimizeBtn').click();
-  await page.waitForFunction(()=>document.querySelector('#solverStatus').textContent.startsWith('Best found:'),null,{timeout:120000}).catch(async error=>{console.error('Jelly status:',await page.locator('#solverStatus').textContent(),'Page errors:',errors);throw error;});
-  const status=await page.locator('#solverStatus').innerText();assert(goal==='chance'||status.includes(goal==='dps'?'mean peak DPS':'mean Bloodcells per attempt'),status);
+  await page.waitForFunction(()=>document.querySelector('#solverStatus').textContent.startsWith('Best found:'),null,{timeout:300000}).catch(async error=>{console.error('Jelly status:',await page.locator('#solverStatus').textContent(),'Page errors:',errors);throw error;});
+  const status=await page.locator('#solverStatus').innerText();assert(goal==='chance'||status.includes(goal==='cellExp'?'mean cell levels gained':goal==='dps'?'mean peak DPS':'mean Bloodcells per attempt'),status);
   assert((await page.locator('#bestSummary').textContent()).includes('Bloodcells / attempt'));
   assert((await page.locator('#bestSummary').textContent()).includes('Stronkroid'));
   assert((await page.locator('#bestSummary').textContent()).includes('activated in'));
@@ -43,5 +47,5 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'playwright');
  await page.screenshot({path:'../audit/jelly-objectives-desktop.png',fullPage:true}); await page.locator('.optimize-panel').screenshot({path:'../audit/jelly-controls-desktop.png'});
  await page.setViewportSize({width:390,height:844});assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
  await page.screenshot({path:'../audit/jelly-objectives-mobile.png',fullPage:true}); await page.locator('.optimize-panel').screenshot({path:'../audit/jelly-controls-mobile.png'});assert.deepEqual(errors,[]);
- console.log('All three Jelly objectives complete through the browser worker; full clear boards, Fever tags, breakpoint display and desktop/mobile layout pass.');
+ console.log('All four Jelly objectives complete through the browser worker; full clear boards, Fever tags, breakpoint display and desktop/mobile layout pass.');
 }finally{await browser.close();}})().catch(e=>{console.error(e);process.exitCode=1;});

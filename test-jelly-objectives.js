@@ -25,7 +25,7 @@ const missing=E.cloneState(state);missing.rawData={};
 assert.equal(E.simulateMany(missing,arr,{runs:1}).avgBloodcells,null);
 assert.throws(()=>E.optimizeOperation(missing,{objectiveMode:'bloodcells'}),/full account export/);
 assert.throws(()=>E.optimizeOperation(fixed,{objectiveMode:'dps'}),/DPS Biometrics/);
-for(const objectiveMode of ['chance','dps','bloodcells']){
+for(const objectiveMode of ['chance','dps','bloodcells','cellExp']){
  const result=E.optimizeOperation(state,{objectiveMode,timeMs:500,runs:8,mixLimit:12,shortlist:4,screenRuns:1,refineRuns:1,finalists:4,searchFever:false});
  assert(E.isLegalLayout(state,result.arrangement));
  assert(E.timedObjective(result.stats,objectiveMode)>=E.timedObjective(result.currentStats,objectiveMode));
@@ -33,3 +33,16 @@ for(const objectiveMode of ['chance','dps','bloodcells']){
 }
 assert.equal(JSON.stringify(state),before);
 console.log('Jelly DPS and Bloodcell objectives: per-hit payout, failed attempts, overkill, Sepsis, missing data, legal search and save preservation pass.');
+
+const expState=E.cloneState(state);expState.cellLevels=Array(9).fill(0);expState.cellExp=Array(9).fill(0);
+let bank=Array(9).fill(0);bank[0]=46;bank[1]=20;
+assert.equal(E.cellExpProjection(expState,bank).projectedLevelsGained,3);
+expState.cellExp[0]=19;bank[0]=20;bank[1]=0;
+assert.equal(E.cellExpProjection(expState,bank).projectedLevelsGained,1);
+assert.equal(E.cellExpProjection(expState,expState.cellExp).projectedLevelsGained,0);
+assert(E.timedObjective({avgCellLevelsGained:1,avgCellLevelProgress:1},'cellExp')>E.timedObjective({avgCellLevelsGained:0,avgCellLevelProgress:8},'cellExp'));
+assert.equal(stats.avgCellLevelsGained,stats.results.reduce((n,x)=>n+x.projectedLevelsGained,0)/stats.runs);
+assert.equal(stats.avgCellExp,stats.results.reduce((n,x)=>n+x.cellExpGained,0)/stats.runs);
+assert.equal(failed.cellExpGained,0);
+assert.throws(()=>E.optimizeOperation(fixed,{objectiveMode:'cellExp'}),/cell leveling/);
+console.log('Cell EXP projection, increasing costs, saved progress, objective ordering and unlock guard pass.');

@@ -378,6 +378,22 @@ const VERSION='0.9.9-alchemy-bubbles';
   }
   function jellyDamageMultiplier(state,elapsedSeconds=0,coldFirstTick=1){return jellyDamageMultiplierForLevels(state,state.cellLevels,elapsedSeconds,coldFirstTick);}
   function cellExpReq(level){return 20*Math.pow(1.3,Math.max(0,asNum(level,0)));}
+  // Convert banked EXP after combat without changing combat levels or the save.
+  function cellLevelProgress(level,exp){
+    let lv=Math.max(0,asNum(level)),bank=Math.max(0,asNum(exp));
+    while(Number.isFinite(bank)&&bank>=cellExpReq(lv)){bank-=cellExpReq(lv);lv++;}
+    return {level:lv,progress:lv+bank/cellExpReq(lv)};
+  }
+  function cellExpProjection(state,exp){
+    let levels=0,progress=0,totalExp=0;
+    for(let t=0;t<9;t++){
+      const before=cellLevelProgress(state.cellLevels[t],state.cellExp[t]);
+      const after=cellLevelProgress(state.cellLevels[t],exp[t]);
+      levels+=after.level-before.level;progress+=after.progress-before.progress;
+      totalExp+=Math.max(0,asNum(exp[t])-asNum(state.cellExp[t]));
+    }
+    return {projectedLevelsGained:levels,levelProgressGained:progress,cellExpGained:totalExp};
+  }
   function cellExpMultiplier(state){return (1+(feverUnlocked(state)&&Math.round(state.fever)===3?100:0)/100)*(1+(upgradeQty(state,30)+upgradeQty(state,31)+upgradeQty(state,10))/100)*(1+upgradeQty(state,11)/100);}
   function canLevelCells(state){return upgradeQty(state,10)>=1;}
   function combatModel(state,arr){
@@ -565,7 +581,7 @@ const VERSION='0.9.9-alchemy-bubbles';
     }
     if(trace)trace.push({time:elapsed,hpFraction:Math.max(0,hp/hpMax),dead:dead.flatMap((v,i)=>v?[i]:[]),levels:runtimeLevels.slice(),steroid:roidFrames>0});
     if(dpsOnly)result='dps';
-    return {bloodcellsGained:currencyBase===null?null:bloodcellsGained,totalDamage,projectedDpsMultiplier:dpsBloodcellMultiplier(bestDps),currencyMissing:economy.missing,trace:trace||undefined,events:events||undefined,result,clear:result==='clear',time:result==='clear'?elapsed:null,elapsed,hpRemaining:dpsOnly?null:Math.max(0,hp),hpFraction:dpsOnly?null:Math.max(0,hp/hpMax),hpAtTimer,criticalEntered,amoebaStacks:stack,peak3s,bossHits,revivesLeft:revives,steroidUsed:roidUsed,steroidStart:roidUsed?steroidStart:null,reviveDelaySeconds:reviveDelayFrames/FPS,coldFirstTick,levelsGained,runtimeLevels,runtimeExp};
+    return {...cellExpProjection(state,runtimeExp),bloodcellsGained:currencyBase===null?null:bloodcellsGained,totalDamage,projectedDpsMultiplier:dpsBloodcellMultiplier(bestDps),currencyMissing:economy.missing,trace:trace||undefined,events:events||undefined,result,clear:result==='clear',time:result==='clear'?elapsed:null,elapsed,hpRemaining:dpsOnly?null:Math.max(0,hp),hpFraction:dpsOnly?null:Math.max(0,hp/hpMax),hpAtTimer,criticalEntered,amoebaStacks:stack,peak3s,bossHits,revivesLeft:revives,steroidUsed:roidUsed,steroidStart:roidUsed?steroidStart:null,reviveDelaySeconds:reviveDelayFrames/FPS,coldFirstTick,levelsGained,runtimeLevels,runtimeExp};
   }
   function simulateMany(state,arr,options={}){
     const runs=Math.max(1,Math.min(500,Math.round(asNum(options.runs,24)))),seedBase=Math.round(asNum(options.seed,0xC0FFEE));
@@ -576,6 +592,9 @@ const VERSION='0.9.9-alchemy-bubbles';
     return {
       steroidStartSeconds:options.useSteroid!==false&&steroidUnlocked(state)?Math.max(0,asNum(options.steroidStartSeconds,0)):null,
       steroidUses:out.filter(x=>x.steroidUsed).length,
+      avgCellLevelsGained:out.reduce((sum,x)=>sum+x.projectedLevelsGained,0)/runs,
+      avgCellLevelProgress:out.reduce((sum,x)=>sum+x.levelProgressGained,0)/runs,
+      avgCellExp:out.reduce((sum,x)=>sum+x.cellExpGained,0)/runs,
       avgBloodcells:out.every(x=>x.bloodcellsGained!==null)?out.reduce((sum,x)=>sum+x.bloodcellsGained,0)/runs:null,
       avgDpsMultiplier:out.reduce((sum,x)=>sum+x.projectedDpsMultiplier,0)/runs,currencyMissing:out[0].currencyMissing,
       runs,clearRate:clears.length/runs,normalClearRate:normalClears.length/runs,criticalClearRate:criticalClears.length/runs,criticalEntryRate:critEntries.length/runs,
@@ -646,6 +665,7 @@ const VERSION='0.9.9-alchemy-bubbles';
     return best;
   }
   function timedObjective(stats,mode='chance'){
+    if(mode==='cellExp')return (stats.avgCellLevelsGained??0)*1e6+Math.max(0,stats.avgCellLevelProgress??0)/(1+Math.max(0,stats.avgCellLevelProgress??0));
     if(mode==='dps')return stats.avgPeakDps??0;
     if(mode==='bloodcells')return stats.avgBloodcells??-Infinity;
     const cr=stats.clearRate,t=stats.medianClearTime??1e9;
@@ -909,7 +929,7 @@ const VERSION='0.9.9-alchemy-bubbles';
       if(clearGoal&&!preserve)arr=fillEmptySlots(state,arr);
       const key=arrangementKey(arr);if(candidates.has(key))return candidates.get(key);
       const score=layoutScore(state,arr),counts=score.counts,shields=counts[4],prox=arr.filter(p=>PROXIMITY_CORES.has(p.anchor)).length;
-      const c={arr,key,proxy:score.withJellyUpgrades,score,counts,shields,prox,
+      const c={arr,key,proxy:options.objectiveMode==='cellExp'?cellExpProjection(state,state.cellExp.map((exp,t)=>asNum(exp)+counts[t]*cellExpMultiplier(state)*100/Math.max(0.1,BASE_CD[t]||1))).levelProgressGained:score.withJellyUpgrades,score,counts,shields,prox,
         supportKey:[shields>0,score.organelleBoosted>0,score.infectedSlots>0,prox>0,counts.some((n,t)=>t!==5&&n>=3&&upgradeQty(state,14)>=1)].join(':')};candidates.set(key,c);return c;}
     add(current,true);add(current);
     if(options.incumbentArr&&isLegalLayout(state,options.incumbentArr)){add(options.incumbentArr,true);add(options.incumbentArr);}
@@ -1018,6 +1038,7 @@ const VERSION='0.9.9-alchemy-bubbles';
   }
   const FEVER_NAMES=['COLD','RASH','SEPSIS','NAUSEA','RABIES','PLAGUE'];
   function optimizeOperation(state,options={}){
+    if(options.objectiveMode==='cellExp'&&!canLevelCells(state))throw new Error('Unlock cell leveling before optimizing Cell EXP.');
     if(options.objectiveMode==='bloodcells'&&!bloodcellBonuses(state).known)throw new Error('Bloodcell optimization needs a full account export. Missing: '+bloodcellBonuses(state).missing.join(', '));
     if(options.objectiveMode==='dps'&&upgradeQty(state,12)<1)throw new Error('Unlock DPS Biometrics before optimizing the recorded DPS bloodcell multiplier.');
     const fevers=options.searchFever===false||!feverUnlocked(state)?[state.fever]:[...new Set([state.fever,...Array.from({length:Math.min(6,Math.floor(upgradeQty(state,16)))},(_,i)=>i)])];
@@ -1151,7 +1172,7 @@ const VERSION='0.9.9-alchemy-bubbles';
   function formatNumber(n){n=asNum(n);const a=Math.abs(n);if(a<1000)return n.toLocaleString(undefined,{maximumFractionDigits:2});const units=['K','M','B','T','Q','Qi','Sx'];let v=a,u=-1;while(v>=1000&&u<units.length-1){v/=1000;u++;}return(n<0?'-':'')+v.toFixed(v>=100?1:v>=10?2:3).replace(/\.0+$|(?<=\.[0-9]*?)0+$/,'')+units[u];}
   function formatTime(t){if(t==null||!Number.isFinite(t))return '—';return t<60?t.toFixed(2)+'s':Math.floor(t/60)+'m '+(t%60).toFixed(1)+'s';}
   return {VERSION,COMBAT_MODEL_VERSION,bonusAudit,bloodcellBonuses,arcadeBloodcellBonus,dpsBloodcellMultiplier,researchGridBonus,cellDetails,CELL_PASSIVES,CELL_ABILITIES,FEVER_NAMES,optimizeOperation,clearConfidence,COLS,ROWS,BOARD_SIZE,FPS,UNIT_NAMES,UNIT_IMG_DIMS,UNIT_VISUAL_OFFSET,UPGRADE_META,UPGRADE_ORDER,PLOTS,SHAPE_OFFSETS,SHAPE_COORDS,BULLET_LAUNCH,PROXIMITY_CORES,BLOCKED_CENTER,SUSHI_ROG_BONUS,
-    parseInput,makeState,cloneState,upgradeQty,unitsOwned,virusLimit,feverUnlocked,critUnlocked,steroidUnlocked,reviveCount,bossHP,bossTime,bossAtkCD,cellExpReq,cellExpMultiplier,canLevelCells,obstructionTier,bundleFlag,slotPurchasesLeft,plotCells,plotLabel,
+    parseInput,makeState,cloneState,upgradeQty,unitsOwned,virusLimit,feverUnlocked,critUnlocked,steroidUnlocked,reviveCount,bossHP,bossTime,bossAtkCD,cellExpReq,cellExpProjection,cellExpMultiplier,canLevelCells,obstructionTier,bundleFlag,slotPurchasesLeft,plotCells,plotLabel,
     unlockedSlots,footprint,placementsForState,arrangementFromBoard,rawCounts,effectiveCounts,rawArray,paletteCellDamageBonus,companionGridBonus,dreamCloudBonus,gridAllMultiplier,gridCellDamageBonus,externalDamageStatus,sushiUniqueCount,sushiRogBonus,organelleSpeedMultiplier,organelleBoosted,infectedSlots,combatModel,jellyDamageMultiplier,layoutScore,backInEase,projectileLaunchPosition,projectileHitDelayFrames,simulateOne,simulateMany,autoDamageScale,calibrateToObservedClearTime,steroidStartCandidates,optimizeSteroidStart,optimizeTimed,
     upgradeCost,upgradeLevelReq,upgradeCandidates,upgradeRoadmap,planUpgradePurchases,findUpgradeTarget,recommendNextPlot,arrangementGrid,formatNumber,formatTime,arrangementKey,isLegalLayout,fillEmptySlots,relocateLayout,rebuildLayoutPatch,localImproveLayout,generateLayout,generateRoleAwareLayout,generateSupportLayout,generateBreakpointLayout,enumerateMixes,buildPlacementIndex,tileMix,timedObjective,seededRng};
 });
