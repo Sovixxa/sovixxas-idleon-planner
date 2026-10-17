@@ -536,8 +536,9 @@ export const initializeCharacter = (char: any, charactersLevels: any, account: a
   }
 
   character.activeBuffs = character.activeBuffs?.map(({ name }: any) => {
-    return character.flatTalents?.find(({ name: tName }: any) => tName === name);
+    return [...(character.flatTalents || []), ...(character.flatStarTalents || [])].find(({ name: tName }: any) => tName === name);
   });
+  character.activeBuffs = character.activeBuffs?.filter(Boolean);
   character.talentsLoadout = char?.AttackLoadout?.flat()?.filter((skill: any) => skill !== 'Null')?.map((skillIndex: any) =>
     character.flatTalents?.find(({ skillIndex: sIndex }: any) => skillIndex === sIndex)
     || character.flatStarTalents?.find(({ skillIndex: sIndex }: any) => skillIndex === sIndex))
@@ -1848,8 +1849,7 @@ export const getClassExpMulti = (character: any, account: any, characters: any) 
   let expGainLUK3 = 0;
 
   // Lowest character bonus
-  const lowestLevel = characters?.reduce((res: any, { level }: any) => (level < res ? level : res), Infinity);
-  const isLowestLevel = character?.level === lowestLevel;
+  const isLowestLevel = (account?.tasks?.[2]?.[0]?.[2] ?? 0) > 0 && characters?.every((other: any) => other.playerId === character.playerId || character.level < other.level);
   const upgradeVaultBonus = getUpgradeVaultBonus(account?.upgradeVault?.upgrades, 12);
   const meritBonus = account?.tasks?.[2]?.[0]?.[2] * 3;
   const superbitBonus = isSuperbitUnlocked(account, 'Noobie_Gains')?.unlocked ? 50 : 0;
@@ -1925,6 +1925,7 @@ export const getClassExpMulti = (character: any, account: any, characters: any) 
   const comp32 = isCompanionBonusActive(account, 32) ? account?.companions?.list?.at(32)?.bonus : 0;
   const comp34 = isCompanionBonusActive(account, 34) ? account?.companions?.list?.at(34)?.bonus : 0;
   const comp168 = isCompanionBonusActive(account, 168) ? account?.companions?.list?.at(168)?.bonus : 0;
+  const eggrollBonus = isCompanionBonusActive(account, 145) ? account?.companions?.list?.at(145)?.bonus : 0;
 
   // Research grid 130, 131, 132, 152
   const researchGrid130 = getResearchGridBonus(account, 130, 0);
@@ -1953,6 +1954,7 @@ export const getClassExpMulti = (character: any, account: any, characters: any) 
     * (1 + comp32)
     * (1 + 0.4 * comp168)
     * (1 + comp34)
+    * (1 + eggrollBonus)
     * babyTrollMulti
     * (1 + researchGridTotal / 100)
     * (1 + stickerBonus / 100)
@@ -1960,7 +1962,9 @@ export const getClassExpMulti = (character: any, account: any, characters: any) 
     * (1 + zenithMarketBonus / 100)
     * santaSnakeMulti);
 
-  // EtcBonuses(84), CardBonusREAL(100)=unused, ArcadeBonus(60), Vial 7classexp
+  // CardBonusREAL(100) is the equipped World 7 Class EXP Multi pool.
+  const cardExpMulti = getCardBonusByEffect(character?.cards?.equippedCards, cardBonuses[100]);
+  // EtcBonuses(84), ArcadeBonus(60), Vial 7classexp
   const { value: equipBonus84 } = getStatsFromGear(character, 84, account);
   const arcadeBonus60 = getArcadeBonus(account?.arcade?.shop, 'Class_XP_multi')?.bonus ?? 0;
   const vial7classexp = getVialsBonusByStat(account?.alchemy?.vials, '7classexp');
@@ -1970,6 +1974,7 @@ export const getClassExpMulti = (character: any, account: any, characters: any) 
   const totalTitanKills = account?.compass?.totalKilledAbominations ?? 0;
 
   expGainLUK5 *= (1 + equipBonus84 / 100)
+    * (1 + cardExpMulti / 100)
     * (1 + arcadeBonus60 / 100)
     * (1 + vial7classexp / 100)
     * Math.pow(Math.max(1, slayerAbominatorTalent), totalTitanKills);
@@ -2007,20 +2012,19 @@ export const getClassExpMulti = (character: any, account: any, characters: any) 
     * (1 + fountainClassExpBonus / 100)
     * (1 + royalStatueClassExpBonus / 100);
 
-  // SuperBitType(24) * pow(1.03, spelunk[6].length), Meritocracy(27), accountOptions[464]
+  // SuperBitType(24) * pow(1.03, spelunk[6].length), Meritocracy(27).
   const superbit24 = isSuperbitUnlocked(account, 'Classy_Discoveries')?.unlocked ? 1 : 0;
   const spelunkRocksFound = account?.spelunking?.discoveriesCount ?? 0;
   const meritocBonus27 = getMeritocracyBonus(account, 27);
-  const opt464 = account?.accountOptions?.[464] ?? 0;
 
   expGainLUK5 *= Math.max(1,
     Math.pow(1.03, spelunkRocksFound)
     * superbit24
-    * (1 + meritocBonus27 / 100)
-    * (1 + Math.max(0, 5 * (opt464 - 8)) / 100));
+    * (1 + meritocBonus27 / 100));
 
   // ExpGainLUK6 - additional additive
-  const cardLvSpringEvent = account?.cards?.['springEvent1']?.stars ?? 0;
+  const springEventCard = Object.values(account?.cards || {}).find((card: any) => card.rawName === 'springEvent1') as any;
+  const cardLvSpringEvent = springEventCard?.amount > 0 ? (springEventCard.stars ?? 0) + 1 : 0;
   const comp3 = isCompanionBonusActive(account, 3) ? account?.companions?.list?.at(3)?.bonus : 0;
   const comp50Additive = isCompanionBonusActive(account, 50) ? account?.companions?.list?.at(50)?.bonus : 0;
   const shimmerBonus = (account?.accountOptions?.[179] ?? 0) * (account?.islands?.allShimmerBonus ?? 0);
@@ -2049,7 +2053,7 @@ export const getClassExpMulti = (character: any, account: any, characters: any) 
                       + (opt421
                         + (stampClassXP
                           + (friendBonus1
-                            + (comp47 + comp111 + getButtonBonus(account, 8))))))))))))));
+                            + (comp47 + comp111 + comp128 + getButtonBonus(account, 8))))))))))))));
 
   // Additive bonuses in the main chain (EtcBonuses('4') + ...)
   const forthTalentBonus = getTalentBonus(character?.flatTalents, 'LUCKY_CHARMS');
@@ -2148,6 +2152,7 @@ export const getClassExpMulti = (character: any, account: any, characters: any) 
             { name: "Companion (Santa Snake)", value: comp50Additive / 100 },
             { name: "Companion (Jigglelord)", value: comp47 / 100 },
             { name: "Companion (Obolbrine)", value: comp111 / 100 },
+            { name: "Companion (Baby Troll additive)", value: comp128 / 100 },
             { name: "Dungeon (Flurbo)", value: flurboBonus / 100 },
             { name: "Exotic Market", value: exoticBonusQTY50 / 100 },
             { name: "Food", value: foodBonus / 100 },
@@ -2215,6 +2220,8 @@ export const getClassExpMulti = (character: any, account: any, characters: any) 
             { name: "Companion (Mr Pig)", value: 1 + comp32 },
             { name: "Companion (Crystal Glunko)", value: 1 + 0.4 * comp168 },
             { name: "Companion (Whale)", value: 1 + comp34 },
+            { name: "Companion (Eggroll)", value: 1 + eggrollBonus },
+            { name: "Cards (Class EXP Multi)", value: 1 + cardExpMulti / 100 },
             { name: "Companion (Baby Troll)", value: babyTrollMulti },
             { name: "Research Grid", value: 1 + researchGridTotal / 100 },
             { name: "Sticker", value: 1 + stickerBonus / 100 },
@@ -2235,7 +2242,7 @@ export const getClassExpMulti = (character: any, account: any, characters: any) 
             { name: "Equinox Multi", value: 1 + equinoxClassExpMulti / 100 },
             { name: "Fountain", value: 1 + fountainClassExpBonus / 100 },
             { name: "Royal Statue", value: 1 + royalStatueClassExpBonus / 100 },
-            { name: "Classy Discoveries", value: Math.max(1, Math.pow(1.03, spelunkRocksFound) * superbit24 * (1 + meritocBonus27 / 100) * (1 + Math.max(0, 5 * (opt464 - 8)) / 100)) },
+            { name: "Classy Discoveries", value: Math.max(1, Math.pow(1.03, spelunkRocksFound) * superbit24 * (1 + meritocBonus27 / 100)) },
             { name: "Class EXP Equip", value: 1 + equipBonus78 / 100 },
           ],
           subSections: [

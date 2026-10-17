@@ -136,3 +136,21 @@ export {getCharacterStatAccount} from './vendor/idleon-toolbox/parsers/world-2/v
 export {getGatheringRates,harvestChance,gatheringSpeed,gatheringActions,fishingPercentages} from './afk-gathering-math';
 
 export {calcShinyLvMulti} from './vendor/idleon-toolbox/parsers/world-4/breeding';
+
+// Primary stats are rebuilt for AFK projections using the equipped loadout.
+export {getStatsFromGear} from './vendor/idleon-toolbox/parsers/items';
+export {getObolsBonus} from './vendor/idleon-toolbox/parsers/obols';
+export {getStampsBonusByStat} from './vendor/idleon-toolbox/parsers/world-1/stamps';
+export {getCardBonusByEffect} from './vendor/idleon-toolbox/parsers/cards';
+export {getPostOfficeBonus} from './vendor/idleon-toolbox/parsers/world-3/postoffice';
+export {getGuildBonusBonus} from './vendor/idleon-toolbox/parsers/guild';
+export {getVialsBonusByStat} from './vendor/idleon-toolbox/parsers/world-2/alchemy';
+export {getCosmoBonus} from './vendor/idleon-toolbox/parsers/world-5/hole';
+export {checkCharClass} from './vendor/idleon-toolbox/parsers/talents';
+export {getTalentBonusIfActive} from './vendor/idleon-toolbox/parsers/talents';
+export {getGrimoireBonus} from './vendor/idleon-toolbox/parsers/class-specific/grimoire';
+export {getArmorSetBonus} from './vendor/idleon-toolbox/parsers/world-3/armorSmithy';
+export {lavaLog} from './vendor/idleon-toolbox/utility/helpers';
+import {bonuses} from './vendor/idleon-toolbox/data/website-data';
+export const primaryEtcBonuses = bonuses.etcBonuses;
+export {getCharacterFamilyBonus} from './vendor/idleon-toolbox/parsers/family';

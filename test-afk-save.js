@@ -13,3 +13,15 @@ const d=Object.fromEntries(['CharacterClass_','PVStatList_','EquipOrder_','Lv0_'
 assert.equal(S.calculate({data:d},stub)[0][0].rate,800);
 delete d.PVStatList_0;assert.match(S.calculate({data:d},stub)[0][0].error,/PVStatList/);
 console.log('AFK save calculations: real save, combat formula, missing fields, unsupported balloons, immutability, manual overrides and reset passed.');
+
+const mapModel={...stub,mapNames:{1:'First_Map',2:'Second_Map',3:'Town',39:'Dungeon'},mapEnemiesArray:{1:'test',2:'other',3:'none',39:'test'},mapDetails:{1:[[],[10]],2:[[],[20]],3:[[],[0]],39:[[],[10]]},monsters:{test:{Name:'Test',AFKtype:'Fighting',ExpGiven:100},other:{Name:'Other',AFKtype:'Fighting',ExpGiven:300}},getMaxDamage:c=>({killsPerHour:c.mapIndex===2?20:10,afkGains:.5,survivability:80}),getClassExpMulti:c=>({value:c.mapIndex===2?3:2})};
+const character={playerId:0,mapIndex:1,targetMonster:'test'},snapshot=JSON.stringify(character);
+const maps=S.combatMaps(character,[character],{},mapModel);
+assert.deepEqual(maps.map(n=>n.map),[1,2]);
+assert.equal(maps[0].rate,800);assert.equal(maps[1].rate,7200);
+assert.equal(JSON.stringify(character),snapshot);
+const switching={rows:[{id:0,node:'2',rate:'123',overrides:{rate:true}}]},session={auto:{0:{0:{nodes:maps,defaultNode:'1',rate:800}}}};
+A.applyAuto(switching,0,session);assert.equal(switching.rows[0].rate,'123');
+delete switching.rows[0].overrides.rate;A.applyAuto(switching,0,session);
+assert.equal(switching.rows[0].rate,'7200');assert.equal(switching.rows[0].map,2);
+console.log('Combat maps: map-specific rates, unsupported-map filtering, immutability and selected-map overrides passed.');
