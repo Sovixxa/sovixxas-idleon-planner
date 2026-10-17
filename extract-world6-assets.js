@@ -2,7 +2,7 @@
 const fs=require('node:fs'),path=require('node:path'),zlib=require('node:zlib'),vm=require('node:vm');
 const root=__dirname,client=fs.readFileSync(path.resolve(root,'../audit/N.js'),'utf8');
 function list(name){const token='.'+name+'=function(){return',start=client.indexOf(token)+token.length;if(start<token.length)throw Error(name+' missing');let depth=0,quote='',escaped=false,end=-1;for(let i=start;i<client.length;i++){const ch=client[i];if(quote){if(escaped)escaped=false;else if(ch==='\\')escaped=true;else if(ch===quote)quote='';continue;}if(ch==='"'||ch==="'"){quote=ch;continue;}if(ch==='['||ch==='{'||ch==='(')depth++;else if(ch===']'||ch==='}'||ch===')'){depth--;if(depth===0){end=i+1;break;}}}if(end<0)throw Error(name+' end missing');return vm.runInNewContext(client.slice(start,end));}
-const names=['SeedInfo','MarketInfo','MarketExoticInfo','NinjaInfo','NinjaUpg','SummonEnemies','SummonUnits','SummonUPG'];
+const names=['SeedInfo','MarketInfo','MarketExoticInfo','NinjaInfo','NinjaUpg','JadeUpg','SummonEnemies','SummonUnits','SummonUPG'];
 const data=Object.fromEntries(names.map(name=>[name,list(name)]));
 fs.writeFileSync(path.resolve(root,'world6-data.js'),'window.WORLD6_CATALOG='+JSON.stringify(data)+';\n');
 const wanted=[...new Set([...client.matchAll(/assets%2Fdata%2F((?:FarmCrop|FarmPlant|FarmStFood|NinjaBar|NjI|SummC|SummMob|SummSt)[A-Za-z0-9_]*)\.png/g)].map(m=>m[1]))];

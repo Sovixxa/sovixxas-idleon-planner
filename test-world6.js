@@ -8,3 +8,22 @@ const B=require("./summoning-battles.js"),battles=B.battles(sum);assert(battles.
 assert(!battles.some(x=>/^rift/.test(x.code)||x.id>=100&&x.id<=114));
 const progress=B.progress({KRbest:JSON.stringify({SummzTrz0:6}),OptionsListAccount:JSON.stringify(Array.from({length:320},(_,i)=>i===319?43:0))},global.WORLD6_CATALOG);assert.equal(progress.stones.length,7);assert.equal(progress.stones[0].kills,6);assert.equal(progress.stones[1].kills,null);assert.equal(progress.endless,43);assert.equal(B.progress({},global.WORLD6_CATALOG).endless,null);
 const endless=B.endlessRows(43,global.WORLD6_CATALOG);assert.equal(endless[0].number,44);assert.equal(endless.length,40);assert.equal(endless[0].rewardText,B.endlessRows(83,global.WORLD6_CATALOG)[0].rewardText);assert(endless.every(x=>x.rule&&x.modifier));
+
+// Jade Emporium uses its own catalog, display order, and original-ID unlock codes.
+const jadeSave={Ninja:Array.from({length:108},()=>[])};jadeSave.Ninja[102][9]='_alAZ';
+const jadeBefore=JSON.stringify(jadeSave),jade=W.sneak(jadeSave).emporium;
+assert.equal(jade[0].name,'Quick Ref Access');assert.equal(jade[0].cost,300);assert(jade[0].owned);
+assert.equal(jade[1].id,12);assert(jade[1].owned);assert.equal(jade[1].cost,801*2.52);
+assert(jade.find(x=>x.id===1).owned);assert(jade.find(x=>x.id===27).owned);
+assert(!jade.find(x=>x.id===2).owned);
+assert(!jade.some(x=>/Golden Tome|Stamp Stack|Bubble Broth|UNDER CONSTRUCTION/.test(x.name)));
+assert.equal(jade.length,global.WORLD6_CATALOG.JadeUpg.filter(r=>r[0]!=='UNDER_CONSTRUCTION').length);
+assert(W.sneak({}).emporium.every(x=>!x.owned));
+assert.deepEqual(W.sneak({Ninja:JSON.stringify(jadeSave.Ninja)}).emporium,jade);
+assert.equal(JSON.stringify(jadeSave),jadeBefore);
+const high=jade.find(x=>global.WORLD6_CATALOG.NinjaInfo[24].indexOf(String(x.id))===45);
+assert(high);assert.equal(high.cost,(300+500*45+45**3)*2.52**45*3.07**17*160**7*300);
+const tabs=[];const host={innerHTML:'',querySelector:()=>null,querySelectorAll(selector){if(selector==='[data-w6-tab]'){tabs.length=0;for(const id of ['twins','knowledge','emporium'])tabs.push({dataset:{w6Tab:id}});return tabs;}return [];}};
+W.render(host,'sneaking',jadeSave);tabs.find(x=>x.dataset.w6Tab==='emporium').onclick();
+assert(host.innerHTML.includes('Quick Ref Access'));assert(!host.innerHTML.includes('Golden Tome'));
+console.log('Jade Emporium: catalog, ordering, ownership, prices, and rendered cards pass.');
