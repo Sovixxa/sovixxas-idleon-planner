@@ -144,6 +144,37 @@ const VERSION='0.9.9-alchemy-bubbles';
   }
   function cloneState(state){return {...state,board:state.board.slice(),cellExp:state.cellExp.slice(),cellLevels:state.cellLevels.slice(),upgrades:state.upgrades.slice(),plots:state.plots.slice()};}
   function upgradeQty(state,id){ const m=UPGRADE_META[id],doubled=rawArray(state,'Spelunk')?.[53]?.includes(id); return m?m.perLevel*asNum(state.upgrades[id])*(doubled?2:1):0; }
+  // CustomLists.Research[61], the client's Jelly doubler allowlist.
+  const JELLY_DOUBLER_IDS=[10,11,15,17,18,19,20,21,22,23,24,25,26,29,30,31,32,33,34,38];
+  function jellyDoublerRows(state){
+    const applied=rawArray(state,'Spelunk')?.[53]||[];
+    const totalLevels=state.cellLevels.reduce((sum,n)=>sum+asNum(n),0);
+    const n=value=>Number(value.toFixed(4)).toLocaleString('en-US',{maximumFractionDigits:4});
+    function effect(id,q){
+      if(id===15)return `${n(1+q)} Virus slots`;
+      if(id===17)return `+${n(1+q)}% damage per Cell LV`;
+      if(id===29)return `${n(1+(50+q)/100)}× attack speed for 5 seconds`;
+      if(id===34)return `${n(100*q/(100+q))}% cheaper upgrades`;
+      if(id===38)return `${n(q)}% of best operation / day (${formatNumber(state.bestBloodcells*q/100)} Bloodcells)`;
+      if(id===32)return `+${n(q)}% damage per 100 combined Cell LVs (+${n(q*Math.floor(totalLevels/100))}% now)`;
+      if(id===33)return `+${n(q)}% Bloodcells per combined Cell LV (+${n(q*totalLevels)}% now)`;
+      if([11,21,22,26].includes(id))return `${n(1+q/100)}× ${id===11?'Cell EXP':id===26?'Bloodcells':'cell damage'}`;
+      return `+${n(q)}% ${[10,30,31].includes(id)?'Cell EXP':[23,24,25].includes(id)?'Bloodcell gain':'cell damage'}`;
+    }
+    return UPGRADE_ORDER.filter(id=>JELLY_DOUBLER_IDS.includes(id)).map(id=>{
+      const meta=UPGRADE_META[id],level=asNum(state.upgrades[id]),base=level*meta.perLevel,doubled=applied.includes(id);
+      return {id,name:meta.name,level,doubled,base,boosted:base*2,
+        status:doubled?'Applied':level>0?'Not applied':'Not purchased',
+        without:effect(id,base),withDoubler:effect(id,base*2),
+        note:id===15?'Place the extra Virus and rearrange cells to benefit.':
+          id===38?'Uses the best Bloodcell record in your loaded save.':
+          id===34?'Doubles the cost-reduction stat, not the final discount.':
+          id===32?'Uses the combat formula’s 100-level breakpoint.':
+          [10,18,19,20,23,24,25,30,31,33].includes(id)?'Adds to its existing bonus pool; total output does not necessarily double.':
+          id===29?'The base +50% speed and burst duration stay fixed.':
+          id===17?'The base +1% per Cell LV stays fixed.':'Doubles the bonus above the base 1× multiplier.'};
+    });
+  }
   function unitsOwned(state){let n=0;for(let i=0;i<8;i++)n+=upgradeQty(state,i);return Math.round(Math.min(8,n));}
   function virusLimit(state){return Math.round(1+upgradeQty(state,15));}
   function feverUnlocked(state){return upgradeQty(state,16)>=1;}
@@ -1228,7 +1259,7 @@ const VERSION='0.9.9-alchemy-bubbles';
   function formatNumber(n){n=asNum(n);const a=Math.abs(n);if(a<1000)return n.toLocaleString(undefined,{maximumFractionDigits:2});const units=['K','M','B','T','Q','Qi','Sx'];let v=a,u=-1;while(v>=1000&&u<units.length-1){v/=1000;u++;}return(n<0?'-':'')+v.toFixed(v>=100?1:v>=10?2:3).replace(/\.0+$|(?<=\.[0-9]*?)0+$/,'')+units[u];}
   function formatTime(t){if(t==null||!Number.isFinite(t))return '—';return t<60?t.toFixed(2)+'s':Math.floor(t/60)+'m '+(t%60).toFixed(1)+'s';}
   return {VERSION,COMBAT_MODEL_VERSION,bonusAudit,bloodcellBonuses,arcadeBloodcellBonus,dpsBloodcellMultiplier,researchGridBonus,cellDetails,CELL_PASSIVES,CELL_ABILITIES,FEVER_NAMES,optimizeOperation,clearConfidence,COLS,ROWS,BOARD_SIZE,FPS,UNIT_NAMES,UNIT_IMG_DIMS,UNIT_VISUAL_OFFSET,UPGRADE_META,UPGRADE_ORDER,PLOTS,SHAPE_OFFSETS,SHAPE_COORDS,BULLET_LAUNCH,PROXIMITY_CORES,BLOCKED_CENTER,SUSHI_ROG_BONUS,
-    parseInput,makeState,cloneState,upgradeQty,unitsOwned,virusLimit,feverUnlocked,critUnlocked,steroidUnlocked,reviveCount,bossHP,bossTime,bossAtkCD,cellExpReq,cellExpProjection,cellExpMultiplier,canLevelCells,obstructionTier,bundleFlag,slotPurchasesLeft,plotCells,plotLabel,
+    JELLY_DOUBLER_IDS,jellyDoublerRows,parseInput,makeState,cloneState,upgradeQty,unitsOwned,virusLimit,feverUnlocked,critUnlocked,steroidUnlocked,reviveCount,bossHP,bossTime,bossAtkCD,cellExpReq,cellExpProjection,cellExpMultiplier,canLevelCells,obstructionTier,bundleFlag,slotPurchasesLeft,plotCells,plotLabel,
     unlockedSlots,footprint,placementsForState,arrangementFromBoard,rawCounts,effectiveCounts,rawArray,paletteCellDamageBonus,companionGridBonus,dreamCloudBonus,gridAllMultiplier,gridCellDamageBonus,externalDamageStatus,sushiUniqueCount,sushiRogBonus,organelleSpeedMultiplier,organelleBoosted,infectedSlots,combatModel,jellyDamageMultiplier,layoutScore,backInEase,projectileLaunchPosition,projectileHitDelayFrames,simulateOne,simulateMany,autoDamageScale,calibrateToObservedClearTime,steroidStartCandidates,optimizeSteroidStart,optimizeTimed,
     upgradeCost,upgradeLevelReq,upgradeCandidates,upgradeRoadmap,planUpgradePurchases,findUpgradeTarget,recommendNextPlot,arrangementGrid,formatNumber,formatTime,arrangementKey,isLegalLayout,fillEmptySlots,relocateLayout,rebuildLayoutPatch,localImproveLayout,generateLayout,generateRoleAwareLayout,generateSupportLayout,generateBreakpointLayout,enumerateMixes,buildPlacementIndex,tileMix,timedObjective,seededRng};
 });

@@ -15,3 +15,24 @@ assert.equal(plan([group(16,3,{unlocked:null})]).next.target,5);
 assert.equal(new Set(tiers.flatMap(t=>t.ids)).size,26);
 assert.equal(plan([]).next,undefined);
 console.log('Shiny planner: staged milestones, priority, locked/missing records and completed pets pass.');
+
+assert.equal(plan([group(0,20,{maxLevel:20}),group(16,25,{maxLevel:30})]).next.target,30,'Completed level-20 pets must not reenter an expanded queue');
+
+const {estimate}=require('./shiny-planner');
+const pet={level:1,maxLevel:30,progress:1};
+assert.equal(estimate(pet,2,1,1,0,false).passive,2*86400);
+assert.equal(estimate(pet,2,2,1,0,false).passive,86400);
+assert.equal(estimate(pet,2,1,2,0,false).passive,86400);
+assert.equal(estimate(pet,2,1,1,2400,true).active,86400);
+assert.equal(estimate(pet,2,1,1,2400,false).active,2*86400);
+assert.equal(estimate(pet,2,1,1,'',true).active,null);
+assert.equal(estimate(pet,1,0,'','',true).passive,0);
+assert(estimate(pet,2,0,1,2400,true).error);
+assert(estimate({...pet,progress:null},2,1,1,0,false).error);
+assert(estimate({...pet,level:0},2,1,1,0,false).error);
+assert(estimate(pet,31,1,1,0,false).error);
+assert(estimate({...pet,progress:3},2,1,1,0,false).passive>0);
+assert(estimate(pet,2,1,'',0,false).error);
+assert(estimate(pet,2,1.5,1,0,false).error);
+assert(estimate({...pet,level:20,progress:1e5},25,1,1000,2400,true).active>0);
+console.log('Shiny timing: passive and active rates, copy scaling, thresholds, cap, missing values and hatch requirements pass.');

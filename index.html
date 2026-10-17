@@ -196,8 +196,17 @@
         <button id="tabOptimizer" class="workspace-tab" role="tab" aria-selected="false" aria-controls="panelOptimizer">Optimizer</button>
         <button id="tabPractice" class="workspace-tab" role="tab" aria-selected="false" aria-controls="panelPractice">Practice game</button>
         <button id="tabUpgrades" class="workspace-tab" role="tab" aria-selected="false" aria-controls="panelUpgrades">Upgrade optimizer</button>
+        <button id="tabDoublers" class="workspace-tab" role="tab" aria-selected="false" aria-controls="panelDoublers">Doublers</button>
         <button id="tabBonuses" class="workspace-tab" role="tab" aria-selected="false" aria-controls="panelBonuses">Bonuses & cells</button>
       </nav>
+
+      <div id="panelDoublers" class="tab-panel hidden" role="tabpanel" aria-labelledby="tabDoublers">
+        <section class="panel"><h2>Jelly doublers</h2>
+          <p>Compare each eligible perk at its saved level, without and with one doubler. Applied doublers are marked below. Each perk can be doubled once.</p>
+          <p id="jellyDoublerSummary" class="fountain-note"></p>
+          <div id="jellyDoublerList" class="jelly-doubler-grid"></div>
+        </section>
+      </div>
 
       <div id="panelHome" class="tab-panel" role="region" aria-label="Home">
         <section class="panel home-panel">
@@ -488,6 +497,9 @@
   <script src="clicker-models.js"></script>
     <script src="clicker-preview.js"></script>
     <script src="bonus-systems.js?v=15"></script>
+    <script src="palette-data.js"></script>
+    <script src="palette-doublers.js"></script>
+    <script src="station-doublers.js"></script>
     <script src="bonus-systems-v2.js?v=2"></script>
     <script src="bubba-optimizer-data.js"></script>
     <script src="bubba-optimizer.js"></script>

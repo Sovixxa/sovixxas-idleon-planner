@@ -314,3 +314,12 @@ The production script policy follows the static-site hash approach described at 
 The old Class EXP page and redundant EXP Planning sections have been removed.
 Old `#/classExp` links redirect to Account Review. AFK Tester remains available.
 Shared EXP calculations still support Post Office and world-page information.
+
+Breeding → Shiny Pets includes a leveling-time calculator. It imports saved progress
+and Fenceyard shiny copies, and calculates shiny speed for the selected character.
+Compare passive/AFK time with active Beast Master or Wind Walker time using measured
+actual kills/hour and the enhanced Whale Wallop checkbox (50% chance of 3 extra
+Fenceyard seconds per kill). Targets respect the saved 20/30 cap. Rates are held
+constant; future shiny/OverLV speed gains are not projected. Manual speed overrides
+survive asynchronous bonus loading. Run `node test-shiny-planner.js` and
+`node test-shiny-browser.js` for timing and UI coverage.

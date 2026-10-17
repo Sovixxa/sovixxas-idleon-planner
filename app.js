@@ -70,7 +70,7 @@
     window.PlannerAnalytics?.page(name==='home'?'home':'jelly/'+name);
     $('panelWorld').classList.add('hidden');
     $('panelHome').classList.toggle('hidden',name!=='home');
-    const tabs={optimizer:['tabOptimizer','panelOptimizer'],practice:['tabPractice','panelPractice'],upgrades:['tabUpgrades','panelUpgrades'],bonuses:['tabBonuses','panelBonuses']};
+    const tabs={optimizer:['tabOptimizer','panelOptimizer'],practice:['tabPractice','panelPractice'],upgrades:['tabUpgrades','panelUpgrades'],doublers:['tabDoublers','panelDoublers'],bonuses:['tabBonuses','panelBonuses']};
     for(const [key,[button,panel]] of Object.entries(tabs)){
       const active=key===name;$(button).classList.toggle('active',active);$(button).setAttribute('aria-selected',String(active));$(panel).classList.toggle('hidden',!active);
     }
@@ -78,6 +78,13 @@
     for(const job of ['practice','upgrades'])if(name!==job&&jellyPanelJobs.has(job)){jellyPanelJobs.get(job)();if(job==='practice')initialPracticePending=true;else initialUpgradesPending=true;}
     if(name==='upgrades'&&initialUpgradesPending){initialUpgradesPending=false;renderUpgrades(currentArrangement,currentStats,calibration?.scale);}
     if(name==='practice'&&initialPracticePending){initialPracticePending=false;refreshPracticeFevers();refreshPracticeCells();runPractice(true,true);}
+    if(name==='doublers')renderJellyDoublers();
+  }
+  function renderJellyDoublers(){
+    if(!state){$('jellyDoublerSummary').textContent='Load your save to compare doubler effects.';$('jellyDoublerList').replaceChildren();return;}
+    const rows=E.jellyDoublerRows(state);
+    $('jellyDoublerSummary').textContent=`${rows.length} eligible perks · ${rows.filter(r=>r.doubled).length} applied. Values use your loaded save; unpurchased perks stay at level 0 until upgraded.`;
+    $('jellyDoublerList').innerHTML=rows.map(r=>`<article class="jelly-doubler-card" data-perk="${r.id}"><div class="jelly-doubler-heading"><img src="assets/JellyUpg${r.id}.png" width="32" height="32" alt=""><div><h3>${esc(r.name)}</h3><span>Level ${r.level} · ${r.status}</span></div></div><dl><dt>Without doubler</dt><dd>${esc(r.without)}</dd><dt>With doubler${r.doubled?' (current)':''}</dt><dd>${esc(r.withDoubler)}</dd></dl><p class="fountain-note">${esc(r.note)}</p></article>`).join('');
   }
   const SKILL_PAGES={
     library:{title:'Library',world:'World 3',copy:'Talent book levels, upgrade sources, and checkout timers.'},
@@ -209,6 +216,7 @@ SKILL_PAGES.holeFloors={title:'Floors',world:'World 5',copy:'All 18 Hole caverns
   $('tabOptimizer').addEventListener('click',()=>selectSideNav('jelly'));
   $('tabPractice').addEventListener('click',()=>{selectSideNav('jelly');selectWorkspaceTab('practice');});
   $('tabUpgrades').addEventListener('click',()=>{selectSideNav('jelly');selectWorkspaceTab('upgrades');});
+  $('tabDoublers').addEventListener('click',()=>{selectSideNav('jelly');selectWorkspaceTab('doublers');});
   $('tabBonuses').addEventListener('click',()=>{selectSideNav('jelly');selectWorkspaceTab('bonuses');});
   $('navHome').addEventListener('click',()=>selectSideNav('home'));
   $('navJelly').addEventListener('click',()=>selectSideNav('jelly'));
@@ -653,6 +661,7 @@ SKILL_PAGES.holeFloors={title:'Floors',world:'World 5',copy:'All 18 Hole caverns
     $('worldContent').classList.toggle('jar-page',name==='holeJars');
     const addSubtabs=()=>{const parentKey=page.parent||name,parent=SKILL_PAGES[parentKey],keys=[parentKey,...(parent.tabs||[])];if(keys.length<2)return;const head=$('worldContent').querySelector('.section-head,.bonus-system-hero,.divinity-hero');if(parentKey==='hole'){if($('worldContent').querySelector('.hole-tab-stack'))return;const activeGroup=HOLE_TAB_GROUPS.find(group=>group.keys.includes(name))||HOLE_TAB_GROUPS[0],stack=document.createElement('div');stack.className='hole-tab-stack';stack.innerHTML=`<nav class="skill-tabs hole-group-tabs" role="tablist" aria-label="The Hole groups">${HOLE_TAB_GROUPS.map(group=>`<button class="skill-tab${group===activeGroup?' active':''}" data-hole-group="${esc(group.keys[0])}" role="tab" aria-selected="${group===activeGroup}">${esc(group.label)}</button>`).join('')}</nav><nav class="skill-tabs hole-section-tabs${activeGroup.label==='Villagers'?' hole-villager-tabs':''}" role="tablist" aria-label="${esc(activeGroup.label)} sections">${activeGroup.keys.map(key=>`<button class="skill-tab${key===name?' active':''}" data-skill-tab="${esc(key)}" role="tab" aria-selected="${key===name}">${HOLE_VILLAGER_ICONS[key]!=null?`<span class="hole-portrait"><img src="assets/HoleUIvillager${HOLE_VILLAGER_ICONS[key]}.png" alt=""></span>`:''}<span>${esc(key==='hole'?'Explore':SKILL_PAGES[key].title)}</span></button>`).join('')}</nav>`;head?.insertAdjacentElement('afterend',stack);stack.querySelectorAll('[data-hole-group]').forEach(button=>button.onclick=()=>selectSideNav(button.dataset.holeGroup));stack.querySelectorAll('[data-skill-tab]').forEach(button=>button.onclick=()=>selectSideNav(button.dataset.skillTab));return;}const nav=document.createElement('nav');nav.className='skill-tabs';nav.setAttribute('role','tablist');nav.setAttribute('aria-label',`${parent.title} sections`);nav.innerHTML=keys.map(key=>`<button class="skill-tab${key===name?' active':''}" data-skill-tab="${esc(key)}" role="tab" aria-selected="${key===name}">${esc(SKILL_PAGES[key].title)}</button>`).join('');if(parentKey==='coralReef')$('worldContent').prepend(nav);else head?.insertAdjacentElement('afterend',nav);nav.querySelectorAll('[data-skill-tab]').forEach(button=>button.onclick=()=>selectSideNav(button.dataset.skillTab));};
     $('worldContent').bonusAfterRender=addSubtabs;
+    if(name==='gamingPalette'){window.PaletteDoublers.render($('worldContent'),loadedExport||state?.rawRoot||{});addSubtabs();return;}
     if(name==='menagerie'){window.Menagerie.render($('worldContent'),loadedExport||state?.rawRoot||{});return;}
     if(name==='research'){window.ResearchPage.render($('worldContent'),loadedExport||state?.rawRoot||{});return;}
     if(name==='minigames'){ $('worldContent').innerHTML='<div class="section-head compact"><div><h2>Minigames</h2><p>Select Hoops or Darts to see your saved scores and bonuses.</p></div></div>';addSubtabs();return;}
@@ -677,7 +686,7 @@ SKILL_PAGES.holeFloors={title:'Floors',world:'World 5',copy:'All 18 Hole caverns
     if(name==='lab'){window.Lab.render($('worldContent'),state?.rawData||{},state?.rawRoot||{});return;}
     if(['breeding','cooking','rift'].includes(name)){window.World4.render($('worldContent'),name,state?.rawData||{},state?.rawRoot||{});return;}
     if(name==='divinity'){window.Divinity.render($('worldContent'),state?.rawData||{},state?.rawRoot||{},addSubtabs);return;}
-    if(name==='sailing'||name==='gaming'){window.World5.render($('worldContent'),name,state?.rawData||{},loadedExport||state?.rawRoot||{});return;}
+    if(name==='sailing'||name==='gaming'){window.World5.render($('worldContent'),name,state?.rawData||{},loadedExport||state?.rawRoot||{},name==='gaming'?addSubtabs:undefined);return;}
     if(name==='tome'||name==='slab'){window.ProgressionPages.render($('worldContent'),name,loadedExport||state?.rawRoot||{});return;}
     if(name==='equinox'){window.Equinox.render($('worldContent'),state?.rawData||{});return;}
     if(name==='farming'||name==='sneaking'||name==='summoning'){window.World6.render($('worldContent'),name,state?.rawData||{},loadedExport||state?.rawRoot||{});return;}

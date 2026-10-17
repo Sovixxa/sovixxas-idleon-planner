@@ -26,7 +26,7 @@ function build(raw,parsed){
   const groups=root.ProgressionModels.build(root.BeanValueEngine.systems(raw),raw).shinyPets||[],queue=root.ShinyPlanner.plan(groups),stored=read(d.PetsStored),fence=a.breeding?.rawFencePets||[];
   const owned=new Set((stored||[]).filter(p=>p[1]===5).map(p=>p[0]));
   const target=queue.pets.find(p=>p.ready&&owned.has(p.id)&&!(a.breeding.fencePetsObject?.[p.id]?.shiny>0));
-  const free=fence.some(p=>!p[0]||['Blank','none','_'].includes(p[0])),finished=fence.find(p=>p[1]===5&&(a.breeding.pets.flat().find(x=>x.monsterRawName===p[0])?.shinyLevel>=20));
+  const free=fence.some(p=>!p[0]||['Blank','none','_'].includes(p[0])),finished=fence.find(p=>{const pet=a.breeding.pets.flat().find(x=>x.monsterRawName===p[0]);return p[1]===5&&pet&&pet.shinyLevel>=(pet.maxShinyLevel??20);});
   if(target&&(free||finished))out.push({id:'shiny-pet|'+target.id,sectionId:'shinyPets',page:'shinyPets',system:'Shiny pets',sourceName:target.id,name:`${free?'Place':'Swap a completed shiny for'} ${clean(target.id)} in the Fenceyard`,effect:target.perLevel,state:'Do now',ready:true,score:97,reason:'The existing shiny-pet planner selected this milestone, and a shiny copy is present in pet storage.',facts:[{label:'Current / target',text:`Lv ${target.level} / ${target.target}`},{label:'Fence slot',text:free?'Saved empty slot':`Replace completed ${clean(finished[0])}`},{label:'Per level',text:target.perLevel}],benefit:target.bonus,blocker:'This is the existing tier-based shiny progression plan, not a measured gain-per-hour optimum. Active Wind Walker kills can change leveling time.'});
  }
  return out;

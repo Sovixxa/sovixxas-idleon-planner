@@ -1,0 +1,15 @@
+const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),E=require('./engine');
+const catalog={window:{}};vm.runInNewContext(fs.readFileSync('world7-data.js','utf8'),catalog);
+assert.deepEqual(E.JELLY_DOUBLER_IDS,Array.from(catalog.window.WORLD7_CATALOG.Research[61],Number));
+const state=E.parseInput(fs.readFileSync('../example json.txt','utf8'));
+state.upgrades[15]=1;state.upgrades[38]=20;state.upgrades[34]=100;state.bestBloodcells=1000;
+state.rawData={...state.rawData,Spelunk:JSON.stringify(Array.from({length:54},(_,i)=>i===53?[15]:[]))};
+const before=JSON.stringify(state),rows=E.jellyDoublerRows(state),row=id=>rows.find(r=>r.id===id);
+assert.equal(rows.length,20);assert(!row(27));assert(!row(35));
+assert.equal(row(15).without,'2 Virus slots');assert.equal(row(15).withDoubler,'3 Virus slots');assert.equal(row(15).status,'Applied');
+assert.match(row(38).without,/200%/);assert.match(row(38).withDoubler,/400%/);
+assert.equal(row(34).without,'50% cheaper upgrades');assert.equal(row(34).withDoubler,'66.6667% cheaper upgrades');
+assert.equal(JSON.stringify(state),before);
+state.rawData.Spelunk=JSON.parse(state.rawData.Spelunk);assert.equal(E.jellyDoublerRows(state).find(r=>r.id===15).doubled,true);
+state.upgrades.fill(0);assert(E.jellyDoublerRows(state).every(r=>r.base===0&&r.without===r.withDoubler));
+console.log('Jelly doubler allowlist, effects, applied state, zero levels and save preservation pass.');
