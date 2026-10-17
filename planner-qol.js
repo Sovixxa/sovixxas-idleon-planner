@@ -172,7 +172,7 @@
     content.addEventListener('click',e=>{if(restoring)return;const b=e.target.closest('button');if(!b)return;const attr=tabKey(b);if(attr){restoreBudget=0;pref()['tab:'+attr.name]=attr.value;save();}},true);
     function restore(){
       if(restoreBudget<=0)return;restoring=true;
-      try{const p=pref();for(const el of controls()){const v=p[fieldKey(el)];if(v===undefined)continue;if(el.tagName==='SELECT'&&![...el.options].some(o=>o.value===v))continue;const old=el.type==='checkbox'?el.checked:el.value;if(old!==v){if(el.type==='checkbox')el.checked=v;else el.value=v;restoreBudget--;el.dispatchEvent(new Event(el.type==='search'?'input':'change',{bubbles:true}));return;}}
+      try{const p=pref();for(const el of controls()){if(el.disabled)continue;const v=p[fieldKey(el)];if(v===undefined)continue;if(el.tagName==='SELECT'&&![...el.options].some(o=>o.value===v))continue;const old=el.type==='checkbox'?el.checked:el.value;if(old!==v){if(el.type==='checkbox')el.checked=v;else el.value=v;restoreBudget--;el.dispatchEvent(new Event(el.type==='search'?'input':'change',{bubbles:true}));return;}}
         for(const [key,value] of Object.entries(p)){if(!key.startsWith('tab:'))continue;const b=[...content.querySelectorAll('button')].find(b=>{const attr=tabKey(b);return attr?.name===key.slice(4)&&attr.value===value;});if(b&&!b.disabled&&!b.classList.contains('active')&&!b.classList.contains('selected')&&b.getAttribute('aria-selected')!=='true'&&b.getAttribute('aria-pressed')!=='true'){restoreBudget--;b.click();return;}}
       }finally{restoring=false;}
     }

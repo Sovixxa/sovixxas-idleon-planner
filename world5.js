@@ -8,7 +8,7 @@
   const tiers=['Missing','Normal','Ancient','Eldritch','Sovereign','Omnipotent','Transcendent','Verisimilitude'];
   function decodeSailing(data,c=root.WORLD5_CATALOG){
     const sailing=parse(data.Sailing),boats=parse(data.Boats)||[],captains=parse(data.Captains)||[],chests=parse(data.SailChests)||[],levels=sailing?.[3]||[];
-    const artifacts=c.ArtifactInfo.map((row,id)=>({id,name:pretty(row[0]),tier:num(levels[id])??0,tierName:tiers[num(levels[id])??0]||`Tier ${levels[id]}`,effect:pretty(row[4]),icon:id<35?`assets/SailT${id}.png`:null}));
+    const artifacts=c.ArtifactInfo.map((row,id)=>({id,name:pretty(row[0]),tier:num(levels[id])??0,tierName:tiers[num(levels[id])??0]||`Tier ${levels[id]}`,effect:pretty(row[4]),icon:`assets/Arti${id}.png`}));
     const boatRows=boats.map((raw,id)=>{const b=parse(raw)||[],captainId=num(b[0]),island=num(b[1]);return{id,captainId,island,returning:num(b[2])===1,lootLevel:num(b[3]),speedLevel:num(b[5]),frame:(num(b[3])+num(b[5])>=400&&Number(parse(data.Research)?.[0]?.[105])>0)?6:([25,50,100,200,300].findIndex(n=>num(b[3])+num(b[5])<n)<0?5:[25,50,100,200,300].findIndex(n=>num(b[3])+num(b[5])<n)),unlocked:(num(b[3])||0)>0||captainId>=0};}).filter(b=>b.unlocked);
     const captainRows=captains.slice(0,30).map((raw,id)=>{const x=parse(raw)||[];return{id,tier:num(x[0]),bonusA:num(x[1]),bonusB:num(x[2]),level:num(x[3]),exp:num(x[4]),trait:num(x[5]),traitB:num(x[6]),hired:num(x[0])>=0};}).filter(x=>x.hired);
     return{available:Array.isArray(sailing),goldBars:num(sailing?.[1]?.[0]),captainSlots:num(sailing?.[2]?.[0])===null?null:1+Number(sailing[2][0]),boatSlots:num(sailing?.[2]?.[1])===null?null:1+Number(sailing[2][1]),artifacts,boats:boatRows,captains:captainRows,chests:chests.length,islands:c.IslandInfo};

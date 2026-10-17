@@ -4,7 +4,7 @@ const names=['Pearl Value','Clam Comrades','Lucky Day','Multi-Scalping','Frugali
 const bases=[1.2,5,1.5,1.4,1.15,1.5,1.35,1.25,1.22];
 const num=v=>Number.isFinite(Number(v))?Math.max(0,Number(v)):0;
 const copy=s=>({...s,levels:s.levels.slice()});
-function decode(raw){const parse=v=>{try{return typeof v==='string'?JSON.parse(v):v;}catch{return null;}},data=parse(raw?.data)||raw,mena=parse(data?.Menagerie)||[];for(const r of [raw?.data,raw])for(const key of ['OptLacc','OptionsListAccount']){let o=r?.[key];if(typeof o==='string'){try{o=JSON.parse(o);}catch{continue;}}if(Array.isArray(o)&&o.length>465)return {scurge:Array.from({length:9},(_,i)=>num(mena[5]?.[i])),scurgeLevel:num(mena[0]?.[8]),pearls:num(o[454]),levels:Array.from({length:9},(_,i)=>Math.floor(num(o[455+i]))),promotion:Math.floor(num(o[464])),unlocked:Math.min(8,Math.floor(num(o[465])))};}return null;}
+function decode(raw){const parse=v=>{try{return typeof v==='string'?JSON.parse(v):v;}catch{return null;}},data=parse(raw?.data)||raw,mena=parse(data?.Menagerie)||[];for(const r of [data,raw])for(const key of ['OptLacc','OptionsListAccount']){let o=r?.[key];if(typeof o==='string'){try{o=JSON.parse(o);}catch{continue;}}if(Array.isArray(o)&&o.length>465)return {scurgeKnown:Array.isArray(mena[5]),scurgeExp:num(mena[0]?.[7]),scurgeUnlocked:num(mena[2]?.[4])>0,scurge:Array.from({length:9},(_,i)=>num(mena[5]?.[i])),scurgeLevel:num(mena[0]?.[8]),pearls:num(o[454]),levels:Array.from({length:9},(_,i)=>Math.floor(num(o[455+i]))),promotion:Math.floor(num(o[464])),unlocked:Math.min(8,Math.floor(num(o[465])))};}return null;}
 const requirement=(s,i)=>i===0?0:20*Math.pow(10+3*s.promotion,i-1);
 function unlock(s){for(let i=s.unlocked+1;i<9&&s.pearls>=requirement(s,i);i++)s.unlocked=i;}
 function cost(s,i){const l=s.levels[i],discount=(1+.12*s.levels[4])*(1+.16*s.levels[8])*(1+.25*num(s.scurge?.[3]))*(1+.1*num(s.scurge?.[i])*num(s.scurge?.[5]));return (i===0?Math.pow(bases[i],l)+3*l+Math.pow(l,2.5):requirement(s,i)/5*Math.pow(bases[i],l)+2*l+Math.pow(l,1.5))/discount;}
@@ -33,5 +33,6 @@ function purchaseRows(steps,done=[],compress=false){
  else{const row={...a,order,end:order,keys:[key],orders:[order],count:1};rows.push(row);groups.set(a.id,row);}
  });return rows;
 }
-const api={purchaseRows,farmerMultikill,names,bases,decode,requirement,cost,production,buy,plan};if(typeof module==='object'&&module.exports)module.exports=api;else root.ClamworksOptimizer=api;
+function scurgeSummary(s){const l=s.scurge||Array(9).fill(0),level=num(s.scurgeLevel);return {level,exp:num(s.scurgeExp),required:(50+15*level)*Math.pow(1.08,level),pearls:Math.max(0,level-l.reduce((a,b)=>a+num(b),0)),pearlMulti:(1+.5*num(l[1]))*(1+.1*num(l[8])*level),discount:1+.25*num(l[3]),expMulti:(1+num(l[0]))*(1+1.5*num(l[4]))*(1+2*num(l[2])),carry:100*Math.min(.8,num(l[6])/(num(l[6])+25)*.75)};}
+const api={scurgeSummary,purchaseRows,farmerMultikill,names,bases,decode,requirement,cost,production,buy,plan};if(typeof module==='object'&&module.exports)module.exports=api;else root.ClamworksOptimizer=api;
 })(typeof window==='undefined'?globalThis:window);

@@ -62,6 +62,7 @@
     "test:drop-target": "node test-drop-target.js && node test-drop-target-browser.js",
     "test:calculator-performance": "node test-calculator-performance.js",
     "test:review-quick": "node test-review-quick.js && node test-review-quick-browser.js",
+    "test:review-lifecycle": "node test-review-lifecycle-browser.js && node test-review-saved-state-browser.js",
     "test:review-full": "node test-review-full-parity.js && node test-review-full-browser.js && node test-review-route-workers-browser.js && node test-review-worker-choice-browser.js",
     "test:review-shared": "node test-review-shared-plan.js && node test-review-shared-browser.js",
     "test:review-relevance": "node test-review-relevance.js && node test-shared-sources-browser.js",
