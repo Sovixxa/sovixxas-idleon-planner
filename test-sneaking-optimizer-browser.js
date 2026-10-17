@@ -1,0 +1,22 @@
+'use strict';
+const fs=require('fs'),path=require('path'),assert=require('assert/strict'),{chromium}=require(process.env.PLAYWRIGHT_PATH||'playwright');
+(async()=>{const browser=await chromium.launch({headless:true});try{
+ const page=await browser.newPage({viewport:{width:1440,height:1000}}),errors=[];page.on('pageerror',e=>errors.push(e.message));
+ await page.route('http://localhost:7332/**',async route=>{const pathname=decodeURIComponent(new URL(route.request().url()).pathname);if(pathname.startsWith('/__'))return route.fulfill({contentType:'application/json',body:'{}'});const file=path.resolve(__dirname,'.'+(pathname==='/'?'/index.html':pathname));if(!file.startsWith(__dirname+path.sep)||!fs.existsSync(file)||fs.statSync(file).isDirectory())return route.fulfill({status:404,body:''});return route.fulfill({contentType:({'.js':'text/javascript','.css':'text/css','.html':'text/html','.png':'image/png'})[path.extname(file)]||'application/octet-stream',body:fs.readFileSync(file)});});
+ await page.goto('http://localhost:7332/');await page.locator('#quickNotesToggle').click();
+ const raw=JSON.parse(fs.readFileSync('../example json.txt','utf8'));await page.locator('#jsonInput').fill(JSON.stringify(raw));await page.locator('#parseBtn').click();
+ await page.evaluate(()=>window.dispatchEvent(new CustomEvent('idleon:navigate',{detail:'sneaking'})));
+ await page.locator('[data-w6-tab=optimizer]').click();await page.locator('.sneak-planner').waitFor();
+ assert(Number(await page.locator('[name=sneak-level]').inputValue())>0);assert.equal(await page.locator('[name=sneak-character]').count(),0);assert.equal(await page.locator('[name=sneak-goal] option').count(),6);
+ await page.locator('[name=sneak-mode]').selectOption('future');assert(await page.locator('.sneak-plan li').count()>0);
+ for(const goal of ['exp','doors','items','recovery']){await page.locator('[name=sneak-goal]').selectOption(goal);assert(await page.locator('.sneak-plan li').count()>0);assert(!(await page.locator('[name=sneak-level]').isVisible()));}await page.locator('[name=sneak-goal]').selectOption('jade');
+ const jade=await page.locator('[data-sneak-result]').innerText();await page.locator('[name=sneak-goal]').selectOption('stealth');assert.notEqual(await page.locator('[data-sneak-result]').innerText(),jade);assert((await page.locator('[data-sneak-result]').innerText()).includes('Stealth'));
+ await page.locator('[name=sneak-mode]').selectOption('now');await page.locator('[name=sneak-percent]').fill('0');assert.equal(await page.locator('.sneak-plan li').count(),0);
+ await page.locator('[name=sneak-mode]').selectOption('future');await page.locator('.sneak-planner summary').first().click();await page.locator('[name=sneak-price]').fill('bad');assert((await page.locator('[data-sneak-result]').innerText()).includes('valid positive'));
+ await page.locator('[name=sneak-price]').fill('100');assert((await page.locator('[data-sneak-result]').innerText()).includes('Calibrated'));assert(await page.locator('.sneak-plan li').count()>0);
+ await page.locator('[name=sneak-price]').fill('');await page.locator('[name=sneak-percent]').fill('100');
+ await page.locator('.sneak-planner').screenshot({path:'../audit/sneaking-optimizer-desktop.png'});
+ await page.setViewportSize({width:390,height:844});assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));await page.locator('.sneak-planner').screenshot({path:'../audit/sneaking-optimizer-mobile.png'});
+ await page.evaluate(()=>SneakingOptimizerPage.render(document.querySelector('#sneakingOptimizer'),{}));assert((await page.locator('[data-sneak-result]').innerText()).includes('Load a save'));
+ assert.deepEqual(errors,[]);console.log('Sneaking browser: real navigation/import, goals, budget, calibration, missing data and mobile layout pass.');
+}finally{await browser.close();}})().catch(e=>{console.error(e);process.exitCode=1;});

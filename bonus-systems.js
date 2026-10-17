@@ -9,6 +9,25 @@ let cachedRoot=null,cached=null,cachedRowsRoot=null,cachedRows=null,enrichedRoot
 const pendingRows=new Map(),rosters=new WeakMap(),clickers=new WeakMap();
 function systems(rawRoot={}){if(rawRoot===cachedRoot&&cached)return cached;cachedRoot=rawRoot;try{cached=root.BeanValueEngine?.systems?.(rawRoot)||new Map();}catch(error){cachedRoot=null;cached=null;throw error;}return cached;}
 function row(source,name,effect,level,status='active',icon=null,search=''){if(icon)icon=icon.replace(/(MotherlodeTREE|(?:Bone|Dust|Tach|DungRNG)\d+)\.png$/, '$1_x1.png');return{source,name,effect:String(effect||'Bonus'),level,status,icon,search};}
+// Fractal Island catalogue and thresholds verified against the installed client.
+function fractalRows(rawRoot){
+ const parse=value=>{try{return typeof value==='string'?JSON.parse(value):value;}catch{return null;}};
+ const saved=parse(rawRoot?.data)||rawRoot||{},options=parse(saved.OptionsListAccount??saved.OptLacc);
+ const hours=Math.max(0,num(options?.[184]));
+ const rewards=[
+  [24,'Trophy Chance','1 in 100,000 chance for a Trophy per hour of Nothing AFK'],
+  [200,'Dungeon Credits and Flurbos','1.25x Dungeon Credits and Flurbos gained'],
+  [750,'Kitchen Cost Reduction','30% cheaper Kitchen upgrade costs'],
+  [2500,'Sailing Artifact Chance','1.20x chance to find Sailing Artifacts'],
+  [10000,'Gold Nuggets','Dirty Shovel digs up +25% more Gold Nuggets'],
+  [20000,'Star Talent Points','+100 Star Talent Points'],
+  [40000,'Sneaking Stealth','All Ninja Twins get +2% Stealth per Sneaking LV'],
+  [60000,'World 7 Bonus (placeholder)','World 7 Bonus... I wonder what it will be...']
+ ];
+ return rewards.map(([required,name,description])=>row('Fractal Island',name,description,
+  (hours>=required?'Unlocked':'Locked')+' · '+fmt(hours)+' / '+fmt(required)+' Nothing AFK hours',
+  hours>=required?'active':'missing'));
+}
 function getRows(rawRoot={}){if(rawRoot===enrichedRoot&&enrichedRows)return enrichedRows;if(rawRoot===cachedRowsRoot&&cachedRows)return cachedRows;const d=systems(rawRoot),groups={};
  // Keep character-specific Power of 10 coefficients in the shared bonus catalogue.
  const power10=/pow(?:er)?s?[ _-]*(?:of[ _-]*)?10/i;
@@ -45,7 +64,7 @@ function getRows(rawRoot={}){if(rawRoot===enrichedRoot&&enrichedRows)return enri
  const zen=d.get('zenithMarket');groups.zenithMarket=(zen?.bonuses||[]).map(x=>row('Zenith Market',x.data?.name,effect(x.data?.description,x.getBonus?.()),`Lv ${num(x.level)} / ${num(x.data?.maxLevel)}`,num(x.level)?'active':'missing'));
  const lab=d.get('lab');groups.labMainframe=(lab?.bonuses||[]).map(x=>row('Lab Mainframe',x.name,x.getBonusText?.()||x.description,x.active?'Active connection':x.unlocked?'Unlocked, disconnected':'Locked',x.active?'active':'missing'));groups.labJewels=(lab?.jewels||[]).map(x=>row('Lab Jewels',x.data?.name,x.getBonusText?.()||effect(x.data?.effect,x.getBonus?.()),x.active?'Active':x.available?'Owned, disconnected':'Not owned',x.active?'active':'missing'));
  const collider=d.get('collider');groups.atomCollider=(collider?.atoms||[]).map(x=>row('Atom Collider',x.data?.name,effect(x.data?.desc,num(x.level)*num(x.data?.bonusPerLv)),`Lv ${num(x.level)}`,num(x.level)?'active':'missing'));
- const islands=d.get('islandExpeditions');groups.islandExpeditions=islands?[row('Island Expeditions','Shovel Speed',`+${fmt(islands.bonusToShovelSpeed)}% Shovel Speed`,'Expedition reward',num(islands.bonusToShovelSpeed)?'active':'missing'),row('Island Expeditions','Kitchen Cost Reduction',`${fmt(islands.reductionToKitchenCosts)}% cheaper Kitchen costs`,'Expedition reward',num(islands.reductionToKitchenCosts)?'active':'missing'),row('Island Expeditions','Star Talent Points',`+${fmt(islands.bonusStarTalentPoints)} Star Talent Points`,'Expedition reward',num(islands.bonusStarTalentPoints)?'active':'missing')]:[];
+ groups.islandExpeditions=fractalRows(rawRoot);
  const po=d.get('POExtra');groups.poExtras=po?[row('Post Office Extras','Orders Completed',`${fmt(po.complete)} completed Post Office orders`,'Account progress',num(po.complete)?'active':'missing'),row('Post Office Extras','Order Streak',`${fmt(po.streak)} current order streak`,'Account progress',num(po.streak)?'active':'missing'),row('Post Office Extras','Miscellaneous PO Progress',fmt(po.misc),'Saved total',num(po.misc)?'active':'missing')]:[];
  const sushi=d.get('sushi');groups.sushi=(sushi?.sushi||[]).map(x=>row('Sushi',x.data?.name,effect(x.data?.unlockDescription,x.getBonus?.()),x.unlocked?'Unlocked':'Locked',x.unlocked?'active':'missing',null,x.data?.knowledgeBonusCategory||''));
  const button=d.get('button');groups.button=(button?.bonuses||[]).map(x=>row('The Button',x.data?.name,`+${fmt(x.getBonus?.())}% ${x.data?.name}`,`${num(x.categoryPresses)} presses`,num(x.categoryPresses)?'active':'missing'));
