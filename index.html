@@ -15,6 +15,7 @@
   <meta name="color-scheme" content="dark">
   <title>Sovixxa’s Idleon Planner</title>
   <link rel="stylesheet" href="styles.css?v=6">
+  <link rel="stylesheet" href="hug-button.css">
   <link rel="stylesheet" href="afk-tester.css">
   <link rel="stylesheet" href="cog-board.css">
   <link rel="stylesheet" href="worship.css">
@@ -404,6 +405,9 @@
   <aside id="quickNotes" class="quick-notes" aria-label="Personal notes">
     <div class="quick-notes-head">
       <label for="quickNotesInput">Notes</label>
+      <button id="hugButton" class="hug-button" type="button" title="Send a hug — saved in this browser">
+        <span aria-hidden="true">🤗</span> <span class="hug-label">Hug</span> <span id="hugCount" class="hug-count" aria-live="polite" aria-atomic="true">0</span>
+      </button>
       <button id="quickNotesToggle" class="quick-notes-toggle" type="button" aria-expanded="true" aria-controls="quickNotesBody" title="Collapse notes"><span aria-hidden="true">−</span><span class="sr-only">Collapse notes</span></button>
     </div>
     <div id="quickNotesBody" class="quick-notes-body">
@@ -640,5 +644,6 @@
     <script src="app.js?v=15"></script>
   <link rel="stylesheet" href="back-to-top.css">
   <script src="back-to-top.js"></script>
+  <script src="hug-button.js"></script>
 </body>
 </html>

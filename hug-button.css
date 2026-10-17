@@ -1,0 +1,30 @@
+.hug-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 28px;
+  padding: 3px 8px;
+  margin-left: auto;
+  border: 1px solid #a879b9;
+  border-radius: 999px;
+  background: #302039;
+  color: #ffe3f2;
+  font: inherit;
+  font-size: .75rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.quick-notes-head { flex-wrap: wrap; }
+.hug-label { min-width: 3.5em; text-align: center; }
+.hug-button:hover { background: #452c51; border-color: #efadd1; }
+.hug-button:active { background: #593361; }
+.hug-button:focus-visible { outline: 3px solid #f8b9db; outline-offset: 3px; }
+.hug-button[aria-disabled="true"] { opacity: .65; cursor: wait; background: #302039; }
+.hug-count {
+  min-width: 1.8em;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: #17101f;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
