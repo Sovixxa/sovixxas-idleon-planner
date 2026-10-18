@@ -2,7 +2,7 @@
   const world7=root.World7;if(!world7)return;
   const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&#39;'}[c]));
   const fmt=v=>Number(v||0).toLocaleString(undefined,{maximumFractionDigits:2});
-  const names=['Brain Coral','Pillar Coral','Anemone Coral','Paragorgia Coral','Clover Coral','Aegean Coral'];
+  const names=['Brain Coral','Carnation Coral','Anemone Coral','Pillar Coral','Paragorgia Coral','Staghorn Coral'];
   const originalRender=world7.render;
   world7.render=(host,kind,data)=>{
     if(kind!=='coral')return originalRender(host,kind,data);

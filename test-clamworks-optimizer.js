@@ -19,3 +19,32 @@ const grouped=M.purchaseRows(alternating,[],true);assert.equal(grouped.length,2)
 console.log('Compression: alternating upgrades, mixed funding, totals, group completion and uncompressed order passed.');
 
 const mena=Array.from({length:6},()=>Array(10).fill(0));mena[0][8]=30;mena[0][7]=75;mena[2][4]=1;mena[5]=[1,2,0,2,1,3,1,0,1];const scSave=M.decode({data:JSON.stringify({OptLacc:JSON.stringify(o),Menagerie:JSON.stringify(mena)})});assert.equal(scSave.scurgeKnown,true);assert.equal(scSave.scurgeUnlocked,true);const summary=M.scurgeSummary(scSave);assert.equal(summary.pearls,19);assert.equal(summary.pearlMulti,8);assert.equal(summary.discount,1.5);assert.equal(summary.expMulti,5);assert.equal(summary.exp,75);const plain={...scSave,scurge:Array(9).fill(0)};assert(Math.abs(M.cost(plain,0)/M.cost(scSave,0)-1.95)<1e-9);assert.equal(M.production(scSave)/M.production(plain),8);assert.equal(M.decode({OptLacc:o}).scurgeKnown,false);console.log('Scurge: wrapped saves, green pearls, income and per-slot discounts passed.');
+for(const population of [false,true]){
+ const state=fresh();state.pearls=50;const before=JSON.stringify(state),opts={population,multikill:1000,steps:20,rate:100};const p=M.promotionPlan(state,opts);
+ assert.equal(JSON.stringify(state),before);assert(p.time<=p.baseline);assert.equal(p.hours,p.time/100);assert(p.steps.length<=20);
+ let elapsed=0;const replay=JSON.parse(before),initial=M.production(replay,opts);
+ for(const step of p.steps){const speed=M.production(replay,opts)/initial;const a=M.buy(replay,step.id,true);elapsed+=a.shortfall/speed;assert.equal(step.elapsed,elapsed);assert.equal(a.cost,step.cost);}
+ elapsed+=Math.max(0,p.target-replay.pearls)/(M.production(replay,opts)/initial);assert(Math.abs(elapsed-p.time)<1e-8);assert.deepEqual(replay,p.state);
+ assert(!p.steps.some(a=>a.id===1&&!population));
+}
+const ready=M.promotionPlan(fresh(),{rate:100});assert.equal(ready.time,0);assert.equal(ready.save,0);assert.equal(ready.steps.length,0);
+assert.equal(M.promotionPlan({...fresh(),pearls:0}).hours,null);
+const one={...fresh(),pearls:0};const single=M.promotionPlan(one,{steps:1});let exact=1e5;
+for(let id=0;id<9;id++){if(id===1||id===3)continue;const s=JSON.parse(JSON.stringify(one)),a=M.buy(s,id,true);if(a)exact=Math.min(exact,a.shortfall+Math.max(0,1e5-s.pearls)/M.production(s));}
+assert.equal(single.time,exact);
+console.log('Promotion route: no mutation, timed replay, saving baseline, ready balance, missing rate and exhaustive one-step comparison passed.');
+// Scurge route replay and client parity.
+const fs=require('fs'),vm=require('vm'),{handler}=require('./client-source-utils');
+const catalogBox={window:{}};vm.runInNewContext(fs.readFileSync('world7-data.js','utf8'),catalogBox);
+const attrs={Menagerie:Array.from({length:6},()=>Array(10).fill(0)),OtherPlayers:{h:{}},DNSM:{h:{}}};
+const q={},env={a:{engine:{getGameAttribute:k=>attrs[k]}},c:{asNumber:Number},D:{mapCount:o=>Object.keys(o.h).length},q,m:{_customBlock_Thingies:(key,id)=>key==='Clam_Cost'?1:catalogBox.window.WORLD7_CATALOG.Spelunky[28][9+id]*attrs.Menagerie[5][id]}};
+q._customBlock_MenagerieStuff=vm.runInNewContext('('+handler(fs.readFileSync('../audit/N.js','utf8'),'_customBlock_MenagerieStuff')+')',env);
+for(const players of [0,1,10])for(const value of [0,1,20]){attrs.Menagerie[5]=Array(9).fill(value);attrs.OtherPlayers.h=Object.fromEntries(Array.from({length:players+1},(_,i)=>[i,{}]));assert.equal(M.scurgeGain(attrs.Menagerie[5],players),q._customBlock_MenagerieStuff('ScurgeEXPgain',0,0));}
+assert.equal(M.scurgePlan(fresh()).unavailable,true);
+const scInput={...fresh(),scurgeKnown:true,scurgeUnlocked:true,scurgeLevel:0,scurgeExp:0,scurge:Array(9).fill(0)},scBefore=JSON.stringify(scInput);
+const route=M.scurgePlan(scInput,{steps:60,kills:1000});assert.equal(JSON.stringify(scInput),scBefore);assert.equal(route.steps.length,60);assert.equal(route.steps[0].waitKills,50);assert.equal(route.hours,route.totalKills/1000);assert(!route.steps.some(x=>x.id===2||x.id===7));
+let lv=0,xp=0,total=0,green=0,sl=Array(9).fill(0);
+for(const a of route.steps){if(green===0){const req=(50+15*lv)*1.08**lv,count=Math.ceil(Math.max(0,req-xp)/M.scurgeGain(sl));assert.equal(count,a.waitKills);xp=Math.max(0,xp+count*M.scurgeGain(sl)-req);total+=count;lv++;green++;}assert(lv>=M.scurgeUnlocks[a.id]);sl[a.id]++;green--;assert.equal(a.totalKills,total);}
+assert.deepEqual(sl,route.levels);assert.equal(M.scurgePlan(scInput,{mode:'now'}).steps.length,0);
+const advanced={...scInput,scurgeLevel:500};const spend=M.scurgePlan(advanced,{mode:'now',players:5,affliction:2,steps:100});assert(spend.steps.some(a=>a.id===7));assert(spend.levels[2]<=2);assert(spend.levels[2]>0);assert.equal(spend.totalKills,0);assert.equal(spend.pearls,400);
+console.log('Scurgeworks: client EXP parity, immutable inputs, unlocks, funding replay, population, affliction cap and available budget passed.');

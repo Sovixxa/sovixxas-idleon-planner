@@ -92,6 +92,7 @@
     trueDr:{title:'True DR',world:'Misc',copy:''},
     statConnections:{title:'Game Connections',world:'Misc',copy:''},
     shadowCaps:{title:'Shadow Caps',world:'Misc',copy:''},
+    milkOpti:{title:'Milktimizer',world:'Misc',copy:''},
     communitySheets:{title:"Community Sheets",world:'Misc',copy:''},
     pocketWatches:{title:'Pocket Watches',world:'Misc',copy:''},
     accountReview:{title:'Account Review',world:'Optimizers',copy:'Review saved progress and plan your next account milestones.'},
@@ -184,6 +185,7 @@ SKILL_PAGES.holeFloors={title:'Floors',world:'World 5',copy:'All 18 Hole caverns
     if(changed){$('routeStatus').textContent=title+' page';if(document.activeElement?.matches('.side-link,.skill-tab'))$('pageHeading').focus({preventScroll:true});}
   }
   function selectSideNav(name){
+    clearTimeout($('worldContent')?.milkTimer);
     window.StatConnections?.dispose();
     window.LibraryPage?.dispose();
     window.SailingArtifactChance?.dispose();
@@ -197,8 +199,8 @@ SKILL_PAGES.holeFloors={title:'Floors',world:'World 5',copy:'All 18 Hole caverns
     updateRoute(name);
     window.plannerQoL?.onNavigate(name);
     if(name!=='jelly'){stopSearch();cancelJellyPanels();initialUpgradesPending=true;initialPracticePending=true;if(practice?.playing)stopPracticePlayback();}
-    if(!state)$('workspace').classList.toggle('hidden',!['library','dailies','accountReview','loadouts','statConnections','shadowCaps','trueDr','communitySheets','pocketWatches','credits','connectedBonuses'].includes(name));
-    if(!state)$('inputPanel').classList.toggle('hidden',['loadouts','statConnections','shadowCaps','trueDr','communitySheets','pocketWatches','credits'].includes(name));
+    if(!state)$('workspace').classList.toggle('hidden',!['library','dailies','accountReview','loadouts','statConnections','shadowCaps','trueDr','milkOpti','communitySheets','pocketWatches','credits','connectedBonuses'].includes(name));
+    if(!state)$('inputPanel').classList.toggle('hidden',['loadouts','statConnections','shadowCaps','trueDr','milkOpti','communitySheets','pocketWatches','credits'].includes(name));
     const selected=SKILL_PAGES[name]?.parent||name;
     for(const id of ['navHome','navJelly',...Object.keys(SKILL_PAGES).map(key=>'nav'+key[0].toUpperCase()+key.slice(1))]){const button=$(id);if(!button)continue;const active=id===('nav'+selected[0].toUpperCase()+selected.slice(1));button.classList.toggle('active',active);if(active)button.setAttribute('aria-current','page');else button.removeAttribute('aria-current');}
     if(!['home','credits'].includes(name)&&window.PlannerFeatures?.toolsReady?.()===false){
@@ -710,6 +712,46 @@ SKILL_PAGES.holeFloors={title:'Floors',world:'World 5',copy:'All 18 Hole caverns
       return;
     }
     if(name==='pocketWatches'){window.PocketWatches.render($('worldContent'));return;}
+    if(name==='milkOpti'){
+      const host=$('worldContent');
+      host.innerHTML='<section class="loadouts-page milk-opti-page"><div class="section-head compact"><div><p class="eyebrow">Misc</p><h2><span aria-hidden="true">🥛</span> Milktimizer</h2><p>When is dad coming back with the milk?</p></div></div><form id="milkForm"><div class="milk-fields"><label>Milk build<select id="milkBuild"><option>Whole milk, full commitment</option><option>Skim milk, skim responsibility</option><option>Oat milk, side quest unlocked</option><option>Chocolate milk, legendary drop</option><option>Invisible milk, already delivered</option><option>Milk and cigarettes, legendary combo quest</option><option>Went for milk, came back with a leaf blower</option></select></label><label>Last known location<select id="milkLocation"><option>The dairy aisle</option><option>World 8, probably</option><option>A very competitive checkout queue</option><option>The tutorial he refuses to skip</option><option>Buying a second fridge</option><option>Getting cigarettes at a different store</option><option>Arguing with the self-checkout</option><option>Comparing lawnmowers he does not need</option><option>Holding a flashlight for another dad</option></select></label><label>Travel method<select id="milkTravel"><option>Walking in new balances</option><option>AFK gains</option><option>Shopping cart with one bad wheel</option><option>Teleport on cooldown</option><option>Taking the scenic route through 2007</option></select></label><label>Years since “be right back”<input id="milkYears" type="number" min="0" max="999" step="1" value="12" required></label><label>Emergency snack<input id="milkSnack" type="text" maxlength="60" placeholder="e.g. emotional support cereal" value="emotional support cereal"></label><label>Last message from dad<input id="milkMessage" type="text" maxlength="120" placeholder="e.g. just one more aisle" value="just one more aisle"></label></div><fieldset class="milk-modifiers"><legend>Optional dad modifiers</legend><div class="milk-toggle-row"><label><input type="checkbox" value="thermostat"><span>Touch the thermostat</span></label><label><input type="checkbox" value="cigarettes"><span>Cigarette side quest</span></label><label><input type="checkbox" value="hardware"><span>Found a hardware store sale</span></label><label><input type="checkbox" value="directions"><span>Refuses to ask directions</span></label><label><input type="checkbox" value="dad"><span>Encountered another dad</span></label><label><input type="checkbox" value="coupon"><span>Expired coupon equipped</span></label></div></fieldset><div class="milk-actions"><button type="submit" class="primary">Optimize milk run</button> <button type="button" class="secondary" id="milkRandomize">Randomize dad build</button></div></form><div id="milkProgressPanel" class="milk-progress-panel" hidden><div class="milk-progress-heading"><label for="milkProgress">Milk run progress</label><strong id="milkPercent">0%</strong></div><progress id="milkProgress" max="100" value="0">0%</progress><p id="milkProgressStatus" role="status" aria-live="polite"></p></div><div id="milkResult" class="milk-result" hidden></div></section>';
+      const pick=items=>items[Math.floor(Math.random()*items.length)];
+      const optimize=()=>{
+        const build=host.querySelector('#milkBuild').value,location=host.querySelector('#milkLocation').value,travel=host.querySelector('#milkTravel').value;
+        const years=host.querySelector('#milkYears').value,snack=host.querySelector('#milkSnack').value.trim()||'an empty cereal bowl',message=host.querySelector('#milkMessage').value.trim()||'Seen 12 years ago';
+        const eta=pick(['∞. Still getting milk.','3–5 business decades.','Next patch. Probably.','After one more side quest.','Before the cereal expires. No promises.','404: dad not found.','After he finds his favourite cigarette brand.','As soon as the hardware store stops existing.','He said five minutes. The year was not specified.']);
+        const tip=pick(['Equip +50% grocery speed.','Try turning the porch light off and on again.','The milk has reached its prestige cap.','Checkout queue respawn timer is unknown.','He found a buy-one-get-one side quest.','Return chance doubles if you touch the thermostat.','Milk acquired. Cigarettes triggered a second campaign.','He met another dad. They are discussing the best route home.','He is guarding the checkout because this line looks faster.','The store moved the cigarettes. Search radius increased to three towns.','He stopped to say that petrol used to be cheaper.','Bonus objective: return the trailer he borrowed in 2004.']);
+        const modifierJokes={thermostat:'Thermostat changed by 1 degree. Dad has sensed a disturbance.',cigarettes:'Cigarette side quest accepted. Main quest abandoned.',hardware:'Hardware store sale discovered. +48 hours, +3 extension cords.',directions:'Directions declined. He knows a shortcut through another postcode.',dad:'Another dad encountered. Unskippable driveway conversation started.',coupon:'Expired coupon equipped. Checkout boss enters phase two.'};
+        const modifiers=[...host.querySelectorAll('.milk-modifiers input:checked')].map(input=>modifierJokes[input.value]);
+        const resultText='Estimated return: '+eta+' Build: '+build+'. Last spotted: '+location+'. Travel: '+travel+'. '+years+' years of AFK progress converted into 0 cartons. Recommended supplies: '+snack+'. Last transmission: “'+message+'”. '+tip;
+        clearTimeout(host.milkTimer);
+        const panel=host.querySelector('#milkProgressPanel'),progress=host.querySelector('#milkProgress'),percent=host.querySelector('#milkPercent'),status=host.querySelector('#milkProgressStatus'),result=host.querySelector('#milkResult');
+        panel.hidden=false;result.hidden=true;result.replaceChildren();progress.value=0;percent.textContent='0%';
+        status.textContent='Finding the dairy aisle…';
+        const steps=[18,37,58,76,89,96,99];let step=0;
+        const advance=()=>{
+          if(!progress.isConnected)return;
+          const value=steps[step++];progress.value=value;progress.textContent=value+'%';percent.textContent=value+'%';
+          if(value===99){
+            status.textContent='Dad got distracted in another aisle';
+            const lines=resultText.split(/ (?=Build:|Last spotted:|Travel:|Recommended supplies:|Last transmission:)/);
+            lines.push(...modifiers);
+            lines.forEach(line=>{const p=document.createElement('p');p.textContent=line;result.append(p);});result.hidden=false;
+          }else{host.milkTimer=setTimeout(advance,400);}
+        };
+        host.milkTimer=setTimeout(advance,400);
+      };
+      host.querySelector('#milkForm').onsubmit=event=>{event.preventDefault();optimize();};
+      host.querySelector('#milkRandomize').onclick=()=>{
+        host.querySelectorAll('select').forEach(select=>{select.selectedIndex=Math.floor(Math.random()*select.options.length);});
+        host.querySelectorAll('.milk-modifiers input').forEach(input=>{input.checked=Math.random()<.5;});
+        host.querySelector('#milkYears').value=Math.floor(Math.random()*70);
+        host.querySelector('#milkSnack').value=pick(['emotional support cereal','a single dry cornflake','99 stacks of copium','emergency cheese','a suspiciously old coupon','a petrol station hot dog of unknown age','a family-size bag of excuses','the receipt for his first lawnmower']);
+        host.querySelector('#milkMessage').value=pick(['just one more aisle','the queue has a second phase','forgot which house','milk drop rate got nerfed','do we need eggs?','getting cigarettes too, back in five','they have a sale on extension cords','ask your mother where we live','found a shortcut, only adds two hours','tell the dog I said hi','this queue has grandchildren now']);
+        optimize();
+      };
+      return;
+    }
     if(name==='communitySheets'){
       window.CommunitySheets.render($('worldContent'));
       return;

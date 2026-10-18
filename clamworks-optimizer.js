@@ -21,6 +21,28 @@ const gain=production(next,opts)/before-1,total=actions.reduce((v,x)=>v+x.cost,0
 if(gain>0&&Number.isFinite(score)&&(!best||score>best.score))best={next,actions,score};
 }if(!best)break;for(const action of best.actions){steps.push(action);spent+=action.cost;funding+=action.shortfall;}Object.assign(s,best.next);
 }return {steps,state:s,spent,funding,gain:production(s,opts)/initial-1};}
+// Beam search in units of current pearl income. Every state can stop buying
+// and save for one promotion attempt; discount-only intermediate states survive.
+function promotionPlan(input,opts={}){
+ const initial=production(input,opts),target=1e5*Math.pow(10,input.promotion),rate=num(opts.rate),limit=Math.min(100,Math.max(1,Math.floor(num(opts.steps)||30)));
+ const finish=n=>n.time+Math.max(0,target-n.state.pearls)/(production(n.state,opts)/initial);
+ const start={state:copy(input),steps:[],time:0,spent:0,funding:0};let best=start,bestTime=finish(start),beam=[start];
+ for(let depth=0;depth<limit&&beam.length&&bestTime>0;depth++){
+  const candidates=[];
+  for(const node of beam)for(let id=0;id<9;id++){
+   if(id===1&&!opts.population||id===3&&!num(opts.multikill))continue;
+   const state=copy(node.state),action=buy(state,id,true);if(!action)continue;
+   const time=node.time+action.shortfall/(production(node.state,opts)/initial);
+   if(!Number.isFinite(time)||time>=bestTime)continue;
+   const next={state,steps:node.steps.concat({...action,elapsed:time}),time,spent:node.spent+action.cost,funding:node.funding+action.shortfall};
+   const eta=finish(next);if(eta<bestTime){best=next;bestTime=eta;}
+   candidates.push({...next,eta});
+  }
+  candidates.sort((a,b)=>a.eta-b.eta);beam=candidates.slice(0,48);
+ }
+ const baseline=finish(start),save=Math.max(0,target-best.state.pearls);
+ return {...best,target,baseline,time:bestTime,hours:rate>0?bestTime/rate:null,baselineHours:rate>0?baseline/rate:null,save,gain:production(best.state,opts)/initial-1,savedFraction:baseline>0?1-bestTime/baseline:0};
+}
 function farmerMultikill(character,promotion){
  const loot=character?.loot;if(character?.error||character?.missing?.length||!Number.isFinite(loot?.damage)||!Number.isFinite(loot?.base)||!Number.isFinite(loot?.perTier?.[6]))return null;
  const diminish=v=>v>=250?98.14+(v-250)/50:v>=200?95.6+(v-200)/20:v>=150?90.6+(v-150)/10:v>=100?80.6+(v-100)/5:v>=50?47.3+(v-50)/1.5:v>=20?20+(v-20)/1.1:v;
@@ -34,5 +56,25 @@ function purchaseRows(steps,done=[],compress=false){
  });return rows;
 }
 function scurgeSummary(s){const l=s.scurge||Array(9).fill(0),level=num(s.scurgeLevel);return {level,exp:num(s.scurgeExp),required:(50+15*level)*Math.pow(1.08,level),pearls:Math.max(0,level-l.reduce((a,b)=>a+num(b),0)),pearlMulti:(1+.5*num(l[1]))*(1+.1*num(l[8])*level),discount:1+.25*num(l[3]),expMulti:(1+num(l[0]))*(1+1.5*num(l[4]))*(1+2*num(l[2])),carry:100*Math.min(.8,num(l[6])/(num(l[6])+25)*.75)};}
-const api={scurgeSummary,purchaseRows,farmerMultikill,names,bases,decode,requirement,cost,production,buy,plan};if(typeof module==='object'&&module.exports)module.exports=api;else root.ClamworksOptimizer=api;
+
+const scurgeNames=['Reckoning','Pearl Infection','Self Affliction','Cost Dissolving','Even Better','Cross Culting','Gravestart','Swarming','True Scurge'];
+const scurgeUnlocks=[0,5,10,25,50,100,250,500,1000];
+function scurgeGain(levels,players=0){return (1+levels[0])*(1+1.5*levels[4])*(1+2*levels[2])*(1+.1*levels[7]*num(players));}
+function scurgePlan(input,opts={}){
+ if(!input.scurgeKnown||!input.scurgeUnlocked)return {steps:[],unavailable:true};
+ const levels=input.scurge.slice(),steps=[],limit=Math.min(100,Math.max(1,Math.floor(num(opts.steps)||20))),players=Math.floor(num(opts.players)),affliction=levels[2]+Math.floor(num(opts.affliction)),kills=num(opts.kills);
+ let level=Math.floor(num(input.scurgeLevel)),exp=num(input.scurgeExp),pearls=Math.floor(scurgeSummary(input).pearls),totalKills=0;
+ const initial=scurgeGain(levels,players);
+ for(let n=0;n<limit;n++){
+  let waitKills=0;
+  if(pearls<1){if(opts.mode==='now')break;const req=(50+15*level)*Math.pow(1.08,level);waitKills=Math.ceil(Math.max(0,req-exp)/scurgeGain(levels,players));if(!Number.isFinite(waitKills))break;exp=Math.max(0,exp+waitKills*scurgeGain(levels,players)-req);level++;pearls++;totalKills+=waitKills;}
+  let best=null;const before=scurgeGain(levels,players);
+  for(const id of [0,2,4,7]){if(level<scurgeUnlocks[id]||id===2&&levels[2]>=affliction)continue;const next=levels.slice();next[id]++;const gain=scurgeGain(next,players)/before-1;if(gain>0&&(!best||gain>best.gain))best={id,gain};}
+  if(!best)break;const from=levels[best.id]++;pearls--;
+  steps.push({id:best.id,name:scurgeNames[best.id],from,to:from+1,level,waitKills,totalKills,gain:best.gain,expPerKill:scurgeGain(levels,players)});
+ }
+ return {steps,levels,level,pearls,totalKills,hours:kills>0?totalKills/kills:null,gain:scurgeGain(levels,players)/initial-1,expPerKill:scurgeGain(levels,players),unavailable:false};
+}
+
+const api={scurgePlan,scurgeGain,scurgeNames,scurgeUnlocks,promotionPlan,scurgeSummary,purchaseRows,farmerMultikill,names,bases,decode,requirement,cost,production,buy,plan};if(typeof module==='object'&&module.exports)module.exports=api;else root.ClamworksOptimizer=api;
 })(typeof window==='undefined'?globalThis:window);

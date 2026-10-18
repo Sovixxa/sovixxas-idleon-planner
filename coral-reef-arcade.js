@@ -1,7 +1,7 @@
 (function(root){'use strict';
   const arcade=root.ArcadePages;if(!arcade)return;
   const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&#39;'}[c]));
-  const names=['Brain Coral','Pillar Coral','Anemone Coral','Paragorgia Coral','Clover Coral','Aegean Coral'];
+  const names=['Brain Coral','Carnation Coral','Anemone Coral','Pillar Coral','Paragorgia Coral','Staghorn Coral'];
   const originalRender=arcade.render;
   arcade.render=async(host,key,raw,afterRender)=>{
     if(key!=='coralReef')return originalRender(host,key,raw,afterRender);

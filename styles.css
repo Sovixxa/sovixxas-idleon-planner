@@ -189,3 +189,40 @@ body .alchemy-board .alchemy-bubble>span{display:block;width:100%;min-width:0;te
 .jelly-doubler-card dt { font-size:12px; opacity:.75; margin-top:12px; }
 .jelly-doubler-card dd { margin:4px 0 0; overflow-wrap:anywhere; }
 .palette-doubler-swatch { width:32px; height:32px; flex:0 0 32px; border-radius:8px; border:1px solid #ffffff40; }
+
+/* Milk Opti */
+.milk-opti-page{max-width:880px;margin:0 auto;padding:0 0 16px;color-scheme:dark}
+.milk-opti-page .section-head{margin-bottom:16px}
+.milk-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 16px}
+.milk-fields label{display:flex;flex-direction:column;gap:6px;min-width:0;color:var(--muted);font-size:.78rem;font-weight:600}
+.milk-fields input,.milk-fields select{box-sizing:border-box;width:100%;min-width:0;height:40px;margin:0;padding:8px 11px;background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:8px;font-family:inherit;font-size:.85rem;font-weight:400;line-height:1.3;box-shadow:none;outline:none}
+.milk-fields select{appearance:none;padding-right:30px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='m3 4.5 3 3 3-3' fill='none' stroke='%239ba7b8' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 11px center}
+.milk-fields input:hover,.milk-fields select:hover{border-color:#535063}
+.milk-fields input:focus-visible,.milk-fields select:focus-visible{border-color:var(--accent);box-shadow:0 0 0 2px #b96dff20}
+.milk-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.milk-actions button{min-height:38px;padding:8px 13px;font-size:.82rem;font-weight:600;border-radius:8px;box-shadow:none}
+.milk-actions .primary{background:#ad73e8;color:#130d1c;border:1px solid #bd89f0}
+.milk-actions .primary:hover{background:#bd89f0}
+.milk-actions .secondary{background:var(--panel2);color:var(--text);border:1px solid var(--line)}
+.milk-actions .secondary:hover{background:#202333}
+.milk-progress-panel{margin-top:16px;padding:14px;border:1px solid var(--line);border-radius:10px;background:var(--panel2)}
+.milk-progress-heading{display:flex;justify-content:space-between;gap:12px;margin-bottom:9px;font-size:.8rem;color:var(--muted)}
+.milk-progress-heading strong{color:#cba3f3;font-variant-numeric:tabular-nums}
+.milk-progress-panel progress{appearance:none;-webkit-appearance:none;display:block;width:100%;height:6px;border:0;border-radius:9px;overflow:hidden;background:#292636}
+.milk-progress-panel progress::-webkit-progress-bar{background:#292636;border-radius:9px}
+.milk-progress-panel progress::-webkit-progress-value{background:#b586e8;border-radius:9px;transition:width .25s ease}
+.milk-progress-panel progress::-moz-progress-bar{background:#b586e8;border-radius:9px}
+.milk-progress-panel p{margin:10px 0 0;font-size:.85rem;line-height:1.4}
+.milk-result{margin-top:12px;padding:14px;border:1px solid var(--line);border-radius:10px;font-size:.85rem;line-height:1.5;overflow-wrap:anywhere;background:var(--panel2);color:var(--muted)}
+.milk-result p{margin:0 0 6px}.milk-result p:first-child{color:var(--text);font-weight:600}.milk-result p:last-child{margin-bottom:0}
+@media(max-width:640px){.milk-fields{grid-template-columns:minmax(0,1fr);gap:10px}.milk-actions>button{flex:1 1 auto}.milk-opti-page .section-head{margin-bottom:14px}}
+@media(prefers-reduced-motion:reduce){.milk-progress-panel progress::-webkit-progress-value{transition:none}}
+
+.milk-modifiers{min-width:0;margin:14px 0 0;padding:0;border:0}
+.milk-modifiers legend{padding:0;margin-bottom:8px;font-size:.78rem;font-weight:600;color:var(--muted)}
+.milk-toggle-row{display:flex;flex-wrap:wrap;gap:7px}
+.milk-toggle-row label{display:inline-flex;align-items:center;gap:7px;min-height:34px;padding:7px 10px;border:1px solid var(--line);border-radius:8px;background:var(--panel2);color:var(--muted);font-size:.78rem;line-height:1.3;cursor:pointer;user-select:none}
+.milk-toggle-row label:hover{border-color:#78618f;color:var(--text)}
+.milk-toggle-row label:has(input:checked){background:#2c203d;border-color:#9b6ec8;color:#e6d3fa}
+.milk-toggle-row label:has(input:focus-visible){outline:2px solid var(--accent);outline-offset:2px}
+.milk-toggle-row input{width:14px;height:14px;margin:0;flex:none;accent-color:#b586e8;cursor:pointer}

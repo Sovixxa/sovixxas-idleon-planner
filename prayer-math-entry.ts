@@ -120,7 +120,6 @@ export {getLabEfficiency} from './vendor/idleon-toolbox/parsers/world-4/lab';
 export {getSpelunkingEfficiency} from './vendor/idleon-toolbox/parsers/world-7/spelunking';
 export {getMultiKillBase,getMultiKillPerTier,getMultiKillTiers,getMultiKillDiminished} from './vendor/idleon-toolbox/parsers/damage';
 
-export {getMonsterHpTotal} from './vendor/idleon-toolbox/parsers/damage';
 
 export {getDoubleStatueDrop,getDoubleGoldenFoodDrop} from './vendor/idleon-toolbox/parsers/misc';
 export {getLegendTalentBonus} from './vendor/idleon-toolbox/parsers/world-7/legendTalents';
@@ -154,3 +153,8 @@ export {lavaLog} from './vendor/idleon-toolbox/utility/helpers';
 import {bonuses} from './vendor/idleon-toolbox/data/website-data';
 export const primaryEtcBonuses = bonuses.etcBonuses;
 export {getCharacterFamilyBonus} from './vendor/idleon-toolbox/parsers/family';
+
+export {getEffectiveDamage} from './vendor/idleon-toolbox/parsers/misc/boneJoeCalculator';
+export {mapMonsterCounts} from './vendor/idleon-toolbox/data/website-data';
+
+export {getMonsterHpTotal} from './vendor/idleon-toolbox/parsers/damage';
