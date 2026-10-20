@@ -48,3 +48,31 @@ for(const a of route.steps){if(green===0){const req=(50+15*lv)*1.08**lv,count=Ma
 assert.deepEqual(sl,route.levels);assert.equal(M.scurgePlan(scInput,{mode:'now'}).steps.length,0);
 const advanced={...scInput,scurgeLevel:500};const spend=M.scurgePlan(advanced,{mode:'now',players:5,affliction:2,steps:100});assert(spend.steps.some(a=>a.id===7));assert(spend.levels[2]<=2);assert(spend.levels[2]>0);assert.equal(spend.totalKills,0);assert.equal(spend.pearls,400);
 console.log('Scurgeworks: client EXP parity, immutable inputs, unlocks, funding replay, population, affliction cap and available budget passed.');
+
+const pearlGoal=M.scurgePlan(advanced,{mode:'now',goal:'pearls'}),discountGoal=M.scurgePlan(advanced,{mode:'now',goal:'discount'});
+assert(pearlGoal.steps.every(a=>a.id===1));assert(pearlGoal.gain>0);
+assert.equal(discountGoal.steps[0].id,3);assert(discountGoal.gain>0);
+assert(M.scurgePlan(scInput,{goal:'pearls',steps:10}).steps.some(a=>a.id===1));
+assert.equal(M.scurgePlan({...scInput,scurgeLevel:3},{goal:'pearls',mode:'now'}).steps.length,0);
+assert(M.scurgePlan({...advanced,scurgeLevel:1000},{goal:'pearls',mode:'now'}).steps.some(a=>a.id===8));
+
+const overallInput={...advanced,scurgeLevel:1000},overallBefore=JSON.stringify(overallInput);
+const overall=M.scurgePlan(overallInput,{goal:'overall',mode:'now',steps:100,players:5,affliction:10});
+assert.equal(overall.goal,'overall');assert.equal(JSON.stringify(overallInput),overallBefore);
+assert.equal(new Set(overall.steps.map(a=>a.id)).size,9);assert.equal(overall.pearls,900);
+const ol=overall.levels,pearlFactor=(1+.5*ol[1])*(1+.1*ol[8]*1000),discountFactor=(1+.25*ol[3])*Math.exp(ol.reduce((sum,v)=>sum+Math.log(1+.1*v*ol[5]),0)/9);
+assert(Math.abs(overall.gain+1-Math.cbrt(M.scurgeGain(ol,5)*pearlFactor*discountFactor))<1e-8);
+const safeOverall=M.scurgePlan(scInput,{goal:'overall',steps:20});
+assert(safeOverall.steps.every(a=>a.level>=M.scurgeUnlocks[a.id]));assert.equal(safeOverall.levels[2],0);
+console.log('Overall Scurge goal: balanced score, all nine upgrades, unlocks and affliction cap passed.');
+
+const comparisonInput={...advanced,scurgeLevel:129,scurge:[30,8,0,10,30,10,0,0,0]};
+const compareOverall=M.scurgePlan(comparisonInput,{goal:'overall',mode:'now',steps:1});
+const comparePearls=M.scurgePlan(comparisonInput,{goal:'pearls',mode:'now',steps:1});
+assert.equal(compareOverall.steps[0].id,1);assert.equal(comparePearls.steps[0].id,1);
+assert.deepEqual(compareOverall.steps[0].effects,comparePearls.steps[0].effects);
+assert(Math.abs(compareOverall.steps[0].effects.pearls-.1)<1e-12);
+assert.equal(compareOverall.steps[0].effects.exp,0);
+assert(compareOverall.steps[0].effects.costReduction>0);
+assert(compareOverall.steps[0].gain<compareOverall.steps[0].effects.pearls);
+console.log('Scurge purchase effects are consistent across goals.');

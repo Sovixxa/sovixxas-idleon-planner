@@ -60,20 +60,29 @@ function scurgeSummary(s){const l=s.scurge||Array(9).fill(0),level=num(s.scurgeL
 const scurgeNames=['Reckoning','Pearl Infection','Self Affliction','Cost Dissolving','Even Better','Cross Culting','Gravestart','Swarming','True Scurge'];
 const scurgeUnlocks=[0,5,10,25,50,100,250,500,1000];
 function scurgeGain(levels,players=0){return (1+levels[0])*(1+1.5*levels[4])*(1+2*levels[2])*(1+.1*levels[7]*num(players));}
+function scurgeScore(levels,level,goal,players=0){
+ if(goal==='overall')return Math.exp((Math.log(scurgeGain(levels,players))+Math.log(scurgeScore(levels,level,'pearls',players))+Math.log(scurgeScore(levels,level,'discount',players)))/3);
+ if(goal==='pearls')return (1+.5*levels[1])*(1+.1*levels[8]*level);
+ if(goal==='discount')return (1+.25*levels[3])*Math.exp(levels.reduce((sum,v)=>sum+Math.log(1+.1*v*levels[5]),0)/9);
+ return scurgeGain(levels,players);
+}
 function scurgePlan(input,opts={}){
  if(!input.scurgeKnown||!input.scurgeUnlocked)return {steps:[],unavailable:true};
  const levels=input.scurge.slice(),steps=[],limit=Math.min(100,Math.max(1,Math.floor(num(opts.steps)||20))),players=Math.floor(num(opts.players)),affliction=levels[2]+Math.floor(num(opts.affliction)),kills=num(opts.kills);
  let level=Math.floor(num(input.scurgeLevel)),exp=num(input.scurgeExp),pearls=Math.floor(scurgeSummary(input).pearls),totalKills=0;
- const initial=scurgeGain(levels,players);
+ const goal=['overall','pearls','discount'].includes(opts.goal)?opts.goal:'leveling',initial=scurgeScore(levels,level,goal,players);
  for(let n=0;n<limit;n++){
   let waitKills=0;
   if(pearls<1){if(opts.mode==='now')break;const req=(50+15*level)*Math.pow(1.08,level);waitKills=Math.ceil(Math.max(0,req-exp)/scurgeGain(levels,players));if(!Number.isFinite(waitKills))break;exp=Math.max(0,exp+waitKills*scurgeGain(levels,players)-req);level++;pearls++;totalKills+=waitKills;}
-  let best=null;const before=scurgeGain(levels,players);
-  for(const id of [0,2,4,7]){if(level<scurgeUnlocks[id]||id===2&&levels[2]>=affliction)continue;const next=levels.slice();next[id]++;const gain=scurgeGain(next,players)/before-1;if(gain>0&&(!best||gain>best.gain))best={id,gain};}
-  if(!best)break;const from=levels[best.id]++;pearls--;
-  steps.push({id:best.id,name:scurgeNames[best.id],from,to:from+1,level,waitKills,totalKills,gain:best.gain,expPerKill:scurgeGain(levels,players)});
+  let best=null;const before=scurgeScore(levels,level,goal,players);
+  for(const id of (goal==='leveling'?[0,2,4,7]:goal==='pearls'?[1,8]:[0,1,2,3,4,5,6,7,8])){if(level<scurgeUnlocks[id]||id===2&&levels[2]>=affliction)continue;const next=levels.slice();next[id]++;const gain=scurgeScore(next,level,goal,players)/before-1;if(gain>0&&(!best||gain>best.gain))best={id,gain};}
+  if(!best&&opts.mode!=='now'&&goal!=='leveling')best={id:0,gain:0};
+  if(!best)break;
+  const beforeLevels=levels.slice(),from=levels[best.id]++;pearls--;
+  const effects={exp:scurgeGain(levels,players)/scurgeGain(beforeLevels,players)-1,pearls:scurgeScore(levels,level,'pearls',players)/scurgeScore(beforeLevels,level,'pearls',players)-1,costReduction:1-scurgeScore(beforeLevels,level,'discount',players)/scurgeScore(levels,level,'discount',players)};
+  steps.push({id:best.id,name:scurgeNames[best.id],from,to:from+1,level,waitKills,totalKills,gain:best.gain,effects,expPerKill:scurgeGain(levels,players)});
  }
- return {steps,levels,level,pearls,totalKills,hours:kills>0?totalKills/kills:null,gain:scurgeGain(levels,players)/initial-1,expPerKill:scurgeGain(levels,players),unavailable:false};
+ return {steps,levels,level,pearls,totalKills,hours:kills>0?totalKills/kills:null,goal,gain:scurgeScore(levels,level,goal,players)/initial-1,expPerKill:scurgeGain(levels,players),unavailable:false};
 }
 
 const api={scurgePlan,scurgeGain,scurgeNames,scurgeUnlocks,promotionPlan,scurgeSummary,purchaseRows,farmerMultikill,names,bases,decode,requirement,cost,production,buy,plan};if(typeof module==='object'&&module.exports)module.exports=api;else root.ClamworksOptimizer=api;
