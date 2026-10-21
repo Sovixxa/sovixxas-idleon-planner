@@ -73,3 +73,37 @@ for(let target=1;target<8;target+=0.017){
 }
 assert(threeCropCase,'Search must find mixtures with more than two crops');
 console.log('Automatic recipes match exhaustive mixtures, including three-crop recipes.');
+
+assert.equal(M.testHarvests(0,100,[{id:0,quantity:40}],seeds).status,'none');
+const batchMix=M.testHarvests(0,777/Math.sqrt(61.6),[{id:0,quantity:40},{id:1,quantity:20}],seeds);
+assert.equal(batchMix.status,'found');
+assert.equal(batchMix.harvests.length,2);
+assert(batchMix.harvests.every(h=>h.batches===1));
+assert(M.qualifies(batchMix.beans));
+assert.equal(M.testHarvests(0,777/Math.sqrt(40),[{id:0,quantity:40}],seeds).harvests[0].batches,1);
+assert.equal(M.testHarvests(0,777/Math.sqrt(40.5),[{id:0,quantity:40.5}],seeds).status,'found');
+for(const quantity of [0,-1,NaN,Infinity,1e20])assert.equal(M.testHarvests(0,100,[{id:0,quantity}],seeds).status,'invalid');
+assert.equal(M.testHarvests(0,100,[],seeds).status,'invalid');
+assert.equal(M.testHarvests(777**2,1,[{id:0,quantity:40}],seeds).status,'ready');
+assert.equal(M.testHarvests(800**2,1,[{id:0,quantity:40}],seeds).status,'overshot');
+assert.equal(M.testHarvests(0,777/Math.sqrt(61.6),[{id:0,quantity:40},{id:1,quantity:20}],seeds,0).status,'limited');
+console.log('Actual harvest feasibility: 40 apples, mixed batches, fractional yields and bounded conclusions passed.');
+
+assert.equal(response.result.resetScenarios.length,4);
+assert(response.result.resetScenarios.every(s=>s.options>0));
+const resetBoth=response.result.resetScenarios.find(s=>s.id==='both');
+assert(resetBoth.appleYields.length>0);
+assert(resetBoth.appleYields[0]<=response.result.resetScenarios.find(s=>s.id==='current').appleYields[0]);
+for(const scenario of response.result.resetScenarios)if(scenario.status==='found'){
+ assert(M.qualifies(scenario.beans));
+ assert(scenario.recipe.every(r=>Number.isSafeInteger(r.batches)&&r.batches>0&&r.quantity>0));
+}
+console.log('Automatic reset scenarios:',JSON.stringify(response.result.resetScenarios.map(s=>({id:s.id,status:s.status,apples:s.appleYields,recipe:s.recipe}))));
+
+box.scenarioRaw=raw;
+const varied=vm.runInContext(`(()=>{const r=scenarioRaw,d=r.data||r,a=PrayerMath.parseData(d,r.charNames,r.companion,r.guildData,r.serverVars||{},r.accountCreateTime,r.tournament).account;const copy=JSON.parse(JSON.stringify(a));copy.farming.stats.magicBean.categories.forEach(c=>c.sources.forEach(s=>s.value=s.name==='More Beenz (Market)'?10:1));return buildResetScenarios(copy);})()`,box);
+assert(varied.some(s=>s.status==='found'),'Reset analysis should also find actionable harvest recipes');
+for(const s of varied.filter(s=>s.status==='found')){
+ const total=s.recipe.reduce((sum,r)=>sum+r.total*M.weight(r.id,model.seeds),s.empty?0:weighted);
+ assert(M.qualifies(Math.sqrt(total)*10),'Recommended reset recipe must forward-calculate into range');
+}
