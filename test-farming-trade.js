@@ -28,3 +28,20 @@ assert(Math.abs(sample.beans-Math.sqrt(weighted+sample.quantity*M.weight(sample.
 assert(M.beanTarget(100,1,1,20).quantity===300,'Doubling payout needs 3x additional weighted stock');
 assert(M.beanTarget(100,1,1,30).quantity===800,'Tripling payout needs 8x additional weighted stock');
 console.log('Bean harvest ranking, saved yield and payout breakpoints passed.');
+
+const seeds=[{id:0,start:0,end:10}],crops=[{id:0,found:true},{id:1,found:true},{id:2,found:false}];
+const ranked=M.cropPlans(0,1,crops,seeds);
+assert.equal(ranked[0].id,0);
+assert.equal(ranked[0].beans,777);
+assert.equal(ranked.length,2);
+assert.deepEqual(M.cropPlans(NaN,1,crops,seeds),[]);
+assert.deepEqual(M.cropPlans(800**2,1,crops,seeds),[]);
+assert.equal(M.batchPlan(0,1,1,603729).batches,1);
+assert(M.batchPlan(0,1,1,700000).unreachable);
+assert.equal(M.batchPlan(0,1,1,0),null);
+assert.equal(M.batchPlan(0,1,1,1e20),null);
+// A fixed second crop can close a gap that either crop alone skips.
+assert(M.plan(0,1,777/Math.sqrt(2.08)).unreachable);
+assert(M.plan(0,1.08,777/Math.sqrt(2.08)).unreachable);
+assert(M.qualifies(M.plan(1.08,1,777/Math.sqrt(2.08)).beans));
+console.log('777 crop comparison, mixed crops and whole harvest batches passed.');
