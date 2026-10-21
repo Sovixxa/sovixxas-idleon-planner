@@ -76,7 +76,8 @@
     "test:menagerie": "node test-menagerie.js && node test-menagerie-lumi.js && node test-menagerie-bonuses.js && node test-menagerie-expanded.js && node test-menagerie-browser.js",
     "test:update-buffs": "node test-update-buff-audit.js && node test-menagerie-bonuses.js && node test-sailing-artifact-model.js",
     "test:artifact-pools": "node test-artifact-source-pools.js && node test-sailing-artifact-model.js && node test-sailing-artifact-browser.js",
-    "test:sneaking": "node test-sneaking-optimizer.js && node test-sneaking-optimizer-browser.js"
+    "test:sneaking": "node test-sneaking-optimizer.js && node test-sneaking-optimizer-browser.js",
+    "test:blue-jelly": "node test-blue-jelly.js && node test-blue-jelly-browser.js"
   },
   "devDependencies": {
     "esbuild": "0.28.1",
