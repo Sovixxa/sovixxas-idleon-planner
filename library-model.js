@@ -30,11 +30,11 @@ function build(account,characters,data,M,at){
   {name:'Salt Lick',value:(account.saltLick?.[4]?.baseBonus||0)*(account.saltLick?.[4]?.level||0),where:'Upgrade the Spontaneity Salts bonus at the W3 Salt Lick.',page:'saltLick'},
   {name:'Checkout Takeout',value:account.achievements?.[145]?.completed?5:0,where:'Complete the achievement for 1,000 Library checkouts to gain +5 book levels.',page:'tasks'},
   {name:'Oxygen — Library Booker',value:10*Math.min(atom,1),where:'Unlock Oxygen in the Atom Collider for +10 maximum levels. Further levels improve speed and the minimum roll.',page:'atomCollider'},
-  {name:'Fury Relic',value:account.sailing?.artifacts?.find(x=>x.name==='Fury_Relic'&&x.acquired)?.bonus||0,where:'Find and upgrade the Fury Relic through W5 Sailing.',page:'sailing'},
+  {name:'Fury Relic',value:account.sailing?.artifacts?.find(x=>x.name==='Fury_Relic'&&x.acquired)?.bonus||0,where:'Find and upgrade the Fury Relic through W5 Sailing. +25 maximum book levels per tier, up to +175 at Verisimilitude.',page:'sailing'},
   {name:'Summoning victories',value:summoning,where:'Includes The Winz Lantern, Crystal Comb, merits, achievements, Godshard, King of All Winners, and the Daydreamer Pack. Full breakdown below.',page:'summoning'}
  ];
  // Maximum bonus contributions, not upgrade levels. Summoning includes the paid pack.
- const maxima=[125,10,20,5,10,150,14*1.3*1.5*(1+(150+10+1+1+15+50)/100)];
+ const maxima=[125,10,20,5,10,175,14*1.3*1.5*(1+(175+10+1+1+15+50)/100)];
  sources.forEach((source,index)=>{source.max=maxima[index];});
  const count=Number(account.accountOptions?.[55]),progress=Number(account.timeAway?.BookLib);
  const timerKnown=Number.isFinite(count)&&count>=0&&Number.isFinite(progress)&&progress>=0&&Number.isFinite(at);

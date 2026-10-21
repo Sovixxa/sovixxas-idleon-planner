@@ -13,7 +13,7 @@ export const getLibraryBreakdown=(a:any)=>{
  const pack=!!a.bundles?.find((x:any)=>x.name==='ban_i'&&x.owned);
  const merit=a.meritsDescriptions?.[5]?.[4];
  const pool=[
-  {name:'The Winz Lantern',value:artifact('The_Winz_Lantern'),page:'sailing',where:'W5 Sailing: find and upgrade The Winz Lantern. +25% per artifact tier, up to +150% at Transcendent.'},
+  {name:'The Winz Lantern',value:artifact('The_Winz_Lantern'),page:'sailing',where:'W5 Sailing: find and upgrade The Winz Lantern. +25% per artifact tier, up to +175% at Verisimilitude.'},
   {name:'W6 winner-bonus merit',value:Math.min(10,(merit?.level||0)*(merit?.bonusPerLevel||0)),page:'tasks',where:'W6 Merit Shop: purchase larger Summoning winner bonuses, up to +10%.'},
   {name:'Regalis My Beloved',value:getAchievementStatus(a.achievements,373),page:'tasks',where:'W6 achievement: obtain a Regalis Summoning Familiar. +1%.'},
   {name:'Spectre Stars',value:getAchievementStatus(a.achievements,379),page:'tasks',where:'W6 achievement: complete all Spirited Valley constellations. +1%.'},

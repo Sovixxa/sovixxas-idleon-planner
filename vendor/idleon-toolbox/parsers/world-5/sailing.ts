@@ -925,6 +925,9 @@ const getArtifact = (artifact: any, acquired: any, lootPile: any, index: any, ch
   else if (acquired === 6 && artifact?.transcendentFormDescription === 'The_artifact\'s_main_bonus_is_sixtupled!') {
     bonus *= 6;
   }
+  else if (acquired === 7 && artifact?.verisimilitudeFormDescription === 'The_artifact\'s_main_bonus_is_seventupled!') {
+    bonus *= 7;
+  }
 
   fixedDescription = fixedDescription.replace(/{/, baseBonus).replace(/}/, kFormatter(bonus, 2)).replace(/@/, '');
   return {

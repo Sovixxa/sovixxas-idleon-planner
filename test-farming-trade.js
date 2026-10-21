@@ -45,3 +45,31 @@ assert(M.plan(0,1,777/Math.sqrt(2.08)).unreachable);
 assert(M.plan(0,1.08,777/Math.sqrt(2.08)).unreachable);
 assert(M.qualifies(M.plan(1.08,1,777/Math.sqrt(2.08)).beans));
 console.log('777 crop comparison, mixed crops and whole harvest batches passed.');
+
+const recipe=M.solveMix(0,777/Math.sqrt(2.08),crops,seeds);
+assert.equal(recipe.status,'found');
+assert.equal(recipe.items.length,2);
+assert(M.qualifies(recipe.beans));
+assert.equal(M.solveMix(800**2,1,crops,seeds).status,'overshot');
+assert.equal(M.solveMix(777**2,1,crops,seeds).status,'ready');
+assert.equal(M.solveMix(0,1000,crops,seeds).status,'none');
+assert.equal(M.solveMix(0,777/Math.sqrt(2.08),crops,seeds,0).status,'limited');
+// Independent exhaustive oracle for small mixtures, including recipes needing 3 crop types.
+const mixCrops=[0,5,10].map(id=>({id,found:true}));
+let threeCropCase=false;
+for(let target=1;target<8;target+=0.017){
+ const m=777/Math.sqrt(target);
+ let possible=false;
+ for(let a=0;a<=8;a++)for(let b=0;b<=6;b++)for(let c=0;c<=4;c++){
+  if(M.qualifies(Math.sqrt(a+b*1.08**5+c*1.08**10)*m))possible=true;
+ }
+ const r=M.solveMix(0,m,mixCrops,seeds);
+ assert.equal(r.status==='found',possible,`target ${target}`);
+ if(r.status==='found'){
+  assert(r.items.every(x=>Number.isSafeInteger(x.quantity)&&x.quantity>0));
+  assert(M.qualifies(Math.sqrt(r.items.reduce((sum,x)=>sum+x.quantity*M.weight(x.id,seeds),0))*m));
+  if(r.items.length===3)threeCropCase=true;
+ }
+}
+assert(threeCropCase,'Search must find mixtures with more than two crops');
+console.log('Automatic recipes match exhaustive mixtures, including three-crop recipes.');

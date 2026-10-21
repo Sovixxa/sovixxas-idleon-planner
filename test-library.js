@@ -8,6 +8,19 @@ const unpacked=structuredClone(raw),save=typeof unpacked.data==='string'?JSON.pa
 const bundles=typeof save.BundlesReceived==='string'?JSON.parse(save.BundlesReceived):save.BundlesReceived;delete bundles.ban_i;save.BundlesReceived=bundles;unpacked.data=save;
 const noPack=M.calculate(unpacked);assert.equal(noPack.paid.owned,false);assert.equal(noPack.maxBookLv,396);assert.equal(noPack.paid.withPack,409);assert.equal(noPack.breakdown.pool.find(x=>x.name==='Daydreamer Pack').value,0);
 const b=full.breakdown,sum=full.sources.find(x=>x.name==='Summoning victories').value;
+// Verisimilitude raises both direct Library levels and the Summoning pool.
+for(const tier of [0,1,6,7]){
+ const updated=structuredClone(raw),d=typeof updated.data==='string'?JSON.parse(updated.data):updated.data;
+ const sailing=typeof d.Sailing==='string'?JSON.parse(d.Sailing):d.Sailing;
+ sailing[3][21]=tier;sailing[3][32]=tier;d.Sailing=sailing;updated.data=d;
+ const result=M.calculate(updated),fury=result.sources.find(s=>s.name==='Fury Relic');
+ assert.equal(fury.value,25*tier);assert.equal(fury.max,175);
+ assert.equal(result.breakdown.pool.find(s=>s.name==='The Winz Lantern').value,25*tier);
+ const expectedSummoning=result.breakdown.base*result.breakdown.multipliers.reduce((n,s)=>n*s.value,1)*result.breakdown.poolMultiplier;
+ assert.equal(result.maxBookLv,Math.round(result.sources.filter(s=>s.name!=='Summoning victories').reduce((n,s)=>n+s.value,0)+expectedSummoning));
+ assert(result.characters.every(ch=>ch.talents.every(t=>t.needsBook===(t.cap!==null&&t.cap<result.maxBookLv))));
+ assert.equal(result.sources.find(s=>s.name==='Summoning victories').max,14*1.3*1.5*3.52);
+}
 assert(Math.abs(b.base*b.multipliers.reduce((n,s)=>n*s.value,1)*b.poolMultiplier-sum)<1e-9,'Every Summoning multiplier reconciles');
 assert.equal(Math.round(b.minimum.reduce((n,s)=>n+s.value,0)),full.minBookLv);
 const meals=b.meals.reduce((n,s)=>n+s.base*s.ribbon*s.mastery,0)*(1+b.mealBonuses.filter(s=>s.pool==='add').reduce((n,s)=>n+s.value,0)/100)*b.mealBonuses.filter(s=>s.pool==='multiply').reduce((n,s)=>n*s.value,1);

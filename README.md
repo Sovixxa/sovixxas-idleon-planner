@@ -61,7 +61,10 @@ Run `npm start` here, or double-click `start.bat`. Open http://localhost:3000.
 No npm install is needed. Edit the files in this folder; source changes hot reload.
 
 World 3 → Library shows the saved talent book cap, its seven contributing
-sources, ordinary book range, checkout balance, and estimated next checkout and
+sources including Verisimilitude Fury Relic (+175) and Winz Lantern (+175% in
+the Summoning pool). Tier-seven artifact effects update the cap and character
+book targets from the imported save. It shows ordinary book range, checkout
+balance, and estimated next checkout and
 5/20/40/60 checkout milestones. It explains class/VIP books and the Automation
 Arm's guaranteed maximum-level checkout. Timers use the save timestamp and
 saved bonuses; overdue forecasts ask for a refreshed save. Run
