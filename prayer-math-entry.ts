@@ -19,7 +19,7 @@ export {getStarSignBonus} from "./vendor/idleon-toolbox/parsers/starSigns";
 export {getTalentBonus} from "./vendor/idleon-toolbox/parsers/talents";
 export {getGiantMobChance} from './vendor/idleon-toolbox/parsers/misc';
 export {mapNames,mapEnemiesArray,mapDetails,trappingInfo} from './vendor/idleon-toolbox/data/website-data';
-export {getExoticMarketRotations} from './vendor/idleon-toolbox/parsers/world-6/farming';
+export {getExoticMarketRotations,getTotalCrop} from './vendor/idleon-toolbox/parsers/world-6/farming';
 
 export {getTesseractBonus} from './vendor/idleon-toolbox/parsers/class-specific/tesseract';
 export {getMeritocracyBonus} from './vendor/idleon-toolbox/parsers/world-2/voteBallot';

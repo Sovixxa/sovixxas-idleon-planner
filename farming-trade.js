@@ -43,5 +43,48 @@ function mount(host,result,model){
  };
  baseSelect.onchange=update;cropSelect.onchange=update;input.oninput=preview;update();
 }
-const api={qualifies,multiplier,weight,plan,mount};if(typeof module!=='undefined'&&module.exports)module.exports=api;root.FarmingTrade=api;
+
+function beanTarget(stock,unit,multi,target,balance=0){
+ if(![stock,unit,multi,target,balance].every(Number.isFinite)||stock<0||unit<=0||multi<=0||target<0||balance<0)return null;
+ const required=Math.max(0,target-balance),quantity=Math.max(0,Math.ceil(((required/multi)**2-stock)/unit));
+ return Number.isSafeInteger(quantity)?{quantity,beans:Math.sqrt(stock+quantity*unit)*multi}:null;
+}
+function harvestRows(result,model){
+ const multi=multiplier(result.farming),stock=model.crops.reduce((sum,c)=>sum+c.quantity*weight(c.id,model.seeds),0);
+ if(multi===null)return [];
+ return (result.harvests||[]).filter(p=>Number.isFinite(p.quantity)&&p.quantity>0&&weight(p.cropId,model.seeds)>0).map(p=>({...p,beans:Math.sqrt(stock+p.quantity*weight(p.cropId,model.seeds))*multi,gain:(Math.sqrt(stock+p.quantity*weight(p.cropId,model.seeds))-Math.sqrt(stock))*multi})).sort((a,b)=>b.gain-a.gain);
+}
+function mountBeans(host,result,model){
+ const multi=multiplier(result.farming),stock=model.crops.reduce((sum,c)=>sum+c.quantity*weight(c.id,model.seeds),0);
+ if(multi===null){host.innerHTML='<p class="collection-note">Bean bonuses are unavailable. Load a fresh complete account export.</p>';return;}
+ const crops=model.crops.filter(c=>c.found&&weight(c.id,model.seeds)>0).sort((a,b)=>weight(b.id,model.seeds)-weight(a.id,model.seeds));
+ if(!crops.length){host.innerHTML='<p class="collection-note">Discover a Farming crop and import your save to calculate harvests.</p>';return;}
+ const quote=Math.sqrt(stock)*multi,harvests=harvestRows(result,model),fmt=v=>{if(!Number.isFinite(v))return 'Unavailable';const scale=[[1e12,'trillion'],[1e9,'billion'],[1e6,'million']].find(([n])=>Math.abs(v)>=n);return Intl.NumberFormat('en',{maximumFractionDigits:2}).format(scale?v/scale[0]:v)+(scale?' '+scale[1]:'');};
+ const label=id=>`Crop #${id+1} · ${model.seeds.find(s=>id>=s.start&&id<=s.end)?.name||''}`;
+ const cropCell=id=>`<span class="bean-crop"><img src="assets/FarmCrop${id}.png" alt="" width="32" height="32"><span>${esc(label(id))}</span></span>`;
+ const number=v=>`<span title="${esc(exact(v))}">${esc(fmt(v))}</span>`;
+ const table=(headers,rows)=>`<div class="bean-table-wrap"><table class="bean-table"><thead><tr>${headers.map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>${rows.join('')}</tbody></table></div>`;
+ const allStock=harvests.reduce((sum,p)=>sum+p.quantity*weight(p.cropId,model.seeds),stock),allQuote=Math.sqrt(allStock)*multi;
+ host.innerHTML=`<section class="farm-extra-board farm-beans"><header><p class="eyebrow">FARMING · BEAN TRADES</p><h3>Harvest calculator</h3></header><div class="farm-extra-stats"><article class="farm-extra-card"><h4>Beans if you trade now</h4><strong>${number(quote)} beans</strong></article><article class="farm-extra-card"><h4>Beans after harvesting all plots</h4><strong>${number(allQuote)} beans</strong><p>+${number(allQuote-quote)} from harvesting</p></article></div><div class="exotic-controls"><label>How many beans do you want?<input data-beans-target type="number" min="0" step="any" value="${quote>0?quote*1.25:1000}"></label><input data-beans-crop type="hidden" value="${crops[0].id}"><label>Try harvesting this many more crops<input data-beans-units type="number" min="0" step="1" value="1000"></label></div><details class="bean-picker" data-beans-picker><summary><span>Crop to harvest</span><span data-beans-selected></span><span class="bean-picker-action">Choose crop ▾</span></summary><label class="bean-family-filter">Seed family<select data-beans-family><option value="all">All families</option>${model.seeds.filter(seed=>crops.some(c=>c.id>=seed.start&&c.id<=seed.end)).map(seed=>`<option value="${seed.id}">${esc(seed.name)}</option>`).join('')}</select></label><div class="bean-picker-grid">${crops.map(c=>`<button type="button" data-beans-tile="${c.id}" data-seed="${model.seeds.find(seed=>c.id>=seed.start&&c.id<=seed.end)?.id}" aria-label="Select ${esc(label(c.id))}" aria-pressed="false"><img src="assets/FarmCrop${c.id}.png" alt="${esc(label(c.id))}" width="48" height="48" loading="lazy"><span>${esc(model.seeds.find(seed=>c.id>=seed.start&&c.id<=seed.end)?.name||'')}</span><small>#${c.id+1}</small></button>`).join('')}</div></details><div class="bean-target-buttons">${[1.1,1.25,1.5,2].map(x=>`<button type="button" data-beans-multiple="${x}">+${Math.round((x-1)*100)}% beans</button>`).join('')}</div><div data-beans-result aria-live="polite"></div><h3>Which crop needs the least harvesting?</h3><p class="farm-extra-note">Each row reaches your bean target using that crop alone. Amounts are crops added to your depot, not harvest clicks. Growth time is not compared.</p><div data-beans-ranking></div><h3>Crops needed for a bigger trade <span data-beans-breakpoint-name></span></h3><div data-beans-breakpoints></div><details><summary>All discovered crops</summary><div data-beans-all></div></details></section>`;
+ const target=host.querySelector('[data-beans-target]'),crop=host.querySelector('[data-beans-crop]'),units=host.querySelector('[data-beans-units]');
+ const update=()=>{
+  const t=Number(target.value),q=Number(units.value),id=Number(crop.value),unit=weight(id,model.seeds),validTarget=target.value.trim()!==''&&Number.isFinite(t)&&t>=0,validQ=units.value.trim()!==''&&Number.isSafeInteger(q)&&q>=0,p=validTarget?beanTarget(stock,unit,multi,t):null;
+  const card=(heading,value,detail)=>`<article class="farm-extra-card"><h4>${heading}</h4><strong>${value}</strong><p>${detail}</p></article>`;
+  host.querySelector('[data-beans-result]').innerHTML=`<div class="farm-extra-stats">${p?card('To reach your bean target',p.quantity===0?'No more crops needed':`Harvest ${number(p.quantity)} more of this crop`,p.quantity===0?'Your saved depot already reaches this target.':`${cropCell(id)}Your trade will give ${number(p.beans)} beans.`):card('Target unavailable','Enter a valid target','Use a non-negative finite target with a safe whole-unit harvest.')}${validQ?card('If you harvest the amount entered',number(Math.sqrt(stock+q*unit)*multi)+' beans total',`Harvesting ${number(q)} more crops adds ${number((Math.sqrt(stock+q*unit)-Math.sqrt(stock))*multi)} beans to your trade.`):card('Invalid harvest','Enter whole crop units','Use a non-negative safe whole number.')}</div>`;
+  host.querySelector('[data-beans-selected]').innerHTML=cropCell(id);
+  host.querySelectorAll('[data-beans-tile]').forEach(b=>b.setAttribute('aria-pressed',String(Number(b.dataset.beansTile)===id)));
+  const rows=crops.map(c=>{const plan=validTarget?beanTarget(stock,weight(c.id,model.seeds),multi,t):null;return `<tr class="${c.id===id?'selected':''}"><td><button type="button" data-beans-pick="${c.id}">${cropCell(c.id)}</button></td><td>${plan?number(plan.quantity):'—'} more crops</td></tr>`;});
+  const headers=['Choose a crop','Harvest this much more'];
+  host.querySelector('[data-beans-ranking]').innerHTML=table(headers,rows.slice(0,5));host.querySelector('[data-beans-all]').innerHTML=table(headers,rows);
+  host.querySelector('[data-beans-breakpoint-name]').innerHTML=cropCell(id);
+  host.querySelector('[data-beans-breakpoints]').innerHTML=table(['Bean increase','Harvest this much more','Your trade gives'],[1.1,1.25,1.5,2,3].map(x=>{const bp=beanTarget(stock,unit,multi,quote*x);return `<tr><td>${x===2?'Double the beans':x===3?'Triple the beans':Math.round((x-1)*100)+'% more beans'}</td><td>${quote>0&&bp?number(bp.quantity)+' crops':'Set a target above'}</td><td>${number(quote*x)} beans</td></tr>`;}));
+  host.querySelectorAll('[data-beans-pick]').forEach(b=>b.onclick=()=>{crop.value=b.dataset.beansPick;update();});
+ };
+ target.oninput=update;units.oninput=update;
+ host.querySelectorAll('[data-beans-tile]').forEach(b=>b.onclick=()=>{crop.value=b.dataset.beansTile;host.querySelector('[data-beans-picker]').open=false;update();host.querySelector('[data-beans-picker] summary').focus();});
+ host.querySelector('[data-beans-family]').onchange=e=>{host.querySelectorAll('[data-beans-tile]').forEach(b=>b.hidden=e.target.value!=='all'&&b.dataset.seed!==e.target.value);};
+ host.querySelectorAll('[data-beans-multiple]').forEach(b=>b.onclick=()=>{target.value=quote*Number(b.dataset.beansMultiple);update();});update();
+}
+
+const api={qualifies,multiplier,weight,plan,mount,beanTarget,mountBeans,harvestRows};if(typeof module!=='undefined'&&module.exports)module.exports=api;root.FarmingTrade=api;
 })(typeof window!=='undefined'?window:globalThis);
