@@ -38,7 +38,7 @@ function lensPlan(state,raw,config={}){
  const types=[...Array(state.magnifyingGlassOwned).fill(0),...Array(state.opticalMonocleOwned).fill(1),...Array(state.kaleidoscopeOwned).fill(2)].slice(0,state.magnifiersOwned);
  const saved=Array.from({length:state.magnifiersOwned},(_,i)=>({type:Number(raw[5]?.[4*i+3])||0,obs:Number(raw[5]?.[4*i+2]??-1)}));
  const before=lensRates(state,saved),expBase=Math.max(1,before.exp),insightBase=Math.max(1e-9,before.insight),goal=config.goal||'balanced';
- const score=a=>{const r=lensRates(state,a);return goal==='exp'?[r.exp/expBase,r.insight/insightBase]:goal==='insight'?[r.insight/insightBase,r.exp/expBase]:[Math.log1p(r.exp/expBase)+Math.log1p(r.insight/insightBase),r.exp/expBase+r.insight/insightBase];};
+ const score=a=>{const r=lensRates(state,a);if(Number.isInteger(config.observation))return [r.per.find(o=>o.id===config.observation)?.insight||0,r.exp/expBase+r.insight/insightBase];return goal==='exp'?[r.exp/expBase,r.insight/insightBase]:goal==='insight'?[r.insight/insightBase,r.exp/expBase]:[Math.log1p(r.exp/expBase)+Math.log1p(r.insight/insightBase),r.exp/expBase+r.insight/insightBase];};
  const better=(a,b)=>a[0]>b[0]+1e-10||Math.abs(a[0]-b[0])<=1e-10&&a[1]>b[1]+1e-10;
  function improve(start){const a=start.map(x=>({...x}));let value=score(a);
   for(let pass=0;pass<8;pass++){let changed=false;

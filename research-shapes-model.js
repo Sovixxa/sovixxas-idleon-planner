@@ -9,7 +9,7 @@ function inside(x,y,v){let yes=false;for(let i=0,j=v.length-1;i<v.length;j=i++){
 function covers(v,id){const x=18+30*(id%20),y=27+30*Math.floor(id/20);return inside(x,y,v)||inside(x+21,y,v)||inside(x,y+21,v)||inside(x+21,y+21,v);}
 function coverage(shape,p,nodes){const v=vertices(shape,p),xs=v.map(v=>v[0]),ys=v.map(v=>v[1]),left=Math.min(...xs),right=Math.max(...xs),top=Math.min(...ys),bottom=Math.max(...ys);return nodes.filter(id=>{const x=18+30*(id%20),y=27+30*Math.floor(id/20);return x<=right&&x+21>=left&&y<=bottom&&y+21>=top&&covers(v,id);});}
 function legal(shape,p){return Number.isFinite(p.x)&&Number.isFinite(p.y)&&Number.isFinite(p.angle)&&p.x>=10&&p.y>=20&&p.x+shape.size[0]<=616&&p.y+shape.size[1]<=375;}
-function rates(state,raw,defs){
+function rates(state,raw,defs,observation=null){
  const old=state.gridSquares.map(x=>Number(x.bonuses[0])||0),base=old.map((b,i)=>b/(1+(defs[raw[1]?.[i]]?.bonus||0)/100));
  const additive=state.researchEXPmultiBreakdown.categories.flatMap(x=>x.sources).find(x=>x.name==='(1 + total additive % / 100)')?.value;
  if(!(additive>0))throw Error('Research EXP breakdown is unavailable. Refresh your save.');
@@ -19,14 +19,14 @@ function rates(state,raw,defs){
  const count=Array.from({length:80},()=>[0,0,0]);
  for(let i=0;i<(raw[5]||[]).length;i+=4){const obs=Number(raw[5][i+2]),type=Number(raw[5][i+3]);if(obs>=0&&obs<80&&type>=0&&type<3)count[obs][type]++;}
  const neighbors=i=>[i%8?i-1:-1,i%8<7?i+1:-1,i-8,i+8].filter(j=>j>=0&&j<80);
- const terms=state.observations.filter(o=>o.found&&o.unlocked).map(o=>({lv:o.insightLevel,k:neighbors(o.index).reduce((s,i)=>s+count[i][2],0),exp:count[o.index][0]*o.unitExp/(1+old[93]*o.insightLevel/100),insight:count[o.index][1]*o.unitInsight/Math.max(1,o.insightExpREQ)/(1+(old[91]+old[92])/100)}));
+ const terms=state.observations.filter(o=>o.found&&o.unlocked).map(o=>({id:o.index,req:Math.max(1,o.insightExpREQ),lv:o.insightLevel,k:neighbors(o.index).reduce((s,i)=>s+count[i][2],0),exp:count[o.index][0]*o.unitExp/(1+old[93]*o.insightLevel/100),insight:count[o.index][1]*o.unitInsight/Math.max(1,o.insightExpREQ)/(1+(old[91]+old[92])/100)}));
  return owners=>{
   const b=id=>base[id]*(1+(defs[owners[id]]?.bonus||0)/100);
   let add=additive;for(const [id,weight] of additiveNodes)add+=(b(id)-old[id])*weight/100;
   add+=(extras.stickerAddSlope||0)*(b(68)-old[68])/100;
   const stickerRatio=(sticker+(extras.stickerMultiSlope||0)*(b(68)-old[68]))/sticker,buttonRatio=(1+(button-1)*(1+b(125)/100)/(1+old[125]/100))/button;
   const expRatio=stickerRatio*buttonRatio*add/additive*(1+b(70)/100)/(1+old[70]/100),kal=state.kaleiBase+(b(52)-old[52]+b(72)-old[72])/100,insightRatio=1+(b(91)+b(92))/100;
-  let exp=0,insight=0;const bonus93=b(93);for(const o of terms){const k=1+o.k*kal;exp+=o.exp*(1+bonus93*o.lv/100)*k;insight+=o.insight*insightRatio*k;}return {exp:exp*expRatio,insight};
+  let exp=0,insight=0,target=0;const bonus93=b(93);for(const o of terms){const k=1+o.k*kal;exp+=o.exp*(1+bonus93*o.lv/100)*k;insight+=o.insight*insightRatio*k;if(o.id===observation)target=o.insight*insightRatio*k*o.req;}return {exp:exp*expRatio,insight,target};
  };
 }
 function ownersFor(layout,order,defs,nodes){const owners=Array(240).fill(-1);for(const id of order)for(const cell of coverage(defs[id],layout[id],nodes))if(owners[cell]===-1)owners[cell]=id;return owners;}
@@ -35,11 +35,12 @@ function plan(state,raw,data,config={},progress=()=>{}){
  const owned=Math.min(10,Math.max(state.shapesOwned,...savedOwners.map(x=>x+1))),defs=allDefs.slice(0,owned);
  const saved=defs.map((d,i)=>({x:Number(raw[6]?.[4*i]),y:Number(raw[6]?.[4*i+1]),angle:Number(raw[6]?.[4*i+2])||0}));
  if(saved.some(p=>!Number.isFinite(p.x)||!Number.isFinite(p.y)))throw Error('Shape positions are missing from this save. Load a fresh full export.');
- const scoreRates=rates(state,raw,allDefs),before=scoreRates(savedOwners),goal=config.goal==='insight'?'insight':'exp';
- const score=owners=>scoreRates(owners)[goal];
+ const scoreRates=rates(state,raw,allDefs,config.observation),before=scoreRates(savedOwners),goal=config.goal==='insight'?'insight':'exp';
+ const metric=Number.isInteger(config.observation)?'target':goal;
+ const score=owners=>scoreRates(owners)[metric];
  const nodes=state.gridSquares.filter(x=>x.canSelect).map(x=>x.index),targets=relevant.filter(id=>state.gridSquares[id]?.level>0);
- const beforeScore=before[goal];
- if(!owned||!targets.length||!(beforeScore>0))return {before,after:before,shapes:defs,saved,layout:saved,owners:savedOwners,steps:[],order:[],nodes:state.gridSquares,reason:!owned?'No shapes are unlocked yet.':!(beforeScore>0)?'Place lenses for this goal in-game and refresh your save before optimizing shapes.':'No purchased Research targets are available.'};
+ const beforeScore=before[metric];
+ if(!owned||!targets.length||!(beforeScore>0))return {before,after:before,shapes:defs,saved,layout:saved,owners:savedOwners,steps:[],order:[],nodes:state.gridSquares,canRotate:!!state.canRotateShapes,reason:!owned?'No shapes are unlocked yet.':!(beforeScore>0)?'Place lenses for this goal in-game and refresh your save before optimizing shapes.':'No purchased Research targets are available.'};
  const maskOf=(shape,p)=>coverage(shape,p,targets).reduce((m,id)=>m|(1<<targets.indexOf(id)),0);
  const park=defs.map((d,id)=>{for(let y=20;y<=375-d.size[1];y+=5)for(let x=10;x<=616-d.size[0];x+=5){const p={x,y,angle:saved[id].angle};if(!coverage(d,p,nodes).length)return p;}return null;});
  if(park.some(p=>!p))throw Error('Could not find a clear staging position for every shape. This save needs a move-by-move overlap search.');
@@ -70,7 +71,7 @@ function plan(state,raw,data,config={},progress=()=>{}){
  // This preserves unrelated account bonuses instead of leaving spare shapes parked.
  for(const id of best.order){if(!legal(defs[id],saved[id]))continue;const previous=best.layout[id],p={...saved[id],mask:maskOf(defs[id],saved[id])};best.layout[id]=p;const value=score(ownersFromMasks(best.layout,best.order));if(value>=best.value-Math.abs(best.value)*1e-12)best.value=value;else best.layout[id]=previous;}
  const layout=best.layout.map(({x,y,angle})=>({x,y,angle})),owners=ownersFor(layout,best.order,defs,nodes),after=scoreRates(owners);
- if(after[goal]<=beforeScore*(1+1e-9))return {before,after:before,shapes:defs,saved,layout:saved,owners:savedOwners,steps:[],order:[],nodes:state.gridSquares,reason:'No better layout found. Keep your current shapes.'};
+ if(after[metric]<=beforeScore*(1+1e-9))return {before,after:before,shapes:defs,saved,layout:saved,owners:savedOwners,steps:[],order:[],nodes:state.gridSquares,canRotate:!!state.canRotateShapes,reason:'No better layout found. Keep your current shapes.'};
  const steps=defs.map((d,id)=>({id,phase:'park',from:saved[id],to:park[id],covers:[]}));
  for(const id of best.order)steps.push({id,phase:'place',from:park[id],to:layout[id],covers:owners.map((v,i)=>v===id?i:-1).filter(i=>i>=0)});
  return {before,after,shapes:defs,saved,layout,owners,steps,order:best.order,nodes:state.gridSquares,goal,canRotate:!!state.canRotateShapes};
