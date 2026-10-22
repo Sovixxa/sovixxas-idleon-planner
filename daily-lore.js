@@ -23,9 +23,10 @@ function levelBreakpoint(level,multi=1){
 }
 function progressCard(row,name){
  const l=row.lore,decay=l.func.startsWith('decay'),pct=decay?100*l.level/(l.scale+l.level||1):null;
+ const milestones=[50,75,90,95,99].map(percent=>{const level=Math.ceil(l.scale*percent/(100-percent));return {percent,level,bonus:effect(l,level)};});
  const heading=decay?'Diminishing returns · No finite hard cap':'Linear · No soft or hard cap';
  return '<article class="lore-progress-card"><div class="lore-progress-heading"><strong>'+esc(name)+'</strong><span>'+heading+'</span></div><p>'+esc(row.effect)+' · '+fmt(l.level)+' saved levels</p><p class="lore-next-level">At level '+fmt(l.level+1)+': '+esc(effect(l,l.level+1))+'</p>'+(decay?
- '<div class="lore-progress-track" role="progressbar" aria-label="'+esc(name)+' scaling ceiling" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+pct+'"><div style="width:'+pct+'%"></div>'+[50,75,90,95].map(n=>'<i style="left:'+n+'%"></i>').join('')+'</div><p><b>'+fmt(pct)+'% of scaling ceiling</b> · Soft cap: gradual diminishing returns, no fixed cutoff.</p><div class="lore-milestones">'+[50,75,90,95,99].map(n=>'<span>'+n+'% at '+fmt(Math.round(l.scale*n/(100-n)))+' levels</span>').join('')+'</div>':
+ '<div class="lore-progress-scale"><div class="lore-progress-track" role="progressbar" aria-label="'+esc(name)+' scaling ceiling" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+pct+'"><div style="width:'+pct+'%"></div>'+milestones.filter(m=>m.percent<99).map(m=>'<i style="left:'+m.percent+'%" title="'+esc(m.percent+'% · Level '+fmt(m.level)+' · '+m.bonus)+'"></i>').join('')+'</div><div class="lore-progress-labels" aria-hidden="true">'+milestones.filter(m=>m.percent<99).map(m=>'<span style="left:'+m.percent+'%">'+m.percent+'%</span>').join('')+'</div></div><p><b>'+fmt(pct)+'% of scaling ceiling</b> · Soft cap: gradual diminishing returns, no fixed cutoff.</p><div class="lore-milestones">'+milestones.map(m=>'<div class="lore-milestone"><strong>'+m.percent+'% of ceiling</strong><span>Level '+fmt(m.level)+'</span><b>'+esc(m.bonus)+'</b></div>').join('')+'</div>':
  '<div class="lore-linear-track" aria-hidden="true"></div><p>Constant gain per level: '+fmt(l.base*l.multi)+'. Continues indefinitely; no cap percentage applies.</p>')+'</article>';
 }
 function render(host,all){
