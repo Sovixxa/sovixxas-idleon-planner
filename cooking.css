@@ -49,3 +49,13 @@
  .mastery-edit-row:not(.mastery-purple-row) { grid-template-columns: minmax(0,1fr) 80px; }
  .mastery-yellow-gain { grid-template-columns: minmax(0,.8fr) minmax(0,1.4fr); }
 }
+#blueResults .cook-plans{grid-template-columns:repeat(5,minmax(0,1fr));gap:12px}
+#blueResults .cook-plan-title{align-items:flex-start}
+#blueResults .cook-plan-title span{min-width:0;overflow-wrap:anywhere}
+#blueResults .cook-plan p,#blueResults .cook-plan>small{overflow-wrap:anywhere}
+@media(max-width:850px){#blueResults .cook-plans{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:420px){#blueResults .cook-plans{grid-template-columns:minmax(0,1fr)}}
+
+.cook-blue-settings{margin:16px 0;border:1px solid #574069;border-radius:8px;padding:12px 16px}
+.cook-blue-settings>summary{cursor:pointer;color:#d9c5ee;font-weight:600}
+.cook-blue-settings>summary:focus-visible{outline:2px solid #e2bcff;outline-offset:4px}

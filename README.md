@@ -326,3 +326,11 @@ Fenceyard seconds per kill). Targets respect the saved 20/30 cap. Rates are held
 constant; future shiny/OverLV speed gains are not projected. Manual speed overrides
 survive asynchronous bonus loading. Run `node test-shiny-planner.js` and
 `node test-shiny-browser.js` for timing and UI coverage.
+
+Divinity now includes a per-character Breakdown tab for points and EXP. It separates
+style base rates, additive percentage pools, and independent multipliers, including
+Coral Kid and Singularity upgrades. Rates are before activity checks and exclude
+received Mantra EXP. Coral Kid shows all twelve upgrades with current/next effects,
+costs, total-level unlocks, and a saved-state transmutation preview. Missing source
+data prevents calculation instead of silently producing a complete total.
+Run `npm run test:divinity` for decoding, native-client formula and browser checks.

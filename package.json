@@ -79,7 +79,8 @@
     "test:update-buffs": "node test-update-buff-audit.js && node test-menagerie-bonuses.js && node test-sailing-artifact-model.js",
     "test:artifact-pools": "node test-artifact-source-pools.js && node test-sailing-artifact-model.js && node test-sailing-artifact-browser.js",
     "test:sneaking": "node test-sneaking-optimizer.js && node test-sneaking-optimizer-browser.js",
-    "test:blue-jelly": "node test-blue-jelly.js && node test-blue-jelly-browser.js"
+    "test:blue-jelly": "node test-blue-jelly.js && node test-blue-jelly-browser.js",
+    "test:divinity": "node test-divinity.js && node test-divinity-client.js && node test-divinity-planner-client.js && node test-divinity-browser.js && node test-divinity-planner-browser.js"
   },
   "devDependencies": {
     "esbuild": "0.28.1",

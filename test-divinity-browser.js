@@ -6,12 +6,22 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'playwright');
  await page.route('**/*',route=>{const url=new URL(route.request().url());if(url.origin!=='http://localhost:7332')return route.abort();const file=path.resolve(__dirname,'.'+(url.pathname==='/'?'/index.html':url.pathname));return route.fulfill(file.startsWith(__dirname+path.sep)&&fs.existsSync(file)&&fs.statSync(file).isFile()?{contentType:({'.js':'text/javascript','.css':'text/css','.html':'text/html','.png':'image/png'})[path.extname(file)]||'application/octet-stream',body:fs.readFileSync(file)}:{status:404,body:''});});
  await page.goto('http://localhost:7332/');await page.locator('#quickNotesToggle').click();const raw=fs.readFileSync('../example json.txt','utf8');await page.evaluate(raw=>{document.querySelector('#jsonInput').value=raw;document.querySelector('#parseBtn').click();},raw);
  await page.evaluate(()=>window.dispatchEvent(new CustomEvent('idleon:navigate',{detail:'divinity'})));
+ assert.equal(await page.locator('.divinity-stat').count(),6);
+ await page.locator('.divinity-overview').waitFor({state:'visible',timeout:30000});
+ await page.locator('[data-div-tab="characters"]').click();assert(await page.locator('.divinity-character').count()>0);
+ assert((await page.locator('.divinity-characters').innerText()).includes('EXP'));
+ await page.locator('[data-div-tab="styles"]').click();assert.equal(await page.locator('.divinity-style').count(),8);
+ assert((await page.locator('.divinity-styles').innerText()).includes('eligible'));
  await page.locator('[data-div-tab="gods"]').click();assert.equal(await page.locator('.divinity-god').count(),10);
  for(const [id,major,minor] of [[1,'Lab Mainframe','Talent LV'],[2,'All kills count 2x','Total Damage'],[4,'Lab also counts','AFK Gains'],[5,'AFK claims','Class EXP'],[7,'Pearl','skill EXP']]){
   await page.locator(`[data-divinity-kind="god"][data-divinity-id="${id}"]`).click();const detail=await page.locator('#divinityDetail').innerText();assert(detail.includes(major));assert(detail.includes(minor));await page.locator('.divinity-close').click();
  }
  await page.locator('[data-divinity-kind="god"][data-divinity-id="1"]').click();
  await page.screenshot({path:'../audit/divinity-third-pass-desktop.png',fullPage:true});
- await page.setViewportSize({width:390,height:844});await page.screenshot({path:'../audit/divinity-third-pass-mobile.png',fullPage:true});assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));assert.equal(errors.length,0,errors.join('\n'));
+ await page.setViewportSize({width:390,height:844});await page.screenshot({path:'../audit/divinity-third-pass-mobile.png',fullPage:true});assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));for(const tab of ['overview','characters','styles','gods']){await page.locator('[data-div-tab="'+tab+'"]').click();assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),tab+' mobile overflow');}
+ await page.evaluate(()=>{window.Divinity.render(document.querySelector('#worldContent'),{},{});});
+ await page.locator('[data-div-tab="gods"]').click();assert.equal(await page.locator('.divinity-god').count(),10);
+ await page.locator('[data-div-tab="styles"]').click();assert.equal(await page.locator('.divinity-style').count(),8);
+ assert.equal(errors.length,0,errors.join('\n'));
  console.log('Divinity browser: all five corrected god details, ten tiles, mobile overflow and page errors pass.');
  }finally{await browser.close();}})().catch(e=>{console.error(e);process.exitCode=1;});

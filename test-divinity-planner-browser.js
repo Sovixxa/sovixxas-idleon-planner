@@ -1,0 +1,45 @@
+'use strict';
+const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
+const siteRoot=process.env.DIVINITY_SITE_ROOT?path.resolve(process.env.DIVINITY_SITE_ROOT):__dirname;
+const {chromium}=require(process.env.PLAYWRIGHT_PATH||'playwright');
+(async()=>{const browser=await chromium.launch({headless:true});try{
+ const page=await browser.newPage({viewport:{width:1440,height:1000}}),errors=[];page.on('pageerror',e=>errors.push(e.message));
+ await page.route('**/*',route=>{const url=new URL(route.request().url());if(url.origin!=='http://localhost:7332')return route.abort();const file=path.resolve(siteRoot,'.'+(url.pathname==='/'?'/index.html':url.pathname));return route.fulfill(file.startsWith(siteRoot+path.sep)&&fs.existsSync(file)&&fs.statSync(file).isFile()?{contentType:({'.js':'text/javascript','.css':'text/css','.html':'text/html','.png':'image/png'})[path.extname(file)]||'application/octet-stream',body:fs.readFileSync(file)}:{status:404,body:''});});
+ await page.goto('http://localhost:7332/');await page.locator('#quickNotesToggle').click();const raw=fs.readFileSync('../example json.txt','utf8');await page.evaluate(raw=>{document.querySelector('#jsonInput').value=raw;document.querySelector('#parseBtn').click();},raw);
+
+ await page.evaluate(()=>window.dispatchEvent(new CustomEvent('idleon:navigate',{detail:'coralKid'})));
+ await page.locator('.coral-upgrade').first().waitFor({timeout:60000});
+ assert.equal(await page.locator('.coral-upgrade').count(),6);
+ assert((await page.locator('.coral-upgrades').innerText()).includes('NEXT LEVEL'));
+ await page.screenshot({path:'../audit/coral-kid-revamp-desktop.png',fullPage:true});
+ await page.locator('[data-kid-tab="singularities"]').click();assert.equal(await page.locator('.coral-upgrade').count(),6);
+ assert((await page.locator('.singularity-panel').innerText()).includes('resets'));
+ await page.screenshot({path:'../audit/singularities-desktop.png',fullPage:true});
+ await page.evaluate(()=>window.dispatchEvent(new CustomEvent('idleon:navigate',{detail:'divinity'})));
+ await page.locator('[data-div-tab="breakdown"]').click();
+ await page.locator('.divinity-source-table').first().waitFor({timeout:60000});
+ assert.equal(await page.locator('.divinity-source-columns .divinity-source-table tbody tr').count(),21);
+ assert.equal(await page.locator('.divinity-source-limit').count(),21);
+ assert((await page.locator('.divinity-source-limit').first().innerText()).includes('800 / 800'));
+ assert.equal(await page.locator('.divinity-source-columns tbody tr').first().locator('td').last().innerText(),'18% / 18%');
+ assert(!(await page.locator('.divinity-source-columns').innerText()).includes('NaN'));
+ await page.locator('[data-div-metric="exp"]').click();assert.equal(await page.locator('.divinity-source-columns .divinity-source-table tbody tr').count(),29);
+ assert.equal(await page.locator('.divinity-source-limit').count(),29);
+ assert((await page.locator('.divinity-source-limit').nth(1).innerText()).includes('Max bonus: +18%'));
+ assert.equal(await page.locator('.divinity-source-columns tbody tr').nth(1).locator('td').last().innerText(),'18% / 18%');
+ fs.writeFileSync('../audit/divinity-limits-rendered.txt',await page.locator('.divinity-source-columns').textContent());
+ assert((await page.locator('.divinity-source-columns').innerText()).includes('Shared Beliefs'));
+ await page.locator('[aria-label="Divinity breakdown character"]').selectOption('1');
+ await page.screenshot({path:'../audit/divinity-breakdown-desktop.png',fullPage:true});
+ await page.setViewportSize({width:390,height:844});assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
+ await page.screenshot({path:'../audit/divinity-breakdown-mobile.png',fullPage:true});
+ await page.getByRole('button',{name:'Coral Kid · Volcano Link',exact:true}).click();
+ assert(await page.locator('.divinity-source-dialog').isVisible());
+ await page.keyboard.press('Escape');assert.equal(await page.locator('.divinity-source-dialog').count(),0);
+ await page.getByRole('button',{name:'Coral Kid · Volcano Link',exact:true}).click();
+ await page.locator('[data-source-page]').click();await page.locator('.coral-upgrade').first().waitFor();
+ for(const tab of ['upgrades','singularities']){await page.locator('[data-kid-tab="'+tab+'"]').click();assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),tab+' overflow');}
+ await page.screenshot({path:'../audit/coral-kid-revamp-mobile.png',fullPage:true});
+ await page.evaluate(()=>window.DivinityPlanner.renderCoral(document.querySelector('#worldContent'),{}));assert((await page.locator('#worldContent').innerText()).includes('Unavailable'));assert.equal(await page.locator('.coral-upgrade').count(),6);
+ assert.equal(errors.length,0,errors.join('\n'));console.log('Coral Kid and Divinity: 12 upgrades, transmutation, both source breakdowns, character switching, source navigation, missing save and mobile layouts pass.');
+ }finally{await browser.close();}})().catch(e=>{console.error(e);process.exitCode=1;});
