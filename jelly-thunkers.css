@@ -1,0 +1,24 @@
+.thunkers-panel{border:1px dashed #a994d0;background:linear-gradient(125deg,#251e32,#171c27);padding:16px 20px;color:#e9e0f6}
+.thunkers-panel summary{display:flex;align-items:center;justify-content:space-between;gap:12px;cursor:pointer;font-weight:800;list-style:none}
+.thunkers-panel summary::-webkit-details-marker{display:none}
+.thunkers-panel summary>span:first-child{overflow-wrap:anywhere}
+.thunkers-panel summary>span:first-child::before{content:'＋ ';color:#d9b8ff}
+.thunkers-panel[open] summary>span:first-child::before{content:'− '}
+.thunkers-content>p,.thunkers-content small{color:#c9bdd8;font-size:.82rem;line-height:1.6}
+.thunkers-stage{display:flex;gap:20px;align-items:center;margin:18px 0;padding:16px;border:1px solid #50405f;border-radius:12px;background:#14131e}
+.thunkers-board{display:grid;grid-template-columns:repeat(4,28px);gap:5px;flex:none}
+.thunkers-board span{display:grid;place-items:center;width:28px;height:28px;border-radius:7px;background:#302840;font-size:19px}
+.thunkers-panel.is-thunking .thunkers-board{animation:thunkers-wobble 1.1s ease-in-out infinite alternate}
+.thunkers-console{flex:1;min-width:0}
+.thunkers-caption{font-size:.62rem;letter-spacing:.07em;color:#b6a4c9;line-height:1.5;margin:0 0 10px}
+#thunkersStatus{font-size:.88rem;line-height:1.6;min-height:3.2em;margin:0 0 12px}
+#thunkersProgress{display:block;width:100%;height:8px;accent-color:#bb91ed}
+.thunkers-verdict{color:#f5d7a1;font-weight:700;font-size:.85rem;line-height:1.6;margin-bottom:0}
+.thunkers-actions{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.thunkers-transcript{margin:14px 0;font-size:.8rem;color:#c9bdd8}
+.thunkers-transcript summary{font-weight:600;color:#d9b8ff}
+.thunkers-transcript ol{padding-left:24px;line-height:1.6;max-height:240px;overflow:auto}
+.thunkers-transcript li{padding:4px 0}
+@keyframes thunkers-wobble{from{transform:rotate(-2deg)}to{transform:rotate(2deg)}}
+@media(prefers-reduced-motion:reduce){.thunkers-panel.is-thunking .thunkers-board{animation:none}}
+@media(max-width:540px){.thunkers-panel{padding:14px}.thunkers-panel summary{align-items:flex-start;flex-direction:column;gap:8px}.thunkers-stage{align-items:flex-start;flex-direction:column;gap:14px}.thunkers-console{width:100%}.thunkers-actions button{flex:1;min-width:120px}}

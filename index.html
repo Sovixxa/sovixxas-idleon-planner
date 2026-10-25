@@ -269,20 +269,21 @@
       </section>
 
       <details id="jellyThunkers" class="panel thunkers-panel">
-        <summary><span>Extended-ed Thunkers-ing- for Naught</span><span class="thunkers-badge">JOKE MODE</span></summary>
+        <summary><span>Extended-ed Thunkers-ing- for Naught</span></summary>
         <div class="thunkers-content">
-          <p>For when Extended has not extended enough. Comedy only: imaginary calculations, absolutely no real recommendations.</p>
+          <p>For when thinking has failed, but you would like it to fail with more confidence.</p>
           <div class="thunkers-stage">
             <div id="thunkersBoard" class="thunkers-board" aria-hidden="true"></div>
             <div class="thunkers-console">
-              <p class="thunkers-caption">THE BOARD OF QUESTIONABLE DECISIONS · decorative jelly only</p>
-              <p id="thunkersStatus" role="status">One brain cell. Unlimited administrative overhead.</p>
+              <p id="thunkersCaption" class="thunkers-caption">DEPARTMENT OF ADVANCED MAYBE</p>
+              <p id="thunkersStatus" role="status">One brain cell. Currently on loan to the progress bar.</p>
               <progress id="thunkersProgress" max="100" value="0" aria-label="Completely imaginary progress"></progress>
               <p id="thunkersVerdict" class="thunkers-verdict" hidden></p>
             </div>
           </div>
-          <div class="thunkers-actions"><button id="thunkersStart" type="button" class="secondary">Engage the thunk</button><button id="thunkersStop" type="button" class="secondary" disabled>Mercy. Stop thunking.</button></div>
-          <small>No boards, saves, or playbook results are changed. Only the jelly's ego is at risk.</small>
+          <div class="thunkers-actions"><button id="thunkersStart" type="button" class="secondary">Engage the thunk</button><button id="thunkersWorse" type="button" class="secondary" disabled>Make it worse</button><button id="thunkersStop" type="button" class="secondary" disabled>Mercy. Stop thunking.</button></div>
+          <details class="thunkers-transcript"><summary>Read the highly classified minutes</summary><ol id="thunkersLog"></ol></details>
+          <small>Your real board stays put. This department only moves the goalposts.</small>
         </div>
       </details>
 
@@ -673,6 +674,7 @@
     <script src="connected-bonuses.js"></script>
     <script src="app.js?v=15"></script>
   <link rel="stylesheet" href="jelly-thunkers.css">
+  <script src="jelly-thunkers-content.js"></script>
   <script src="jelly-thunkers.js"></script>
   <link rel="stylesheet" href="back-to-top.css">
   <script src="back-to-top.js"></script>

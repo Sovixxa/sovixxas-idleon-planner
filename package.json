@@ -13,6 +13,7 @@
     "test:jelly-lookahead": "node test-jelly-lookahead.js && node test-jelly-speed.js && node test-jelly-clear-search.js",
     "test:jelly-lookahead-browser": "node test-jelly-lookahead-browser.js && node test-jelly-performance-browser.js",
     "test:jelly-clear-thinking": "node test-jelly-clear-thinking.js && node test-jelly-lookahead.js && node test-jelly-objectives.js && node test-jelly-speed.js && node test-jelly-clear-search.js",
+    "test:jelly-thunkers": "node test-jelly-thunkers-browser.js",
     "test:jelly-clear": "node test-jelly-speed.js && node test-client-audit.js && node test-engine.js && node test-jelly-clear-search.js && node test-jelly-stronkroid.js && node test-jelly-objectives.js && node test-jelly-objectives-browser.js",
     "test:sushi": "node test-sushi.js && node test-sushi-browser.js",
     "pretest": "node test-google-device.js && node test-live-sync.js",
