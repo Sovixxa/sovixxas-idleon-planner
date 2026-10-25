@@ -593,8 +593,8 @@ const VERSION='0.9.9-alchemy-bubbles';
         if(damageBuckets.length>=4){const d=(damageBuckets[1]+damageBuckets[2]+damageBuckets[3])/3;peak3s=Math.max(peak3s,d);if(dpsUnlocked)bestDps=Math.max(bestDps,d);}
       }
       if(trace&&frame%FPS===0)trace.push({time:elapsed,hpFraction:Math.max(0,hp/hpMax),dead:dead.flatMap((v,i)=>v?[i]:[]),levels:runtimeLevels.slice(),steroid:roidFrames>0});
-      if(!dpsOnly&&hp<=0){result='clear';break;}
       if(elapsed>timer&&hpAtTimer===null){hpAtTimer=dpsOnly?null:Math.max(0,hp/hpMax);criticalEntered=true;}
+      if(!dpsOnly&&hp<=0){hpAtTimer??=0;result='clear';break;}
       if(!dpsOnly&&elapsed>timer){
         bossCounter++;
         if(!crit)bossCounter+=9999;
@@ -1256,7 +1256,7 @@ const VERSION='0.9.9-alchemy-bubbles';
     if(options.objectiveMode==='bloodcells'&&!bloodcellBonuses(state).known)throw new Error('Bloodcell optimization needs a full account export. Missing: '+bloodcellBonuses(state).missing.join(', '));
     if(options.objectiveMode==='dps'&&upgradeQty(state,12)<1)throw new Error('Unlock DPS Biometrics before optimizing the recorded DPS bloodcell multiplier.');
     const fevers=options.searchFever===false||!feverUnlocked(state)?[state.fever]:[...new Set([state.fever,...Array.from({length:Math.min(6,Math.floor(upgradeQty(state,16)))},(_,i)=>i)])];
-    const begin=performanceNow(),deadline=begin+Math.max(500,asNum(options.timeMs,4200));let best=null,baseline=null;const feverResults=[];
+    const begin=performanceNow(),deadline=begin+Math.max(500,asNum(options.timeMs,4200));let best=null,baseline=null;const tested=[];
     // Calibrate against the saved board and Fever once. Re-fitting each Fever
     // to the same historical DPS record would cancel its real damage effect.
     const calibration=options.damageScale?{scale:asNum(options.damageScale,1),source:'custom'}:autoDamageScale(state,arrangementFromBoard(state));
@@ -1264,11 +1264,27 @@ const VERSION='0.9.9-alchemy-bubbles';
     for(const fever of fevers){
       if(best&&performanceNow()>=deadline&&fever!==options.incumbentFever)break;
       const st=cloneState(state);st.fever=fever;
-      const result=optimizeTimed(st,{...options,deadline,damageScale:calibration.scale,timeMs:Math.max(500,(deadline-performanceNow())/(fevers.length-feverResults.length)),onProgress:p=>options.onProgress?.({...p,fever:FEVER_NAMES[fever]||'None',feverIndex:fever})});
+      const result=optimizeTimed(st,{...options,deadline,damageScale:calibration.scale,timeMs:Math.max(500,(deadline-performanceNow())/(fevers.length-tested.length)),onProgress:p=>options.onProgress?.({...p,fever:FEVER_NAMES[fever]||'None',feverIndex:fever})});
       if(fever===state.fever)baseline=result;
-      feverResults.push({fever,stats:result.stats});
+      tested.push({fever,...result});
       if(!best||timedObjective(result.stats,options.objectiveMode)>timedObjective(best.stats,options.objectiveMode))best={...result,fever};
     }
+    // Adaptive validation may expand only some Fever searches to 500 runs.
+    // Compare every Fever winner and the saved baseline on the same seed set.
+    const runs=Math.max(...tested.map(r=>r.stats.runs));
+    for(const result of tested){
+      const st=cloneState(state);st.fever=result.fever;
+      const common={...options,damageScale:calibration.scale,runs,seed:0xD00D};
+      if(result.stats.runs!==runs)result.stats=simulateMany(st,result.arrangement,{...common,steroidStartSeconds:result.steroidStart??0});
+      if(result.fever===state.fever){
+        if(result.currentStats.runs!==runs)result.currentStats=simulateMany(st,result.current,{...common,steroidStartSeconds:result.currentSteroidStart??0});
+        baseline=result;
+      }
+    }
+    best=tested.reduce((a,b)=>timedObjective(b.stats,options.objectiveMode)>timedObjective(a.stats,options.objectiveMode)?b:a);
+    // A winner selected before the extra trials can lose to the saved board.
+    if(timedObjective(baseline.currentStats,options.objectiveMode)>timedObjective(best.stats,options.objectiveMode))best={...baseline,arrangement:baseline.current,stats:baseline.currentStats,score:baseline.currentScore,steroidStart:baseline.currentSteroidStart};
+    const feverResults=tested.map(r=>({fever:r.fever,stats:r.stats}));
     return {...best,calibration,currentStats:baseline.currentStats,currentSteroidStart:baseline.currentSteroidStart,currentFever:state.fever,feversRequested:fevers.length,feverResults,timeMs:performanceNow()-begin};
   }
   function clearConfidence(stats){

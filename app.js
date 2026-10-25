@@ -335,6 +335,39 @@ SKILL_PAGES.holeFloors={title:'Floors',world:'World 5',copy:'All 18 Hole caverns
     }
   }
 
+  function renderCombatComparison(res){
+    const currentFever=res.currentFever??state.fever,bestFever=res.fever??state.fever;
+    const timing=stats=>stats?.steroidStartSeconds==null?'Stronkroid off':`Stronkroid at ${stats.steroidStartSeconds.toFixed(1)}s`;
+    $('currentCombatSettings').textContent=`Fever: ${E.FEVER_NAMES[currentFever]||'none'} · ${timing(res.currentStats)} · simulated baseline`;
+    const sameBoard=E.arrangementKey(res.arrangement)===E.arrangementKey(res.current);
+    const changes=[];
+    if(currentFever!==bestFever)changes.push(`Fever ${E.FEVER_NAMES[currentFever]||'none'} → ${E.FEVER_NAMES[bestFever]||'none'}`);
+    if(res.currentStats?.steroidStartSeconds!==res.stats?.steroidStartSeconds)changes.push(`${timing(res.currentStats)} → ${timing(res.stats)}`);
+    $('bestCombatSettings').textContent=`${sameBoard?'Same cell placements.':'Cell placements changed.'} Fever: ${E.FEVER_NAMES[bestFever]||'none'} · ${timing(res.stats)}. ${changes.length?`Combat settings changed: ${changes.join('; ')}. Results include these changes.`:'Same combat settings.'}`;
+  }
+
+  function renderCompletedJelly(res){
+    const projected=E.cloneState(state);projected.fever=res.fever??state.fever;
+    renderCombatComparison(res);
+    renderBoard($('currentBoard'),res.current,state);
+    renderSummary($('currentSummary'),res.currentStats);renderTimeline($('currentTimeline'),res.currentStats);$('currentVerdict').innerHTML=verdict(res.currentStats);
+    renderBoard($('bestBoard'),res.arrangement,projected);renderSummary($('bestSummary'),res.stats);renderTimeline($('bestTimeline'),res.stats);$('bestVerdict').innerHTML=verdict(res.stats);
+    renderCellMix(res.arrangement,projected);
+    $('replayPanel').classList.toggle('hidden',!res.replay);
+    if(res.replay){$('replayFrame').max=String(res.replay.trace.length);$('replayFrame').value='0';renderReplay();}
+  }
+
+  function restoreJellyResult(){
+    if(!state)return;
+    if(lastResult)renderCompletedJelly(lastResult);
+    else{
+      renderBoard($('bestBoard'),currentArrangement);renderCellMix(currentArrangement);
+      $('bestSummary').textContent='Not simulated yet. Click Optimize Jelly to calculate results.';
+      $('bestVerdict').textContent='';$('bestTimeline').textContent='';$('bestCombatSettings').textContent='';$('replayPanel').classList.add('hidden');
+    }
+    $('layoutChanges').textContent='Showing the last completed result; preliminary candidates were not promoted.';
+  }
+
   function resultMetrics(stats){
     const cr=stats?.clearRate??0, med=stats?.medianClearTime;
     return [
@@ -807,7 +840,7 @@ SKILL_PAGES.holeFloors={title:'Floors',world:'World 5',copy:'All 18 Hole caverns
   }
   function renderTrainer(){
     const has=!!state,entries=has?memoryForBoard():[];
-    $('trainBtn').disabled=!has;$('exportMemoryBtn').disabled=!has;$('clearMemoryBtn').disabled=!has||!entries.length;
+    $('trainBtn').disabled=!has||!!activeWorker;$('exportMemoryBtn').disabled=!has;$('clearMemoryBtn').disabled=!has||!entries.length;
     if(!has){$('trainerStatus').textContent='Load a save to start local self-play.';$('trainerMemory').innerHTML='';return;}
     $('trainerStatus').textContent=entries.length?`${entries.length} remembered layout${entries.length===1?'':'s'} for this boss and board. Training rechecks them before keeping a new best.`:'No saved layout for this boss and board yet. Train to create a local playbook.';
     $('trainerMemory').innerHTML=entries.slice(0,3).map((entry,i)=>`<div class="memory-row"><strong>#${i+1}</strong><span>${pct(entry.stats?.clearRate??0,0)} clear</span><span>${E.formatTime(entry.stats?.medianClearTime)}</span><span>${E.FEVER_NAMES[entry.fever]||'Current Fever'}</span><span>saved ${new Date(entry.savedAt).toLocaleDateString()}</span></div>`).join('');
@@ -893,6 +926,7 @@ SKILL_PAGES.holeFloors={title:'Floors',world:'World 5',copy:'All 18 Hole caverns
     stopPracticePlayback();practice=null;
     renderStateStats();renderBoard($('currentBoard'),currentArrangement);renderBoard($('bestBoard'),currentArrangement);
     for(const id of ['currentSummary','bestSummary'])$(id).textContent='Not simulated yet. Click Optimize Jelly to calculate results.';
+    for(const id of ['currentCombatSettings','bestCombatSettings'])$(id).textContent='';
     for(const id of ['currentTimeline','bestTimeline','currentVerdict','bestVerdict'])$(id).textContent='';
     renderCellMix(currentArrangement);renderTrainer();renderHome();
     initialUpgradesPending=true;initialPracticePending=true;
@@ -1116,12 +1150,14 @@ SKILL_PAGES.holeFloors={title:'Floors',world:'World 5',copy:'All 18 Hole caverns
     stopSearch();
     return new Promise((resolve,reject)=>{
       const worker=new Worker('solver-worker.js');activeWorker=worker;
+      const settings=['objectiveMode','searchQuality','searchFever','observedTime','reviveDelay','trainGenerations'].map(id=>$(id)).filter(Boolean);
+      const disabledBefore=settings.map(el=>el.disabled);settings.forEach(el=>{el.disabled=true;});
       const started=performance.now();let bestPreview=null;
       let stage=job==='calibrate'?'Calibrating saved board…':job==='train'?'Starting training…':job==='plan'?'Comparing purchases…':'Searching for the best board…';
       $('bestBoard').setAttribute('aria-busy','true');
       const tick=()=>{$('solverStatus').textContent=stage+' · '+Math.floor((performance.now()-started)/1000)+'s elapsed';};
       tick();const timer=setInterval(tick,1000);
-      const finish=()=>{clearInterval(timer);worker.terminate();if(activeWorker===worker){activeWorker=null;cancelActive=null;$('bestBoard').setAttribute('aria-busy','false');}$('cancelBtn').disabled=true;};
+      const finish=()=>{clearInterval(timer);worker.terminate();if(activeWorker===worker){activeWorker=null;cancelActive=null;$('bestBoard').setAttribute('aria-busy','false');settings.forEach((el,i)=>{el.disabled=disabledBefore[i];});}$('cancelBtn').disabled=true;};
       cancelActive=()=>{finish();reject(new Error('Search cancelled.'));};
       $('cancelBtn').disabled=false;
       worker.onmessage=({data})=>{
@@ -1139,6 +1175,8 @@ SKILL_PAGES.holeFloors={title:'Floors',world:'World 5',copy:'All 18 Hole caverns
             bestPreview={validated,objective,filled};
             renderBoard($('bestBoard'),p.arrangement,previewState);renderCellMix(p.arrangement,previewState);
             renderSummary($('bestSummary'),p.stats);$('bestVerdict').textContent=validated?'Best validated so far · searching':'Best so far · preliminary';
+            $('bestCombatSettings').textContent=`Search preview · Fever: ${E.FEVER_NAMES[previewState.fever]||'none'} · ${p.stats.steroidStartSeconds==null?'Stronkroid off':`Stronkroid at ${p.stats.steroidStartSeconds.toFixed(1)}s`}`;
+            $('bestTimeline').textContent='';$('replayPanel').classList.add('hidden');
             $('layoutChanges').textContent=`Best board so far: ${p.arrangement.length} cells occupy ${filled}/${slots} unlocked squares. ${options.objectiveMode==='chance'?'New clear candidates fill every unlocked square; saved boards are also tested for comparison.':'Exploring cell types and placements.'}`;
           }
         }else if(data.type==='result'){finish();resolve(data.value);}
@@ -1150,10 +1188,10 @@ SKILL_PAGES.holeFloors={title:'Floors',world:'World 5',copy:'All 18 Hole caverns
   }
   $('cancelBtn').addEventListener('click',stopSearch);
   $('optimizeBtn').addEventListener('click',async()=>{
-    if(!state||activeWorker)return;
+    if(!state||activeWorker||$('optimizeBtn').disabled)return;
     window.PlannerAnalytics?.event('optimizer_started',{tool:'jelly'});
     const btn=$('optimizeBtn'),q=quality();q.searchSeed=crypto.getRandomValues(new Uint32Array(1))[0];const prior=lastResult||memoryForBoard()[0];q.incumbentArr=prior?.arrangement;q.incumbentFever=prior?.fever;q.incumbentSteroidStart=prior?.steroidStart;btn.disabled=true;$('replayPanel').classList.add('hidden');$('planBtn').disabled=true;
-    $('parseBtn').disabled=true;$('fileInput').disabled=true;$('clearBtn').disabled=true;
+    $('parseBtn').disabled=true;$('fileInput').disabled=true;$('clearBtn').disabled=true;$('trainBtn').disabled=true;
     try{
       calibration=await chooseCalibration();$('calibrationNote').textContent=calibrationText(calibration);
       const res=await workerJob('optimize',{...q,damageScale:calibration.scale,useSteroid:true,reviveDelaySeconds:currentReviveDelay(),searchFever:$('searchFever').checked});
@@ -1170,12 +1208,8 @@ SKILL_PAGES.holeFloors={title:'Floors',world:'World 5',copy:'All 18 Hole caverns
         const board=document.createElement('div');board.className='jelly-board';renderBoard(board,alt.arrangement);card.appendChild(board);alternatives.appendChild(card);
       }
       $('alternativesPanel').classList.remove('hidden');
-      const projected=E.cloneState(state);projected.fever=res.fever;
-      renderSummary($('currentSummary'),res.currentStats);renderTimeline($('currentTimeline'),res.currentStats);$('currentVerdict').innerHTML=verdict(res.currentStats);
-      renderBoard($('bestBoard'),res.arrangement,projected);renderSummary($('bestSummary'),res.stats);renderTimeline($('bestTimeline'),res.stats);$('bestVerdict').innerHTML=verdict(res.stats);
-      renderCellMix(res.arrangement,projected);
-      $('replayPanel').classList.remove('hidden');$('replayFrame').max=String(res.replay.trace.length);$('replayFrame').value='0';renderReplay();
-      const same=E.arrangementKey(res.arrangement)===E.arrangementKey(res.current)&&res.fever===state.fever;
+      renderCompletedJelly(res);
+      const same=E.arrangementKey(res.arrangement)===E.arrangementKey(res.current)&&res.fever===state.fever&&res.currentStats.steroidStartSeconds===res.stats.steroidStartSeconds;
       const confidence=E.clearConfidence(res.stats);
       const outcome=q.objectiveMode==='cellExp'?`${E.formatNumber(res.stats.avgCellLevelsGained)} mean cell levels gained; ${E.formatNumber(res.stats.avgCellExp)} mean Cell EXP per attempt.`:q.objectiveMode==='dps'?`${E.formatNumber(res.stats.avgPeakDps)} mean peak DPS; projected DPS BC multiplier ${res.stats.avgDpsMultiplier.toFixed(3)}×.`:q.objectiveMode==='bloodcells'?`${E.formatNumber(res.stats.avgBloodcells)} mean Bloodcells per attempt.`:res.stats.clearRate>0?`${pct(res.stats.clearRate)} clear; median ${E.formatTime(res.stats.medianClearTime)}.`:`No clear found; median ${pct(res.stats.medianHpRemaining,1)} boss HP remains at the end.`;
       const steroid=res.steroidStart==null?'':` Press Stronkroid at ${res.steroidStart.toFixed(1)}s.`;
@@ -1185,23 +1219,21 @@ SKILL_PAGES.holeFloors={title:'Floors',world:'World 5',copy:'All 18 Hole caverns
     }catch(e){
       window.PlannerAnalytics?.event(e.message==='Search cancelled.'?'optimizer_cancelled':'optimizer_failed',{tool:'jelly'});
       if(e.message!=='Search cancelled.')fail(e.message);
-      const arr=lastResult?.arrangement||currentArrangement,stats=lastResult?.stats||currentStats;
-      renderBoard($('bestBoard'),arr);if(stats)renderSummary($('bestSummary'),stats);else $('bestSummary').textContent='Not simulated yet. Click Optimize Jelly to calculate results.';renderCellMix(arr);$('bestVerdict').innerHTML=verdict(stats);
-      $('layoutChanges').textContent='Showing the last completed result; preliminary candidates were not promoted.';
+      restoreJellyResult();
       $('solverStatus').textContent=e.message;$('planBtn').disabled=!lastResult;
     }
-    finally{btn.disabled=false;$('parseBtn').disabled=false;$('fileInput').disabled=false;$('clearBtn').disabled=false;}
+    finally{btn.disabled=false;$('parseBtn').disabled=false;$('fileInput').disabled=false;$('clearBtn').disabled=false;renderTrainer();}
   });
   $('planBtn').addEventListener('click',async()=>{
-    if(!state||!lastResult||activeWorker)return;
-    $('planBtn').disabled=true;$('optimizeBtn').disabled=true;$('parseBtn').disabled=true;$('fileInput').disabled=true;$('clearBtn').disabled=true;
+    if(!state||!lastResult||activeWorker||$('planBtn').disabled)return;
+    $('planBtn').disabled=true;$('optimizeBtn').disabled=true;$('parseBtn').disabled=true;$('fileInput').disabled=true;$('clearBtn').disabled=true;$('trainBtn').disabled=true;
     try{const move=await workerJob('plan',quality(),lastResult);renderNextMove(move,lastResult.stats);$('solverStatus').textContent=move?'Purchase comparison complete.':`No affordable combat upgrade is available with ${E.formatNumber(state.bloodcells)} Bloodcells. More progression is needed; no clear has been guaranteed.`;}
     catch(e){$('solverStatus').textContent=e.message;}
-    finally{$('planBtn').disabled=false;$('optimizeBtn').disabled=false;$('parseBtn').disabled=false;$('fileInput').disabled=false;$('clearBtn').disabled=false;}
+    finally{$('planBtn').disabled=false;$('optimizeBtn').disabled=false;$('parseBtn').disabled=false;$('fileInput').disabled=false;$('clearBtn').disabled=false;renderTrainer();}
   });
 
   $('trainBtn').addEventListener('click',async()=>{
-    if(!state||activeWorker)return;
+    if(!state||activeWorker||$('trainBtn').disabled)return;
     const btn=$('trainBtn'),q=quality(),generations=Number($('trainGenerations').value)||3;
     btn.disabled=true;$('optimizeBtn').disabled=true;$('planBtn').disabled=true;$('parseBtn').disabled=true;$('fileInput').disabled=true;$('clearBtn').disabled=true;
     try{
@@ -1210,13 +1242,13 @@ SKILL_PAGES.holeFloors={title:'Floors',world:'World 5',copy:'All 18 Hole caverns
       const trained=await workerJob('train',{...q,generations,timeMs,searchSeed:crypto.getRandomValues(new Uint32Array(1))[0],memory:memoryForBoard(),damageScale:calibration.scale,useSteroid:true,reviveDelaySeconds:currentReviveDelay(),searchFever:$('searchFever').checked});
       saveTraining(trained,q.objectiveMode);renderTrainer();
       const res=trained.best;lastResult=res;
-      const projected=E.cloneState(state);projected.fever=res.fever;
-      renderBoard($('bestBoard'),res.arrangement,projected);renderSummary($('bestSummary'),res.stats);renderTimeline($('bestTimeline'),res.stats);$('bestVerdict').innerHTML=verdict(res.stats);renderCellMix(res.arrangement,projected);
+      renderCompletedJelly(res);
+      $('alternativesPanel').classList.add('hidden');
       const stopping=trained.cap>=60?(trained.solved?'Reliable clear found; auto-training stopped early.':`No reliable clear after ${trained.generations} attempts; auto-training stopped at its cap.`):`Self-play completed ${trained.generations} generation${trained.generations===1?'':'s'}.`;
       $('layoutChanges').textContent=`${stopping} The validated result is retained in local memory and seeds later optimizer and trainer searches for this board.`;
       $('solverStatus').textContent=`Self-play saved: ${pct(res.stats.clearRate,0)} clear · ${E.formatTime(res.stats.medianClearTime)} median · ${res.stats.runs} final validation runs. ${stopping}`;
       $('nextMove').textContent='Use Plan next purchase to compare progression options.';$('planBtn').disabled=false;
-    }catch(e){if(e.message!=='Search cancelled.')fail(e.message);$('trainerStatus').textContent=e.message;}
+    }catch(e){restoreJellyResult();if(e.message!=='Search cancelled.')fail(e.message);$('trainerStatus').textContent=e.message;$('solverStatus').textContent=e.message;}
     finally{btn.disabled=!state;$('optimizeBtn').disabled=false;$('planBtn').disabled=!lastResult;$('parseBtn').disabled=false;$('fileInput').disabled=false;$('clearBtn').disabled=false;renderTrainer();}
   });
   $('clearMemoryBtn').addEventListener('click',()=>{

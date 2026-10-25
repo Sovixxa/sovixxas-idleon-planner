@@ -16,9 +16,11 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'playwright');
   window.Worker=class extends NativeWorker{constructor(...args){super(...args);this.addEventListener('message',({data})=>{
    if(data.type==='progress'&&data.progress?.arrangement)window.__jellyTrials.push(data.progress);
    if(data.type==='result'&&data.value?.arrangement&&data.value?.stats)window.__jellyResult=data.value;
+   if(data.type==='result'&&data.value?.best)window.__jellyResult=data.value.best;
   });} postMessage(data,...args){
    // Bound search breadth for UI coverage; retain the real solver and all result checks.
    if(data.job==='optimize')data={...data,options:{...data.options,timeMs:500,runs:8,mixLimit:12,shortlist:4,screenRuns:1,refineRuns:1,finalists:4,searchSeed:12345}};
+   if(data.job==='train')data={...data,options:{...data.options,generations:2,timeMs:900,runs:8,mixLimit:12,shortlist:4,screenRuns:1,refineRuns:1,finalists:2,searchSeed:12345}};
    return super.postMessage(data,...args);
   }};
  });
@@ -31,6 +33,11 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'playwright');
   assert((await page.locator('#bestSummary').textContent()).includes('Bloodcells / attempt'));
   assert((await page.locator('#bestSummary').textContent()).includes('Stronkroid'));
   assert((await page.locator('#bestSummary').textContent()).includes('activated in'));
+  const comparison=await page.evaluate(()=>({result:window.__jellyResult,current:document.querySelector('#currentCombatSettings').textContent,best:document.querySelector('#bestCombatSettings').textContent}));
+  assert(comparison.current.includes('Fever:'));
+  assert(comparison.best.includes('Fever:'));
+  assert(comparison.best.includes('Stronkroid'));
+  assert(comparison.best.includes(require('./engine').arrangementKey(comparison.result.arrangement)===require('./engine').arrangementKey(comparison.result.current)?'Same cell placements.':'Cell placements changed.'));
   assert((await page.locator('#bonusAudit').textContent()).includes('3 → 4, 6 → 8, 9 → 12'));
   if(goal==='chance'){
    const check=await page.evaluate(raw=>{
@@ -44,6 +51,32 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'playwright');
    assert((await page.locator('#bonusAudit').textContent()).includes(check.filled+'/'+check.slots));
   }
  }
+ await page.locator('#trainBtn').click();
+ await page.waitForFunction(()=>document.querySelector('#solverStatus').textContent.startsWith('Self-play saved:'),null,{timeout:120000});
+ assert(await page.locator('#replayPanel').isVisible(),'training supplies its own replay');
+ assert(await page.locator('#alternativesPanel').isHidden(),'old optimizer alternatives are not retained after training');
+ const trained=await page.evaluate(()=>({result:window.__jellyResult,baseline:document.querySelector('#currentCombatSettings').textContent}));
+ assert(trained.baseline.includes(require('./engine').FEVER_NAMES[trained.result.currentFever]));
+ const comparisonSnapshot=()=>page.evaluate(()=>JSON.stringify(['currentBoard','currentSummary','currentCombatSettings','bestBoard','bestSummary','bestCombatSettings','bestTimeline','replayStatus'].map(id=>document.getElementById(id).innerHTML)));
+ const completed=await comparisonSnapshot();
+ // Cancel after a preliminary training preview has actually replaced the UI.
+ await page.evaluate(()=>{
+  window.Worker=class {
+   postMessage(data){if(data.job==='calibrate')queueMicrotask(()=>this.onmessage({data:{type:'result',value:{scale:1,source:'custom'}}}));else if(data.job==='train'){
+    const result=window.__jellyResult;
+    queueMicrotask(()=>this.onmessage({data:{type:'progress',progress:{stage:'testing layouts',arrangement:result.arrangement.slice(1),feverIndex:result.fever,stats:{...result.stats,avgPeakDps:999999999}}}}));
+   }}
+   terminate(){}
+  };
+ });
+ await page.locator('#trainBtn').click();
+ await page.waitForFunction(()=>document.querySelector('#bestVerdict').textContent.includes('preliminary'));
+ assert(await page.locator('#optimizeBtn').isDisabled());assert(await page.locator('#trainBtn').isDisabled());
+ assert(await page.locator('#objectiveMode').isDisabled());assert(await page.locator('#searchFever').isDisabled());
+ await page.locator('#cancelBtn').click();
+ await page.waitForFunction(()=>document.querySelector('#solverStatus').textContent==='Search cancelled.');
+ assert.equal(await comparisonSnapshot(),completed,'cancel restores board, metrics, settings, timeline and replay together');
+ assert(await page.locator('#objectiveMode').isEnabled());assert(await page.locator('#searchFever').isEnabled());
  await page.screenshot({path:'../audit/jelly-objectives-desktop.png',fullPage:true}); await page.locator('.optimize-panel').screenshot({path:'../audit/jelly-controls-desktop.png'});
  await page.setViewportSize({width:390,height:844});assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
  await page.screenshot({path:'../audit/jelly-objectives-mobile.png',fullPage:true}); await page.locator('.optimize-panel').screenshot({path:'../audit/jelly-controls-mobile.png'});assert.deepEqual(errors,[]);
