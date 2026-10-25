@@ -672,6 +672,7 @@ SKILL_PAGES.holeFloors={title:'Floors',world:'World 5',copy:'All 18 Hole caverns
     window.AccountReview.render(panels.review,raw);
     host.querySelectorAll('[data-review-tab]').forEach(button=>button.onclick=()=>{
       const selected=button.dataset.reviewTab;
+      try{localStorage.setItem('idleon.review-tab',selected);}catch{}
       host.querySelectorAll('[data-review-tab]').forEach(tab=>{const active=tab.dataset.reviewTab===selected;tab.classList.toggle('active',active);tab.setAttribute('aria-selected',String(active));});
       Object.entries(panels).forEach(([id,panel])=>panel.classList.toggle('hidden',id!==selected));
       if(ready.has(selected))return;
@@ -679,6 +680,7 @@ SKILL_PAGES.holeFloors={title:'Floors',world:'World 5',copy:'All 18 Hole caverns
       if(selected==='afkTester')window.AfkTester.render(panels.afkTester,state||{rawData:raw.data||raw,rawRoot:raw});
 
     });
+    try{if(localStorage.getItem('idleon.review-tab')==='afkTester')host.querySelector('[data-review-tab="afkTester"]').click();}catch{}
   }
   function renderWorldPage(name){
     if(name==='dailies'){$('worldContent').dataset.page=name;window.Dashboard.render($('worldContent'),loadedExport||state?.rawRoot||{});return;}

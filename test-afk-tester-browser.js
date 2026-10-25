@@ -11,6 +11,7 @@ const fs=require('node:fs'),path=require('node:path'),assert=require('node:asser
   return route.fulfill({contentType:({'.js':'text/javascript','.css':'text/css','.html':'text/html','.png':'image/png','.json':'application/json','.svg':'image/svg+xml'})[path.extname(file)]||'application/octet-stream',body:fs.readFileSync(file)});
  });
  await page.goto('http://localhost:7331/');
+ await page.locator('#quickNotesToggle').click();
  const raw=JSON.parse(fs.readFileSync('../example json.txt','utf8'));
  const keys=Object.keys(raw.data).filter(k=>/^Lv0_\d+$/.test(k)),count=keys.length;
  for(const key of keys){const id=Number(key.slice(4));for(const k of [key,'Exp0_'+id,'ExpReq0_'+id])if(typeof raw.data[k]==='string')raw.data[k]=JSON.parse(raw.data[k]);raw.data[key][0]=id===0?499:500;raw.data['Exp0_'+id][0]=0;raw.data['ExpReq0_'+id][0]=require('./afk-tester').requirement(raw.data[key][0]);}
@@ -25,6 +26,23 @@ const fs=require('node:fs'),path=require('node:path'),assert=require('node:asser
  assert((await page.locator('[data-afk-summary]').innerText()).includes(`${count-1} / ${count} at target level`));
  const maps=page.locator('[data-afk-node="0"]');
  const savedMap=await maps.inputValue(),savedRate=await page.locator('[data-afk-row="0"][data-afk-field="rate"]').inputValue();
+ await page.locator('.afk-options').screenshot({path:'../audit/afk-planning-options.png'});
+ // Scenario controls recalculate saved inputs, never mutate the imported save.
+ const waitRate=()=>page.waitForFunction(()=>document.querySelector('[data-afk-source="0"]')?.textContent.startsWith('Calculated for'),{},{timeout:60000});
+ await page.locator('[data-afk-option="boostFoods"]').check();
+ const foodSelect=page.locator('[data-afk-food-row="0"][data-afk-food-id="FoodPotYe5"]');
+ await foodSelect.check();
+ await waitRate();
+ assert.notEqual(await page.locator('[data-afk-row="0"][data-afk-field="rate"]').inputValue(),savedRate);
+ await page.locator('[data-afk-option="boostFoods"]').uncheck();
+ await waitRate();
+ assert.equal(await page.locator('[data-afk-row="0"][data-afk-field="rate"]').inputValue(),savedRate);
+ await page.locator('[data-afk-option="statueWeek"]').check();
+ await waitRate();
+ assert.notEqual(await page.locator('[data-afk-row="0"][data-afk-field="rate"]').inputValue(),savedRate);
+ await page.locator('[data-afk-reset]').click();await waitRate();
+ assert.equal(await page.locator('[data-afk-option="boostFoods"]').isChecked(),false);
+ assert.equal(await page.locator('[data-afk-row="0"][data-afk-field="rate"]').inputValue(),savedRate);
  const remaining=(await page.locator('[data-afk-result="0"]').innerText()).match(/EXP remaining: [^\n]+/)[0];
  const options=await maps.locator('option').evaluateAll(els=>els.map(e=>e.value));
  assert(options.length>20,'Combat map choices should be available');
@@ -51,7 +69,7 @@ const fs=require('node:fs'),path=require('node:path'),assert=require('node:asser
  await page.locator('[data-afk-skill]').selectOption('17');
  assert.equal(await page.locator('[data-afk-row="0"][data-afk-field="level"]').inputValue(),String(raw.data.Lv0_0[17]));
  assert.equal(await page.locator('[data-afk-mode] option[value="balloons"]').evaluate(el=>el.disabled),true);
- assert.match(await page.locator('.afk-tester').innerText(),/balloons cannot be used for Sneaking/);
+ assert.match(await page.locator('.afk-tester').textContent(),/balloons cannot be used for Sneaking/);
  const sneakLevel=raw.data.Lv0_0[17];
  await page.locator('[data-afk-target]').fill(String(sneakLevel+1));
  await page.locator('[data-afk-row="0"][data-afk-field="rate"]').fill(String((raw.data.ExpReq0_0[17]-raw.data.Exp0_0[17])/2));
@@ -72,7 +90,7 @@ const fs=require('node:fs'),path=require('node:path'),assert=require('node:asser
  }
  const nodeOptions=await page.locator('[data-afk-node="0"] option').evaluateAll(els=>els.map(e=>e.value));
  await page.locator('[data-afk-node="0"]').selectOption(nodeOptions[1]);
- assert.match(await page.locator('[data-afk-source="0"]').innerText(),/Calculated for/);
+ assert.match(await page.locator('[data-afk-source="0"]').textContent(),/Calculated for/);
  await page.locator('[data-afk-mode]').selectOption('balloons');
  assert(Number(await page.locator('[data-afk-row="0"][data-afk-field="multiplier"]').inputValue())>1);
 
@@ -93,7 +111,7 @@ const fs=require('node:fs'),path=require('node:path'),assert=require('node:asser
  assert.equal(await page.locator('[data-afk-target]').inputValue(),String(sneakLevel+1));
  await page.locator('[data-afk-skill]').selectOption('20');
  assert(Number(await page.locator('[data-afk-row="0"][data-afk-field="rate"]').inputValue())>0);
- assert.match(await page.locator('[data-afk-source="0"]').innerText(),/Research observations/);
+ assert.match(await page.locator('[data-afk-source="0"]').textContent(),/Research observations/);
  await page.locator('[data-afk-skill]').selectOption('11');
  assert.equal(await page.locator('.afk-character').count(),1);
  await page.locator('[data-afk-skill]').selectOption('0');
@@ -128,7 +146,7 @@ const fs=require('node:fs'),path=require('node:path'),assert=require('node:asser
  await candyHost.locator('[data-afk-candy]').selectOption('Timecandy3');
  assert.match(await candyHost.locator('[data-afk-result="0"]').innerText(),/Candy needed: 1/);
  await candyHost.locator('[data-afk-candy]').selectOption('Timecandy9');
- assert.match(await candyHost.innerText(),/best\/worst duration bounds/);
+ assert.match(await candyHost.textContent(),/best\/worst duration bounds/);
  await candyHost.locator('[data-afk-skill]').selectOption('17');
  assert(await candyHost.locator('option[value="candy"]').evaluate(el=>el.disabled));
  assert.deepEqual(errors,[]);console.log('AFK tester browser: navigation, import, estimates, tab persistence, reset, mobile layout, skill dropdown, balloon restrictions and calculations, removed redundant EXP sections and legacy redirects passed.');
