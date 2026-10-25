@@ -231,8 +231,17 @@ const VERSION='0.9.9-alchemy-bubbles';
     let b=state?.rawData?.BundlesReceived;if(typeof b==='string'){try{b=JSON.parse(b);}catch(_){b=null;}}
     return b&&typeof b==='object'&&asNum(b[key],0)===1?1:0;
   }
+  const rawArrayCache=new WeakMap();
   function rawArray(state,key){
-    let v=state?.rawData?.[key];if(typeof v==='string'){try{v=JSON.parse(v);}catch(_){v=null;}}
+    const data=state?.rawData;let v=data?.[key];
+    if(typeof v==='string'){
+      // Exports contain JSON strings. Combat reads upgrade doublers on every
+      // hit; parse each unchanged field once, not thousands of times per run.
+      let cache=rawArrayCache.get(data);if(!cache){cache=new Map();rawArrayCache.set(data,cache);}
+      const cached=cache.get(key);if(cached&&cached.source===v)return cached.value;
+      const source=v;try{v=JSON.parse(v);}catch(_){v=null;}
+      v=Array.isArray(v)?v:null;cache.set(key,{source,value:v});
+    }
     return Array.isArray(v)?v:null;
   }
   function paletteCellDamageBonus(state){
@@ -907,6 +916,23 @@ const VERSION='0.9.9-alchemy-bubbles';
     kept=[...kept,{type:target.type,anchor:target.anchor,cells:target.cells.slice()}];
     return rng()<.5?generateRoleAwareLayout(state,index,rng,kept):generateLayout(state,index,rng,kept);
   }
+  function* replacementLayouts(state,index,arr){
+    // Enumerate exact insertions instead of hoping random deletion opens a useful
+    // footprint. Evict whole shapes and retain all unaffected support positions.
+    const key=arrangementKey(arr),seen=new Set([key]);
+    const byType=Array.from({length:unitsOwned(state)},(_,type)=>index.placements.filter(p=>p.type===type));
+    const targets=[];
+    for(let at=0;at<Math.max(0,...byType.map(lane=>lane.length));at++)for(const lane of byType)if(lane[at])targets.push(lane[at]);
+    for(const target of targets){
+      if(arr.some(p=>p.type===target.type&&p.anchor===target.anchor))continue;
+      const occupied=new Set(target.cells);
+      const kept=arr.filter(p=>!p.cells.some(c=>occupied.has(c)));
+      if(target.type===5&&kept.filter(p=>p.type===5).length>=virusLimit(state))continue;
+      const next=fillEmptySlots(state,[...kept,{type:target.type,anchor:target.anchor,cells:target.cells.slice()}]);
+      const nextKey=arrangementKey(next);if(seen.has(nextKey))continue;
+      seen.add(nextKey);yield {arr:next,type:target.type};
+    }
+  }
   function localImproveLayout(state,index,rng,arr,maxSteps=6,deadline=Infinity){
     // A random layout is good at discovering a cell mix, but poor at arranging a
     // discovered mix around Organelle, Virus and Proximity cells.  This bounded
@@ -948,21 +974,78 @@ const VERSION='0.9.9-alchemy-bubbles';
     }
     return true;
   }
+  function diverseSearchLeaders(candidates,limit,diversity=false){
+    const ranked=candidates.slice().sort((a,b)=>b.obj-a.obj);
+    if(!diversity)return ranked.slice(0,limit);
+    const chosen=ranked.slice(0,Math.ceil(limit/2)),keys=new Set(chosen.map(c=>c.key)),families=new Set(chosen.map(c=>c.beamFamily??c.supportKey??c.key));
+    for(const c of ranked){
+      if(chosen.length>=limit)break;
+      const family=c.beamFamily??c.supportKey??c.key;
+      if(keys.has(c.key)||families.has(family))continue;
+      chosen.push(c);keys.add(c.key);families.add(family);
+    }
+    for(const c of ranked){if(chosen.length>=limit)break;if(!keys.has(c.key)){chosen.push(c);keys.add(c.key);}}
+    return chosen;
+  }
+  function searchLayoutBeam(seeds,options){
+    const width=Math.max(2,Math.min(12,Math.round(asNum(options.width,6)))),maxDepth=Math.max(1,Math.min(6,Math.round(asNum(options.depth,3))));
+    const deadline=asNum(options.deadline,Infinity),visited=new Set(),summary={depth:0,evaluated:0,duplicates:0};
+    let frontier=diverseSearchLeaders(seeds,width,options.preserveDiversity),best=frontier[0]||null;
+    for(const c of frontier)visited.add(c.key);
+    for(let depth=1;depth<=maxDepth&&frontier.length&&performanceNow()<deadline;depth++){
+      const now=performanceNow(),levelDeadline=now+(deadline-now)/(maxDepth-depth+1),expansionDeadline=now+(levelDeadline-now)*.4,pool=new Map();
+      for(let i=0;i<frontier.length&&performanceNow()<expansionDeadline;i++){
+        const parentDeadline=performanceNow()+(expansionDeadline-performanceNow())/(frontier.length-i);
+        for(const c of options.expand(frontier[i],parentDeadline)){
+          if(visited.has(c.key)||pool.has(c.key)){summary.duplicates++;continue;}
+          pool.set(c.key,c);
+        }
+      }
+      // Retain different support mixes as well as strong static damage. Every
+      // retained child is judged by timed combat for the selected objective.
+      const ranked=[...pool.values()].sort((a,b)=>b.proxy-a.proxy),selected=new Map(),families=new Set();
+      const limit=width*3;
+      for(const c of ranked){
+        const family=c.beamFamily??c.supportKey??c.key;
+        if(families.has(family))continue;families.add(family);selected.set(c.key,c);
+        if(selected.size>=width)break;
+      }
+      for(const c of ranked){if(selected.size>=limit)break;selected.set(c.key,c);}
+      const next=[];
+      for(const c of selected.values()){
+        if(performanceNow()>=levelDeadline)break;
+        visited.add(c.key);options.evaluate(c);summary.evaluated++;next.push(c);
+        if(!best||c.obj>best.obj)best=c;
+      }
+      if(!next.length)break;
+      summary.depth=depth;
+      // Advance even when all children are temporarily worse than the parent.
+      // Two coordinated replacements can beat a single-step local optimum.
+      frontier=diverseSearchLeaders(next,width,options.preserveDiversity);
+      options.onDepth?.({...summary,best});
+    }
+    return {...summary,best};
+  }
   function optimizeTimed(state,options={}){
     const start=performanceNow(),timeMs=Math.max(500,asNum(options.timeMs,3500)),current=arrangementFromBoard(state);
     const deadline=Math.min(start+timeMs,asNum(options.deadline,Infinity)),screenDeadline=start+Math.max(0,deadline-start)*.7;
+    const lookaheadDepth=Math.max(0,Math.min(6,Math.round(asNum(options.lookaheadDepth,0))));
+    const initialScreenDeadline=start+Math.max(0,deadline-start)*(lookaheadDepth? .3:.4);
     const cal=options.damageScale?{scale:asNum(options.damageScale,1),source:'custom'}:autoDamageScale(state,current),damageScale=cal.scale;
     const reviveDelaySeconds=Math.max(0,asNum(options.reviveDelaySeconds,0)),index=buildPlacementIndex(state);
     const rng=seededRng(asNum(options.searchSeed,0xB00B5)),candidates=new Map(),currentKey=arrangementKey(current);
     const shortlistTarget=Math.max(16,Math.min(120,Math.round(asNum(options.shortlist,48))));
     const report=(stage,detail)=>{if(typeof options.onProgress==='function')options.onProgress({stage,...detail});};
     const clearGoal=!options.objectiveMode||options.objectiveMode==='chance';
+    const adaptiveClear=clearGoal&&!!options.adaptiveClear;
     function add(arr,preserve=false){
       if(clearGoal&&!preserve)arr=fillEmptySlots(state,arr);
       const key=arrangementKey(arr);if(candidates.has(key))return candidates.get(key);
       const score=layoutScore(state,arr),counts=score.counts,shields=counts[4],prox=arr.filter(p=>PROXIMITY_CORES.has(p.anchor)).length;
       const c={arr,key,proxy:options.objectiveMode==='cellExp'?cellExpProjection(state,state.cellExp.map((exp,t)=>asNum(exp)+counts[t]*cellExpMultiplier(state)*100/Math.max(0.1,BASE_CD[t]||1))).levelProgressGained:score.withJellyUpgrades,score,counts,shields,prox,
-        supportKey:[shields>0,score.organelleBoosted>0,score.infectedSlots>0,prox>0,counts.some((n,t)=>t!==5&&n>=3&&upgradeQty(state,14)>=1)].join(':')};candidates.set(key,c);return c;}
+        supportKey:[shields>0,score.organelleBoosted>0,score.infectedSlots>0,prox>0,counts.some((n,t)=>t!==5&&n>=3&&upgradeQty(state,14)>=1)].join(':')};
+      if(clearGoal)c.beamFamily=shields+':'+(upgradeQty(state,28)>=1?Math.floor(counts[0]/6):0);
+      candidates.set(key,c);return c;}
     add(current,true);add(current);
     if(options.incumbentArr&&isLegalLayout(state,options.incumbentArr)){add(options.incumbentArr,true);add(options.incumbentArr);}
     const constructionDeadline=Math.min(screenDeadline,start+Math.max(0,deadline-start)*.15);
@@ -1055,21 +1138,53 @@ const VERSION='0.9.9-alchemy-bubbles';
     }
     report('screening',{candidates:candidates.size});
     for(const c of shortlist.values()){
-      if(screened.length>=Math.min(2,shortlist.size)&&performanceNow()>=screenDeadline)break;
+      if(screened.length>=Math.min(2,shortlist.size)&&performanceNow()>=initialScreenDeadline)break;
       screen(c);
+    }
+    let lookahead={depth:0,evaluated:0,duplicates:0};
+    if(lookaheadDepth){
+      const result=searchLayoutBeam(screened,{
+        depth:lookaheadDepth,width:options.beamWidth,preserveDiversity:clearGoal,deadline:start+Math.max(0,deadline-start)*.62,
+        expand(parent,until){
+          const children=[];
+          for(const next of replacementLayouts(state,index,parent.arr)){
+            if(performanceNow()>=until)break;
+            children.push(add(next.arr));
+          }
+          return children;
+        },
+        evaluate:screen,
+        onDepth:p=>report('lookahead depth '+p.depth,{tested:simulated,candidates:candidates.size,depth:p.depth})
+      });
+      lookahead={depth:result.depth,evaluated:result.evaluated,duplicates:result.duplicates};
     }
     // Mutate multiple timed elites. Deleting whole cells leaves legal empty squares;
     // refilling can relocate cores, change mixes, or add shielding.
     const mutations=Math.max(16,Math.min(240,Math.round(timeMs/35)));
+    let neighbours=[];
     for(let i=0;i<mutations;i++){
       if(performanceNow()>=screenDeadline)break;
       screened.sort((a,b)=>b.obj-a.obj);
       const parent=screened[Math.floor(rng()*Math.min(8,screened.length))];
+      if(i%12===0){
+        // Keep separate cell-type lanes: raw DPS must not eliminate shields or
+        // EXP cells before the actual requested objective has tested them.
+        const lanes=new Map(),neighbourDeadline=Math.min(screenDeadline,performanceNow()+Math.max(5,timeMs*.025));
+        for(const next of replacementLayouts(state,index,screened[0].arr)){
+          if(performanceNow()>=neighbourDeadline)break;
+          const c=add(next.arr);if(c.stats)continue;
+          const lane=lanes.get(next.type)||[];lane.push(c);lanes.set(next.type,lane);
+        }
+        for(const lane of lanes.values())lane.sort((a,b)=>b.proxy-a.proxy);
+        neighbours=[];
+        for(let depth=0;depth<2;depth++)for(const lane of lanes.values())if(lane[depth])neighbours.push(lane[depth]);
+      }
+      if(neighbours.length&&i%3!==2){screen(neighbours.shift());continue;}
       const removeCount=1+Math.floor(rng()*Math.max(2,parent.arr.length*.15));
       const removed=new Set();for(let n=0;n<removeCount;n++)removed.add(Math.floor(rng()*parent.arr.length));
       const kept=parent.arr.filter((_,i)=>!removed.has(i));
       let child=i%3===0?rebuildLayoutPatch(state,index,rng,parent.arr):i%3===1?relocateLayout(state,index,rng,parent.arr):generateLayout(state,index,rng,kept);
-      if(i%3!==0)child=localImproveLayout(state,index,rng,child,2,screenDeadline);
+      if(i%3!==0)child=localImproveLayout(state,index,rng,child,2,Math.min(screenDeadline,performanceNow()+Math.max(2,timeMs*.005)));
       const c=add(child);screen(c);
       if(i%10===0)report('refining',{tested:simulated,bestClearRate:screened[0].stats.clearRate});
     }
@@ -1081,7 +1196,7 @@ const VERSION='0.9.9-alchemy-bubbles';
     const refineCount=Math.max(0,Math.min(screened.length,Math.round(asNum(options.refineCount,Math.min(12,shortlistTarget)))));
     let finalistPool=screened;
     if(refineRuns>screenRuns&&refineCount){
-      const cohort=screened.slice(0,refineCount);finalistPool=[];
+      const cohort=diverseSearchLeaders(screened,refineCount,clearGoal&&lookaheadDepth>0);finalistPool=[];
       for(let i=0;i<cohort.length;i++){
         if(i&&performanceNow()>=deadline)break;
         const c=cohort[i];report('deep rechecking',{index:i+1,total:cohort.length,runs:refineRuns});
@@ -1107,14 +1222,28 @@ const VERSION='0.9.9-alchemy-bubbles';
       // Timing selection uses training seeds; final comparison uses independent seeds.
       const plan=optimizeSteroidStart(state,c.arr,{...common,runs:Math.max(1,asNum(options.timingRuns,3)),timingSearch:options.timingSearch,incumbentSteroidStart:c.key===arrangementKey(incumbent)?options.incumbentSteroidStart:undefined,seed:0x57E2});
       const stats=simulateMany(state,c.arr,{...common,runs:fullRuns,seed:0xD00D,steroidStartSeconds:plan.start});
-      showBest(c,stats,true);
+      if(!adaptiveClear)showBest(c,stats,true);
       plans.push({c,plan,stats,obj:timedObjective(stats,options.objectiveMode)});simulated++;
+    }
+    let extraClearValidation=false;
+    if(adaptiveClear&&fullRuns<500&&plans.length>1){
+      const ordered=plans.slice().sort((a,b)=>b.obj-a.obj),leader=ordered[0];
+      // Close sampled clear rates need more evidence. Re-evaluate the whole
+      // finalist cohort equally, including the saved board, before choosing.
+      if(leader.stats.clearRate>0&&ordered.slice(1).some(p=>clearConfidence(p.stats)[1]>=clearConfidence(leader.stats)[0])){
+        extraClearValidation=true;
+        for(let i=0;i<plans.length;i++){
+          const p=plans[i];report('checking close clear contenders',{index:i+1,total:plans.length,runs:500});
+          p.stats=simulateMany(state,p.c.arr,{...common,runs:500,seed:0xD00D,steroidStartSeconds:p.plan.start});
+          p.obj=timedObjective(p.stats,options.objectiveMode);simulated++;
+        }
+      }
     }
     plans.sort((a,b)=>b.obj-a.obj||b.c.score.filledSlots-a.c.score.filledSlots);const best=plans[0],baseline=plans.find(p=>p.c.key===currentKey);
     showBest(best.c,best.stats,true,true);
-    report('complete',{clearRate:best.stats.clearRate,runs:fullRuns});
+    report('complete',{clearRate:best.stats.clearRate,runs:best.stats.runs});
     return {arrangement:best.c.arr,stats:best.stats,current,currentStats:baseline.stats,damageScale,calibration:cal,
-      mixesTested:generationCount,tilings:candidates.size,candidates:candidates.size,simulated,timeMs:performanceNow()-start,
+      mixesTested:generationCount,tilings:candidates.size,candidates:candidates.size,simulated,lookahead,extraClearValidation,timeMs:performanceNow()-start,
       slots:index.slots.length,score:layoutScore(state,best.c.arr),currentScore:layoutScore(state,current),
       steroidStart:common.useSteroid&&steroidUnlocked(state)?best.plan.start:null,
       currentSteroidStart:common.useSteroid&&steroidUnlocked(state)?baseline.plan.start:null,reviveDelaySeconds,
@@ -1261,5 +1390,5 @@ const VERSION='0.9.9-alchemy-bubbles';
   return {VERSION,COMBAT_MODEL_VERSION,bonusAudit,bloodcellBonuses,arcadeBloodcellBonus,dpsBloodcellMultiplier,researchGridBonus,cellDetails,CELL_PASSIVES,CELL_ABILITIES,FEVER_NAMES,optimizeOperation,clearConfidence,COLS,ROWS,BOARD_SIZE,FPS,UNIT_NAMES,UNIT_IMG_DIMS,UNIT_VISUAL_OFFSET,UPGRADE_META,UPGRADE_ORDER,PLOTS,SHAPE_OFFSETS,SHAPE_COORDS,BULLET_LAUNCH,PROXIMITY_CORES,BLOCKED_CENTER,SUSHI_ROG_BONUS,
     JELLY_DOUBLER_IDS,jellyDoublerRows,parseInput,makeState,cloneState,upgradeQty,unitsOwned,virusLimit,feverUnlocked,critUnlocked,steroidUnlocked,reviveCount,bossHP,bossTime,bossAtkCD,cellExpReq,cellExpProjection,cellExpMultiplier,canLevelCells,obstructionTier,bundleFlag,slotPurchasesLeft,plotCells,plotLabel,
     unlockedSlots,footprint,placementsForState,arrangementFromBoard,rawCounts,effectiveCounts,rawArray,paletteCellDamageBonus,companionGridBonus,dreamCloudBonus,gridAllMultiplier,gridCellDamageBonus,externalDamageStatus,sushiUniqueCount,sushiRogBonus,organelleSpeedMultiplier,organelleBoosted,infectedSlots,combatModel,jellyDamageMultiplier,layoutScore,backInEase,projectileLaunchPosition,projectileHitDelayFrames,simulateOne,simulateMany,autoDamageScale,calibrateToObservedClearTime,steroidStartCandidates,optimizeSteroidStart,optimizeTimed,
-    upgradeCost,upgradeLevelReq,upgradeCandidates,upgradeRoadmap,planUpgradePurchases,findUpgradeTarget,recommendNextPlot,arrangementGrid,formatNumber,formatTime,arrangementKey,isLegalLayout,fillEmptySlots,relocateLayout,rebuildLayoutPatch,localImproveLayout,generateLayout,generateRoleAwareLayout,generateSupportLayout,generateBreakpointLayout,enumerateMixes,buildPlacementIndex,tileMix,timedObjective,seededRng};
+    upgradeCost,upgradeLevelReq,upgradeCandidates,upgradeRoadmap,planUpgradePurchases,findUpgradeTarget,recommendNextPlot,arrangementGrid,formatNumber,formatTime,arrangementKey,isLegalLayout,fillEmptySlots,relocateLayout,rebuildLayoutPatch,localImproveLayout,generateLayout,generateRoleAwareLayout,generateSupportLayout,generateBreakpointLayout,enumerateMixes,buildPlacementIndex,tileMix,timedObjective,seededRng,searchLayoutBeam};
 });

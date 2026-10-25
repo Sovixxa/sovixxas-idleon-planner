@@ -178,12 +178,14 @@ breakpoints (3 → 4, 6 → 8, 9 → 12 effective passive counts, excluding Viru
 Saved and remembered partial boards remain comparison controls, alongside filled
 versions. Other objectives can still explore partial boards. Stronkroid timing
 includes Critical Condition, not just the normal timer.
-Screening compares up to five Stronkroid timings per board; refinement performs
-the full timing search before narrowing the finalists. Summaries show the chosen
+Screening compares a small set of Stronkroid timings per board; finalists receive
+a separate timing search before final validation. Summaries show the chosen
 time and the number of attempts in which Stronkroid actually activated.
 After it discovers a strong cell mix, it also performs bounded legal local placement
 refinement so adjacency, infection and Proximity arrangements are deliberately tested.
-Quick/Normal/Deep use 32/128/384 runs per finalist. This is a bounded heuristic search,
+Quick/Normal/Deep use 16/128/384 runs per finalist. For close clear-chance results,
+Deep rechecks every finalist and the saved board with 500 runs before selecting a
+winner. Extended uses 500 runs from the start. This is a bounded heuristic search,
 not a proof of the globally best layout. Failed attempts are ranked by remaining
 boss HP at the END of Critical, not just damage at the normal timer.
 
@@ -204,9 +206,26 @@ After loading a save, use the Optimizer, Practice game and Upgrades & bonuses ta
 keep each activity focused. The pasted JSON is removed from the page after parsing;
 use Change local save to load a different export.
 
-Deep search uses a larger candidate pool, role-aware placement refinement, an
-independent intermediate recheck of the strongest candidates, then 384-run finalist
-validation. The Upgrade optimizer separates immediate board damage and Bloodcell
+Deep · lookahead uses a larger candidate pool and searches sequences of up to three
+legal replacements, retaining up to six promising boards at each depth. Intermediate
+boards can be weaker than their parents, allowing coordinated changes to escape a
+single-step local optimum. Duplicate layouts reuse their evaluations. The requested
+objective's timed combat results rank the explored positions, followed by an
+independent intermediate recheck and 384-run finalist validation. Search depth is
+bounded by the available time and shown in the result. This is a Jelly-specific
+beam search, not the Stockfish chess engine.
+For clear chance, the search retains different Immunoid counts and Amoeba weakening
+mixes through multiple depths instead of keeping only similar high-scoring boards.
+Extended · more thinking increases the exploration budget to 45 seconds, looks up
+to five changes ahead with eight retained boards, and uses larger screening and
+timing samples. Final validation can take additional time; Cancel remains available.
+Run `npm run test:jelly-lookahead` for local-optimum, duplicate, deadline and real
+combat checks across all four goals; `npm run test:jelly-lookahead-browser` exercises
+the actual Deep settings and cancellation/responsiveness in Chromium.
+`npm run test:jelly-clear-thinking` also checks defensive-route retention and fair
+500-run rechecks. Set `JELLY_SEARCH_QUALITY=extended` when running
+`test-jelly-lookahead-browser.js` to exercise the actual Extended settings.
+The Upgrade optimizer separates immediate board damage and Bloodcell
 multiplier math from one-time unlocks, which are clearly marked for re-optimization.
 
 Search and purchase planning run in a cancellable browser worker. Drag the sample

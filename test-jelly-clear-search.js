@@ -2,6 +2,18 @@
 const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
 const E=require('./engine');
 const source=fs.readFileSync(require.resolve('./engine'),'utf8');
+// Crowded-board neighbourhoods must include every legal single-shape insertion,
+// without displacing unrelated support cells or modifying the input board.
+const neighbourhoodBox={module:{exports:{}},performance};
+vm.runInNewContext(source.replace('return {VERSION,COMBAT_MODEL_VERSION,','return {replacementLayouts,VERSION,COMBAT_MODEL_VERSION,'),neighbourhoodBox);
+const crowded=E.makeState(Array.from({length:19},()=>[]));crowded.upgrades.fill(1,0,8);
+const crowdedIndex=E.buildPlacementIndex(crowded),crowdedBoard=E.fillEmptySlots(crowded,[]),crowdedBefore=JSON.stringify(crowdedBoard);
+const neighbours=[...neighbourhoodBox.module.exports.replacementLayouts(crowded,crowdedIndex,crowdedBoard)];
+for(const p of crowdedIndex.placements.filter(p=>p.type!==0&&(p.type!==5||E.virusLimit(crowded)>0))){
+ assert(neighbours.some(n=>n.arr.some(q=>q.type===p.type&&q.anchor===p.anchor)),'targeted insertion at '+p.anchor+'/'+p.type);
+}
+for(const n of neighbours){assert(E.isLegalLayout(crowded,n.arr));assert.equal(E.layoutScore(crowded,n.arr).filledSlots,crowdedIndex.slots.length);}
+assert.equal(JSON.stringify(crowdedBoard),crowdedBefore);
 const state=E.makeState(Array.from({length:19},()=>[]));
 state.upgrades[0]=1;state.upgrades[1]=1;state.upgrades[16]=2;
 state.board[77]=0;

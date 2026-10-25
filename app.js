@@ -239,7 +239,8 @@ SKILL_PAGES.holeFloors={title:'Floors',world:'World 5',copy:'All 18 Hole caverns
   function quality(){
     const q=$('searchQuality').value,objectiveMode=$('objectiveMode')?.value||'chance';
     if(q==='quick')return {timeMs:1800,runs:16,mixLimit:100,shortlist:20,screenRuns:1,refineRuns:4,refineCount:4,finalists:2,timingRuns:1,timingSearch:'coarse',objectiveMode};
-    if(q==='deep')return {timeMs:15000,runs:384,mixLimit:1050,shortlist:104,screenRuns:3,refineRuns:32,refineCount:24,finalists:12,objectiveMode};
+    if(q==='extended')return {timeMs:45000,runs:500,mixLimit:1200,shortlist:120,screenRuns:6,refineRuns:64,refineCount:32,finalists:12,timingRuns:12,lookaheadDepth:5,beamWidth:8,adaptiveClear:true,objectiveMode};
+    if(q==='deep')return {timeMs:15000,runs:384,mixLimit:1050,shortlist:104,screenRuns:3,refineRuns:32,refineCount:24,finalists:12,timingRuns:8,lookaheadDepth:3,beamWidth:6,adaptiveClear:true,objectiveMode};
     return {timeMs:5200,runs:128,mixLimit:480,shortlist:64,screenRuns:2,refineRuns:12,refineCount:8,finalists:4,timingRuns:3,objectiveMode};
   }
   function currentReviveDelay(){return Math.max(0,Number($('reviveDelay')?.value)||0);}
@@ -1161,7 +1162,7 @@ SKILL_PAGES.holeFloors={title:'Floors',world:'World 5',copy:'All 18 Hole caverns
       const currentMap=new Map(res.current.map(p=>[p.anchor,p.type]));
       const removed=res.current.filter(p=>!res.arrangement.some(x=>x.anchor===p.anchor&&x.type===p.type)).length;
       const added=res.arrangement.filter(p=>currentMap.get(p.anchor)!==p.type).length;
-      $('layoutChanges').textContent=`${res.candidates} candidate layouts generated · ${res.simulated} layouts evaluated in the winning Fever search. ${removed} old placements removed; ${added} new placements. Empty unlocked squares: ${res.slots-res.score.filledSlots}.`;
+      $('layoutChanges').textContent=`${res.candidates} candidate layouts generated · ${res.simulated} evaluation batches in the winning Fever search.${res.lookahead?.depth?` Lookahead reached ${res.lookahead.depth} changes deep; ${res.lookahead.evaluated} positions checked.`:''} ${removed} old placements removed; ${added} new placements. Empty unlocked squares: ${res.slots-res.score.filledSlots}.`;
       const alternatives=$('alternatives');alternatives.innerHTML='';
       for(const [i,alt] of res.alternatives.entries()){
         const card=document.createElement('article');card.className='panel';

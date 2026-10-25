@@ -250,11 +250,13 @@
               <select id="searchQuality">
                 <option value="quick">Quick</option>
                 <option value="normal" selected>Normal</option>
-                <option value="deep">Deep</option>
+                <option value="deep">Deep · lookahead</option>
+                <option value="extended">Extended · more thinking</option>
               </select>
             </label>
           </div>
           <p id="jellyObjectiveNote" class="fountain-note">Prioritizes the highest simulated clear chance, then the fastest median successful clear among layouts tied on clear chance. Searches layouts, unlocked Fevers and Stronkroid timing.</p>
+          <p class="fountain-note">Deep looks up to three changes ahead and uses 384–500 runs per finalist. Extended looks up to five changes ahead, allows 45 seconds for exploration, then validates finalists with 500 runs each. Both keep different survival setups in play. You can cancel a search at any time.</p>
           <div class="jelly-optimizer-actions">
             <label class="check"><input id="searchFever" type="checkbox" checked> Compare unlocked Fevers</label>
             <div class="jelly-optimizer-buttons">
@@ -265,6 +267,24 @@
         <div id="solverStatus" class="solver-status" aria-live="polite">Parse your JSON first.</div>
         <div id="calibrationNote" class="calibration-note"></div>
       </section>
+
+      <details id="jellyThunkers" class="panel thunkers-panel">
+        <summary><span>Extended-ed Thunkers-ing- for Naught</span><span class="thunkers-badge">JOKE MODE</span></summary>
+        <div class="thunkers-content">
+          <p>For when Extended has not extended enough. Comedy only: imaginary calculations, absolutely no real recommendations.</p>
+          <div class="thunkers-stage">
+            <div id="thunkersBoard" class="thunkers-board" aria-hidden="true"></div>
+            <div class="thunkers-console">
+              <p class="thunkers-caption">THE BOARD OF QUESTIONABLE DECISIONS · decorative jelly only</p>
+              <p id="thunkersStatus" role="status">One brain cell. Unlimited administrative overhead.</p>
+              <progress id="thunkersProgress" max="100" value="0" aria-label="Completely imaginary progress"></progress>
+              <p id="thunkersVerdict" class="thunkers-verdict" hidden></p>
+            </div>
+          </div>
+          <div class="thunkers-actions"><button id="thunkersStart" type="button" class="secondary">Engage the thunk</button><button id="thunkersStop" type="button" class="secondary" disabled>Mercy. Stop thunking.</button></div>
+          <small>No boards, saves, or playbook results are changed. Only the jelly's ego is at risk.</small>
+        </div>
+      </details>
 
       <section class="panel trainer-panel">
         <div class="section-head compact">
@@ -652,6 +672,8 @@
     <link rel="stylesheet" href="connected-bonuses.css">
     <script src="connected-bonuses.js"></script>
     <script src="app.js?v=15"></script>
+  <link rel="stylesheet" href="jelly-thunkers.css">
+  <script src="jelly-thunkers.js"></script>
   <link rel="stylesheet" href="back-to-top.css">
   <script src="back-to-top.js"></script>
   <script src="hug-button.js"></script>
