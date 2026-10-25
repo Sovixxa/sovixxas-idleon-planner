@@ -17,8 +17,8 @@ const fs=require('node:fs'),path=require('node:path'),assert=require('node:asser
  for(const key of keys){const id=Number(key.slice(4));for(const k of [key,'Exp0_'+id,'ExpReq0_'+id])if(typeof raw.data[k]==='string')raw.data[k]=JSON.parse(raw.data[k]);raw.data[key][0]=id===0?499:500;raw.data['Exp0_'+id][0]=0;raw.data['ExpReq0_'+id][0]=require('./afk-tester').requirement(raw.data[key][0]);}
  await page.locator('#jsonInput').fill(JSON.stringify(raw));await page.locator('#parseBtn').click();
  await page.waitForFunction(()=>/^(Save age|Imported):/.test(document.getElementById('qolFreshness').textContent),{},{timeout:60000});
- await page.evaluate(()=>window.dispatchEvent(new CustomEvent('idleon:navigate',{detail:'accountReview'})));
- await page.locator('[data-review-tab="afkTester"]').click();
+ await page.evaluate(()=>window.dispatchEvent(new CustomEvent('idleon:navigate',{detail:'skills'})));
+ await page.locator('.afk-tester').waitFor();
  assert.equal(await page.locator('.afk-character').count(),count);
  await page.waitForFunction(()=>document.querySelector('[data-afk-source="0"]')?.textContent.startsWith('Calculated for'),{},{timeout:60000});
  assert(Number(await page.locator('[data-afk-row="0"][data-afk-field="rate"]').inputValue())>0);
@@ -63,7 +63,7 @@ const fs=require('node:fs'),path=require('node:path'),assert=require('node:asser
  await page.locator('[data-afk-row="0"][data-afk-field="rate"]').fill(rate);
  assert.match(await page.locator('[data-afk-result="0"]').innerText(),/0d 2h 0m/);
  assert.match(await page.locator('[data-afk-summary]').innerText(),/Everyone reaches the target in/);
- await page.locator('[data-review-tab="review"]').click();await page.locator('[data-review-tab="afkTester"]').click();
+ await page.evaluate(()=>document.getElementById('navAccountReview').click());await page.evaluate(()=>document.getElementById('navSkills').click());
  assert.equal(await page.locator('[data-afk-row="0"][data-afk-field="rate"]').inputValue(),rate);
  // Changing skills imports that skill, preserves independent plans, and blocks invalid consumables.
  await page.locator('[data-afk-skill]').selectOption('17');
@@ -126,7 +126,8 @@ const fs=require('node:fs'),path=require('node:path'),assert=require('node:asser
  await page.locator('[data-afk-target]').fill('');assert((await page.locator('[data-afk-summary]').innerText()).includes(`${count} need`));
  await page.locator('[data-afk-reset]').click();assert.equal(await page.locator('[data-afk-target]').inputValue(),'500');
  assert(Number(await page.locator('[data-afk-row="0"][data-afk-field="rate"]').inputValue())>0);
- assert.equal(await page.locator('[data-review-tab]').count(),2);
+ assert.equal(await page.locator('[data-review-tab]').count(),0);
+ assert.equal(await page.locator('[data-skills-tab]').count(),0);
  assert.equal(await page.getByRole('tab',{name:'EXP Planning',exact:true}).count(),0);
  assert.equal(await page.locator('[data-exp-tab]').count(),0);
  assert(!fs.readFileSync('app.js','utf8').includes("classExp:{title:'Class EXP Optimizer'"));
@@ -134,7 +135,9 @@ const fs=require('node:fs'),path=require('node:path'),assert=require('node:asser
  assert.match(page.url(),/#\/accountReview$/);
  await page.goto('http://localhost:7331/#/classExp');
  await page.waitForURL('**/#/accountReview');
- await page.locator('[data-review-tab="afkTester"]').waitFor();
+ assert.equal(await page.locator('[data-skills-tab="afkTester"]').count(),0);
+ await page.evaluate(()=>document.getElementById('navSkills').click());
+ await page.locator('.afk-tester').waitFor();
  // Exercise the candy controls with a manual planning row independently of saved map restrictions.
  await page.evaluate(()=>{const host=document.createElement('div');host.id='candy-test';document.body.append(host);AfkTester.render(host,null);});
  const candyHost=page.locator('#candy-test');

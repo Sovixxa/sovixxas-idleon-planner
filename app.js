@@ -95,6 +95,7 @@
     milkOpti:{title:'Milktimizer',world:'Misc',copy:''},
     communitySheets:{title:"Community Sheets",world:'Misc',copy:''},
     pocketWatches:{title:'Pocket Watches',world:'Misc',copy:''},
+    skills:{title:'Skills',world:'Optimizers',copy:'Plan skill gains and compare AFK progress.'},
     accountReview:{title:'Account Review',world:'Optimizers',copy:'Review saved progress and plan your next account milestones.'},
     bribes:{title:"Bribes",world:"World 1",copy:"Purchased bribes and account bonuses."},
     mining:{title:'Mining',world:'World 1',copy:'Mining characters, ore targets, and gain planning will be modeled here.'},smithing:{title:'Smithing',world:'World 1',copy:'Smithing production and material targets will be planned here.',tabs:['forge','anvilUpgrades']},chopping:{title:'Chopping',world:'World 1',copy:'Chopping characters, log targets, and gain planning will be modeled here.'},forge:{title:'Forge & Anvil',world:'World 1',copy:'Forge bars, anvil production, and capacity planning will be modeled here.',parent:'smithing'},anvilUpgrades:{title:'Anvil Upgrades',world:'World 1',copy:'Per-character Anvil speed, XP, capacity, and point investment.',parent:'smithing'},forgeBonuses:{title:'Forge Bonuses',world:'World 1',copy:'Permanent Forge upgrade levels and effects.'},starSigns:{title:'Star Signs',world:'World 1',copy:'Unlocked, aligned, and infinite Star Sign bonuses.',tabs:['constellations']},constellations:{title:'Constellations',world:'World 1',copy:'Constellation completion and Star Chart points.',parent:'starSigns'},stampBonuses:{title:'Stamp Bonuses',world:'World 1',parent:'stamps'},stampCollection:{title:'Stamp Collection',world:'World 1',parent:'stamps'},stamps:{title:'Stamps',world:'World 1',copy:'Stamp costs, material requirements, and account-wide priority planning will be modeled here.'},statues:{title:'Statues',world:'World 1',copy:'Statue levels, deposits, and account-wide statue bonuses will be modeled here.'},dungeons:{title:'Dungeons',world:'World 1',copy:'Dungeon runs, cards, and reward planning will be modeled here.'},
@@ -199,7 +200,7 @@ SKILL_PAGES.holeFloors={title:'Floors',world:'World 5',copy:'All 18 Hole caverns
     updateRoute(name);
     window.plannerQoL?.onNavigate(name);
     if(name!=='jelly'){stopSearch();cancelJellyPanels();initialUpgradesPending=true;initialPracticePending=true;if(practice?.playing)stopPracticePlayback();}
-    if(!state)$('workspace').classList.toggle('hidden',!['library','dailies','accountReview','loadouts','statConnections','shadowCaps','trueDr','milkOpti','communitySheets','pocketWatches','credits','connectedBonuses'].includes(name));
+    if(!state)$('workspace').classList.toggle('hidden',!['library','dailies','accountReview','skills','loadouts','statConnections','shadowCaps','trueDr','milkOpti','communitySheets','pocketWatches','credits','connectedBonuses'].includes(name));
     if(!state)$('inputPanel').classList.toggle('hidden',['loadouts','statConnections','shadowCaps','trueDr','milkOpti','communitySheets','pocketWatches','credits'].includes(name));
     const selected=SKILL_PAGES[name]?.parent||name;
     for(const id of ['navHome','navJelly',...Object.keys(SKILL_PAGES).map(key=>'nav'+key[0].toUpperCase()+key.slice(1))]){const button=$(id);if(!button)continue;const active=id===('nav'+selected[0].toUpperCase()+selected.slice(1));button.classList.toggle('active',active);if(active)button.setAttribute('aria-current','page');else button.removeAttribute('aria-current');}
@@ -664,23 +665,10 @@ SKILL_PAGES.holeFloors={title:'Floors',world:'World 5',copy:'All 18 Hole caverns
       if(pinnedTile)pin(pinnedTile);else if(activeTile)preview(activeTile);
     });
   }
-  function renderAccountReviewTabs(){
+  function renderSkillsTabs(){
     const host=$('worldContent'),raw=loadedExport||state?.rawRoot||{};
-    const tabs=[['review','Account Review'],['afkTester','AFK Tester']];
-    host.innerHTML='<nav class="skill-tabs" role="tablist" aria-label="Account Review sections">'+tabs.map(([id,label])=>`<button class="skill-tab ${id==='review'?'active':''}" role="tab" aria-selected="${id==='review'}" data-review-tab="${id}">${label}</button>`).join('')+'</nav>'+tabs.map(([id])=>`<div data-review-panel="${id}" class="${id==='review'?'':'hidden'}"></div>`).join('');
-    const panels=Object.fromEntries(tabs.map(([id])=>[id,host.querySelector(`[data-review-panel="${id}"]`)])),ready=new Set(['review']);
-    window.AccountReview.render(panels.review,raw);
-    host.querySelectorAll('[data-review-tab]').forEach(button=>button.onclick=()=>{
-      const selected=button.dataset.reviewTab;
-      try{localStorage.setItem('idleon.review-tab',selected);}catch{}
-      host.querySelectorAll('[data-review-tab]').forEach(tab=>{const active=tab.dataset.reviewTab===selected;tab.classList.toggle('active',active);tab.setAttribute('aria-selected',String(active));});
-      Object.entries(panels).forEach(([id,panel])=>panel.classList.toggle('hidden',id!==selected));
-      if(ready.has(selected))return;
-      ready.add(selected);
-      if(selected==='afkTester')window.AfkTester.render(panels.afkTester,state||{rawData:raw.data||raw,rawRoot:raw});
-
-    });
-    try{if(localStorage.getItem('idleon.review-tab')==='afkTester')host.querySelector('[data-review-tab="afkTester"]').click();}catch{}
+    host.innerHTML='<div data-skills-panel="afkTester"></div>';
+    window.AfkTester.render(host.querySelector('[data-skills-panel="afkTester"]'),state||{rawData:raw.data||raw,rawRoot:raw});
   }
   function renderWorldPage(name){
     if(name==='dailies'){$('worldContent').dataset.page=name;window.Dashboard.render($('worldContent'),loadedExport||state?.rawRoot||{});return;}
@@ -694,7 +682,8 @@ SKILL_PAGES.holeFloors={title:'Floors',world:'World 5',copy:'All 18 Hole caverns
     };
     $('worldContent').bonusAfterRender=null;
     if(name==='connectedBonuses'){window.ConnectedBonuses.render($('worldContent'),loadedExport||state?.rawRoot||{},state?.rawData||{});return;}
-    if(name==='accountReview'){renderAccountReviewTabs();return;}
+    if(name==='accountReview'){window.AccountReview.render($('worldContent'),loadedExport||state?.rawRoot||{});return;}
+    if(name==='skills'){renderSkillsTabs();return;}
     if(name==='loadouts'){window.Loadouts.render($('worldContent'),loadedExport||state?.rawRoot||{});return;}
     $('worldContent').classList.toggle('jar-page',name==='holeJars');
     const addSubtabs=()=>{const parentKey=page.parent||name,parent=SKILL_PAGES[parentKey],keys=[parentKey,...(parent.tabs||[])];if(keys.length<2)return;const head=$('worldContent').querySelector('.section-head,.bonus-system-hero,.divinity-hero');if(parentKey==='hole'){if($('worldContent').querySelector('.hole-tab-stack'))return;const activeGroup=HOLE_TAB_GROUPS.find(group=>group.keys.includes(name))||HOLE_TAB_GROUPS[0],stack=document.createElement('div');stack.className='hole-tab-stack';stack.innerHTML=`<nav class="skill-tabs hole-group-tabs" role="tablist" aria-label="The Hole groups">${HOLE_TAB_GROUPS.map(group=>`<button class="skill-tab${group===activeGroup?' active':''}" data-hole-group="${esc(group.keys[0])}" role="tab" aria-selected="${group===activeGroup}">${esc(group.label)}</button>`).join('')}</nav><nav class="skill-tabs hole-section-tabs${activeGroup.label==='Villagers'?' hole-villager-tabs':''}" role="tablist" aria-label="${esc(activeGroup.label)} sections">${activeGroup.keys.map(key=>`<button class="skill-tab${key===name?' active':''}" data-skill-tab="${esc(key)}" role="tab" aria-selected="${key===name}">${HOLE_VILLAGER_ICONS[key]!=null?`<span class="hole-portrait"><img src="assets/HoleUIvillager${HOLE_VILLAGER_ICONS[key]}.png" alt=""></span>`:''}<span>${esc(key==='hole'?'Explore':SKILL_PAGES[key].title)}</span></button>`).join('')}</nav>`;head?.insertAdjacentElement('afterend',stack);stack.querySelectorAll('[data-hole-group]').forEach(button=>button.onclick=()=>selectSideNav(button.dataset.holeGroup));stack.querySelectorAll('[data-skill-tab]').forEach(button=>button.onclick=()=>selectSideNav(button.dataset.skillTab));return;}const nav=document.createElement('nav');nav.className='skill-tabs';nav.setAttribute('role','tablist');nav.setAttribute('aria-label',`${parent.title} sections`);nav.innerHTML=keys.map(key=>`<button class="skill-tab${key===name?' active':''}" data-skill-tab="${esc(key)}" role="tab" aria-selected="${key===name}">${esc(SKILL_PAGES[key].title)}</button>`).join('');if(parentKey==='coralReef')$('worldContent').prepend(nav);else head?.insertAdjacentElement('afterend',nav);nav.querySelectorAll('[data-skill-tab]').forEach(button=>button.onclick=()=>selectSideNav(button.dataset.skillTab));};
