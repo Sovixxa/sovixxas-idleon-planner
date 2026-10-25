@@ -1454,7 +1454,7 @@ export const getSkillExpMulti = (skillName: string, character: any, characters: 
     const food = golden ? getGoldenFoodBonus(golden.displayName,character,account,characters) : 0;
     const talent = character?.flatTalents?.find((t: any) => t.skillIndex === 236);
     const factors = [
-      {name:'Mastery, exotic, cards & chapters',value:1+(25*isMasteryBonusUnlocked(account?.rift,account?.totalSkillsLevels?.spelunking?.rank,0)+getExoticMarketBonus(account,47)+getCardBonusByEffect(character?.cards?.equippedCards,'Spelunking_EXP')+chapter(1,1)+chapter(3,1))/100},
+      {name:'Mastery, exotic, cards & chapters',value:1+(25*isMasteryBonusUnlocked(account?.rift,account?.totalSkillsLevels?.spelunking?.rank,0)+getExoticMarketBonus(account,47)+getCardBonusByEffect(character?.cards?.equippedCards,'Spelunking_EXP')+chapter(1,1)+chapter(6,0)+chapter(3,1))/100},
       {name:'Killroy, Arcade & shop',value:1+(getKillRoyShopBonus(account,5)+(account?.arcade?.shop?.[56]?.bonus||0)+getSpelunkingBonus(account,59))/100},
       {name:'Shared skill EXP multiplier',value:allSkillExpMultiplier},
       {name:'Shop, food, meals, stamps & statue',value:1+(getSpelunkingBonus(account,45)+food+getMealsBonusByEffectOrStat(account,null,'SplkExp')+getStampsBonusByStat(account,'spelunkxp',character)+getStatueBonus(account,30,character?.flatTalents))/100},
@@ -3613,11 +3613,12 @@ export const getAfkGain = (character: any, characters: any, account: any) => {
     ]
   }
   else if (afkType === 'SPELUNKING') {
-    const bigFishBonus = getSpelunkingBonus(account, 41);
+    const bigFishBonus = getAdviceFishBonus(account, 2);
     const spelunkingCompBonus = isCompanionBonusActive(account, 28) ? account?.companions?.list?.at(28)?.bonus : 0;
     const spelunkingCardBonus = getCardBonusByEffect(account?.cards, 'Spelunking_AFK_(Passive)');
     const spelunkingVialBonus = getVialsBonusByStat(account?.alchemy?.vials, '7skillw7afk');
-    const spelunkingAfkPct = getSpelunkingBonus(account, 42);
+    // Current client SpelunkingAFKgains_PCTofALL returns zero.
+    const spelunkingAfkPct = 0;
 
     const baseSpelunkingGains = (bigFishBonus
       + (spelunkingCompBonus

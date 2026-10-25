@@ -138,6 +138,22 @@ const fs=require('node:fs'),path=require('node:path'),assert=require('node:asser
  assert.equal(await page.locator('[data-skills-tab="afkTester"]').count(),0);
  await page.evaluate(()=>document.getElementById('navSkills').click());
  await page.locator('.afk-tester').waitFor();
+ await page.waitForFunction(()=>/^(Save age|Imported):/.test(document.getElementById('qolFreshness').textContent),{},{timeout:60000});
+ // Spelunking uses its own seven map nodes, not stamina-cycle estimates.
+ await page.locator('[data-afk-skill]').selectOption('19');
+ await page.waitForFunction(()=>document.querySelectorAll('[data-afk-node="0"] option').length===7,{},{timeout:60000});
+ assert.equal(await page.locator('[data-afk-skill]').inputValue(),'19');
+ assert.equal(await page.locator('[data-afk-mode] option[value="candy"]').evaluate(el=>el.disabled),true);
+ await page.locator('[data-afk-node="0"]').selectOption('Spelunking6');
+ assert.match(await page.locator('[data-afk-source="0"]').textContent(),/Burned Tunnel/);
+ assert(!/NaN|stamina cycle/.test(await page.locator('.afk-tester').innerText()));
+ await page.locator('[data-afk-node="0"]').selectOption('Spelunking0');
+ assert(Number(await page.locator('[data-afk-row="0"][data-afk-field="rate"]').inputValue())>=0);
+ await page.setViewportSize({width:390,height:844});
+ assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
+ await page.screenshot({path:'../audit/skills-spelunking-mobile.png',fullPage:true});
+ await page.setViewportSize({width:1440,height:1000});
+ await page.screenshot({path:'../audit/skills-spelunking-desktop.png',fullPage:true});
  // Exercise the candy controls with a manual planning row independently of saved map restrictions.
  await page.evaluate(()=>{const host=document.createElement('div');host.id='candy-test';document.body.append(host);AfkTester.render(host,null);});
  const candyHost=page.locator('#candy-test');

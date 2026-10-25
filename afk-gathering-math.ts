@@ -23,6 +23,28 @@ import {getAfkGain,getSkillExpMulti} from './vendor/idleon-toolbox/parsers/chara
 import {lavaLog} from './vendor/idleon-toolbox/utility/helpers';
 import {bonuses,monsters,mapNames} from './vendor/idleon-toolbox/data/website-data';
 import pools from './afk-fish-pools.json';
+import spelunkNodes from './afk-spelunk-nodes.json';
+import {getSpelunkingEfficiency} from './vendor/idleon-toolbox/parsers/world-7/spelunking';
+
+export function spelunkingSpeed(bonus:number){return Math.max(2,40/(1+bonus/100));}
+export function spelunkingActions(speed:number,chance:number){return Math.round(3600/speed*Math.min(1,chance));}
+export function getSpelunkingRates(ch:any,characters:any[],account:any){
+ if(!(ch.skillsInfo?.spelunking?.level>0))return {nodes:[]};
+ const talents=[...(ch.flatTalents||[]),...(ch.flatStarTalents||[])];
+ const talent=(index:number,y=false)=>{const t=talents.find(t=>Number(t.skillIndex)===index);return t?getTalentBonus(talents,t.name,y):0;};
+ const efficiency=getSpelunkingEfficiency(ch,characters,account);
+ const speed=spelunkingSpeed(talent(637)+(getStatsFromGear(ch,61,account).value||0)+getObolsBonus(ch.obols,bonuses.etcBonuses[61])+Math.round((getLabBonus(account.lab?.labBonuses,112)||0)/20)+getVialsBonusByStat(account.alchemy?.vials,'7spelunkspd')+(account.spelunking?.chapters?.[0]?.[2]?.bonus||0)+talent(237,true));
+ const multiplier=getSkillExpMulti('spelunking',ch,characters,account).value;
+ const nodes=spelunkNodes.map(node=>{
+  const planned={...ch,afkType:'SPELUNKING',mapIndex:node.map,currentMap:mapNames[node.map],targetMonster:node.id};
+  const afk=getAfkGain(planned,characters.map(c=>c.playerId===ch.playerId?planned:c),account).afkGains;
+  const chance=harvestChance(efficiency,node.defence),actions=spelunkingActions(speed,chance),rate=actions*afk*node.exp*multiplier;
+  if(!Number.isFinite(rate)||rate<0)throw Error('Invalid Spelunking rate');
+  return {...node,target:node.id,activity:'SPELUNKING',label:node.name+' — '+String(mapNames[node.map]||node.map).replace(/_/g,' '),rate,efficiency,harvestChance:chance,speed,actions,afk,multiplier};
+ });
+ return {nodes};
+}
+
 const configs:any={1:{name:'mining',prefix:'Mining',type:'MINING',tool:0,stat:'strength',bubble:'W',statue:2,card:24,speedCard:34,stamp:'BaseMinEff',po:'MinEffPct',sign:'Mining_Efficency',vial:'MinEff'},3:{name:'chopping',prefix:'Choppin',type:'CHOPPIN',tool:1,stat:'wisdom',bubble:'M',statue:6,card:27,speedCard:37,stamp:'BaseChopEff',po:'ChopEffPct',sign:'Chop_Efficiency',vial:'ChopEff'},4:{name:'fishing',prefix:'Fishing',type:'FISHING',tool:2,stat:'strength',bubble:'W',statue:8,card:30,speedCard:45,stamp:'BaseFishEff',po:'FishEffPct',sign:'Fishin_Efficency',vial:'FishEff'},6:{name:'catching',prefix:'Catching',type:'CATCHING',tool:3,stat:'agility',bubble:'A',statue:9,card:32,speedCard:75,stamp:'BaseCatchEff',po:'CatchEffPct',sign:'Catch_Efficiency',vial:'CatchEff'}};
 export function harvestChance(eff:number,defence:number){const ratio=eff/defence;return ratio>=.25?Math.min(1,1.512*(ratio-.0763)/(ratio+5)):0;}
 export function gatheringSpeed(skill:number,level:number,toolSpeed:number,bonus:number,eff:number){

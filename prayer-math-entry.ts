@@ -132,7 +132,7 @@ export {carryBags as dropCarryBags} from "./vendor/idleon-toolbox/data/website-d
 
 export {getCharacterStatAccount} from './vendor/idleon-toolbox/parsers/world-2/voteBallot';
 
-export {getGatheringRates,harvestChance,gatheringSpeed,gatheringActions,fishingPercentages} from './afk-gathering-math';
+export {getSpelunkingRates,spelunkingSpeed,spelunkingActions,getGatheringRates,harvestChance,gatheringSpeed,gatheringActions,fishingPercentages} from './afk-gathering-math';
 
 export {calcShinyLvMulti} from './vendor/idleon-toolbox/parsers/world-4/breeding';
 

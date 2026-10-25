@@ -123,8 +123,9 @@
       if(Number.isFinite(exp.value)&&exp.value>=0)row.context='Saved floor '+account.sneaking.players[id].floor+': '+exp.value.toLocaleString(undefined,{maximumFractionDigits:2})+' EXP per successful action. The tester does not yet calculate action timing and detection downtime; enter a measured hourly average.';
      }
      if(skill===19){
-      const exp=M.getSkillExpMulti('spelunking',ch,characters,account);
-      if(Number.isFinite(exp.value)&&exp.value>0)row.context='Saved Spelunking EXP multiplier: ×'+exp.value.toLocaleString(undefined,{maximumFractionDigits:2})+'. Hourly EXP also depends on the activity and stamina cycle; the tester does not yet calculate that cycle.';
+      row.nodes=M.getSpelunkingRates(ch,characters,account).nodes;
+      row.defaultNode=row.nodes.find(n=>n.target===ch.targetMonster)?.id||row.nodes[0]?.id;
+      row.context='Calculated AFK gathering EXP. Active cave runs and stamina spending are separate activities.';
      }
     }catch(e){row.error='Could not calculate this stat from the export. You can enter an override.';}
    }

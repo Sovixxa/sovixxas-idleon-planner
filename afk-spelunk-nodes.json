@@ -1,0 +1,51 @@
+[
+  {
+    "id": "Spelunking0",
+    "name": "Fearful Tunnel",
+    "map": 301,
+    "exp": 5,
+    "defence": 100
+  },
+  {
+    "id": "Spelunking1",
+    "name": "Decaying Crevasse",
+    "map": 304,
+    "exp": 18,
+    "defence": 2500
+  },
+  {
+    "id": "Spelunking2",
+    "name": "Buried Church",
+    "map": 310,
+    "exp": 70,
+    "defence": 100000
+  },
+  {
+    "id": "Spelunking3",
+    "name": "One Way Opening",
+    "map": 312,
+    "exp": 500,
+    "defence": 2000000
+  },
+  {
+    "id": "Spelunking4",
+    "name": "Plunder Cranny",
+    "map": 317,
+    "exp": 1000,
+    "defence": 15000000
+  },
+  {
+    "id": "Spelunking5",
+    "name": "Kelp Forest",
+    "map": 320,
+    "exp": 5000,
+    "defence": 500000000
+  },
+  {
+    "id": "Spelunking6",
+    "name": "Burned Tunnel",
+    "map": 324,
+    "exp": 10000,
+    "defence": 100000000000
+  }
+]

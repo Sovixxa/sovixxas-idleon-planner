@@ -3,6 +3,12 @@ const A=require('./afk-tester'),S=require('./afk-save-model');
 const ctx={console,structuredClone};vm.createContext(ctx);vm.runInContext(fs.readFileSync('prayer-math-engine.js','utf8'),ctx);
 const raw=JSON.parse(fs.readFileSync('../example json.txt','utf8')),before=JSON.stringify(raw),result=S.calculate(raw,ctx.PrayerMath);
 assert.equal(JSON.stringify(raw),before,'Must not mutate imported save');
+for(const [id,skills] of Object.entries(result)){
+ assert.equal(skills[19].error,undefined);
+ assert.equal(skills[19].nodes.length,7);
+ for(const node of skills[19].nodes){assert(Number.isFinite(node.rate)&&node.rate>=0);assert.equal(node.rate,node.actions*node.afk*node.exp*node.multiplier);}
+ const plan={rows:[{id:Number(id),rate:''}],node:'Spelunking6'};A.applyAuto(plan,19,{auto:result});assert.equal(Number(plan.rows[0].rate),skills[19].nodes[6].rate);
+}
 for(const skill of A.skills.filter(s=>s.balloons))assert(result[0][skill.id].multiplier>0,skill.name+' multiplier');
 assert(result[0][20].rate>0);
 assert(result[0][0].rate>0);assert(result[0][1].multiplier>1);assert.equal(result[0][17].multiplier,undefined);assert.equal(result[0][19].rate,undefined);
