@@ -4,6 +4,11 @@
 .qol-actions{gap:6px}
 .qol-actions button{font-size:12px;font-weight:650;padding:9px 12px;min-height:42px;background:transparent;border-color:transparent;color:#b6c1d4;transition:background .15s,border-color .15s,color .15s}
 .qol-actions button:hover{background:#ffffff08;border-color:#455069;color:#f3edff}
+/* A gentle press on the command bar, without changing layout or hit targets. */
+@media(prefers-reduced-motion:no-preference){
+  .qol-actions button{transition:background .15s,border-color .15s,color .15s,scale .12s ease-out}
+  .qol-actions button:active:not(:disabled):not([aria-disabled="true"]){scale:.98 .95}
+}
 .qol-actions button:focus-visible,.qol-meta input:focus-visible{outline:2px solid #c49aef;outline-offset:3px}
 .qol-actions #qolSearchOpen{display:flex;align-items:center;gap:11px;flex:1 1 280px;max-width:480px;min-width:0;margin-right:10px;padding:10px 13px;text-align:left;background:#0c1220;border:1px solid #4e4263;color:#c7bdd9;box-shadow:inset 0 1px 3px #0003}
 .qol-actions #qolSearchOpen:hover{background:#151b2c;border-color:#b58ada;color:#f0e4ff}
@@ -11,6 +16,11 @@
 #qolSearchOpen span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .qol-actions kbd{flex-shrink:0;font:10px/1.5 ui-monospace,monospace;color:#a69cb9;border:1px solid #39354c;border-radius:5px;background:#201e30;padding:2px 6px}
 .qol-actions #qolFavorite[aria-pressed="true"]{color:#eed091;background:#e9be6510;border-color:#e9be6530}
+#qolFavorite{position:relative}
+/* One small, decorative twinkle; never loops or intercepts clicks. */
+#qolFavorite.qol-sparkle::after{content:"";position:absolute;left:19px;top:5px;width:10px;height:10px;background:#f3dbab;clip-path:polygon(50% 0,61% 39%,100% 50%,61% 61%,50% 100%,39% 61%,0 50%,39% 39%);pointer-events:none;opacity:0;animation:qol-favorite-twinkle 480ms ease-out}
+@keyframes qol-favorite-twinkle{0%{opacity:0;transform:translateY(3px) scale(.3) rotate(-20deg)}35%{opacity:1;transform:translateY(0) scale(1) rotate(0)}100%{opacity:0;transform:translateY(-5px) scale(.4) rotate(25deg)}}
+@media(prefers-reduced-motion:reduce){#qolFavorite.qol-sparkle::after{animation:none;display:none}}
 .qol-meta{margin-top:12px;padding-top:11px;border-top:1px solid #ffffff0b;font-size:12px;color:#95a3bb;gap:12px}
 .qol-meta label{display:flex;align-items:center;gap:8px;cursor:pointer}
 .qol-meta .qol-completion-filter{margin-left:auto}

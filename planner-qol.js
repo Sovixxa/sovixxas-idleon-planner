@@ -84,13 +84,14 @@
     }
     dialog.addEventListener('click',e=>{if(e.target===dialog)dialog.close();});
     function paintFavorites(){
+      doc.getElementById('qolFavorite').classList.remove('qol-sparkle');
       const saved=settings.favorites.filter(k=>registry[k]);
       homeFavorites.hidden=current!=='home';
       homeFavorites.innerHTML=`<div class="qol-section-head"><h3 id="qolHomeFavoritesTitle"><span aria-hidden="true">★</span> Favorites</h3><span class="qol-help">${saved.length} saved ${saved.length===1?'page':'pages'}</span></div>${saved.length?`<nav class="qol-home-favorites-grid" aria-label="Your favorite pages">${saved.map(k=>`<button class="secondary qol-home-favorite" data-go="${esc(k)}"><span>${esc(title(k))}</span><span aria-hidden="true">→</span></button>`).join('')}</nav>`:'<p class="qol-help">Keep your go-to pages close. Open a page and select ☆ Favorite to add it here.</p>'}`;
       homeFavorites.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>go(b.dataset.go));
       doc.getElementById('qolFavorite').textContent=settings.favorites.includes(current)?'★ Favorited':'☆ Favorite';doc.getElementById('qolFavorite').setAttribute('aria-pressed',String(settings.favorites.includes(current)));
     }
-    button('qolFavorite',()=>{settings.favorites=settings.favorites.includes(current)?settings.favorites.filter(k=>k!==current):[...settings.favorites,current];save();paintFavorites();});
+    button('qolFavorite',()=>{settings.favorites=settings.favorites.includes(current)?settings.favorites.filter(k=>k!==current):[...settings.favorites,current];save();paintFavorites();if(settings.favorites.includes(current))doc.getElementById('qolFavorite').classList.add('qol-sparkle');});
     function search(){
       openDialog('Find a page or bonus','<label>Search pages, systems, and imported bonuses<input id="qolQuery" type="search" autocomplete="off" placeholder="Printer, stamps, damage…"></label><p class="qol-help">Enter opens the first result. Tab moves through results. Escape closes.</p><div id="qolResults"></div>');
       const input=doc.getElementById('qolQuery');input.value=searchQuery;input.oninput=()=>{searchQuery=input.value;paintSearch();};input.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();dialog.querySelector('[data-open-result]')?.click();}if(e.key==='ArrowDown'){e.preventDefault();dialog.querySelector('[data-open-result]')?.focus();}};paintSearch();input.focus();

@@ -74,6 +74,10 @@ body {
 .side-link-label, .side-link > .side-icon {
   transition: transform 160ms ease;
 }
+@media (prefers-reduced-motion: no-preference) {
+  .side-nav .side-link { transition: scale 120ms ease-out; }
+  .side-nav .side-link:active:not(:disabled):not([aria-disabled="true"]):not(.locked) { scale: .98 .95; }
+}
 @media (hover: hover) and (prefers-reduced-motion: no-preference) {
   .side-link:not(:disabled):not(.locked):hover .side-link-label { transform: translateX(2px); }
   .side-link:not(:disabled):not(.locked):hover > .side-icon { transform: translateY(-1px) rotate(-5deg); }
