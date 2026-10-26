@@ -1,0 +1,2 @@
+// Item sprites with nonstandard filenames.
+window.GREENSTACK_ICONS={"Bone0":"Bone0_x1","Bone1":"Bone1_x1","Bone2":"Bone2_x1","Bone3":"Bone3_x1","DungWeaponBow1":null,"Dust0":"Dust0_x1","Dust1":"Dust1_x1","Dust2":"Dust2_x1","Dust3":"Dust3_x1","Dust4":"Dust4_x1","MotherlodeTREE":"MotherlodeTREE_x1","Tach0":"Tach0_x1","Tach1":"Tach1_x1","Tach2":"Tach2_x1","Tach3":"Tach3_x1","Tach4":"Tach4_x1","Tach5":"Tach5_x1","W7item3":"W7item3_x1"};

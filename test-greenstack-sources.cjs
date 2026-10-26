@@ -1,0 +1,3 @@
+const fs=require('fs'),vm=require('vm'),assert=require('assert');const c={window:{}};vm.runInNewContext(fs.readFileSync('greenstack-sources.js','utf8'),c);const r=c.window.GREENSTACK_SOURCES,native=require('./greenstack-source-supplements.json').records;
+for(const id of Object.keys(native))assert(r[id]?.length,'Native source omitted: '+id);
+assert(r.Coral6.some(x=>x.includes('Magni Pufferfin')));assert(r.Copper.includes('W1 Colo'));for(const sources of Object.values(r)){assert.equal(new Set(sources).size,sources.length);assert(!sources.some(x=>/Chest.*\(W[1-7]\)/i.test(x)));}assert(r.Crystal6.some(x=>x.includes('Emperor')));console.log('All '+Object.keys(native).length+' native drop items covered; Colosseum consolidation passed');

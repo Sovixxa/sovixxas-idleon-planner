@@ -1,0 +1,11 @@
+{
+  "policy": "Conservative farming targets, not merely items that can theoretically stack. Exclusions remain available in All stackable items. Ordinary farmable quest drops remain eligible, subject to quest availability.",
+  "groups": [
+    {"reason":"Premium cosmetic consumable; not a bulk farming target","items":["Ht","StonePremSTR","StonePremAGI","StonePremWIS","StonePremLUK","StonePremRestore","StonePremStatswap"]},
+    {"reason":"Limited reward consumable; collecting 10m is impractical","items":["GemP16","GemP37","Quest112","Gfoodcoupon","GfoodcouponS","ExpBalloon1","PetEgg","Crystal6","Quest95"]},
+    {"reason":"Seasonal upgrade stone; limited event supply","items":["StoneWe","StoneWeb","StoneAe","StoneAeB","StoneTe","StoneT1eb"]},
+    {"reason":"Limited quest, tutorial, or legacy item","items":["AlienTreetutorial","Starlight","Secretstone","IceMountains2","Quest18","Quest12","Quest13","Quest41","Quest68","JobApplication","Cutter"]},
+    {"reason":"Time-gated boss or miniboss supply; not a practical bulk target","items":["BabaYagaETC","Hgg","Quest17","Quest29","EfauntDrop1","EfauntDrop2","Chiz0","Chiz1","TrollPart","KrukPart","KrukPart2","EmpPart","Key1","Key2","Key3","Key4","Key5"]},
+    {"reason":"No confirmed repeatable farming source in the bundled catalog","items":["Coral7","Coral8"]}
+  ]
+}

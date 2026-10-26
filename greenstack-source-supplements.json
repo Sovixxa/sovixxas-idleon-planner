@@ -1,0 +1,3884 @@
+{
+  "source": "Native client monster and recursive rare-drop tables",
+  "sha256": "a2657944c1f9e2dda4d58ed57ef2ede60d139078450fd536a5fb7bbb40b873a2",
+  "records": {
+    "DungCredits1": [
+      "Drop: Poisonic Frog",
+      "Drop: Globohopper",
+      "Drop: King Frog",
+      "Drop: Lava Slimer",
+      "Drop: Chromatium Frog",
+      "Drop: Eldritch Croaker",
+      "Drop: Grandfrogger",
+      "Drop: Rotting Grandfrogger",
+      "Drop: Forlorn Grandfrogger",
+      "Drop: Vengeful Grandfrogger",
+      "Drop: Grumblo",
+      "Drop: Cactopunk",
+      "Drop: Target",
+      "Drop: Lazlo",
+      "Drop: Beefie",
+      "Drop: Crescent Spud",
+      "Drop: Snakenhotep",
+      "Drop: Enraged Snakenhotep",
+      "Drop: Inevitable Snakenhotep",
+      "Drop: Ice Guard",
+      "Drop: Glaciaxus",
+      "Drop: Golden Glaciaxus",
+      "Drop: Caustic Glaciaxus"
+    ],
+    "DungCredits2": [
+      "Drop: Poisonic Frog",
+      "Drop: Globohopper",
+      "Drop: King Frog",
+      "Drop: Lava Slimer",
+      "Drop: Chromatium Frog",
+      "Drop: Eldritch Croaker",
+      "Drop: Grandfrogger",
+      "Drop: Rotting Grandfrogger",
+      "Drop: Forlorn Grandfrogger",
+      "Drop: Vengeful Grandfrogger",
+      "Drop: Grumblo",
+      "Drop: Cactopunk",
+      "Drop: Target",
+      "Drop: Lazlo",
+      "Drop: Beefie",
+      "Drop: Crescent Spud",
+      "Drop: Snakenhotep",
+      "Drop: Enraged Snakenhotep",
+      "Drop: Inevitable Snakenhotep",
+      "Drop: Ice Guard",
+      "Drop: Glaciaxus",
+      "Drop: Golden Glaciaxus",
+      "Drop: Caustic Glaciaxus"
+    ],
+    "CopperBar": [
+      "Drop: Fire Forge",
+      "W1 Colo"
+    ],
+    "EquipmentHats17": [
+      "Drop: Fire Forge",
+      "W1 Colo"
+    ],
+    "IronBar": [
+      "Drop: Fire Forge",
+      "W1 Colo"
+    ],
+    "EquipmentHats18": [
+      "Drop: Fire Forge",
+      "W2 Colo"
+    ],
+    "EquipmentShirts12": [
+      "Drop: Fire Forge",
+      "W1 Colo"
+    ],
+    "GoldBar": [
+      "Drop: Fire Forge",
+      "W2 Colo"
+    ],
+    "EquipmentHats28": [
+      "Drop: Fire Forge",
+      "W3 Colo"
+    ],
+    "EquipmentPants4": [
+      "Drop: Fire Forge",
+      "W2 Colo"
+    ],
+    "PlatBar": [
+      "Drop: Cinder Forge",
+      "W2 Colo",
+      "W3 Colo"
+    ],
+    "EquipmentPants5": [
+      "Drop: Cinder Forge",
+      "W3 Colo"
+    ],
+    "DementiaBar": [
+      "Drop: Cinder Forge",
+      "W3 Colo"
+    ],
+    "VoidBar": [
+      "Drop: Cinder Forge",
+      "W4 Colo"
+    ],
+    "Quest19": [
+      "Drop: Bandit Bob"
+    ],
+    "Sewers2": [
+      "Drop: Verminous",
+      "Drop: Rat — Rats Nest"
+    ],
+    "CardsZ27": [
+      "Drop: Verminous"
+    ],
+    "CardsA14": [
+      "Drop: Crystal Carrot"
+    ],
+    "StampC3": [
+      "Drop: Crystal Carrot",
+      "Drop: Crystal Crabal",
+      "Drop: Crystal Cattle",
+      "Drop: Crystal Custard",
+      "Drop: Crystal Capybara",
+      "Drop: Crystal Candalight",
+      "Drop: Crystal Cuttlefish"
+    ],
+    "TalentBook1": [
+      "Drop: Crystal Carrot",
+      "Drop: Crystal Crabal",
+      "Drop: Crystal Cattle",
+      "Drop: Crystal Custard",
+      "Drop: Green Mushroom — Spore Meadows",
+      "Drop: Frog — Froggy Fields, Dewdrop Colosseum, Grandfrog's Backyard, Grandfrog's Gazebo",
+      "Drop: Bored Bean — Valley Of The Beans",
+      "Drop: Slime — Jungle Perimeter",
+      "Drop: Baby Boa — Winding Willows"
+    ],
+    "SmithingRecipes1": [
+      "Drop: Crystal Carrot",
+      "Drop: Green Mushroom — Spore Meadows",
+      "Drop: Red Mushroom — Birch Enclave",
+      "Drop: Frog — Froggy Fields, Dewdrop Colosseum, Grandfrog's Backyard, Grandfrog's Gazebo",
+      "Drop: Bored Bean — Valley Of The Beans",
+      "Drop: Slime — Jungle Perimeter",
+      "Drop: Baby Boa — Winding Willows",
+      "Drop: Glublin — Forest Outskirts",
+      "Drop: Wode Board — Encroaching Forest Villas, End Of The Road",
+      "Drop: Gigafrog — Tucked Away",
+      "Drop: Walking Stick — The Base Of The Bark",
+      "Drop: Poop — Poopy Sewers, The Office",
+      "Drop: Baba Yaga",
+      "Drop: Dr Defecaus",
+      "Drop: Glunko The Massive",
+      "Drop: Amarok",
+      "Drop: Chaotic Amarok",
+      "Drop: Radiant Amarok",
+      "W1 Colo"
+    ],
+    "EquipmentHats5": [
+      "Drop: Crystal Carrot",
+      "Drop: Green Mushroom — Spore Meadows",
+      "Drop: Red Mushroom — Birch Enclave",
+      "Drop: Frog — Froggy Fields, Dewdrop Colosseum, Grandfrog's Backyard, Grandfrog's Gazebo",
+      "Drop: Bored Bean — Valley Of The Beans",
+      "Drop: Baba Yaga",
+      "Drop: Amarok",
+      "Drop: Chaotic Amarok",
+      "W1 Colo"
+    ],
+    "EquipmentPants10": [
+      "Drop: Crystal Carrot",
+      "Drop: Green Mushroom — Spore Meadows",
+      "Drop: Red Mushroom — Birch Enclave",
+      "Drop: Frog — Froggy Fields, Dewdrop Colosseum, Grandfrog's Backyard, Grandfrog's Gazebo",
+      "Drop: Bored Bean — Valley Of The Beans",
+      "Drop: Baba Yaga",
+      "Drop: Amarok",
+      "Drop: Chaotic Amarok",
+      "W1 Colo"
+    ],
+    "StampB3": [
+      "Drop: Crystal Carrot",
+      "Drop: Green Mushroom — Spore Meadows",
+      "Drop: Red Mushroom — Birch Enclave",
+      "Drop: Frog — Froggy Fields, Dewdrop Colosseum, Grandfrog's Backyard, Grandfrog's Gazebo",
+      "Drop: Bored Bean — Valley Of The Beans",
+      "Drop: Baba Yaga",
+      "Drop: Amarok",
+      "Drop: Chaotic Amarok",
+      "W1 Colo"
+    ],
+    "Quest24": [
+      "Drop: Crystal Carrot",
+      "Drop: Crystal Crabal",
+      "Drop: Crystal Cattle",
+      "Drop: Crystal Custard",
+      "Drop: Crystal Capybara",
+      "Drop: Crystal Candalight",
+      "Drop: Crystal Cuttlefish",
+      "Drop: Green Mushroom — Spore Meadows",
+      "Drop: Red Mushroom — Birch Enclave",
+      "Drop: Wood Mushroom — Where the Branches End",
+      "Drop: Frog — Froggy Fields, Dewdrop Colosseum, Grandfrog's Backyard, Grandfrog's Gazebo",
+      "Drop: Bored Bean — Valley Of The Beans",
+      "Drop: Slime — Jungle Perimeter",
+      "Drop: Baby Boa — Winding Willows",
+      "Drop: Carrotman — Vegetable Patch",
+      "Drop: Glublin — Forest Outskirts",
+      "Drop: Wode Board — Encroaching Forest Villas, End Of The Road",
+      "Drop: Gigafrog — Tucked Away",
+      "Drop: Walking Stick — The Base Of The Bark",
+      "Drop: Nutto — Hollowed Trunk, The Roots",
+      "Drop: Poop — Poopy Sewers, The Office",
+      "Drop: Rat — Rats Nest",
+      "Drop: Baba Yaga",
+      "Drop: Dr Defecaus",
+      "Drop: Glunko The Massive",
+      "Drop: Amarok",
+      "Drop: Chaotic Amarok",
+      "Drop: Radiant Amarok",
+      "Drop: Sandy Pot — Jar Bridge",
+      "Drop: Mimic — The Mimic Hole, Sandstone Colosseum, Heaty Hole, Gravel Tomb",
+      "Drop: Crabcake — Dessert Dunes",
+      "Drop: Dig Doug",
+      "Drop: Mafioso — The Grandioso Canyon",
+      "Drop: Sand Castle — Shifty Sandbox",
+      "Drop: Pincermin — Pincer Plateau",
+      "Drop: Mashed Potato — Slamabam Straightaway",
+      "Drop: Tyson — The Ring",
+      "Drop: Moonmoon — Up Up Down Down",
+      "Drop: Sand Giant — Sands of Time, Mummy Memorial",
+      "Drop: Snelbie — Djonnuttown, Efaunt's Tomb",
+      "Drop: Biggie Hours",
+      "Drop: Efaunt",
+      "Drop: Chaotic Efaunt",
+      "Drop: Gilded Efaunt",
+      "Drop: Sheepie — Steep Sheep Ledge, Inside the Igloo, Igloo's Basement",
+      "Drop: Frost Flake — Snowfield Outskirts, Coldsnap Colosseum",
+      "Drop: Sir Stache — The Stache Split",
+      "Drop: Dedotated Ram — Wam Wonderland, Equinox Valley",
+      "Drop: Bloque — Refrigeration Station",
+      "Drop: Mamooth — Mamooooth Mountain",
+      "Drop: Snowman — Rollin' Tundra",
+      "Drop: Penguin — Signature Slopes",
+      "Drop: Thermister — Thermonuclear Climb",
+      "Drop: Quenchie — Waterlogged Entrance",
+      "Drop: Cryosnake — Cryo Catacombs",
+      "Drop: Bop Box — Overpass of Sound",
+      "Drop: Neyeptune — Crystal Basecamp, Chizoar's Cavern",
+      "Drop: Xylobone",
+      "Drop: Bloodbone — Hell Hath Frozen Over",
+      "Drop: Chizoar",
+      "Drop: Chaotic Chizoar",
+      "Drop: Blighted Chizoar",
+      "Drop: Massive Troll",
+      "Drop: Chaotic Troll",
+      "Drop: Blitzkrieg Troll",
+      "Drop: Purp Mushroom — Spaceway Raceway, Astro Colosseum",
+      "Drop: TV — TV Outpost",
+      "Drop: Donut — Donut Drive-In",
+      "Drop: Demon Genie — Outskirts of Fallstar Isle",
+      "Drop: Soda Can — Mountainous Deugh",
+      "Drop: Flying Worm — Wurm Highway",
+      "Drop: Gelatinous Cuboid — Jelly Cube Bridge",
+      "Drop: Choccie — Cocoa Tunnel",
+      "Drop: Biggole Wurm — Standstill Plains",
+      "Drop: Clammie — Shelled Shores",
+      "Drop: Octodar — The Untraveled Octopath",
+      "Drop: Flombeige — Flamboyant Bayou",
+      "Drop: Stilted Seeker — Enclave of Eyes, Enclave a la Troll",
+      "Drop: Suggma — Naut Sake Perimeter",
+      "Drop: Maccie — Niagrilled Falls, Molten Colosseum",
+      "Drop: Mister Brightside — The Killer Roundabout",
+      "Drop: Cheese Nub — Cracker Jack Lake",
+      "Drop: Stiltmole — The Great Molehill",
+      "Drop: Molti — Erruption River",
+      "Drop: Purgatory Stalker — Mount Doomish",
+      "Drop: Citringe — OJ Bay",
+      "Drop: Lampar — Lampar Lake",
+      "Drop: Fire Spirit — Spitfire River",
+      "Drop: Biggole Mole — Miner Mole Outskirts, KattleKruk's Volcano",
+      "Drop: Crawler — Crawly Catacombs",
+      "Drop: Tremor Wurm — The Worm Nest",
+      "Drop: Kattlekruk",
+      "Drop: Chaotic Kattlekruk",
+      "Drop: Sacrilegious Kattlekruk",
+      "Drop: Sprout Spirit — Gooble Goop Creek",
+      "Drop: Ricecake — Picnic Bridgeways, Whimsical Colosseum",
+      "Drop: River Spirit — Irrigation Station",
+      "Drop: Baby Troll — Troll Playground",
+      "Drop: Woodlin Spirit — Edge of the Valley",
+      "Drop: Bamboo Spirit — Bamboo Laboredge",
+      "Drop: Lantern Spirit — Lightway Path",
+      "Drop: Mama Troll — Troll Broodnest",
+      "Drop: Leek Spirit — Above the Clouds",
+      "Drop: Ceramic Spirit — Sleepy Skyline",
+      "Drop: Skydoggie Spirit — Dozey Dogpark",
+      "Drop: Royal Egg — Yolkrock Basin",
+      "Drop: Minichief Spirit — Chieftain Stairway",
+      "Drop: Samurai Guardian — Emperor's Castle Doorstep, Emperor's Castle",
+      "Drop: Emperor",
+      "Drop: Chaotic Emperor",
+      "Drop: Sovereign Emperor",
+      "Drop: Equinox Broadbass — Refraction Bend",
+      "Drop: Doodlefish — Doodle Reef",
+      "Drop: Eamsy Earl — Seaweed Street",
+      "Drop: Shellslug — Barnacle Curb",
+      "Drop: Balloonfish — Balloon Bay",
+      "Drop: Litterfish — Plastic Basin",
+      "Drop: Pufferblob — Puffpuff Overpass",
+      "Drop: Demonblub — Pinpoint Summit",
+      "Drop: Spearfish — Middle of Nowhere",
+      "Drop: Coralcave Crab — Coralcave Outskirts",
+      "Drop: Coralcave Guardian — Coralcave Perimeter",
+      "Drop: Trench Fish — Deep End of the Koipond",
+      "Drop: Boomy Mine — Minefield",
+      "Drop: Pirate Underling — Pirate Upper Deck",
+      "Drop: Eggroll — Sushi Perimeter",
+      "Drop: Jellofish — Jellofish Fields",
+      "Drop: Kelpfish — Where the Kelp Meets Trench",
+      "Drop: Mantaray — Trench Precipice",
+      "Drop: Glowfish — The Glowing Underbelly",
+      "Drop: Ancientfish — Ancient Fissure",
+      "Drop: Magni Pufferfin — Molten Edge",
+      "Drop: Pirate Deckhand — Pirate Mess Hall",
+      "Drop: Dreadnaught Captain — Dreadnaught Chamber",
+      "Drop: RIP Tide",
+      "W1 Colo",
+      "W2 Colo",
+      "W3 Colo",
+      "W4 Colo",
+      "W5 Colo",
+      "W6 Colo"
+    ],
+    "EquipmentStatues1": [
+      "Drop: Crystal Carrot",
+      "Drop: Slime — Jungle Perimeter",
+      "Drop: Baby Boa — Winding Willows",
+      "Drop: Carrotman — Vegetable Patch",
+      "Drop: Baba Yaga",
+      "Drop: Amarok",
+      "Drop: Chaotic Amarok",
+      "W1 Colo"
+    ],
+    "FoodPotOr2": [
+      "Drop: Crystal Carrot",
+      "Drop: Slime — Jungle Perimeter",
+      "Drop: Baby Boa — Winding Willows",
+      "Drop: Carrotman — Vegetable Patch",
+      "Drop: Baba Yaga",
+      "Drop: Amarok",
+      "Drop: Chaotic Amarok",
+      "W1 Colo"
+    ],
+    "rtt0": [
+      "Drop: Crystal Carrot",
+      "Drop: Slime — Jungle Perimeter",
+      "Drop: Baby Boa — Winding Willows",
+      "Drop: Carrotman — Vegetable Patch",
+      "Drop: Glublin — Forest Outskirts",
+      "Drop: Wode Board — Encroaching Forest Villas, End Of The Road",
+      "Drop: Gigafrog — Tucked Away",
+      "Drop: Baba Yaga",
+      "Drop: Dr Defecaus",
+      "Drop: Glunko The Massive",
+      "Drop: Amarok",
+      "Drop: Chaotic Amarok",
+      "Drop: Radiant Amarok",
+      "W1 Colo"
+    ],
+    "EquipmentShirts21": [
+      "Drop: Crystal Carrot",
+      "Drop: Slime — Jungle Perimeter",
+      "Drop: Baby Boa — Winding Willows",
+      "Drop: Carrotman — Vegetable Patch",
+      "Drop: Baba Yaga",
+      "Drop: Amarok",
+      "Drop: Chaotic Amarok",
+      "W1 Colo"
+    ],
+    "Quest21": [
+      "Drop: Crystal Carrot",
+      "Drop: Slime — Jungle Perimeter",
+      "Drop: Baby Boa — Winding Willows",
+      "Drop: Carrotman — Vegetable Patch",
+      "Drop: Baba Yaga",
+      "Drop: Amarok",
+      "Drop: Chaotic Amarok",
+      "W1 Colo"
+    ],
+    "EquipmentStatues5": [
+      "Drop: Crystal Carrot",
+      "Drop: Glublin — Forest Outskirts",
+      "Drop: Wode Board — Encroaching Forest Villas, End Of The Road",
+      "Drop: Gigafrog — Tucked Away",
+      "Drop: Poop — Poopy Sewers, The Office",
+      "Drop: Rat — Rats Nest",
+      "Drop: Baba Yaga",
+      "Drop: Dr Defecaus",
+      "Drop: Glunko The Massive",
+      "Drop: Amarok",
+      "Drop: Chaotic Amarok",
+      "Drop: Radiant Amarok",
+      "W1 Colo"
+    ],
+    "StoneT2": [
+      "Drop: Crystal Carrot",
+      "Drop: Glublin — Forest Outskirts",
+      "Drop: Wode Board — Encroaching Forest Villas, End Of The Road",
+      "Drop: Gigafrog — Tucked Away",
+      "Drop: Baba Yaga",
+      "Drop: Dr Defecaus",
+      "Drop: Glunko The Massive",
+      "Drop: Amarok",
+      "Drop: Chaotic Amarok",
+      "Drop: Radiant Amarok",
+      "W1 Colo",
+      "Drop: Flies",
+      "Drop: Butterflies — Bandit Bob's Hideout",
+      "Drop: Sentient Cereal",
+      "Drop: Fruitflies"
+    ],
+    "StoneA1": [
+      "Drop: Crystal Carrot",
+      "W1 Colo",
+      "Drop: Copper — Tunnels Entrance",
+      "Drop: Iron — Freefall Caverns",
+      "Drop: Gold",
+      "Drop: Plat — The Ol' Straightaway",
+      "Drop: Dementia",
+      "Drop: Void — Echoing Egress",
+      "Drop: Lustre",
+      "Drop: Starfire — Slip Slidy Ledges",
+      "Drop: Dreadlo",
+      "Drop: Marble",
+      "Drop: Godshard — Motherlode Pit",
+      "Drop: Prehistrium",
+      "Drop: Motherlode",
+      "Drop: Fractalfly",
+      "Drop: Evertree",
+      "Drop: Trench Fish",
+      "Drop: Fearful Tunnel",
+      "Drop: Decaying Crevasse",
+      "Drop: Buried Church",
+      "Drop: One Way Opening",
+      "Drop: Plunder Cranny",
+      "Drop: Kelp Forest"
+    ],
+    "StoneT1": [
+      "Drop: Crystal Carrot",
+      "Drop: Crystal Crabal",
+      "Drop: Copper — Tunnels Entrance",
+      "Drop: Iron — Freefall Caverns",
+      "Drop: Gold",
+      "Drop: Plat — The Ol' Straightaway",
+      "Drop: Dementia",
+      "Drop: Void — Echoing Egress",
+      "Drop: Lustre",
+      "Drop: Starfire — Slip Slidy Ledges",
+      "Drop: Dreadlo",
+      "Drop: Marble",
+      "Drop: Godshard — Motherlode Pit",
+      "Drop: Prehistrium",
+      "Drop: Motherlode",
+      "Drop: Fractalfly",
+      "Drop: Evertree",
+      "Drop: Trench Fish",
+      "Drop: Oak Tree",
+      "Drop: Birch Tree",
+      "Drop: Jungle Tree",
+      "Drop: Forest Tree",
+      "Drop: Stump Tree",
+      "Drop: Toilet Tree",
+      "Drop: Palm Tree",
+      "Drop: Flies",
+      "Drop: Butterflies — Bandit Bob's Hideout",
+      "Drop: Sentient Cereal",
+      "Drop: Fruitflies",
+      "Drop: Fearful Tunnel",
+      "Drop: Decaying Crevasse",
+      "Drop: Buried Church",
+      "Drop: One Way Opening",
+      "Drop: Plunder Cranny",
+      "Drop: Kelp Forest"
+    ],
+    "StampB11": [
+      "Drop: Crystal Carrot",
+      "Drop: Copper — Tunnels Entrance",
+      "Drop: Iron — Freefall Caverns",
+      "Drop: Gold",
+      "Drop: Plat — The Ol' Straightaway",
+      "Drop: Dementia",
+      "Drop: Void — Echoing Egress",
+      "Drop: Lustre",
+      "Drop: Starfire — Slip Slidy Ledges",
+      "Drop: Dreadlo",
+      "Drop: Marble",
+      "Drop: Godshard — Motherlode Pit",
+      "Drop: Prehistrium",
+      "Drop: Motherlode",
+      "Drop: Fractalfly",
+      "Drop: Evertree",
+      "Drop: Trench Fish",
+      "Drop: Fearful Tunnel",
+      "Drop: Decaying Crevasse",
+      "Drop: Buried Church",
+      "Drop: One Way Opening",
+      "Drop: Plunder Cranny",
+      "Drop: Kelp Forest"
+    ],
+    "FoodPotGr1": [
+      "Drop: Crystal Carrot",
+      "Drop: Copper — Tunnels Entrance",
+      "Drop: Iron — Freefall Caverns",
+      "Drop: Gold",
+      "Drop: Plat — The Ol' Straightaway",
+      "Drop: Dementia",
+      "Drop: Void — Echoing Egress",
+      "Drop: Lustre",
+      "Drop: Starfire — Slip Slidy Ledges",
+      "Drop: Dreadlo",
+      "Drop: Marble",
+      "Drop: Godshard — Motherlode Pit",
+      "Drop: Prehistrium",
+      "Drop: Motherlode",
+      "Drop: Fractalfly",
+      "Drop: Evertree",
+      "Drop: Trench Fish",
+      "Drop: Fearful Tunnel",
+      "Drop: Decaying Crevasse",
+      "Drop: Buried Church",
+      "Drop: One Way Opening",
+      "Drop: Plunder Cranny",
+      "Drop: Kelp Forest"
+    ],
+    "StampA13": [
+      "Drop: Crystal Carrot",
+      "Drop: Copper — Tunnels Entrance",
+      "Drop: Iron — Freefall Caverns",
+      "Drop: Gold",
+      "Drop: Plat — The Ol' Straightaway",
+      "Drop: Dementia",
+      "Drop: Void — Echoing Egress",
+      "Drop: Lustre",
+      "Drop: Starfire — Slip Slidy Ledges",
+      "Drop: Dreadlo",
+      "Drop: Marble",
+      "Drop: Godshard — Motherlode Pit",
+      "Drop: Prehistrium",
+      "Drop: Motherlode",
+      "Drop: Fractalfly",
+      "Drop: Evertree",
+      "Drop: Trench Fish",
+      "Drop: Fearful Tunnel",
+      "Drop: Decaying Crevasse",
+      "Drop: Buried Church",
+      "Drop: One Way Opening",
+      "Drop: Plunder Cranny",
+      "Drop: Kelp Forest"
+    ],
+    "Leaf1": [
+      "Drop: Crystal Carrot",
+      "Drop: Oak Tree",
+      "Drop: Birch Tree",
+      "Drop: Jungle Tree",
+      "Drop: Forest Tree",
+      "Drop: Stump Tree",
+      "Drop: Toilet Tree"
+    ],
+    "StoneW1": [
+      "Drop: Crystal Carrot",
+      "W1 Colo",
+      "Drop: Oak Tree",
+      "Drop: Birch Tree",
+      "Drop: Jungle Tree",
+      "Drop: Forest Tree",
+      "Drop: Stump Tree",
+      "Drop: Toilet Tree"
+    ],
+    "FoodPotOr1": [
+      "Drop: Crystal Carrot",
+      "Drop: Crystal Crabal",
+      "Drop: Frog — Froggy Fields, Dewdrop Colosseum, Grandfrog's Backyard, Grandfrog's Gazebo",
+      "Drop: Oak Tree",
+      "Drop: Birch Tree",
+      "Drop: Jungle Tree",
+      "Drop: Forest Tree",
+      "Drop: Stump Tree",
+      "Drop: Toilet Tree",
+      "Drop: Palm Tree",
+      "Drop: Flies",
+      "Drop: Butterflies — Bandit Bob's Hideout",
+      "Drop: Sentient Cereal",
+      "Drop: Fruitflies"
+    ],
+    "StampB9": [
+      "Drop: Crystal Carrot",
+      "Drop: Oak Tree",
+      "Drop: Birch Tree",
+      "Drop: Jungle Tree",
+      "Drop: Forest Tree",
+      "Drop: Stump Tree",
+      "Drop: Toilet Tree"
+    ],
+    "EquipmentStatues2": [
+      "Drop: Crystal Carrot",
+      "Drop: Crystal Cattle",
+      "Drop: Wood Mushroom — Where the Branches End",
+      "Drop: Sheepie — Steep Sheep Ledge, Inside the Igloo, Igloo's Basement",
+      "Drop: Frost Flake — Snowfield Outskirts, Coldsnap Colosseum",
+      "Drop: Sir Stache — The Stache Split",
+      "Drop: Xylobone",
+      "Drop: Chizoar",
+      "W3 Colo"
+    ],
+    "EquipmentStatues4": [
+      "Drop: Crystal Carrot",
+      "Drop: Crystal Cattle",
+      "Drop: Wood Mushroom — Where the Branches End",
+      "Drop: Poop — Poopy Sewers, The Office",
+      "Drop: Rat — Rats Nest",
+      "Drop: Dedotated Ram — Wam Wonderland, Equinox Valley",
+      "Drop: Quenchie — Waterlogged Entrance",
+      "Drop: Cryosnake — Cryo Catacombs",
+      "Drop: Bop Box — Overpass of Sound",
+      "Drop: Neyeptune — Crystal Basecamp, Chizoar's Cavern",
+      "Drop: Bloodbone — Hell Hath Frozen Over",
+      "Drop: Chizoar",
+      "Drop: Chaotic Chizoar",
+      "Drop: Blighted Chizoar",
+      "W3 Colo"
+    ],
+    "EquipmentStatues14": [
+      "Drop: Crystal Carrot",
+      "Drop: Crystal Cattle",
+      "Drop: Wood Mushroom — Where the Branches End"
+    ],
+    "EquipmentStatues3": [
+      "Drop: Crystal Carrot",
+      "Drop: Crystal Cattle",
+      "Drop: Wood Mushroom — Where the Branches End"
+    ],
+    "EquipmentStatues7": [
+      "Drop: Crystal Carrot",
+      "Drop: Crystal Cattle",
+      "Drop: Wood Mushroom — Where the Branches End"
+    ],
+    "EquipmentStatues15": [
+      "Drop: Crystal Carrot",
+      "Drop: Crystal Cattle",
+      "Drop: Wood Mushroom — Where the Branches End"
+    ],
+    "CardsB13": [
+      "Drop: Crystal Crabal"
+    ],
+    "InvBag7": [
+      "Drop: Crystal Crabal",
+      "Drop: Sandy Pot — Jar Bridge",
+      "Drop: Mimic — The Mimic Hole, Sandstone Colosseum, Heaty Hole, Gravel Tomb",
+      "Drop: Crabcake — Dessert Dunes",
+      "Drop: Biggie Hours",
+      "Drop: Efaunt",
+      "W2 Colo"
+    ],
+    "FoodHealth6": [
+      "Drop: Crystal Crabal",
+      "Drop: Sandy Pot — Jar Bridge",
+      "Drop: Mimic — The Mimic Hole, Sandstone Colosseum, Heaty Hole, Gravel Tomb",
+      "Drop: Crabcake — Dessert Dunes",
+      "Drop: Biggie Hours",
+      "Drop: Efaunt",
+      "W2 Colo"
+    ],
+    "FoodPotGr2": [
+      "Drop: Crystal Crabal",
+      "Drop: Sandy Pot — Jar Bridge",
+      "Drop: Mimic — The Mimic Hole, Sandstone Colosseum, Heaty Hole, Gravel Tomb",
+      "Drop: Crabcake — Dessert Dunes",
+      "Drop: Biggie Hours",
+      "Drop: Efaunt",
+      "W2 Colo"
+    ],
+    "StampB15": [
+      "Drop: Crystal Crabal",
+      "Drop: Sandy Pot — Jar Bridge",
+      "Drop: Mimic — The Mimic Hole, Sandstone Colosseum, Heaty Hole, Gravel Tomb",
+      "Drop: Crabcake — Dessert Dunes",
+      "Drop: Biggie Hours",
+      "Drop: Efaunt",
+      "W2 Colo"
+    ],
+    "EquipmentStatues12": [
+      "Drop: Crystal Crabal",
+      "Drop: Sandy Pot — Jar Bridge",
+      "Drop: Mimic — The Mimic Hole, Sandstone Colosseum, Heaty Hole, Gravel Tomb",
+      "Drop: Crabcake — Dessert Dunes",
+      "Drop: Biggie Hours",
+      "Drop: Efaunt",
+      "W2 Colo"
+    ],
+    "Quest32": [
+      "Drop: Crystal Crabal",
+      "Drop: Sandy Pot — Jar Bridge",
+      "Drop: Mimic — The Mimic Hole, Sandstone Colosseum, Heaty Hole, Gravel Tomb",
+      "Drop: Crabcake — Dessert Dunes",
+      "Drop: Dig Doug",
+      "Drop: Mafioso — The Grandioso Canyon",
+      "Drop: Sand Castle — Shifty Sandbox",
+      "Drop: Pincermin — Pincer Plateau",
+      "Drop: Mashed Potato — Slamabam Straightaway",
+      "Drop: Biggie Hours",
+      "Drop: Efaunt",
+      "Drop: Chaotic Efaunt",
+      "W2 Colo"
+    ],
+    "Quest23": [
+      "Drop: Crystal Crabal",
+      "Drop: Crystal Cattle",
+      "Drop: Rat — Rats Nest",
+      "Drop: Sandy Pot — Jar Bridge",
+      "Drop: Mimic — The Mimic Hole, Sandstone Colosseum, Heaty Hole, Gravel Tomb",
+      "Drop: Crabcake — Dessert Dunes",
+      "Drop: Dig Doug",
+      "Drop: Mafioso — The Grandioso Canyon",
+      "Drop: Sand Castle — Shifty Sandbox",
+      "Drop: Pincermin — Pincer Plateau",
+      "Drop: Mashed Potato — Slamabam Straightaway",
+      "Drop: Tyson — The Ring",
+      "Drop: Moonmoon — Up Up Down Down",
+      "Drop: Sand Giant — Sands of Time, Mummy Memorial",
+      "Drop: Snelbie — Djonnuttown, Efaunt's Tomb",
+      "Drop: Biggie Hours",
+      "Drop: Efaunt",
+      "Drop: Chaotic Efaunt",
+      "Drop: Gilded Efaunt",
+      "Drop: Sheepie — Steep Sheep Ledge, Inside the Igloo, Igloo's Basement",
+      "Drop: Frost Flake — Snowfield Outskirts, Coldsnap Colosseum",
+      "Drop: Sir Stache — The Stache Split",
+      "Drop: Dedotated Ram — Wam Wonderland, Equinox Valley",
+      "Drop: Bloque — Refrigeration Station",
+      "Drop: Mamooth — Mamooooth Mountain",
+      "Drop: Snowman — Rollin' Tundra",
+      "Drop: Penguin — Signature Slopes",
+      "Drop: Thermister — Thermonuclear Climb",
+      "Drop: Quenchie — Waterlogged Entrance",
+      "Drop: Cryosnake — Cryo Catacombs",
+      "Drop: Bop Box — Overpass of Sound",
+      "Drop: Neyeptune — Crystal Basecamp, Chizoar's Cavern",
+      "Drop: Xylobone",
+      "Drop: Bloodbone — Hell Hath Frozen Over",
+      "Drop: Chizoar",
+      "Drop: Chaotic Chizoar",
+      "Drop: Blighted Chizoar",
+      "W2 Colo",
+      "W3 Colo"
+    ],
+    "InvStorage14": [
+      "Drop: Crystal Crabal",
+      "Drop: Dig Doug",
+      "Drop: Mafioso — The Grandioso Canyon",
+      "Drop: Sand Castle — Shifty Sandbox",
+      "Drop: Pincermin — Pincer Plateau",
+      "Drop: Mashed Potato — Slamabam Straightaway",
+      "Drop: Efaunt",
+      "Drop: Chaotic Efaunt",
+      "W2 Colo"
+    ],
+    "StoneA2b": [
+      "Drop: Crystal Crabal",
+      "Drop: Dig Doug",
+      "Drop: Mafioso — The Grandioso Canyon",
+      "Drop: Sand Castle — Shifty Sandbox",
+      "Drop: Pincermin — Pincer Plateau",
+      "Drop: Mashed Potato — Slamabam Straightaway",
+      "Drop: Efaunt",
+      "Drop: Chaotic Efaunt",
+      "W2 Colo"
+    ],
+    "FoodHealth7": [
+      "Drop: Crystal Crabal",
+      "Drop: Dig Doug",
+      "Drop: Mafioso — The Grandioso Canyon",
+      "Drop: Sand Castle — Shifty Sandbox",
+      "Drop: Pincermin — Pincer Plateau",
+      "Drop: Mashed Potato — Slamabam Straightaway",
+      "Drop: Efaunt",
+      "Drop: Chaotic Efaunt",
+      "W2 Colo"
+    ],
+    "StampB16": [
+      "Drop: Crystal Crabal",
+      "Drop: Dig Doug",
+      "Drop: Mafioso — The Grandioso Canyon",
+      "Drop: Sand Castle — Shifty Sandbox",
+      "Drop: Pincermin — Pincer Plateau",
+      "Drop: Mashed Potato — Slamabam Straightaway",
+      "Drop: Efaunt",
+      "Drop: Chaotic Efaunt",
+      "W2 Colo"
+    ],
+    "EquipmentStatues11": [
+      "Drop: Crystal Crabal",
+      "Drop: Dig Doug",
+      "Drop: Mafioso — The Grandioso Canyon",
+      "Drop: Sand Castle — Shifty Sandbox",
+      "Drop: Pincermin — Pincer Plateau",
+      "Drop: Mashed Potato — Slamabam Straightaway",
+      "Drop: Efaunt",
+      "Drop: Chaotic Efaunt",
+      "W2 Colo"
+    ],
+    "MidnightCookie": [
+      "Drop: Crystal Crabal",
+      "Drop: Tyson — The Ring",
+      "Drop: Moonmoon — Up Up Down Down",
+      "Drop: Sand Giant — Sands of Time, Mummy Memorial",
+      "Drop: Snelbie — Djonnuttown, Efaunt's Tomb",
+      "Drop: King Doot",
+      "Drop: Efaunt",
+      "Drop: Chaotic Efaunt",
+      "Drop: Gilded Efaunt",
+      "W2 Colo"
+    ],
+    "StampA17": [
+      "Drop: Crystal Crabal",
+      "Drop: Tyson — The Ring",
+      "Drop: Moonmoon — Up Up Down Down",
+      "Drop: Sand Giant — Sands of Time, Mummy Memorial",
+      "Drop: Snelbie — Djonnuttown, Efaunt's Tomb",
+      "Drop: Efaunt",
+      "Drop: Chaotic Efaunt",
+      "Drop: Gilded Efaunt",
+      "W2 Colo"
+    ],
+    "FoodPotRe3": [
+      "Drop: Crystal Crabal",
+      "Drop: Tyson — The Ring",
+      "Drop: Moonmoon — Up Up Down Down",
+      "Drop: Sand Giant — Sands of Time, Mummy Memorial",
+      "Drop: Snelbie — Djonnuttown, Efaunt's Tomb",
+      "Drop: Efaunt",
+      "Drop: Chaotic Efaunt",
+      "Drop: Gilded Efaunt",
+      "W2 Colo"
+    ],
+    "StampB24": [
+      "Drop: Crystal Crabal",
+      "Drop: Tyson — The Ring",
+      "Drop: Moonmoon — Up Up Down Down",
+      "Drop: Sand Giant — Sands of Time, Mummy Memorial",
+      "Drop: Snelbie — Djonnuttown, Efaunt's Tomb",
+      "Drop: Efaunt",
+      "Drop: Chaotic Efaunt",
+      "Drop: Gilded Efaunt",
+      "W2 Colo"
+    ],
+    "EquipmentStatues13": [
+      "Drop: Crystal Crabal",
+      "Drop: Tyson — The Ring",
+      "Drop: Moonmoon — Up Up Down Down",
+      "Drop: Sand Giant — Sands of Time, Mummy Memorial",
+      "Drop: Snelbie — Djonnuttown, Efaunt's Tomb",
+      "Drop: Efaunt",
+      "Drop: Chaotic Efaunt",
+      "Drop: Gilded Efaunt",
+      "W2 Colo"
+    ],
+    "StampB23": [
+      "Drop: Crystal Crabal",
+      "Drop: Small Fish — Salty Shores, Faraway Piers",
+      "Drop: Medium Fish — Deepwater Docks, YumYum Islands",
+      "Drop: Large Fish",
+      "Drop: Equinox Fish",
+      "Drop: Goldfish",
+      "Drop: Hermit Can",
+      "Drop: Jellyfish",
+      "Drop: Bloach",
+      "Drop: Skelefish",
+      "Drop: Shark",
+      "Drop: Manta Ray",
+      "Drop: Kraken",
+      "Drop: Icefish",
+      "Drop: Shellfish",
+      "Drop: Jumbo Shrimp",
+      "Drop: Caulifish",
+      "Drop: Trench Fish"
+    ],
+    "EquipmentHats27": [
+      "Drop: Crystal Crabal",
+      "Drop: Small Fish — Salty Shores, Faraway Piers",
+      "Drop: Medium Fish — Deepwater Docks, YumYum Islands",
+      "Drop: Large Fish",
+      "Drop: Equinox Fish",
+      "Drop: Goldfish",
+      "Drop: Hermit Can",
+      "Drop: Jellyfish",
+      "Drop: Bloach",
+      "Drop: Skelefish",
+      "Drop: Shark",
+      "Drop: Manta Ray",
+      "Drop: Kraken",
+      "Drop: Icefish",
+      "Drop: Shellfish",
+      "Drop: Jumbo Shrimp",
+      "Drop: Caulifish",
+      "Drop: Trench Fish"
+    ],
+    "Leaf2": [
+      "Drop: Crystal Crabal",
+      "Drop: Palm Tree"
+    ],
+    "StoneW2": [
+      "Drop: Crystal Crabal",
+      "Drop: Green Mushroom — Spore Meadows",
+      "W1 Colo",
+      "W2 Colo",
+      "Drop: Palm Tree"
+    ],
+    "StampB13": [
+      "Drop: Crystal Crabal",
+      "Drop: Palm Tree"
+    ],
+    "EquipmentStatues8": [
+      "Drop: Crystal Crabal"
+    ],
+    "EquipmentStatues9": [
+      "Drop: Crystal Crabal"
+    ],
+    "EquipmentStatues10": [
+      "Drop: Crystal Crabal"
+    ],
+    "CardsE15": [
+      "Drop: Crystal Cattle"
+    ],
+    "StampB30": [
+      "Drop: Crystal Cattle",
+      "Drop: Sheepie — Steep Sheep Ledge, Inside the Igloo, Igloo's Basement",
+      "Drop: Frost Flake — Snowfield Outskirts, Coldsnap Colosseum",
+      "Drop: Sir Stache — The Stache Split",
+      "Drop: Xylobone",
+      "Drop: Chizoar",
+      "W3 Colo"
+    ],
+    "PureWater": [
+      "Drop: Crystal Cattle",
+      "Drop: Sheepie — Steep Sheep Ledge, Inside the Igloo, Igloo's Basement",
+      "Drop: Frost Flake — Snowfield Outskirts, Coldsnap Colosseum",
+      "Drop: Sir Stache — The Stache Split",
+      "Drop: Dedotated Ram — Wam Wonderland, Equinox Valley",
+      "Drop: Bloque — Refrigeration Station",
+      "Drop: Mamooth — Mamooooth Mountain",
+      "Drop: Snowman — Rollin' Tundra",
+      "Drop: Penguin — Signature Slopes",
+      "Drop: Thermister — Thermonuclear Climb",
+      "Drop: Quenchie — Waterlogged Entrance",
+      "Drop: Cryosnake — Cryo Catacombs",
+      "Drop: Bop Box — Overpass of Sound",
+      "Drop: Neyeptune — Crystal Basecamp, Chizoar's Cavern",
+      "Drop: Xylobone",
+      "Drop: Bloodbone — Hell Hath Frozen Over",
+      "Drop: Chizoar",
+      "Drop: Chaotic Chizoar",
+      "Drop: Blighted Chizoar",
+      "W3 Colo"
+    ],
+    "StampB36": [
+      "Drop: Crystal Cattle",
+      "Drop: Sheepie — Steep Sheep Ledge, Inside the Igloo, Igloo's Basement",
+      "Drop: Frost Flake — Snowfield Outskirts, Coldsnap Colosseum",
+      "Drop: Sir Stache — The Stache Split",
+      "Drop: Xylobone",
+      "Drop: Chizoar",
+      "W3 Colo"
+    ],
+    "EquipmentStatues18": [
+      "Drop: Crystal Cattle",
+      "Drop: Sheepie — Steep Sheep Ledge, Inside the Igloo, Igloo's Basement",
+      "Drop: Frost Flake — Snowfield Outskirts, Coldsnap Colosseum",
+      "Drop: Sir Stache — The Stache Split",
+      "Drop: Bloque — Refrigeration Station",
+      "Drop: Mamooth — Mamooooth Mountain",
+      "Drop: Snowman — Rollin' Tundra",
+      "Drop: Penguin — Signature Slopes",
+      "Drop: Thermister — Thermonuclear Climb",
+      "Drop: Xylobone",
+      "Drop: Chizoar",
+      "Drop: Chaotic Chizoar",
+      "W3 Colo"
+    ],
+    "FoodPotOr3": [
+      "Drop: Crystal Cattle",
+      "Drop: Sheepie — Steep Sheep Ledge, Inside the Igloo, Igloo's Basement",
+      "Drop: Frost Flake — Snowfield Outskirts, Coldsnap Colosseum",
+      "Drop: Sir Stache — The Stache Split",
+      "Drop: Xylobone",
+      "Drop: Chizoar",
+      "W3 Colo"
+    ],
+    "Quest22": [
+      "Drop: Crystal Cattle",
+      "Drop: Crystal Custard",
+      "Drop: Crystal Capybara",
+      "Drop: Crystal Candalight",
+      "Drop: Crystal Cuttlefish",
+      "Drop: Poop — Poopy Sewers, The Office",
+      "Drop: Sheepie — Steep Sheep Ledge, Inside the Igloo, Igloo's Basement",
+      "Drop: Frost Flake — Snowfield Outskirts, Coldsnap Colosseum",
+      "Drop: Sir Stache — The Stache Split",
+      "Drop: Dedotated Ram — Wam Wonderland, Equinox Valley",
+      "Drop: Bloque — Refrigeration Station",
+      "Drop: Mamooth — Mamooooth Mountain",
+      "Drop: Snowman — Rollin' Tundra",
+      "Drop: Penguin — Signature Slopes",
+      "Drop: Thermister — Thermonuclear Climb",
+      "Drop: Quenchie — Waterlogged Entrance",
+      "Drop: Cryosnake — Cryo Catacombs",
+      "Drop: Bop Box — Overpass of Sound",
+      "Drop: Neyeptune — Crystal Basecamp, Chizoar's Cavern",
+      "Drop: Xylobone",
+      "Drop: Bloodbone — Hell Hath Frozen Over",
+      "Drop: Chizoar",
+      "Drop: Chaotic Chizoar",
+      "Drop: Blighted Chizoar",
+      "Drop: Massive Troll",
+      "Drop: Chaotic Troll",
+      "Drop: Blitzkrieg Troll",
+      "Drop: Purp Mushroom — Spaceway Raceway, Astro Colosseum",
+      "Drop: TV — TV Outpost",
+      "Drop: Donut — Donut Drive-In",
+      "Drop: Demon Genie — Outskirts of Fallstar Isle",
+      "Drop: Soda Can — Mountainous Deugh",
+      "Drop: Flying Worm — Wurm Highway",
+      "Drop: Gelatinous Cuboid — Jelly Cube Bridge",
+      "Drop: Choccie — Cocoa Tunnel",
+      "Drop: Biggole Wurm — Standstill Plains",
+      "Drop: Clammie — Shelled Shores",
+      "Drop: Octodar — The Untraveled Octopath",
+      "Drop: Flombeige — Flamboyant Bayou",
+      "Drop: Stilted Seeker — Enclave of Eyes, Enclave a la Troll",
+      "Drop: Suggma — Naut Sake Perimeter",
+      "Drop: Maccie — Niagrilled Falls, Molten Colosseum",
+      "Drop: Mister Brightside — The Killer Roundabout",
+      "Drop: Cheese Nub — Cracker Jack Lake",
+      "Drop: Stiltmole — The Great Molehill",
+      "Drop: Molti — Erruption River",
+      "Drop: Purgatory Stalker — Mount Doomish",
+      "Drop: Citringe — OJ Bay",
+      "Drop: Lampar — Lampar Lake",
+      "Drop: Fire Spirit — Spitfire River",
+      "Drop: Biggole Mole — Miner Mole Outskirts, KattleKruk's Volcano",
+      "Drop: Crawler — Crawly Catacombs",
+      "Drop: Tremor Wurm — The Worm Nest",
+      "Drop: Kattlekruk",
+      "Drop: Chaotic Kattlekruk",
+      "Drop: Sacrilegious Kattlekruk",
+      "Drop: Sprout Spirit — Gooble Goop Creek",
+      "Drop: Ricecake — Picnic Bridgeways, Whimsical Colosseum",
+      "Drop: River Spirit — Irrigation Station",
+      "Drop: Baby Troll — Troll Playground",
+      "Drop: Woodlin Spirit — Edge of the Valley",
+      "Drop: Bamboo Spirit — Bamboo Laboredge",
+      "Drop: Lantern Spirit — Lightway Path",
+      "Drop: Mama Troll — Troll Broodnest",
+      "Drop: Leek Spirit — Above the Clouds",
+      "Drop: Ceramic Spirit — Sleepy Skyline",
+      "Drop: Skydoggie Spirit — Dozey Dogpark",
+      "Drop: Royal Egg — Yolkrock Basin",
+      "Drop: Minichief Spirit — Chieftain Stairway",
+      "Drop: Samurai Guardian — Emperor's Castle Doorstep, Emperor's Castle",
+      "Drop: Emperor",
+      "Drop: Chaotic Emperor",
+      "Drop: Sovereign Emperor",
+      "Drop: Equinox Broadbass — Refraction Bend",
+      "Drop: Doodlefish — Doodle Reef",
+      "Drop: Eamsy Earl — Seaweed Street",
+      "Drop: Shellslug — Barnacle Curb",
+      "Drop: Balloonfish — Balloon Bay",
+      "Drop: Litterfish — Plastic Basin",
+      "Drop: Pufferblob — Puffpuff Overpass",
+      "Drop: Demonblub — Pinpoint Summit",
+      "Drop: Spearfish — Middle of Nowhere",
+      "Drop: Coralcave Crab — Coralcave Outskirts",
+      "Drop: Coralcave Guardian — Coralcave Perimeter",
+      "Drop: Trench Fish — Deep End of the Koipond",
+      "Drop: Boomy Mine — Minefield",
+      "Drop: Pirate Underling — Pirate Upper Deck",
+      "Drop: Eggroll — Sushi Perimeter",
+      "Drop: Jellofish — Jellofish Fields",
+      "Drop: Kelpfish — Where the Kelp Meets Trench",
+      "Drop: Mantaray — Trench Precipice",
+      "Drop: Glowfish — The Glowing Underbelly",
+      "Drop: Ancientfish — Ancient Fissure",
+      "Drop: Magni Pufferfin — Molten Edge",
+      "Drop: Pirate Deckhand — Pirate Mess Hall",
+      "Drop: Dreadnaught Captain — Dreadnaught Chamber",
+      "Drop: RIP Tide",
+      "W3 Colo",
+      "W4 Colo",
+      "W5 Colo",
+      "W6 Colo"
+    ],
+    "StampC19": [
+      "Drop: Crystal Cattle",
+      "Drop: Bloque — Refrigeration Station",
+      "Drop: Mamooth — Mamooooth Mountain",
+      "Drop: Snowman — Rollin' Tundra",
+      "Drop: Penguin — Signature Slopes",
+      "Drop: Thermister — Thermonuclear Climb",
+      "Drop: Chizoar",
+      "Drop: Chaotic Chizoar",
+      "W3 Colo"
+    ],
+    "StampA20": [
+      "Drop: Crystal Cattle",
+      "Drop: Bloque — Refrigeration Station",
+      "Drop: Mamooth — Mamooooth Mountain",
+      "Drop: Snowman — Rollin' Tundra",
+      "Drop: Penguin — Signature Slopes",
+      "Drop: Thermister — Thermonuclear Climb",
+      "Drop: Chizoar",
+      "Drop: Chaotic Chizoar",
+      "W3 Colo"
+    ],
+    "FoodHealth10": [
+      "Drop: Crystal Cattle",
+      "Drop: Bloque — Refrigeration Station",
+      "Drop: Mamooth — Mamooooth Mountain",
+      "Drop: Snowman — Rollin' Tundra",
+      "Drop: Penguin — Signature Slopes",
+      "Drop: Thermister — Thermonuclear Climb",
+      "Drop: Chizoar",
+      "Drop: Chaotic Chizoar",
+      "W3 Colo"
+    ],
+    "SmithingRecipes3": [
+      "Drop: Crystal Cattle",
+      "Drop: Bloque — Refrigeration Station",
+      "Drop: Mamooth — Mamooooth Mountain",
+      "Drop: Snowman — Rollin' Tundra",
+      "Drop: Penguin — Signature Slopes",
+      "Drop: Thermister — Thermonuclear Climb",
+      "Drop: Chizoar",
+      "Drop: Chaotic Chizoar",
+      "Drop: Dilapidated Slush",
+      "Drop: Mutated Mush",
+      "W3 Colo"
+    ],
+    "StampB34": [
+      "Drop: Crystal Cattle",
+      "Drop: Dedotated Ram — Wam Wonderland, Equinox Valley",
+      "Drop: Quenchie — Waterlogged Entrance",
+      "Drop: Cryosnake — Cryo Catacombs",
+      "Drop: Bop Box — Overpass of Sound",
+      "Drop: Neyeptune — Crystal Basecamp, Chizoar's Cavern",
+      "Drop: Bloodbone — Hell Hath Frozen Over",
+      "Drop: Chizoar",
+      "Drop: Chaotic Chizoar",
+      "Drop: Blighted Chizoar",
+      "W3 Colo"
+    ],
+    "StampA27": [
+      "Drop: Crystal Cattle",
+      "Drop: Dedotated Ram — Wam Wonderland, Equinox Valley",
+      "Drop: Quenchie — Waterlogged Entrance",
+      "Drop: Cryosnake — Cryo Catacombs",
+      "Drop: Bop Box — Overpass of Sound",
+      "Drop: Neyeptune — Crystal Basecamp, Chizoar's Cavern",
+      "Drop: Bloodbone — Hell Hath Frozen Over",
+      "Drop: Chizoar",
+      "Drop: Chaotic Chizoar",
+      "Drop: Blighted Chizoar",
+      "W3 Colo"
+    ],
+    "FoodPotYe2": [
+      "Drop: Crystal Cattle",
+      "Drop: Dedotated Ram — Wam Wonderland, Equinox Valley",
+      "Drop: Quenchie — Waterlogged Entrance",
+      "Drop: Cryosnake — Cryo Catacombs",
+      "Drop: Bop Box — Overpass of Sound",
+      "Drop: Neyeptune — Crystal Basecamp, Chizoar's Cavern",
+      "Drop: Bloodbone — Hell Hath Frozen Over",
+      "Drop: Chizoar",
+      "Drop: Chaotic Chizoar",
+      "Drop: Blighted Chizoar",
+      "W3 Colo"
+    ],
+    "Leaf3": [
+      "Drop: Crystal Cattle",
+      "Drop: Saharan Foal",
+      "Drop: Wispy Tree"
+    ],
+    "StampB25": [
+      "Drop: Crystal Cattle",
+      "Drop: Saharan Foal",
+      "Drop: Wispy Tree"
+    ],
+    "StampB27": [
+      "Drop: Crystal Cattle",
+      "Drop: Mosquisnow",
+      "Drop: Flycicle"
+    ],
+    "CardsG14": [
+      "Drop: Crystal Custard"
+    ],
+    "EquipmentStatues20": [
+      "Drop: Crystal Custard",
+      "Drop: Massive Troll",
+      "Drop: Chaotic Troll",
+      "Drop: Blitzkrieg Troll",
+      "Drop: Purp Mushroom — Spaceway Raceway, Astro Colosseum",
+      "Drop: TV — TV Outpost",
+      "Drop: Donut — Donut Drive-In",
+      "Drop: Demon Genie — Outskirts of Fallstar Isle",
+      "W4 Colo"
+    ],
+    "StampA31": [
+      "Drop: Crystal Custard",
+      "Drop: Massive Troll",
+      "Drop: Chaotic Troll",
+      "Drop: Blitzkrieg Troll",
+      "Drop: Purp Mushroom — Spaceway Raceway, Astro Colosseum",
+      "Drop: TV — TV Outpost",
+      "Drop: Donut — Donut Drive-In",
+      "Drop: Demon Genie — Outskirts of Fallstar Isle",
+      "W4 Colo"
+    ],
+    "Weight7": [
+      "Drop: Crystal Custard",
+      "Drop: Massive Troll",
+      "Drop: Chaotic Troll",
+      "Drop: Blitzkrieg Troll",
+      "Drop: Purp Mushroom — Spaceway Raceway, Astro Colosseum",
+      "Drop: TV — TV Outpost",
+      "Drop: Donut — Donut Drive-In",
+      "Drop: Demon Genie — Outskirts of Fallstar Isle",
+      "W4 Colo"
+    ],
+    "EquipmentStatues21": [
+      "Drop: Crystal Custard",
+      "Drop: Massive Troll",
+      "Drop: Chaotic Troll",
+      "Drop: Blitzkrieg Troll",
+      "Drop: Soda Can — Mountainous Deugh",
+      "Drop: Flying Worm — Wurm Highway",
+      "Drop: Gelatinous Cuboid — Jelly Cube Bridge",
+      "Drop: Choccie — Cocoa Tunnel",
+      "Drop: Biggole Wurm — Standstill Plains",
+      "W4 Colo"
+    ],
+    "Line8": [
+      "Drop: Crystal Custard",
+      "Drop: Massive Troll",
+      "Drop: Chaotic Troll",
+      "Drop: Blitzkrieg Troll",
+      "Drop: Soda Can — Mountainous Deugh",
+      "Drop: Flying Worm — Wurm Highway",
+      "Drop: Gelatinous Cuboid — Jelly Cube Bridge",
+      "Drop: Choccie — Cocoa Tunnel",
+      "Drop: Biggole Wurm — Standstill Plains",
+      "W4 Colo"
+    ],
+    "FoodPotMana4": [
+      "Drop: Crystal Custard",
+      "Drop: Massive Troll",
+      "Drop: Chaotic Troll",
+      "Drop: Blitzkrieg Troll",
+      "Drop: Soda Can — Mountainous Deugh",
+      "Drop: Flying Worm — Wurm Highway",
+      "Drop: Gelatinous Cuboid — Jelly Cube Bridge",
+      "Drop: Choccie — Cocoa Tunnel",
+      "Drop: Biggole Wurm — Standstill Plains",
+      "W4 Colo"
+    ],
+    "EquipmentStatues22": [
+      "Drop: Crystal Custard",
+      "Drop: Massive Troll",
+      "Drop: Chaotic Troll",
+      "Drop: Blitzkrieg Troll",
+      "Drop: Clammie — Shelled Shores",
+      "Drop: Octodar — The Untraveled Octopath",
+      "Drop: Flombeige — Flamboyant Bayou",
+      "Drop: Stilted Seeker — Enclave of Eyes, Enclave a la Troll",
+      "W4 Colo"
+    ],
+    "StampA32": [
+      "Drop: Crystal Custard",
+      "Drop: Massive Troll",
+      "Drop: Chaotic Troll",
+      "Drop: Blitzkrieg Troll",
+      "Drop: Clammie — Shelled Shores",
+      "Drop: Octodar — The Untraveled Octopath",
+      "Drop: Flombeige — Flamboyant Bayou",
+      "Drop: Stilted Seeker — Enclave of Eyes, Enclave a la Troll",
+      "W4 Colo"
+    ],
+    "Weight13": [
+      "Drop: Crystal Custard",
+      "Drop: Massive Troll",
+      "Drop: Chaotic Troll",
+      "Drop: Blitzkrieg Troll",
+      "Drop: Clammie — Shelled Shores",
+      "Drop: Octodar — The Untraveled Octopath",
+      "Drop: Flombeige — Flamboyant Bayou",
+      "Drop: Stilted Seeker — Enclave of Eyes, Enclave a la Troll",
+      "W4 Colo"
+    ],
+    "Leaf4": [
+      "Drop: Crystal Custard",
+      "Drop: Alien Tree",
+      "Drop: Cubed Tree"
+    ],
+    "Weight4": [
+      "Drop: Crystal Custard",
+      "Drop: Alien Tree",
+      "Drop: Cubed Tree"
+    ],
+    "CardsH14": [
+      "Drop: Crystal Capybara"
+    ],
+    "EquipmentStatues23": [
+      "Drop: Crystal Capybara",
+      "Drop: Suggma — Naut Sake Perimeter",
+      "Drop: Maccie — Niagrilled Falls, Molten Colosseum",
+      "Drop: Mister Brightside — The Killer Roundabout",
+      "Drop: Cheese Nub — Cracker Jack Lake",
+      "Drop: Stiltmole — The Great Molehill",
+      "Drop: Kattlekruk",
+      "Drop: Chaotic Kattlekruk",
+      "Drop: Sacrilegious Kattlekruk",
+      "W5 Colo"
+    ],
+    "StampA33": [
+      "Drop: Crystal Capybara",
+      "Drop: Suggma — Naut Sake Perimeter",
+      "Drop: Maccie — Niagrilled Falls, Molten Colosseum",
+      "Drop: Mister Brightside — The Killer Roundabout",
+      "Drop: Cheese Nub — Cracker Jack Lake",
+      "Drop: Stiltmole — The Great Molehill",
+      "Drop: Kattlekruk",
+      "Drop: Chaotic Kattlekruk",
+      "Drop: Sacrilegious Kattlekruk",
+      "W5 Colo"
+    ],
+    "FoodG10": [
+      "Drop: Crystal Capybara",
+      "Drop: Suggma — Naut Sake Perimeter",
+      "Drop: Maccie — Niagrilled Falls, Molten Colosseum",
+      "Drop: Mister Brightside — The Killer Roundabout",
+      "Drop: Cheese Nub — Cracker Jack Lake",
+      "Drop: Stiltmole — The Great Molehill",
+      "Drop: Crawler — Crawly Catacombs",
+      "Drop: Tremor Wurm — The Worm Nest",
+      "Drop: Kattlekruk",
+      "Drop: Chaotic Kattlekruk",
+      "Drop: Sacrilegious Kattlekruk",
+      "W5 Colo"
+    ],
+    "FoodPotYe5": [
+      "Drop: Crystal Capybara",
+      "Drop: Suggma — Naut Sake Perimeter",
+      "Drop: Maccie — Niagrilled Falls, Molten Colosseum",
+      "Drop: Mister Brightside — The Killer Roundabout",
+      "Drop: Cheese Nub — Cracker Jack Lake",
+      "Drop: Stiltmole — The Great Molehill",
+      "Drop: Molti — Erruption River",
+      "Drop: Purgatory Stalker — Mount Doomish",
+      "Drop: Citringe — OJ Bay",
+      "Drop: Lampar — Lampar Lake",
+      "Drop: Fire Spirit — Spitfire River",
+      "Drop: Biggole Mole — Miner Mole Outskirts, KattleKruk's Volcano",
+      "Drop: Crawler — Crawly Catacombs",
+      "Drop: Tremor Wurm — The Worm Nest",
+      "Drop: Kattlekruk",
+      "Drop: Chaotic Kattlekruk",
+      "Drop: Sacrilegious Kattlekruk",
+      "W5 Colo"
+    ],
+    "InvStorage24": [
+      "Drop: Crystal Capybara",
+      "Drop: Suggma — Naut Sake Perimeter",
+      "Drop: Maccie — Niagrilled Falls, Molten Colosseum",
+      "Drop: Mister Brightside — The Killer Roundabout",
+      "Drop: Cheese Nub — Cracker Jack Lake",
+      "Drop: Stiltmole — The Great Molehill",
+      "Drop: Kattlekruk",
+      "Drop: Chaotic Kattlekruk",
+      "Drop: Sacrilegious Kattlekruk",
+      "W5 Colo"
+    ],
+    "EquipmentStatues25": [
+      "Drop: Crystal Capybara",
+      "Drop: Molti — Erruption River",
+      "Drop: Purgatory Stalker — Mount Doomish",
+      "Drop: Citringe — OJ Bay",
+      "Drop: Lampar — Lampar Lake",
+      "Drop: Fire Spirit — Spitfire River",
+      "Drop: Biggole Mole — Miner Mole Outskirts, KattleKruk's Volcano",
+      "Drop: Kattlekruk",
+      "Drop: Chaotic Kattlekruk",
+      "W5 Colo"
+    ],
+    "StampA35": [
+      "Drop: Crystal Capybara",
+      "Drop: Molti — Erruption River",
+      "Drop: Purgatory Stalker — Mount Doomish",
+      "Drop: Citringe — OJ Bay",
+      "Drop: Lampar — Lampar Lake",
+      "Drop: Fire Spirit — Spitfire River",
+      "Drop: Biggole Mole — Miner Mole Outskirts, KattleKruk's Volcano",
+      "Drop: Kattlekruk",
+      "Drop: Chaotic Kattlekruk",
+      "W5 Colo"
+    ],
+    "FoodG9": [
+      "Drop: Crystal Capybara",
+      "Drop: Molti — Erruption River",
+      "Drop: Purgatory Stalker — Mount Doomish",
+      "Drop: Citringe — OJ Bay",
+      "Drop: Lampar — Lampar Lake",
+      "Drop: Fire Spirit — Spitfire River",
+      "Drop: Biggole Mole — Miner Mole Outskirts, KattleKruk's Volcano",
+      "Drop: Crawler — Crawly Catacombs",
+      "Drop: Tremor Wurm — The Worm Nest",
+      "Drop: Kattlekruk",
+      "Drop: Chaotic Kattlekruk",
+      "W5 Colo"
+    ],
+    "InvStorage25": [
+      "Drop: Crystal Capybara",
+      "Drop: Molti — Erruption River",
+      "Drop: Purgatory Stalker — Mount Doomish",
+      "Drop: Citringe — OJ Bay",
+      "Drop: Lampar — Lampar Lake",
+      "Drop: Fire Spirit — Spitfire River",
+      "Drop: Biggole Mole — Miner Mole Outskirts, KattleKruk's Volcano",
+      "Drop: Kattlekruk",
+      "Drop: Chaotic Kattlekruk",
+      "W5 Colo"
+    ],
+    "EquipmentStatues24": [
+      "Drop: Crystal Capybara",
+      "Drop: Crawler — Crawly Catacombs",
+      "Drop: Tremor Wurm — The Worm Nest",
+      "Drop: Kattlekruk",
+      "Drop: Chaotic Kattlekruk",
+      "W5 Colo"
+    ],
+    "Weight9": [
+      "Drop: Crystal Capybara",
+      "Drop: Crawler — Crawly Catacombs",
+      "Drop: Tremor Wurm — The Worm Nest",
+      "Drop: Kattlekruk",
+      "Drop: Chaotic Kattlekruk",
+      "W5 Colo"
+    ],
+    "Leaf5": [
+      "Drop: Crystal Capybara",
+      "Drop: Maple Tree",
+      "Drop: Dandelioli Tree",
+      "Drop: Equinox Willow"
+    ],
+    "Line4": [
+      "Drop: Crystal Capybara",
+      "Drop: Dandelioli Tree",
+      "Drop: Equinox Willow"
+    ],
+    "CardsI15": [
+      "Drop: Crystal Candalight"
+    ],
+    "FoodG12": [
+      "Drop: Crystal Candalight",
+      "Drop: Sprout Spirit — Gooble Goop Creek",
+      "Drop: Ricecake — Picnic Bridgeways, Whimsical Colosseum",
+      "Drop: River Spirit — Irrigation Station",
+      "Drop: Baby Troll — Troll Playground",
+      "Drop: Woodlin Spirit — Edge of the Valley",
+      "Drop: Royal Egg — Yolkrock Basin",
+      "Drop: Minichief Spirit — Chieftain Stairway",
+      "Drop: Samurai Guardian — Emperor's Castle Doorstep, Emperor's Castle",
+      "Drop: Emperor",
+      "Drop: Chaotic Emperor",
+      "Drop: Sovereign Emperor",
+      "W6 Colo"
+    ],
+    "StampB52": [
+      "Drop: Crystal Candalight",
+      "Drop: Sprout Spirit — Gooble Goop Creek",
+      "Drop: Ricecake — Picnic Bridgeways, Whimsical Colosseum",
+      "Drop: River Spirit — Irrigation Station",
+      "Drop: Baby Troll — Troll Playground",
+      "Drop: Woodlin Spirit — Edge of the Valley",
+      "W6 Colo"
+    ],
+    "EquipmentStatues26": [
+      "Drop: Crystal Candalight",
+      "Drop: Sprout Spirit — Gooble Goop Creek",
+      "Drop: Ricecake — Picnic Bridgeways, Whimsical Colosseum",
+      "Drop: River Spirit — Irrigation Station",
+      "Drop: Baby Troll — Troll Playground",
+      "Drop: Woodlin Spirit — Edge of the Valley",
+      "W6 Colo"
+    ],
+    "StampB50": [
+      "Drop: Crystal Candalight",
+      "Drop: Sprout Spirit — Gooble Goop Creek",
+      "Drop: Ricecake — Picnic Bridgeways, Whimsical Colosseum",
+      "Drop: River Spirit — Irrigation Station",
+      "Drop: Baby Troll — Troll Playground",
+      "Drop: Woodlin Spirit — Edge of the Valley",
+      "W6 Colo"
+    ],
+    "EquipmentStatues27": [
+      "Drop: Crystal Candalight",
+      "Drop: Bamboo Spirit — Bamboo Laboredge",
+      "Drop: Lantern Spirit — Lightway Path",
+      "Drop: Mama Troll — Troll Broodnest",
+      "Drop: Leek Spirit — Above the Clouds",
+      "Drop: Emperor",
+      "Drop: Chaotic Emperor",
+      "Drop: Sovereign Emperor"
+    ],
+    "FoodG11": [
+      "Drop: Crystal Candalight",
+      "Drop: Bamboo Spirit — Bamboo Laboredge",
+      "Drop: Lantern Spirit — Lightway Path",
+      "Drop: Mama Troll — Troll Broodnest",
+      "Drop: Leek Spirit — Above the Clouds",
+      "Drop: Emperor",
+      "Drop: Chaotic Emperor",
+      "Drop: Sovereign Emperor",
+      "W6 Colo"
+    ],
+    "StampB49": [
+      "Drop: Crystal Candalight",
+      "Drop: Bamboo Spirit — Bamboo Laboredge",
+      "Drop: Lantern Spirit — Lightway Path",
+      "Drop: Mama Troll — Troll Broodnest",
+      "Drop: Leek Spirit — Above the Clouds",
+      "Drop: Emperor",
+      "Drop: Chaotic Emperor",
+      "Drop: Sovereign Emperor"
+    ],
+    "EquipmentStatues28": [
+      "Drop: Crystal Candalight",
+      "Drop: Ceramic Spirit — Sleepy Skyline",
+      "Drop: Skydoggie Spirit — Dozey Dogpark",
+      "Drop: Emperor",
+      "Drop: Chaotic Emperor",
+      "Drop: Sovereign Emperor"
+    ],
+    "StampA42": [
+      "Drop: Crystal Candalight",
+      "Drop: Ceramic Spirit — Sleepy Skyline",
+      "Drop: Skydoggie Spirit — Dozey Dogpark",
+      "Drop: Emperor",
+      "Drop: Chaotic Emperor",
+      "Drop: Sovereign Emperor"
+    ],
+    "StampB54": [
+      "Drop: Crystal Candalight",
+      "Drop: Royal Egg — Yolkrock Basin",
+      "Drop: Minichief Spirit — Chieftain Stairway",
+      "Drop: Samurai Guardian — Emperor's Castle Doorstep, Emperor's Castle",
+      "Drop: Emperor",
+      "Drop: Chaotic Emperor",
+      "Drop: Sovereign Emperor"
+    ],
+    "Leaf6": [
+      "Drop: Crystal Candalight",
+      "Drop: Bamboo",
+      "Drop: Effervescent Eucalyptus",
+      "Drop: Ancient Seaweed"
+    ],
+    "CardsJ99": [
+      "Drop: Crystal Cuttlefish"
+    ],
+    "FoodG14": [
+      "Drop: Crystal Cuttlefish",
+      "Drop: Equinox Broadbass — Refraction Bend",
+      "Drop: Doodlefish — Doodle Reef",
+      "Drop: Eamsy Earl — Seaweed Street",
+      "Drop: Shellslug — Barnacle Curb",
+      "Drop: Balloonfish — Balloon Bay",
+      "Drop: Litterfish — Plastic Basin",
+      "Drop: Pufferblob — Puffpuff Overpass",
+      "Drop: Demonblub — Pinpoint Summit",
+      "Drop: Spearfish — Middle of Nowhere",
+      "Drop: Coralcave Crab — Coralcave Outskirts",
+      "Drop: Coralcave Guardian — Coralcave Perimeter",
+      "Drop: Trench Fish — Deep End of the Koipond",
+      "Drop: Boomy Mine — Minefield",
+      "Drop: Pirate Underling — Pirate Upper Deck",
+      "Drop: Eggroll — Sushi Perimeter",
+      "Drop: Jellofish — Jellofish Fields",
+      "Drop: Kelpfish — Where the Kelp Meets Trench",
+      "Drop: Mantaray — Trench Precipice",
+      "Drop: Glowfish — The Glowing Underbelly",
+      "Drop: Ancientfish — Ancient Fissure",
+      "Drop: Magni Pufferfin — Molten Edge",
+      "Drop: Pirate Deckhand — Pirate Mess Hall",
+      "Drop: Dreadnaught Captain — Dreadnaught Chamber",
+      "Drop: RIP Tide"
+    ],
+    "EquipmentStatues31": [
+      "Drop: Crystal Cuttlefish",
+      "Drop: Equinox Broadbass — Refraction Bend",
+      "Drop: Doodlefish — Doodle Reef",
+      "Drop: Eamsy Earl — Seaweed Street",
+      "Drop: Shellslug — Barnacle Curb",
+      "Drop: Balloonfish — Balloon Bay",
+      "Drop: Litterfish — Plastic Basin",
+      "Drop: Pufferblob — Puffpuff Overpass",
+      "Drop: Demonblub — Pinpoint Summit",
+      "Drop: Spearfish — Middle of Nowhere",
+      "Drop: Coralcave Crab — Coralcave Outskirts",
+      "Drop: Coralcave Guardian — Coralcave Perimeter",
+      "Drop: Trench Fish — Deep End of the Koipond",
+      "Drop: Boomy Mine — Minefield",
+      "Drop: Pirate Underling — Pirate Upper Deck",
+      "Drop: Eggroll — Sushi Perimeter",
+      "Drop: Jellofish — Jellofish Fields",
+      "Drop: Kelpfish — Where the Kelp Meets Trench",
+      "Drop: Mantaray — Trench Precipice",
+      "Drop: Glowfish — The Glowing Underbelly",
+      "Drop: Ancientfish — Ancient Fissure",
+      "Drop: Magni Pufferfin — Molten Edge",
+      "Drop: Pirate Deckhand — Pirate Mess Hall",
+      "Drop: Dreadnaught Captain — Dreadnaught Chamber",
+      "Drop: RIP Tide"
+    ],
+    "Grasslands1": [
+      "Drop: Green Mushroom — Spore Meadows"
+    ],
+    "CardsA0": [
+      "Drop: Green Mushroom — Spore Meadows"
+    ],
+    "EquipmentShirts16": [
+      "Drop: Green Mushroom — Spore Meadows"
+    ],
+    "Cutter": [
+      "Drop: Green Mushroom — Spore Meadows"
+    ],
+    "Grasslands4": [
+      "Drop: Red Mushroom — Birch Enclave"
+    ],
+    "CardsA1": [
+      "Drop: Red Mushroom — Birch Enclave"
+    ],
+    "Quest15": [
+      "Drop: Wood Mushroom — Where the Branches End"
+    ],
+    "TreeInterior1b": [
+      "Drop: Wood Mushroom — Where the Branches End",
+      "Drop: Walking Stick — The Base Of The Bark"
+    ],
+    "CardsA16": [
+      "Drop: Wood Mushroom — Where the Branches End"
+    ],
+    "FoodPotRe1": [
+      "Drop: Wood Mushroom — Where the Branches End",
+      "Drop: Walking Stick — The Base Of The Bark",
+      "Drop: Nutto — Hollowed Trunk, The Roots",
+      "Drop: Poop — Poopy Sewers, The Office",
+      "Drop: Rat — Rats Nest"
+    ],
+    "FoodPotMana1": [
+      "Drop: Wood Mushroom — Where the Branches End",
+      "Drop: Walking Stick — The Base Of The Bark",
+      "Drop: Nutto — Hollowed Trunk, The Roots",
+      "Drop: Poop — Poopy Sewers, The Office",
+      "Drop: Rat — Rats Nest"
+    ],
+    "Grasslands2": [
+      "Drop: Frog — Froggy Fields, Dewdrop Colosseum, Grandfrog's Backyard, Grandfrog's Gazebo",
+      "Drop: Fly Nest",
+      "Drop: Butterfly Bar",
+      "Drop: Sentient Bowl",
+      "Drop: Grocery Bag",
+      "Drop: Snowden",
+      "Drop: Icicle Nest",
+      "Drop: Bee Hive",
+      "Drop: Fairy Hovel",
+      "Drop: Scarab Nest",
+      "Drop: Mote Hovel",
+      "Drop: Equinox Nest",
+      "Drop: Ladybug Nest",
+      "Drop: Firefly Nest",
+      "Drop: Fractal Nest",
+      "Drop: Litter Nest"
+    ],
+    "CardsA2": [
+      "Drop: Frog — Froggy Fields, Dewdrop Colosseum, Grandfrog's Backyard, Grandfrog's Gazebo"
+    ],
+    "Quest3": [
+      "Drop: Frog — Froggy Fields, Dewdrop Colosseum, Grandfrog's Backyard, Grandfrog's Gazebo"
+    ],
+    "Quest4": [
+      "Drop: Frog — Froggy Fields, Dewdrop Colosseum, Grandfrog's Backyard, Grandfrog's Gazebo"
+    ],
+    "InvStorageF": [
+      "Drop: Frog — Froggy Fields, Dewdrop Colosseum, Grandfrog's Backyard, Grandfrog's Gazebo"
+    ],
+    "EquipmentHats6": [
+      "Drop: Frog — Froggy Fields, Dewdrop Colosseum, Grandfrog's Backyard, Grandfrog's Gazebo"
+    ],
+    "Grasslands3": [
+      "Drop: Bored Bean — Valley Of The Beans"
+    ],
+    "CardsA3": [
+      "Drop: Bored Bean — Valley Of The Beans"
+    ],
+    "StoneA2": [
+      "Drop: Bored Bean — Valley Of The Beans",
+      "W1 Colo",
+      "W2 Colo"
+    ],
+    "EquipmentHats25": [
+      "Drop: Bored Bean — Valley Of The Beans"
+    ],
+    "Jungle1": [
+      "Drop: Slime — Jungle Perimeter",
+      "Drop: Glunko The Massive"
+    ],
+    "CardsA4": [
+      "Drop: Slime — Jungle Perimeter"
+    ],
+    "OilBarrel2": [
+      "Drop: Slime — Jungle Perimeter"
+    ],
+    "Jungle2": [
+      "Drop: Baby Boa — Winding Willows"
+    ],
+    "CardsA5": [
+      "Drop: Baby Boa — Winding Willows"
+    ],
+    "FoodHealth2": [
+      "Drop: Baby Boa — Winding Willows"
+    ],
+    "Quest7": [
+      "Drop: Baby Boa — Winding Willows"
+    ],
+    "StampA7": [
+      "Drop: Baby Boa — Winding Willows"
+    ],
+    "InvBag100": [
+      "Drop: Baby Boa — Winding Willows"
+    ],
+    "Jungle3": [
+      "Drop: Carrotman — Vegetable Patch"
+    ],
+    "CardsA6": [
+      "Drop: Carrotman — Vegetable Patch"
+    ],
+    "EquipmentBows4": [
+      "Drop: Carrotman — Vegetable Patch"
+    ],
+    "Forest1": [
+      "Drop: Glublin — Forest Outskirts"
+    ],
+    "CardsA7": [
+      "Drop: Glublin — Forest Outskirts"
+    ],
+    "StoneHelm1": [
+      "Drop: Glublin — Forest Outskirts"
+    ],
+    "Forest2": [
+      "Drop: Wode Board — Encroaching Forest Villas, End Of The Road"
+    ],
+    "CardsA8": [
+      "Drop: Wode Board — Encroaching Forest Villas, End Of The Road"
+    ],
+    "Quest12": [
+      "Drop: Wode Board — Encroaching Forest Villas, End Of The Road"
+    ],
+    "FoodHealth3": [
+      "Drop: Wode Board — Encroaching Forest Villas, End Of The Road",
+      "Drop: Gigafrog — Tucked Away"
+    ],
+    "EquipmentShirts19": [
+      "Drop: Wode Board — Encroaching Forest Villas, End Of The Road"
+    ],
+    "Forest3": [
+      "Drop: Gigafrog — Tucked Away"
+    ],
+    "CardsA9": [
+      "Drop: Gigafrog — Tucked Away"
+    ],
+    "StampA10": [
+      "Drop: Gigafrog — Tucked Away"
+    ],
+    "FoodPotRe2": [
+      "Drop: Gigafrog — Tucked Away"
+    ],
+    "StampA8": [
+      "Drop: Gigafrog — Tucked Away"
+    ],
+    "ObolBronzePop": [
+      "Drop: Gigafrog — Tucked Away"
+    ],
+    "TreeInterior1": [
+      "Drop: Walking Stick — The Base Of The Bark"
+    ],
+    "CardsA12": [
+      "Drop: Walking Stick — The Base Of The Bark"
+    ],
+    "TreeInterior2": [
+      "Drop: Nutto — Hollowed Trunk, The Roots"
+    ],
+    "CardsA13": [
+      "Drop: Nutto — Hollowed Trunk, The Roots"
+    ],
+    "Sewers1": [
+      "Drop: Poop — Poopy Sewers, The Office",
+      "Drop: Dr Defecaus"
+    ],
+    "CardsA10": [
+      "Drop: Poop — Poopy Sewers, The Office"
+    ],
+    "Sewers1b": [
+      "Drop: Poop — Poopy Sewers, The Office",
+      "Drop: Dr Defecaus"
+    ],
+    "CardsA11": [
+      "Drop: Rat — Rats Nest"
+    ],
+    "Quest14": [
+      "Drop: Rat — Rats Nest"
+    ],
+    "Sewers3": [
+      "Drop: Boop — Meel's Crypt"
+    ],
+    "CardsA15": [
+      "Drop: Boop — Meel's Crypt"
+    ],
+    "CardsZ0": [
+      "Drop: Baba Yaga"
+    ],
+    "BabaYagaETC": [
+      "Drop: Baba Yaga"
+    ],
+    "Quest41": [
+      "Drop: Baba Yaga"
+    ],
+    "CardsZ1": [
+      "Drop: Dr Defecaus"
+    ],
+    "JobApplication": [
+      "Drop: Dr Defecaus"
+    ],
+    "SmithingRecipes2": [
+      "Drop: Dr Defecaus",
+      "Drop: Mimic — The Mimic Hole, Sandstone Colosseum, Heaty Hole, Gravel Tomb",
+      "Drop: Crabcake — Dessert Dunes",
+      "Drop: Mafioso — The Grandioso Canyon",
+      "Drop: Sand Castle — Shifty Sandbox",
+      "Drop: Tyson — The Ring",
+      "Drop: Sand Giant — Sands of Time, Mummy Memorial",
+      "Drop: Biggie Hours",
+      "Drop: King Doot",
+      "Drop: Efaunt",
+      "Drop: Gold",
+      "Drop: Butterflies — Bandit Bob's Hideout"
+    ],
+    "EquipmentToolsHatchet2b": [
+      "Drop: Dr Defecaus"
+    ],
+    "EquipmentTools10": [
+      "Drop: Dr Defecaus"
+    ],
+    "CardsZ26": [
+      "Drop: Glunko The Massive"
+    ],
+    "EquipmentPendant32": [
+      "Drop: Glunko The Massive"
+    ],
+    "EquipmentShoes7": [
+      "Drop: Glunko The Massive"
+    ],
+    "Meatloaf": [
+      "Drop: Amarok",
+      "Drop: Chaotic Amarok",
+      "Drop: Radiant Amarok"
+    ],
+    "CardsZ2": [
+      "Drop: Amarok"
+    ],
+    "EquipmentHats39": [
+      "Drop: Amarok",
+      "Drop: Chaotic Amarok",
+      "Drop: Radiant Amarok"
+    ],
+    "ObolAmarokA": [
+      "Drop: Amarok",
+      "Drop: Chaotic Amarok",
+      "Drop: Radiant Amarok"
+    ],
+    "Quest17": [
+      "Drop: Amarok",
+      "Drop: Chaotic Amarok",
+      "Drop: Radiant Amarok"
+    ],
+    "CardsZ4": [
+      "Drop: Chaotic Amarok"
+    ],
+    "Quest29": [
+      "Drop: Chaotic Amarok",
+      "Drop: Radiant Amarok"
+    ],
+    "CardsZ14": [
+      "Drop: Radiant Amarok"
+    ],
+    "EquipmentCape3": [
+      "Drop: Radiant Amarok"
+    ],
+    "StoneZ1": [
+      "Drop: Radiant Amarok",
+      "Drop: Biggie Hours",
+      "Drop: King Doot"
+    ],
+    "DesertA1": [
+      "Drop: Sandy Pot — Jar Bridge"
+    ],
+    "CardsB1": [
+      "Drop: Sandy Pot — Jar Bridge"
+    ],
+    "EquipmentHats9": [
+      "Drop: Sandy Pot — Jar Bridge"
+    ],
+    "DesertA1b": [
+      "Drop: Sandy Pot — Jar Bridge"
+    ],
+    "DesertA2": [
+      "Drop: Mimic — The Mimic Hole, Sandstone Colosseum, Heaty Hole, Gravel Tomb"
+    ],
+    "GoldricP1": [
+      "Drop: Mimic — The Mimic Hole, Sandstone Colosseum, Heaty Hole, Gravel Tomb"
+    ],
+    "CardsB2": [
+      "Drop: Mimic — The Mimic Hole, Sandstone Colosseum, Heaty Hole, Gravel Tomb"
+    ],
+    "InvBag101": [
+      "Drop: Mimic — The Mimic Hole, Sandstone Colosseum, Heaty Hole, Gravel Tomb"
+    ],
+    "DesertA3": [
+      "Drop: Crabcake — Dessert Dunes"
+    ],
+    "CardsB3": [
+      "Drop: Crabcake — Dessert Dunes"
+    ],
+    "DesertA3b": [
+      "Drop: Crabcake — Dessert Dunes"
+    ],
+    "CardsB12": [
+      "Drop: Dig Doug"
+    ],
+    "DesertB1": [
+      "Drop: Mafioso — The Grandioso Canyon"
+    ],
+    "GoldricP2": [
+      "Drop: Mafioso — The Grandioso Canyon"
+    ],
+    "CardsB4": [
+      "Drop: Mafioso — The Grandioso Canyon"
+    ],
+    "DesertB2": [
+      "Drop: Sand Castle — Shifty Sandbox"
+    ],
+    "GoldricP3": [
+      "Drop: Sand Castle — Shifty Sandbox"
+    ],
+    "CardsB5": [
+      "Drop: Sand Castle — Shifty Sandbox"
+    ],
+    "DesertB3": [
+      "Drop: Pincermin — Pincer Plateau"
+    ],
+    "CardsB6": [
+      "Drop: Pincermin — Pincer Plateau"
+    ],
+    "DesertB4": [
+      "Drop: Mashed Potato — Slamabam Straightaway"
+    ],
+    "CardsB7": [
+      "Drop: Mashed Potato — Slamabam Straightaway"
+    ],
+    "DesertC1": [
+      "Drop: Tyson — The Ring"
+    ],
+    "CardsB8": [
+      "Drop: Tyson — The Ring"
+    ],
+    "DesertC2": [
+      "Drop: Moonmoon — Up Up Down Down"
+    ],
+    "DesertC2b": [
+      "Drop: Moonmoon — Up Up Down Down"
+    ],
+    "CardsB9": [
+      "Drop: Moonmoon — Up Up Down Down"
+    ],
+    "Quest18": [
+      "Drop: Moonmoon — Up Up Down Down"
+    ],
+    "EquipmentHats14": [
+      "Drop: Moonmoon — Up Up Down Down"
+    ],
+    "DesertC3": [
+      "Drop: Sand Giant — Sands of Time, Mummy Memorial"
+    ],
+    "CardsB10": [
+      "Drop: Sand Giant — Sands of Time, Mummy Memorial"
+    ],
+    "DesertC4": [
+      "Drop: Snelbie — Djonnuttown, Efaunt's Tomb"
+    ],
+    "CardsB11": [
+      "Drop: Snelbie — Djonnuttown, Efaunt's Tomb"
+    ],
+    "EquipmentPendant14": [
+      "Drop: Snelbie — Djonnuttown, Efaunt's Tomb"
+    ],
+    "Hgg": [
+      "Drop: Biggie Hours"
+    ],
+    "StoneA3b": [
+      "Drop: Biggie Hours",
+      "Drop: King Doot",
+      "Drop: Dilapidated Slush",
+      "Drop: Mutated Mush"
+    ],
+    "CardsZ5": [
+      "Drop: Biggie Hours"
+    ],
+    "ExpBalloon1": [
+      "Drop: Biggie Hours",
+      "Drop: King Doot",
+      "Drop: Dilapidated Slush",
+      "Drop: Mutated Mush",
+      "Drop: Domeo Magmus",
+      "Drop: Demented Spiritlord"
+    ],
+    "PremiumGem": [
+      "Drop: Biggie Hours",
+      "Drop: King Doot",
+      "Drop: Dilapidated Slush",
+      "Drop: Mutated Mush",
+      "Drop: Domeo Magmus",
+      "Drop: Demented Spiritlord",
+      "W1 Colo",
+      "W2 Colo",
+      "W3 Colo",
+      "W4 Colo",
+      "W5 Colo",
+      "W6 Colo",
+      "Drop: Chocco Box",
+      "Drop: Egggulyte",
+      "Drop: Egg Capsule",
+      "Drop: Spring Splendor",
+      "Drop: Falloween Pumpkin",
+      "Drop: IdleOn 4th Anniversary",
+      "Drop: Bort The Cornhusk",
+      "Drop: Luckulyte",
+      "Drop: IdleOn 5th Anniversary"
+    ],
+    "Timecandy1": [
+      "Drop: Biggie Hours",
+      "Drop: King Doot",
+      "Drop: Dilapidated Slush",
+      "Drop: Mutated Mush",
+      "Drop: Domeo Magmus",
+      "Drop: Demented Spiritlord",
+      "Drop: Floofie",
+      "Drop: Shell Snake",
+      "Drop: Spring Splendor"
+    ],
+    "Timecandy2": [
+      "Drop: Biggie Hours",
+      "Drop: King Doot",
+      "Drop: Dilapidated Slush",
+      "Drop: Mutated Mush",
+      "Drop: Domeo Magmus",
+      "Drop: Demented Spiritlord",
+      "Drop: Floofie",
+      "Drop: Shell Snake"
+    ],
+    "Timecandy3": [
+      "Drop: Biggie Hours",
+      "Drop: King Doot",
+      "Drop: Dilapidated Slush",
+      "Drop: Mutated Mush",
+      "Drop: Domeo Magmus",
+      "Drop: Demented Spiritlord"
+    ],
+    "Timecandy4": [
+      "Drop: Biggie Hours",
+      "Drop: King Doot",
+      "Drop: Dilapidated Slush",
+      "Drop: Mutated Mush",
+      "Drop: Domeo Magmus",
+      "Drop: Demented Spiritlord",
+      "Drop: Floofie"
+    ],
+    "Timecandy5": [
+      "Drop: Biggie Hours",
+      "Drop: King Doot",
+      "Drop: Dilapidated Slush",
+      "Drop: Mutated Mush",
+      "Drop: Domeo Magmus",
+      "Drop: Demented Spiritlord"
+    ],
+    "Timecandy6": [
+      "Drop: Biggie Hours",
+      "Drop: King Doot",
+      "Drop: Dilapidated Slush",
+      "Drop: Mutated Mush",
+      "Drop: Domeo Magmus",
+      "Drop: Demented Spiritlord"
+    ],
+    "CardsZ6": [
+      "Drop: King Doot"
+    ],
+    "Key2": [
+      "Drop: King Doot",
+      "W2 Colo"
+    ],
+    "EquipmentPants19": [
+      "Drop: King Doot"
+    ],
+    "CardsZ3": [
+      "Drop: Efaunt",
+      "Drop: Error"
+    ],
+    "ObolEfauntA": [
+      "Drop: Efaunt",
+      "Drop: Chaotic Efaunt",
+      "Drop: Gilded Efaunt"
+    ],
+    "EquipmentHats2": [
+      "Drop: Efaunt",
+      "Drop: Chaotic Efaunt",
+      "Drop: Gilded Efaunt"
+    ],
+    "EfauntDrop1": [
+      "Drop: Efaunt",
+      "Drop: Chaotic Efaunt",
+      "Drop: Gilded Efaunt"
+    ],
+    "CardsZ7": [
+      "Drop: Chaotic Efaunt"
+    ],
+    "EfauntDrop2": [
+      "Drop: Chaotic Efaunt",
+      "Drop: Gilded Efaunt"
+    ],
+    "CardsZ15": [
+      "Drop: Gilded Efaunt"
+    ],
+    "EquipmentCape4": [
+      "Drop: Gilded Efaunt"
+    ],
+    "SnowA1": [
+      "Drop: Sheepie — Steep Sheep Ledge, Inside the Igloo, Igloo's Basement"
+    ],
+    "CardsE0": [
+      "Drop: Sheepie — Steep Sheep Ledge, Inside the Igloo, Igloo's Basement"
+    ],
+    "EquipmentStatues16": [
+      "Drop: Sheepie — Steep Sheep Ledge, Inside the Igloo, Igloo's Basement",
+      "Drop: Penguin — Signature Slopes"
+    ],
+    "StampB5": [
+      "Drop: Sheepie — Steep Sheep Ledge, Inside the Igloo, Igloo's Basement"
+    ],
+    "SnowA2": [
+      "Drop: Frost Flake — Snowfield Outskirts, Coldsnap Colosseum"
+    ],
+    "CardsE1": [
+      "Drop: Frost Flake — Snowfield Outskirts, Coldsnap Colosseum"
+    ],
+    "StampB7": [
+      "Drop: Frost Flake — Snowfield Outskirts, Coldsnap Colosseum"
+    ],
+    "SnowA2a": [
+      "Drop: Frost Flake — Snowfield Outskirts, Coldsnap Colosseum",
+      "W3 Colo"
+    ],
+    "SnowA3": [
+      "Drop: Sir Stache — The Stache Split"
+    ],
+    "CardsE2": [
+      "Drop: Sir Stache — The Stache Split"
+    ],
+    "FoodPotGr3": [
+      "Drop: Sir Stache — The Stache Split"
+    ],
+    "EquipmentStatues17": [
+      "Drop: Sir Stache — The Stache Split",
+      "Drop: Quenchie — Waterlogged Entrance"
+    ],
+    "SnowA4": [
+      "Drop: Dedotated Ram — Wam Wonderland, Equinox Valley"
+    ],
+    "CardsE14": [
+      "Drop: Dedotated Ram — Wam Wonderland, Equinox Valley"
+    ],
+    "EquipmentRings23": [
+      "Drop: Dedotated Ram — Wam Wonderland, Equinox Valley"
+    ],
+    "EquipmentHats11": [
+      "Drop: Dedotated Ram — Wam Wonderland, Equinox Valley"
+    ],
+    "SnowB1": [
+      "Drop: Bloque — Refrigeration Station"
+    ],
+    "CardsE3": [
+      "Drop: Bloque — Refrigeration Station"
+    ],
+    "EquipmentStatues19": [
+      "Drop: Bloque — Refrigeration Station",
+      "Drop: Cryosnake — Cryo Catacombs"
+    ],
+    "FoodPotMana3": [
+      "Drop: Bloque — Refrigeration Station"
+    ],
+    "SnowB2": [
+      "Drop: Mamooth — Mamooooth Mountain"
+    ],
+    "CardsE4": [
+      "Drop: Mamooth — Mamooooth Mountain"
+    ],
+    "SnowB2a": [
+      "Drop: Mamooth — Mamooooth Mountain"
+    ],
+    "InvBag110": [
+      "Drop: Mamooth — Mamooooth Mountain"
+    ],
+    "Quest63": [
+      "Drop: Mamooth — Mamooooth Mountain",
+      "Drop: Snowman — Rollin' Tundra",
+      "Drop: Thermister — Thermonuclear Climb"
+    ],
+    "SnowB5": [
+      "Drop: Snowman — Rollin' Tundra"
+    ],
+    "CardsE5": [
+      "Drop: Snowman — Rollin' Tundra"
+    ],
+    "StampB10": [
+      "Drop: Snowman — Rollin' Tundra"
+    ],
+    "SnowB3": [
+      "Drop: Penguin — Signature Slopes"
+    ],
+    "CardsE6": [
+      "Drop: Penguin — Signature Slopes"
+    ],
+    "SnowB4": [
+      "Drop: Thermister — Thermonuclear Climb"
+    ],
+    "CardsE7": [
+      "Drop: Thermister — Thermonuclear Climb"
+    ],
+    "StampB12": [
+      "Drop: Thermister — Thermonuclear Climb"
+    ],
+    "SnowC1": [
+      "Drop: Quenchie — Waterlogged Entrance"
+    ],
+    "CardsE8": [
+      "Drop: Quenchie — Waterlogged Entrance"
+    ],
+    "SnowC2": [
+      "Drop: Cryosnake — Cryo Catacombs"
+    ],
+    "CardsE9": [
+      "Drop: Cryosnake — Cryo Catacombs"
+    ],
+    "SnowC3": [
+      "Drop: Bop Box — Overpass of Sound"
+    ],
+    "CardsE10": [
+      "Drop: Bop Box — Overpass of Sound"
+    ],
+    "FoodHealth9": [
+      "Drop: Bop Box — Overpass of Sound"
+    ],
+    "SnowC4": [
+      "Drop: Neyeptune — Crystal Basecamp, Chizoar's Cavern"
+    ],
+    "CardsE11": [
+      "Drop: Neyeptune — Crystal Basecamp, Chizoar's Cavern"
+    ],
+    "SnowC4a": [
+      "Drop: Neyeptune — Crystal Basecamp, Chizoar's Cavern"
+    ],
+    "CardsE12": [
+      "Drop: Xylobone"
+    ],
+    "SnowC5": [
+      "Drop: Bloodbone — Hell Hath Frozen Over"
+    ],
+    "Quest78": [
+      "Drop: Bloodbone — Hell Hath Frozen Over"
+    ],
+    "CardsE13": [
+      "Drop: Bloodbone — Hell Hath Frozen Over"
+    ],
+    "CardsZ8": [
+      "Drop: Chizoar"
+    ],
+    "ObolChizoarA": [
+      "Drop: Chizoar",
+      "Drop: Chaotic Chizoar",
+      "Drop: Blighted Chizoar"
+    ],
+    "EquipmentPendant24": [
+      "Drop: Chizoar",
+      "Drop: Chaotic Chizoar",
+      "Drop: Blighted Chizoar"
+    ],
+    "Chiz0": [
+      "Drop: Chizoar",
+      "Drop: Chaotic Chizoar",
+      "Drop: Blighted Chizoar"
+    ],
+    "CardsZ9": [
+      "Drop: Chaotic Chizoar"
+    ],
+    "Chiz1": [
+      "Drop: Chaotic Chizoar",
+      "Drop: Blighted Chizoar"
+    ],
+    "CardsZ16": [
+      "Drop: Blighted Chizoar"
+    ],
+    "EquipmentCape5": [
+      "Drop: Blighted Chizoar"
+    ],
+    "StoneZ2": [
+      "Drop: Blighted Chizoar",
+      "Drop: Blitzkrieg Troll"
+    ],
+    "CardsZ12": [
+      "Drop: Dilapidated Slush"
+    ],
+    "WorshipSkull8": [
+      "Drop: Dilapidated Slush"
+    ],
+    "ObolSlush": [
+      "Drop: Dilapidated Slush"
+    ],
+    "Key3": [
+      "Drop: Dilapidated Slush",
+      "W3 Colo"
+    ],
+    "CardsZ10": [
+      "Drop: Massive Troll"
+    ],
+    "ObolTroll": [
+      "Drop: Massive Troll",
+      "Drop: Chaotic Troll",
+      "Drop: Blitzkrieg Troll"
+    ],
+    "TrollPart": [
+      "Drop: Massive Troll",
+      "Drop: Chaotic Troll",
+      "Drop: Blitzkrieg Troll"
+    ],
+    "CardsZ11": [
+      "Drop: Chaotic Troll"
+    ],
+    "CardsZ17": [
+      "Drop: Blitzkrieg Troll"
+    ],
+    "EquipmentCape6": [
+      "Drop: Blitzkrieg Troll"
+    ],
+    "CardsZ13": [
+      "Drop: Mutated Mush"
+    ],
+    "Key4": [
+      "Drop: Mutated Mush",
+      "Drop: Stilted Seeker — Enclave of Eyes, Enclave a la Troll",
+      "W4 Colo"
+    ],
+    "PetEgg": [
+      "Drop: Mutated Mush"
+    ],
+    "Ladle": [
+      "Drop: Mutated Mush"
+    ],
+    "SmithingRecipes4": [
+      "Drop: Mutated Mush",
+      "Drop: Octodar — The Untraveled Octopath"
+    ],
+    "CardsZ24": [
+      "Drop: Domeo Magmus"
+    ],
+    "SmithingRecipes5": [
+      "Drop: Domeo Magmus",
+      "Drop: Suggma — Naut Sake Perimeter",
+      "Drop: Maccie — Niagrilled Falls, Molten Colosseum",
+      "Drop: Mister Brightside — The Killer Roundabout",
+      "Drop: Cheese Nub — Cracker Jack Lake",
+      "Drop: Stiltmole — The Great Molehill",
+      "Drop: Molti — Erruption River",
+      "Drop: Purgatory Stalker — Mount Doomish",
+      "Drop: Citringe — OJ Bay",
+      "Drop: Lampar — Lampar Lake",
+      "Drop: Fire Spirit — Spitfire River",
+      "Drop: Biggole Mole — Miner Mole Outskirts, KattleKruk's Volcano"
+    ],
+    "ObolLava": [
+      "Drop: Domeo Magmus"
+    ],
+    "Key5": [
+      "Drop: Domeo Magmus",
+      "Drop: Biggole Mole — Miner Mole Outskirts, KattleKruk's Volcano",
+      "Drop: Crawler — Crawly Catacombs",
+      "Drop: Tremor Wurm — The Worm Nest"
+    ],
+    "FoodG13": [
+      "Drop: Domeo Magmus",
+      "Drop: Demented Spiritlord"
+    ],
+    "CardsZ25": [
+      "Drop: Demented Spiritlord"
+    ],
+    "SmithingRecipes6": [
+      "Drop: Demented Spiritlord",
+      "Drop: Sprout Spirit — Gooble Goop Creek",
+      "Drop: Ricecake — Picnic Bridgeways, Whimsical Colosseum",
+      "Drop: River Spirit — Irrigation Station",
+      "Drop: Baby Troll — Troll Playground",
+      "Drop: Lantern Spirit — Lightway Path",
+      "Drop: Mama Troll — Troll Broodnest",
+      "Drop: Leek Spirit — Above the Clouds",
+      "Drop: Ceramic Spirit — Sleepy Skyline",
+      "Drop: Skydoggie Spirit — Dozey Dogpark",
+      "Drop: Minichief Spirit — Chieftain Stairway"
+    ],
+    "EquipmentKeychain29": [
+      "Drop: Demented Spiritlord"
+    ],
+    "GalaxyA1": [
+      "Drop: Purp Mushroom — Spaceway Raceway, Astro Colosseum"
+    ],
+    "EquipmentShoes30": [
+      "Drop: Purp Mushroom — Spaceway Raceway, Astro Colosseum"
+    ],
+    "CardsG1": [
+      "Drop: Purp Mushroom — Spaceway Raceway, Astro Colosseum"
+    ],
+    "GalaxyA2": [
+      "Drop: TV — TV Outpost"
+    ],
+    "GalaxyA2b": [
+      "Drop: TV — TV Outpost",
+      "W4 Colo"
+    ],
+    "Line12": [
+      "Drop: TV — TV Outpost"
+    ],
+    "InvStorage22": [
+      "Drop: TV — TV Outpost"
+    ],
+    "CardsG2": [
+      "Drop: TV — TV Outpost"
+    ],
+    "GalaxyA3": [
+      "Drop: Donut — Donut Drive-In"
+    ],
+    "EquipmentShoes32": [
+      "Drop: Donut — Donut Drive-In"
+    ],
+    "CardsG3": [
+      "Drop: Donut — Donut Drive-In"
+    ],
+    "GalaxyA4": [
+      "Drop: Demon Genie — Outskirts of Fallstar Isle"
+    ],
+    "EquipmentRings24": [
+      "Drop: Demon Genie — Outskirts of Fallstar Isle"
+    ],
+    "CardsG4": [
+      "Drop: Demon Genie — Outskirts of Fallstar Isle"
+    ],
+    "GalaxyB1": [
+      "Drop: Soda Can — Mountainous Deugh"
+    ],
+    "Weight3": [
+      "Drop: Soda Can — Mountainous Deugh"
+    ],
+    "CardsG6": [
+      "Drop: Soda Can — Mountainous Deugh"
+    ],
+    "GalaxyB2": [
+      "Drop: Flying Worm — Wurm Highway"
+    ],
+    "StampA29": [
+      "Drop: Flying Worm — Wurm Highway"
+    ],
+    "CardsG5": [
+      "Drop: Flying Worm — Wurm Highway"
+    ],
+    "GalaxyB3": [
+      "Drop: Gelatinous Cuboid — Jelly Cube Bridge"
+    ],
+    "InvStorageS": [
+      "Drop: Gelatinous Cuboid — Jelly Cube Bridge"
+    ],
+    "CardsG7": [
+      "Drop: Gelatinous Cuboid — Jelly Cube Bridge"
+    ],
+    "EquipmentHats13": [
+      "Drop: Gelatinous Cuboid — Jelly Cube Bridge"
+    ],
+    "GalaxyB4": [
+      "Drop: Choccie — Cocoa Tunnel"
+    ],
+    "EquipmentRings25": [
+      "Drop: Choccie — Cocoa Tunnel"
+    ],
+    "CardsG8": [
+      "Drop: Choccie — Cocoa Tunnel"
+    ],
+    "GalaxyB5": [
+      "Drop: Biggole Wurm — Standstill Plains"
+    ],
+    "InvStorage23": [
+      "Drop: Biggole Wurm — Standstill Plains"
+    ],
+    "CardsG9": [
+      "Drop: Biggole Wurm — Standstill Plains"
+    ],
+    "GalaxyC1": [
+      "Drop: Clammie — Shelled Shores"
+    ],
+    "GalaxyC1b": [
+      "Drop: Clammie — Shelled Shores"
+    ],
+    "CardsG10": [
+      "Drop: Clammie — Shelled Shores"
+    ],
+    "GalaxyC2": [
+      "Drop: Octodar — The Untraveled Octopath"
+    ],
+    "CardsG11": [
+      "Drop: Octodar — The Untraveled Octopath"
+    ],
+    "GalaxyC3": [
+      "Drop: Flombeige — Flamboyant Bayou"
+    ],
+    "Line3": [
+      "Drop: Flombeige — Flamboyant Bayou"
+    ],
+    "CardsG12": [
+      "Drop: Flombeige — Flamboyant Bayou"
+    ],
+    "GalaxyC4": [
+      "Drop: Stilted Seeker — Enclave of Eyes, Enclave a la Troll"
+    ],
+    "CardsG13": [
+      "Drop: Stilted Seeker — Enclave of Eyes, Enclave a la Troll"
+    ],
+    "LavaA1": [
+      "Drop: Suggma — Naut Sake Perimeter"
+    ],
+    "LavaA1b": [
+      "Drop: Suggma — Naut Sake Perimeter",
+      "W5 Colo"
+    ],
+    "CardsH1": [
+      "Drop: Suggma — Naut Sake Perimeter"
+    ],
+    "LavaA2": [
+      "Drop: Maccie — Niagrilled Falls, Molten Colosseum"
+    ],
+    "CardsH2": [
+      "Drop: Maccie — Niagrilled Falls, Molten Colosseum"
+    ],
+    "StampC16": [
+      "Drop: Maccie — Niagrilled Falls, Molten Colosseum"
+    ],
+    "LavaA3": [
+      "Drop: Mister Brightside — The Killer Roundabout"
+    ],
+    "CardsH3": [
+      "Drop: Mister Brightside — The Killer Roundabout"
+    ],
+    "LavaA4": [
+      "Drop: Cheese Nub — Cracker Jack Lake"
+    ],
+    "CardsH4": [
+      "Drop: Cheese Nub — Cracker Jack Lake"
+    ],
+    "InvStorageC": [
+      "Drop: Cheese Nub — Cracker Jack Lake"
+    ],
+    "LavaA5": [
+      "Drop: Stiltmole — The Great Molehill"
+    ],
+    "LavaA5b": [
+      "Drop: Stiltmole — The Great Molehill"
+    ],
+    "CardsH5": [
+      "Drop: Stiltmole — The Great Molehill"
+    ],
+    "LavaB1": [
+      "Drop: Molti — Erruption River"
+    ],
+    "CardsH6": [
+      "Drop: Molti — Erruption River"
+    ],
+    "LavaB2": [
+      "Drop: Purgatory Stalker — Mount Doomish"
+    ],
+    "CardsH7": [
+      "Drop: Purgatory Stalker — Mount Doomish"
+    ],
+    "LavaB3": [
+      "Drop: Citringe — OJ Bay"
+    ],
+    "LavaB3b": [
+      "Drop: Citringe — OJ Bay"
+    ],
+    "CardsH8": [
+      "Drop: Citringe — OJ Bay"
+    ],
+    "LavaB4": [
+      "Drop: Lampar — Lampar Lake"
+    ],
+    "CardsH9": [
+      "Drop: Lampar — Lampar Lake"
+    ],
+    "EquipmentHats12": [
+      "Drop: Lampar — Lampar Lake"
+    ],
+    "LavaB5": [
+      "Drop: Fire Spirit — Spitfire River"
+    ],
+    "CardsH10": [
+      "Drop: Fire Spirit — Spitfire River"
+    ],
+    "LavaB6": [
+      "Drop: Biggole Mole — Miner Mole Outskirts, KattleKruk's Volcano"
+    ],
+    "CardsH11": [
+      "Drop: Biggole Mole — Miner Mole Outskirts, KattleKruk's Volcano"
+    ],
+    "LavaC1": [
+      "Drop: Crawler — Crawly Catacombs"
+    ],
+    "CardsH12": [
+      "Drop: Crawler — Crawly Catacombs"
+    ],
+    "LavaC2": [
+      "Drop: Tremor Wurm — The Worm Nest"
+    ],
+    "CardsH13": [
+      "Drop: Tremor Wurm — The Worm Nest"
+    ],
+    "StampA37": [
+      "Drop: Tremor Wurm — The Worm Nest"
+    ],
+    "KrukPart": [
+      "Drop: Kattlekruk",
+      "Drop: Chaotic Kattlekruk",
+      "Drop: Sacrilegious Kattlekruk"
+    ],
+    "CardsZ18": [
+      "Drop: Kattlekruk"
+    ],
+    "EquipmentPendant29": [
+      "Drop: Kattlekruk",
+      "Drop: Chaotic Kattlekruk",
+      "Drop: Sacrilegious Kattlekruk"
+    ],
+    "ObolKruk": [
+      "Drop: Kattlekruk",
+      "Drop: Chaotic Kattlekruk",
+      "Drop: Sacrilegious Kattlekruk"
+    ],
+    "StoneA6": [
+      "Drop: Kattlekruk"
+    ],
+    "KrukPart2": [
+      "Drop: Chaotic Kattlekruk",
+      "Drop: Sacrilegious Kattlekruk"
+    ],
+    "StoneT6": [
+      "Drop: Chaotic Kattlekruk"
+    ],
+    "CardsZ19": [
+      "Drop: Chaotic Kattlekruk"
+    ],
+    "StoneW7": [
+      "Drop: Sacrilegious Kattlekruk"
+    ],
+    "StoneHelm7": [
+      "Drop: Sacrilegious Kattlekruk"
+    ],
+    "CardsZ20": [
+      "Drop: Sacrilegious Kattlekruk"
+    ],
+    "EquipmentCape13": [
+      "Drop: Sacrilegious Kattlekruk"
+    ],
+    "Quest74": [
+      "Drop: The Rift — The Rift",
+      "Drop: Rift Spooker",
+      "Drop: Rift Slug",
+      "Drop: Rift Jocund",
+      "Drop: Rift Hivemind",
+      "Drop: Rift Stalker"
+    ],
+    "SpiA1": [
+      "Drop: Sprout Spirit — Gooble Goop Creek",
+      "Drop: RIP Tide"
+    ],
+    "CardsI1": [
+      "Drop: Sprout Spirit — Gooble Goop Creek",
+      "Drop: RIP Tide"
+    ],
+    "SpiA2": [
+      "Drop: Ricecake — Picnic Bridgeways, Whimsical Colosseum"
+    ],
+    "SpiA2b": [
+      "Drop: Ricecake — Picnic Bridgeways, Whimsical Colosseum",
+      "W6 Colo"
+    ],
+    "CardsI2": [
+      "Drop: Ricecake — Picnic Bridgeways, Whimsical Colosseum"
+    ],
+    "SpiA3": [
+      "Drop: River Spirit — Irrigation Station"
+    ],
+    "CardsI3": [
+      "Drop: River Spirit — Irrigation Station"
+    ],
+    "SpiA4": [
+      "Drop: Baby Troll — Troll Playground"
+    ],
+    "CardsI4": [
+      "Drop: Baby Troll — Troll Playground"
+    ],
+    "SpiA5": [
+      "Drop: Woodlin Spirit — Edge of the Valley"
+    ],
+    "InvStorageD": [
+      "Drop: Woodlin Spirit — Edge of the Valley"
+    ],
+    "CardsI5": [
+      "Drop: Woodlin Spirit — Edge of the Valley"
+    ],
+    "SpiB1": [
+      "Drop: Bamboo Spirit — Bamboo Laboredge"
+    ],
+    "CardsI6": [
+      "Drop: Bamboo Spirit — Bamboo Laboredge"
+    ],
+    "SpiB2": [
+      "Drop: Lantern Spirit — Lightway Path"
+    ],
+    "SpiB2b": [
+      "Drop: Lantern Spirit — Lightway Path"
+    ],
+    "CardsI7": [
+      "Drop: Lantern Spirit — Lightway Path"
+    ],
+    "SpiB3": [
+      "Drop: Mama Troll — Troll Broodnest"
+    ],
+    "CardsI8": [
+      "Drop: Mama Troll — Troll Broodnest"
+    ],
+    "SpiB4": [
+      "Drop: Leek Spirit — Above the Clouds"
+    ],
+    "CardsI9": [
+      "Drop: Leek Spirit — Above the Clouds"
+    ],
+    "SpiC1": [
+      "Drop: Ceramic Spirit — Sleepy Skyline"
+    ],
+    "CardsI10": [
+      "Drop: Ceramic Spirit — Sleepy Skyline"
+    ],
+    "SpiC2": [
+      "Drop: Skydoggie Spirit — Dozey Dogpark"
+    ],
+    "CardsI11": [
+      "Drop: Skydoggie Spirit — Dozey Dogpark"
+    ],
+    "Line9": [
+      "Drop: Skydoggie Spirit — Dozey Dogpark"
+    ],
+    "FoodPotGr4": [
+      "Drop: Skydoggie Spirit — Dozey Dogpark"
+    ],
+    "FoodHealth17": [
+      "Drop: Skydoggie Spirit — Dozey Dogpark"
+    ],
+    "SpiD1": [
+      "Drop: Royal Egg — Yolkrock Basin"
+    ],
+    "CardsI12": [
+      "Drop: Royal Egg — Yolkrock Basin"
+    ],
+    "SpiD2": [
+      "Drop: Minichief Spirit — Chieftain Stairway"
+    ],
+    "CardsI13": [
+      "Drop: Minichief Spirit — Chieftain Stairway"
+    ],
+    "SpiD3": [
+      "Drop: Samurai Guardian — Emperor's Castle Doorstep, Emperor's Castle",
+      "Drop: Spirit Reindeer",
+      "Drop: Demon Hound"
+    ],
+    "CardsI14": [
+      "Drop: Samurai Guardian — Emperor's Castle Doorstep, Emperor's Castle"
+    ],
+    "Line14": [
+      "Drop: Samurai Guardian — Emperor's Castle Doorstep, Emperor's Castle"
+    ],
+    "Quest95": [
+      "Drop: Samurai Guardian — Emperor's Castle Doorstep, Emperor's Castle"
+    ],
+    "EmpPart": [
+      "Drop: Emperor",
+      "Drop: Chaotic Emperor",
+      "Drop: Sovereign Emperor"
+    ],
+    "CardsZ21": [
+      "Drop: Emperor",
+      "Drop: Chaotic Emperor",
+      "Drop: Sovereign Emperor"
+    ],
+    "CardsZ22": [
+      "Drop: Emperor",
+      "Drop: Chaotic Emperor",
+      "Drop: Sovereign Emperor"
+    ],
+    "CardsZ23": [
+      "Drop: Emperor",
+      "Drop: Chaotic Emperor",
+      "Drop: Sovereign Emperor"
+    ],
+    "EquipmentCape17": [
+      "Drop: Emperor",
+      "Drop: Chaotic Emperor",
+      "Drop: Sovereign Emperor"
+    ],
+    "ObolEmp": [
+      "Drop: Emperor",
+      "Drop: Chaotic Emperor",
+      "Drop: Sovereign Emperor"
+    ],
+    "CardsH15": [
+      "Drop: Gloomie Mushroom"
+    ],
+    "EquipmentStatues29": [
+      "Drop: Gloomie Mushroom"
+    ],
+    "CardsH16": [
+      "Drop: Ancient Golem"
+    ],
+    "EquipmentStatues30": [
+      "Drop: Ancient Golem"
+    ],
+    "StampC24": [
+      "Drop: Ancient Golem"
+    ],
+    "Quest94": [
+      "Drop: Ancient Golem"
+    ],
+    "StampC25": [
+      "Drop: Ancient Golem"
+    ],
+    "CardsH17": [
+      "Drop: Crystal Glunko"
+    ],
+    "HoleGshape0": [
+      "Drop: Crystal Glunko"
+    ],
+    "HoleGshape1": [
+      "Drop: Crystal Glunko"
+    ],
+    "HoleGshape2": [
+      "Drop: Crystal Glunko"
+    ],
+    "HoleGshape3": [
+      "Drop: Crystal Glunko"
+    ],
+    "HoleGshape4": [
+      "Drop: Crystal Glunko"
+    ],
+    "HoleGshape5": [
+      "Drop: Crystal Glunko"
+    ],
+    "HoleGshape6": [
+      "Drop: Crystal Glunko"
+    ],
+    "HoleGshape7": [
+      "Drop: Crystal Glunko"
+    ],
+    "HoleGshape8": [
+      "Drop: Crystal Glunko"
+    ],
+    "HoleGshape9": [
+      "Drop: Crystal Glunko"
+    ],
+    "HoleGshape10": [
+      "Drop: Crystal Glunko"
+    ],
+    "HoleGshape11": [
+      "Drop: Crystal Glunko"
+    ],
+    "w7A1": [
+      "Drop: Equinox Broadbass — Refraction Bend"
+    ],
+    "CardsJ1": [
+      "Drop: Equinox Broadbass — Refraction Bend"
+    ],
+    "SmithingRecipes7": [
+      "Drop: Equinox Broadbass — Refraction Bend",
+      "Drop: Doodlefish — Doodle Reef",
+      "Drop: Eamsy Earl — Seaweed Street",
+      "Drop: Shellslug — Barnacle Curb",
+      "Drop: Balloonfish — Balloon Bay",
+      "Drop: Litterfish — Plastic Basin",
+      "Drop: Coralcave Crab — Coralcave Outskirts",
+      "Drop: Coralcave Guardian — Coralcave Perimeter",
+      "Drop: Trench Fish — Deep End of the Koipond",
+      "Drop: Boomy Mine — Minefield",
+      "Drop: Pirate Underling — Pirate Upper Deck",
+      "Drop: Eggroll — Sushi Perimeter",
+      "Drop: Jellofish — Jellofish Fields",
+      "Drop: Kelpfish — Where the Kelp Meets Trench",
+      "Drop: Mantaray — Trench Precipice",
+      "Drop: Glowfish — The Glowing Underbelly",
+      "Drop: Ancientfish — Ancient Fissure",
+      "Drop: Magni Pufferfin — Molten Edge",
+      "Drop: Pirate Deckhand — Pirate Mess Hall",
+      "Drop: Dreadnaught Captain — Dreadnaught Chamber"
+    ],
+    "w7A2": [
+      "Drop: Doodlefish — Doodle Reef"
+    ],
+    "CardsJ2": [
+      "Drop: Doodlefish — Doodle Reef"
+    ],
+    "w7A3": [
+      "Drop: Eamsy Earl — Seaweed Street"
+    ],
+    "CardsJ3": [
+      "Drop: Eamsy Earl — Seaweed Street"
+    ],
+    "w7A4": [
+      "Drop: Shellslug — Barnacle Curb"
+    ],
+    "CardsJ4": [
+      "Drop: Shellslug — Barnacle Curb"
+    ],
+    "Coral1": [
+      "Drop: Shellslug — Barnacle Curb"
+    ],
+    "w7A5": [
+      "Drop: Balloonfish — Balloon Bay"
+    ],
+    "CardsJ5": [
+      "Drop: Balloonfish — Balloon Bay"
+    ],
+    "w7A6": [
+      "Drop: Noble Clam — The Clamworks"
+    ],
+    "CardsJ6": [
+      "Drop: Noble Clam — The Clamworks"
+    ],
+    "ClamPearl0": [
+      "Drop: Noble Clam — The Clamworks"
+    ],
+    "w7A7": [
+      "Drop: Litterfish — Plastic Basin"
+    ],
+    "CardsJ7": [
+      "Drop: Litterfish — Plastic Basin"
+    ],
+    "Coral2": [
+      "Drop: Litterfish — Plastic Basin"
+    ],
+    "w7A8": [
+      "Drop: Pufferblob — Puffpuff Overpass"
+    ],
+    "CardsJ8": [
+      "Drop: Pufferblob — Puffpuff Overpass"
+    ],
+    "w7A9": [
+      "Drop: Demonblub — Pinpoint Summit"
+    ],
+    "CardsJ9": [
+      "Drop: Demonblub — Pinpoint Summit"
+    ],
+    "w7A10": [
+      "Drop: Spearfish — Middle of Nowhere"
+    ],
+    "CardsJ10": [
+      "Drop: Spearfish — Middle of Nowhere"
+    ],
+    "w7A11": [
+      "Drop: Coralcave Crab — Coralcave Outskirts"
+    ],
+    "CardsJ11": [
+      "Drop: Coralcave Crab — Coralcave Outskirts"
+    ],
+    "Coral3": [
+      "Drop: Coralcave Crab — Coralcave Outskirts"
+    ],
+    "w7A12": [
+      "Drop: Coralcave Guardian — Coralcave Perimeter"
+    ],
+    "CardsJ12": [
+      "Drop: Coralcave Guardian — Coralcave Perimeter"
+    ],
+    "w7B1": [
+      "Drop: Trench Fish — Deep End of the Koipond"
+    ],
+    "w7B1b": [
+      "Drop: Trench Fish — Deep End of the Koipond"
+    ],
+    "CardsJ13": [
+      "Drop: Trench Fish — Deep End of the Koipond"
+    ],
+    "w7B2": [
+      "Drop: Boomy Mine — Minefield"
+    ],
+    "CardsJ14": [
+      "Drop: Boomy Mine — Minefield"
+    ],
+    "w7B3": [
+      "Drop: Pirate Underling — Pirate Upper Deck"
+    ],
+    "CardsJ15": [
+      "Drop: Pirate Underling — Pirate Upper Deck"
+    ],
+    "w7B4": [
+      "Drop: Eggroll — Sushi Perimeter"
+    ],
+    "CardsJ16": [
+      "Drop: Eggroll — Sushi Perimeter"
+    ],
+    "Coral4": [
+      "Drop: Eggroll — Sushi Perimeter"
+    ],
+    "w7B5": [
+      "Drop: Jellofish — Jellofish Fields"
+    ],
+    "CardsJ17": [
+      "Drop: Jellofish — Jellofish Fields"
+    ],
+    "w7B6": [
+      "Drop: Kelpfish — Where the Kelp Meets Trench"
+    ],
+    "CardsJ18": [
+      "Drop: Kelpfish — Where the Kelp Meets Trench"
+    ],
+    "w7B7": [
+      "Drop: Mantaray — Trench Precipice"
+    ],
+    "CardsJ19": [
+      "Drop: Mantaray — Trench Precipice"
+    ],
+    "w7B8": [
+      "Drop: Glowfish — The Glowing Underbelly"
+    ],
+    "CardsJ20": [
+      "Drop: Glowfish — The Glowing Underbelly"
+    ],
+    "w7B9": [
+      "Drop: Ancientfish — Ancient Fissure"
+    ],
+    "CardsJ21": [
+      "Drop: Ancientfish — Ancient Fissure"
+    ],
+    "Coral5": [
+      "Drop: Ancientfish — Ancient Fissure"
+    ],
+    "w7B10": [
+      "Drop: Magni Pufferfin — Molten Edge"
+    ],
+    "CardsJ22": [
+      "Drop: Magni Pufferfin — Molten Edge"
+    ],
+    "Coral6": [
+      "Drop: Magni Pufferfin — Molten Edge"
+    ],
+    "w7B11": [
+      "Drop: Pirate Deckhand — Pirate Mess Hall"
+    ],
+    "w7B11b": [
+      "Drop: Pirate Deckhand — Pirate Mess Hall"
+    ],
+    "CardsJ23": [
+      "Drop: Pirate Deckhand — Pirate Mess Hall"
+    ],
+    "w7B12": [
+      "Drop: Dreadnaught Captain — Dreadnaught Chamber"
+    ],
+    "w7B12b": [
+      "Drop: Dreadnaught Captain — Dreadnaught Chamber"
+    ],
+    "CardsJ24": [
+      "Drop: Dreadnaught Captain — Dreadnaught Chamber"
+    ],
+    "OakTree": [
+      "W1 Colo"
+    ],
+    "Copper": [
+      "W1 Colo"
+    ],
+    "Key1": [
+      "W1 Colo"
+    ],
+    "FoodG4": [
+      "W1 Colo"
+    ],
+    "Iron": [
+      "W1 Colo"
+    ],
+    "JungleTree": [
+      "W1 Colo"
+    ],
+    "BirchTree": [
+      "W1 Colo"
+    ],
+    "FoodG1": [
+      "W1 Colo",
+      "W6 Colo"
+    ],
+    "Gold": [
+      "W1 Colo",
+      "W2 Colo"
+    ],
+    "ToiletTree": [
+      "W1 Colo"
+    ],
+    "StumpTree": [
+      "W1 Colo"
+    ],
+    "Fish1": [
+      "W2 Colo"
+    ],
+    "Fish2": [
+      "W2 Colo"
+    ],
+    "Bug1": [
+      "W2 Colo"
+    ],
+    "StoneW3": [
+      "W2 Colo",
+      "W3 Colo"
+    ],
+    "StoneA3": [
+      "W2 Colo",
+      "W3 Colo"
+    ],
+    "Fish3": [
+      "W2 Colo"
+    ],
+    "Bug3": [
+      "W2 Colo"
+    ],
+    "FoodG2": [
+      "W2 Colo",
+      "W5 Colo",
+      "W6 Colo"
+    ],
+    "Plat": [
+      "W2 Colo"
+    ],
+    "PalmTree": [
+      "W2 Colo"
+    ],
+    "FoodG3": [
+      "W2 Colo"
+    ],
+    "Dementia": [
+      "W2 Colo",
+      "W3 Colo"
+    ],
+    "Fish4": [
+      "W2 Colo"
+    ],
+    "Bug4": [
+      "W2 Colo"
+    ],
+    "Soul1": [
+      "W3 Colo",
+      "Drop: Forest Soul"
+    ],
+    "Critter1": [
+      "W3 Colo",
+      "Drop: Froge"
+    ],
+    "Critter2": [
+      "W3 Colo",
+      "Drop: Crabbo"
+    ],
+    "Bug5": [
+      "W3 Colo"
+    ],
+    "FoodG5": [
+      "W3 Colo"
+    ],
+    "SaharanFoal": [
+      "W3 Colo"
+    ],
+    "Soul2": [
+      "W3 Colo",
+      "Drop: Dune Soul"
+    ],
+    "Void": [
+      "W3 Colo"
+    ],
+    "Bug6": [
+      "W3 Colo"
+    ],
+    "FoodG6": [
+      "W3 Colo",
+      "W5 Colo"
+    ],
+    "StoneW4": [
+      "W4 Colo"
+    ],
+    "StoneA4": [
+      "W4 Colo"
+    ],
+    "Soul3": [
+      "W4 Colo",
+      "Drop: Rooted Soul"
+    ],
+    "Critter6": [
+      "W4 Colo",
+      "Drop: Pingy"
+    ],
+    "Critter8": [
+      "W4 Colo",
+      "Drop: Dung Beat"
+    ],
+    "Bug7": [
+      "W4 Colo"
+    ],
+    "FoodG7": [
+      "W4 Colo"
+    ],
+    "Lustre": [
+      "W4 Colo"
+    ],
+    "AlienTree": [
+      "W4 Colo"
+    ],
+    "LustreBar": [
+      "W4 Colo"
+    ],
+    "Starfire": [
+      "W4 Colo",
+      "W5 Colo"
+    ],
+    "Bug8": [
+      "W4 Colo"
+    ],
+    "StoneW5": [
+      "W5 Colo"
+    ],
+    "StoneA5": [
+      "W5 Colo"
+    ],
+    "Gfoodcoupon": [
+      "W5 Colo",
+      "W6 Colo",
+      "Drop: Bort The Cornhusk"
+    ],
+    "Soul4": [
+      "W5 Colo",
+      "Drop: Frigid Soul"
+    ],
+    "Bug9": [
+      "W5 Colo"
+    ],
+    "Tree9": [
+      "W5 Colo"
+    ],
+    "DreadloBar": [
+      "W5 Colo"
+    ],
+    "Dreadlo": [
+      "W5 Colo"
+    ],
+    "Bug10": [
+      "W5 Colo"
+    ],
+    "StoneW8": [
+      "W6 Colo"
+    ],
+    "StoneA7": [
+      "W6 Colo"
+    ],
+    "Soul5": [
+      "W6 Colo",
+      "Drop: Squishy Soul"
+    ],
+    "Soul6": [
+      "W6 Colo",
+      "Drop: Oozie Soul"
+    ],
+    "Bug12": [
+      "W6 Colo"
+    ],
+    "Tree12": [
+      "W6 Colo"
+    ],
+    "GodshardBar": [
+      "W6 Colo"
+    ],
+    "Godshard": [
+      "W6 Colo"
+    ],
+    "Bug13": [
+      "W6 Colo"
+    ],
+    "CardsY0": [
+      "Drop: Ghost",
+      "Drop: Giftmas Blobulyte",
+      "Drop: Meaning of Giftmas",
+      "Drop: Golden Giftmas Box"
+    ],
+    "Quest30": [
+      "Drop: Ghost",
+      "Drop: Giftmas Blobulyte",
+      "Drop: Meaning of Giftmas",
+      "Drop: Golden Giftmas Box"
+    ],
+    "FoodEvent1": [
+      "Drop: Ghost",
+      "Drop: Giftmas Blobulyte",
+      "Drop: Meaning of Giftmas",
+      "Drop: Golden Giftmas Box"
+    ],
+    "FoodEvent2": [
+      "Drop: Ghost",
+      "Drop: Giftmas Blobulyte",
+      "Drop: Meaning of Giftmas",
+      "Drop: Golden Giftmas Box"
+    ],
+    "FoodEvent3": [
+      "Drop: Ghost",
+      "Drop: Giftmas Blobulyte",
+      "Drop: Meaning of Giftmas",
+      "Drop: Golden Giftmas Box"
+    ],
+    "FoodEvent4": [
+      "Drop: Ghost",
+      "Drop: Giftmas Blobulyte",
+      "Drop: Meaning of Giftmas",
+      "Drop: Golden Giftmas Box"
+    ],
+    "CardsY21": [
+      "Drop: Big Ol Giftmas Box"
+    ],
+    "EquipmentNametag11": [
+      "Drop: Big Ol Giftmas Box"
+    ],
+    "EquipmentNametag14": [
+      "Drop: Big Ol Giftmas Box"
+    ],
+    "EquipmentHats125": [
+      "Drop: Big Ol Giftmas Box"
+    ],
+    "EquipmentHats126": [
+      "Drop: Big Ol Giftmas Box"
+    ],
+    "EquipmentHats42": [
+      "Drop: Big Ol Giftmas Box"
+    ],
+    "EquipmentHats88": [
+      "Drop: Big Ol Giftmas Box",
+      "Drop: Falloween Pumpkin"
+    ],
+    "EquipmentHats85": [
+      "Drop: Big Ol Giftmas Box",
+      "Drop: Falloween Pumpkin"
+    ],
+    "EquipmentHats111": [
+      "Drop: Big Ol Giftmas Box"
+    ],
+    "CardsY3": [
+      "Drop: Valenslime",
+      "Drop: Loveulyte",
+      "Drop: Chocco Box",
+      "Drop: Giant Rose"
+    ],
+    "FoodEvent5": [
+      "Drop: Valenslime",
+      "Drop: Loveulyte"
+    ],
+    "FoodEvent6": [
+      "Drop: Valenslime",
+      "Drop: Loveulyte"
+    ],
+    "FoodEvent7": [
+      "Drop: Valenslime",
+      "Drop: Loveulyte"
+    ],
+    "FoodEvent8": [
+      "Drop: Valenslime",
+      "Drop: Loveulyte"
+    ],
+    "Quest40": [
+      "Drop: Loveulyte"
+    ],
+    "EquipmentHats51": [
+      "Drop: Chocco Box"
+    ],
+    "EquipmentHats128": [
+      "Drop: Chocco Box"
+    ],
+    "EquipmentHats129": [
+      "Drop: Chocco Box"
+    ],
+    "EquipmentHats47": [
+      "Drop: Chocco Box",
+      "Drop: IdleOn 4th Anniversary"
+    ],
+    "EquipmentHats48": [
+      "Drop: Chocco Box"
+    ],
+    "EquipmentCape8": [
+      "Drop: Giant Rose"
+    ],
+    "EquipmentCape9": [
+      "Drop: Giant Rose"
+    ],
+    "EquipmentCape10": [
+      "Drop: Giant Rose"
+    ],
+    "CardsY6": [
+      "Drop: Floofie",
+      "Drop: Egggulyte",
+      "Drop: Egg Capsule"
+    ],
+    "StoneTe": [
+      "Drop: Floofie",
+      "Drop: Shell Snake",
+      "Drop: Egggulyte",
+      "Drop: Egg Capsule"
+    ],
+    "StoneAe": [
+      "Drop: Floofie",
+      "Drop: Shell Snake",
+      "Drop: Egggulyte",
+      "Drop: Egg Capsule"
+    ],
+    "StoneWe": [
+      "Drop: Floofie",
+      "Drop: Shell Snake",
+      "Drop: Egggulyte",
+      "Drop: Egg Capsule"
+    ],
+    "CardsY7": [
+      "Drop: Shell Snake"
+    ],
+    "Quest42": [
+      "Drop: Egggulyte",
+      "Drop: Egg Capsule"
+    ],
+    "Quest44": [
+      "Drop: Egg Capsule"
+    ],
+    "CardsY10": [
+      "Drop: Mr Blueberry"
+    ],
+    "StoneT1eb": [
+      "Drop: Mr Blueberry",
+      "Drop: Plasti Doug"
+    ],
+    "StoneAeB": [
+      "Drop: Mr Blueberry",
+      "Drop: Plasti Doug"
+    ],
+    "StoneWeb": [
+      "Drop: Mr Blueberry",
+      "Drop: Plasti Doug"
+    ],
+    "CardsY13": [
+      "Drop: Plasti Doug"
+    ],
+    "CardsY11": [
+      "Drop: Coastiolyte"
+    ],
+    "Quest49": [
+      "Drop: Coastiolyte"
+    ],
+    "Quest50": [
+      "Drop: Coastiolyte"
+    ],
+    "CardsY2": [
+      "Drop: Summer Spirit",
+      "Drop: Bubbulyte",
+      "Drop: Spring Splendor",
+      "Drop: Falloween Pumpkin",
+      "Drop: IdleOn 4th Anniversary",
+      "Drop: Bort The Cornhusk",
+      "Drop: Luckulyte",
+      "Drop: Potluck",
+      "Drop: IdleOn 5th Anniversary"
+    ],
+    "EquipmentHats139": [
+      "Drop: Summer Spirit"
+    ],
+    "EquipmentHats63": [
+      "Drop: Summer Spirit"
+    ],
+    "EquipmentHats46": [
+      "Drop: Summer Spirit",
+      "Drop: Bort The Cornhusk"
+    ],
+    "EquipmentHats120": [
+      "Drop: Summer Spirit"
+    ],
+    "EquipmentHats110": [
+      "Drop: Summer Spirit"
+    ],
+    "EquipmentNametag8": [
+      "Drop: Summer Spirit"
+    ],
+    "EquipmentHats121": [
+      "Drop: Summer Spirit"
+    ],
+    "Quest71": [
+      "Drop: Bubbulyte"
+    ],
+    "CardPack6": [
+      "Drop: Bubbulyte"
+    ],
+    "EquipmentHats38": [
+      "Drop: Spring Splendor"
+    ],
+    "EquipmentHats32": [
+      "Drop: Spring Splendor",
+      "Drop: Falloween Pumpkin"
+    ],
+    "EquipmentHats56": [
+      "Drop: Spring Splendor"
+    ],
+    "ClassSwap": [
+      "Drop: Spring Splendor"
+    ],
+    "ResetBox": [
+      "Drop: Spring Splendor"
+    ],
+    "ResetCompletedS": [
+      "Drop: Spring Splendor"
+    ],
+    "Timecandy8": [
+      "Drop: Falloween Pumpkin"
+    ],
+    "EquipmentHats86": [
+      "Drop: Falloween Pumpkin"
+    ],
+    "EquipmentHats87": [
+      "Drop: Falloween Pumpkin",
+      "Drop: Luckulyte"
+    ],
+    "EquipmentHats31": [
+      "Drop: Falloween Pumpkin"
+    ],
+    "EquipmentHats108": [
+      "Drop: IdleOn 4th Anniversary"
+    ],
+    "EquipmentHats116": [
+      "Drop: IdleOn 4th Anniversary"
+    ],
+    "EquipmentHats115": [
+      "Drop: IdleOn 4th Anniversary",
+      "Drop: IdleOn 5th Anniversary"
+    ],
+    "EquipmentHats24": [
+      "Drop: IdleOn 4th Anniversary"
+    ],
+    "EquipmentHats117": [
+      "Drop: IdleOn 4th Anniversary",
+      "Drop: Bort The Cornhusk",
+      "Drop: IdleOn 5th Anniversary"
+    ],
+    "EquipmentHats141": [
+      "Drop: Bort The Cornhusk"
+    ],
+    "EquipmentNametag12": [
+      "Drop: Bort The Cornhusk"
+    ],
+    "EquipmentHats73": [
+      "Drop: Bort The Cornhusk"
+    ],
+    "EquipmentHats50": [
+      "Drop: Luckulyte"
+    ],
+    "EquipmentHats96": [
+      "Drop: Luckulyte"
+    ],
+    "EquipmentHats130": [
+      "Drop: Luckulyte"
+    ],
+    "EquipmentHats131": [
+      "Drop: Luckulyte"
+    ],
+    "EquipmentNametag33": [
+      "Drop: Potluck"
+    ],
+    "EquipmentNametag34": [
+      "Drop: Potluck"
+    ],
+    "Quest89": [
+      "Drop: Potluck"
+    ],
+    "GfoodcouponS": [
+      "Drop: Potluck"
+    ],
+    "EquipmentHats135": [
+      "Drop: IdleOn 5th Anniversary"
+    ],
+    "EquipmentHats133": [
+      "Drop: IdleOn 5th Anniversary"
+    ],
+    "EquipmentHats134": [
+      "Drop: IdleOn 5th Anniversary"
+    ],
+    "EquipmentHats109": [
+      "Drop: IdleOn 5th Anniversary"
+    ],
+    "EquipmentHats80": [
+      "Drop: IdleOn 5th Anniversary"
+    ],
+    "CardsC1": [
+      "Drop: Copper — Tunnels Entrance"
+    ],
+    "CardsC2": [
+      "Drop: Iron — Freefall Caverns"
+    ],
+    "CardsC3": [
+      "Drop: Gold"
+    ],
+    "CardsD2": [
+      "Drop: Plat — The Ol' Straightaway"
+    ],
+    "CardsD1": [
+      "Drop: Dementia"
+    ],
+    "CardsD3": [
+      "Drop: Void — Echoing Egress"
+    ],
+    "CardsD4": [
+      "Drop: Lustre"
+    ],
+    "CardsF16": [
+      "Drop: Starfire — Slip Slidy Ledges"
+    ],
+    "CardsF29": [
+      "Drop: Dreadlo",
+      "Drop: Marble"
+    ],
+    "CardsF39": [
+      "Drop: Godshard — Motherlode Pit",
+      "Drop: Motherlode",
+      "Drop: Fractalfly",
+      "Drop: Evertree",
+      "Drop: Trench Fish"
+    ],
+    "CardsF44": [
+      "Drop: Prehistrium"
+    ],
+    "CardsC4": [
+      "Drop: Oak Tree"
+    ],
+    "CardsC5": [
+      "Drop: Birch Tree"
+    ],
+    "CardsC6": [
+      "Drop: Jungle Tree"
+    ],
+    "CardsC7": [
+      "Drop: Forest Tree"
+    ],
+    "CardsD6": [
+      "Drop: Stump Tree"
+    ],
+    "CardsD5": [
+      "Drop: Toilet Tree"
+    ],
+    "CardsD7": [
+      "Drop: Palm Tree"
+    ],
+    "CardsD8": [
+      "Drop: Saharan Foal"
+    ],
+    "CardsF2": [
+      "Drop: Wispy Tree"
+    ],
+    "CardsF13": [
+      "Drop: Alien Tree"
+    ],
+    "CardsF12": [
+      "Drop: Cubed Tree"
+    ],
+    "CardsF24": [
+      "Drop: Maple Tree"
+    ],
+    "CardsF25": [
+      "Drop: Dandelioli Tree",
+      "Drop: Equinox Willow"
+    ],
+    "CardsF34": [
+      "Drop: Bamboo"
+    ],
+    "CardsF35": [
+      "Drop: Effervescent Eucalyptus"
+    ],
+    "CardsF40": [
+      "Drop: Ancient Seaweed"
+    ],
+    "CardsC11": [
+      "Drop: Flies",
+      "Drop: Forest Soul",
+      "Drop: Froge"
+    ],
+    "StampA11": [
+      "Drop: Flies",
+      "Drop: Butterflies — Bandit Bob's Hideout",
+      "Drop: Sentient Cereal",
+      "Drop: Fruitflies"
+    ],
+    "StampB21": [
+      "Drop: Flies",
+      "Drop: Butterflies — Bandit Bob's Hideout",
+      "Drop: Sentient Cereal",
+      "Drop: Fruitflies"
+    ],
+    "CardsC12": [
+      "Drop: Butterflies — Bandit Bob's Hideout",
+      "Drop: Dune Soul",
+      "Drop: Crabbo"
+    ],
+    "ButterBar": [
+      "Drop: Butterflies — Bandit Bob's Hideout"
+    ],
+    "CardsD10": [
+      "Drop: Sentient Cereal",
+      "Drop: Rooted Soul",
+      "Drop: Scorpie",
+      "Drop: Blobfish",
+      "Drop: Tuttle",
+      "Drop: Fearful Tunnel",
+      "Drop: Decaying Crevasse",
+      "Drop: Buried Church",
+      "Drop: One Way Opening",
+      "Drop: Plunder Cranny",
+      "Drop: Kelp Forest"
+    ],
+    "CardsD9": [
+      "Drop: Fruitflies",
+      "Drop: Frigid Soul",
+      "Drop: Squishy Soul",
+      "Drop: Oozie Soul",
+      "Drop: Breezy Soul",
+      "Drop: Deepsea Soul",
+      "Drop: Mousey",
+      "Drop: Owlio",
+      "Drop: Pingy",
+      "Drop: Bunny",
+      "Drop: Dung Beat",
+      "Drop: Honker"
+    ],
+    "CardsF8": [
+      "Drop: Mosquisnow"
+    ],
+    "CardsF9": [
+      "Drop: Flycicle"
+    ],
+    "CardsF14": [
+      "Drop: Bumble Bee"
+    ],
+    "Line13": [
+      "Drop: Bumble Bee",
+      "Drop: Fairy",
+      "Drop: Scarab",
+      "Drop: Dust Mote",
+      "Drop: Dream Particulate",
+      "Drop: Ladybug",
+      "Drop: Firefly",
+      "Drop: Litterbug"
+    ],
+    "CardsF15": [
+      "Drop: Fairy"
+    ],
+    "CardsF26": [
+      "Drop: Scarab"
+    ],
+    "CardsF27": [
+      "Drop: Dust Mote",
+      "Drop: Dream Particulate"
+    ],
+    "CardsF37": [
+      "Drop: Ladybug"
+    ],
+    "CardsF38": [
+      "Drop: Firefly"
+    ],
+    "CardsF46": [
+      "Drop: Litterbug"
+    ],
+    "Soul7": [
+      "Drop: Breezy Soul"
+    ],
+    "Soul8": [
+      "Drop: Deepsea Soul"
+    ],
+    "Critter3": [
+      "Drop: Scorpie"
+    ],
+    "Critter4": [
+      "Drop: Mousey"
+    ],
+    "Critter5": [
+      "Drop: Owlio"
+    ],
+    "Critter7": [
+      "Drop: Bunny"
+    ],
+    "Critter9": [
+      "Drop: Honker"
+    ],
+    "Critter10": [
+      "Drop: Blobfish"
+    ],
+    "Critter11": [
+      "Drop: Tuttle"
+    ],
+    "CardsF41": [
+      "Drop: Fearful Tunnel"
+    ],
+    "CardsF42": [
+      "Drop: Decaying Crevasse"
+    ],
+    "CardsF43": [
+      "Drop: Buried Church"
+    ],
+    "CardsF48": [
+      "Drop: One Way Opening"
+    ],
+    "CardsF49": [
+      "Drop: Plunder Cranny"
+    ],
+    "CardsF50": [
+      "Drop: Kelp Forest"
+    ],
+    "Spelunking0": [
+      "Drop: Fearful Tunnel"
+    ],
+    "Spelunking1": [
+      "Drop: Decaying Crevasse"
+    ],
+    "Spelunking2": [
+      "Drop: Buried Church"
+    ],
+    "Spelunking3": [
+      "Drop: One Way Opening"
+    ],
+    "Spelunking4": [
+      "Drop: Plunder Cranny"
+    ],
+    "Spelunking5": [
+      "Drop: Kelp Forest"
+    ]
+  }
+}
