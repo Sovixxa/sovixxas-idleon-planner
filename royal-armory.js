@@ -62,6 +62,27 @@ function verminous(m,companion=0,jelly=0){
   double:b(39),recycle:b(40)==null?null:Math.min(75,b(40))
  };
 }
+// Active castle estimate. Normal damage, DR, multikill and AFK gains do not apply.
+function automaticParchmentRate(v,c){
+ if(!c||![v.damage,v.respawn,v.chance,v.double,c.attackSeconds,c.movementSpeed].every(x=>known(x)!=null)||v.damage<=0||c.attackSeconds<=0||c.movementSpeed<=0)return null;
+ const rats=15,hp=100000,travelSeconds=1835/(130*c.movementSpeed/100);
+ const hits=Math.max(1,hp/(v.damage*.6)+.5);
+ const clearSeconds=rats*hits*c.attackSeconds+travelSeconds;
+ const killsPerHour=rats*3600/(clearSeconds+v.respawn);
+ // The local client drops floor(1 + ParchmentDouble), despite chance wording in its tooltip.
+ const perDrop=Math.floor(1+v.double/100);
+ const perHour=killsPerHour*Math.min(1,v.chance)*perDrop;
+ const ceilingPerHour=rats*3600/v.respawn*Math.min(1,v.chance)*perDrop;
+ return {killsPerHour,perHour,perDay:perHour*24,ceilingPerHour,clearSeconds,travelSeconds,hits,perDrop};
+}
+// Counter increase over one continuous Orb interval; no attack/respawn cap is reapplied.
+function orbParchmentRate(v,count,seconds,maxWeight=1){
+ const n=known(count),t=known(seconds),w=known(maxWeight);
+ if(n==null||!Number.isInteger(n)||t==null||t<=0||w==null||w<1||known(v.chance)==null||known(v.double)==null)return null;
+ const countsPerHour=n*3600/t,perDrop=Math.floor(1+v.double/100);
+ const perHour=countsPerHour*Math.min(1,v.chance)*perDrop;
+ return {countsPerHour,killsPerHour:countsPerHour,killsLow:countsPerHour/w,perHour,perHourLow:perHour/w,perDay:perHour*24,perDrop};
+}
 const status=x=>x.level==null?'unknown':x.level>0?'active':'missing';
 const levelText=x=>x.level==null?'Saved level unknown':`Lv ${fmt(x.level)}${x.max!=null?' / '+fmt(x.max):''}`;
 const shelfText=(x,total)=>x.slot<0?'Not on a released shelf':x.unlocked==null?`Unlock status unknown · needs ${fmt(x.required)} total levels`:x.unlocked?`Shelf ${x.slot+1} · ${levelText(x)}`:`Locked · needs ${fmt(x.required)} total levels (${fmt(total)} saved) · ${levelText(x)}`;
@@ -82,5 +103,5 @@ function render(host,rawRoot={}){
  host.innerHTML=`<div class="bonus-system-hero"><div><p class="eyebrow">Masterclasses · Royal Guardian</p><h2>Royal Armory</h2><p>Saved upgrades, outposts, resources, Royal Statues and Orblet Market. Unknown means this export is missing the required values.</p></div><strong>${m.total==null?'Total Armory levels unknown':fmt(m.total)+' total Armory levels'}</strong></div><nav class="skill-tabs">${tabs.map(([id,label])=>`<button class="skill-tab${selected===id?' active':''}" data-royal-tab="${id}">${label}</button>`).join('')}</nav>${!m.available?'<p>No Royal Guardian data was found in this export.</p>':`<div class="bonus-system-grid">${body||'<p>No saved entries were found for this section.</p>'}</div>`}`;
  host.querySelectorAll('[data-royal-tab]').forEach(b=>b.onclick=()=>{selected=b.dataset.royalTab;render(host,rawRoot);});
 }
-const api={model,bonusRows,render,verminous};if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.RoyalArmory=api;
+const api={model,bonusRows,render,verminous,automaticParchmentRate,orbParchmentRate};if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.RoyalArmory=api;
 })(typeof window!=='undefined'?window:globalThis);

@@ -9,6 +9,7 @@
   function session(value){try{if(value){sessionStorage.setItem(SESSION,'1');if($('cloudRemember').checked)localStorage.setItem(SESSION,'1');}else{sessionStorage.removeItem(SESSION);localStorage.removeItem(SESSION);}}catch{}}
   try{$('cloudRemember').checked=localStorage.getItem(SESSION)==='1';}catch{}
   const login=(method,credentials)=>controller.connect(method,credentials,{remember:$('cloudRemember').checked});
+  const canRetry=status=>(status.connected||status.method==='resume')&&['error','reconnecting'].includes(status.phase);
   function draw(status){
     $('cloudStatus').textContent=navigator.onLine===false&&status.connected?'Offline · showing the last loaded save':status.message;
     $('cloudLoginStatus').textContent=status.message;
@@ -19,7 +20,7 @@
     $('cloudDisconnect').hidden=!status.connected&&!status.busy&&status.phase!=='error';
     $('cloudApply').hidden=!status.pending;$('cloudPending').hidden=!status.pending;
     $('cloudApply').disabled=!bridge.canApply();
-    $('cloudRetry').hidden=!status.connected||!['error','reconnecting'].includes(status.phase);
+    $('cloudRetry').hidden=!canRetry(status);
     $('cloudRetry').disabled=status.busy;
     for(const node of dialog.querySelectorAll('button[type="submit"],input'))node.disabled=status.busy;
     $('cloudGoogleStart').disabled=status.busy;
@@ -51,7 +52,7 @@
     $('cloudPassword').value='';login('email',credentials).finally(()=>{credentials.password='';});
   };
   window.addEventListener('offline',()=>draw(controller.getStatus()));
-  window.addEventListener('online',()=>{draw(controller.getStatus());if(controller.getStatus().connected)controller.retry();});
+  window.addEventListener('online',()=>{const status=controller.getStatus();draw(status);if(status.connected||canRetry(status))controller.retry();});
   // Queue only the latest save while editing, navigating or running an optimizer.
   // The pause flag prevents a manual import's pending read from being overwritten.
   $('fileInput').addEventListener('change',()=>{paused=true;},true);
@@ -59,8 +60,8 @@
   $('parseBtn').addEventListener('click',()=>{paused=true;queueMicrotask(()=>{if(controller.getStatus().connected)paused=false;});},true);
   $('cloudConnect').addEventListener('click',()=>{paused=false;});
   setInterval(()=>{const status=controller.getStatus();if(status.pending){$('cloudApply').disabled=!bridge.canApply();if(!paused&&bridge.canAutoApply())controller.applyPending();}},1500);
-  window.addEventListener('pageshow',event=>{if(event.persisted&&controller.getStatus().connected)controller.retry();});
-  document.addEventListener('visibilitychange',()=>{const status=controller.getStatus();if(!document.hidden&&status.connected&&['error','reconnecting'].includes(status.phase))controller.retry();});
+  window.addEventListener('pageshow',event=>{const status=controller.getStatus();if(event.persisted&&(status.connected||canRetry(status)))controller.retry();});
+  document.addEventListener('visibilitychange',()=>{const status=controller.getStatus();if(!document.hidden&&canRetry(status))controller.retry();});
   draw(controller.getStatus());
   if(resume){resume=false;setTimeout(()=>controller.connect('resume'),0);}
 })();

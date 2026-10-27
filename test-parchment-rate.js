@@ -1,0 +1,23 @@
+const assert=require('node:assert/strict');
+const {automaticParchmentRate:rate}=require('./royal-armory');
+const v={damage:100000,respawn:5,chance:.1,double:50},c={attackSeconds:1,movementSpeed:100};
+const r=rate(v,c);
+assert.equal(r.perDrop,1);assert(r.perHour>0&&r.perHour<r.ceilingPerHour);
+assert.equal(rate({...v,double:100},c).perHour,r.perHour*2);
+assert(rate({...v,damage:200000},c).perHour>r.perHour);
+assert(rate(v,{...c,attackSeconds:.5}).perHour>r.perHour);
+assert(rate({...v,respawn:60},c).perHour<r.perHour);
+assert.equal(rate({...v,chance:null},c),null);
+assert.equal(rate(v,{...c,attackSeconds:0}),null);
+assert.equal(rate({...v,chance:0},c).perHour,0);
+assert.equal(rate({...v,recycle:75},c).perHour,r.perHour);
+console.log('Automatic parchment rate checks passed');
+
+const {orbParchmentRate:orb}=require('./royal-armory');
+assert.equal(orb(v,1000,200).perHour,1800);
+assert.equal(orb(v,1000,200,3).perHourLow,600);
+assert.equal(orb(v,0,200).perHour,0);
+for(const [n,t] of [['',200],[100,''],[100,0],[-1,10],[1.5,10],[100,Infinity]])assert.equal(orb(v,n,t),null);
+assert.equal(orb({...v,chance:null},100,200),null);
+assert(orb(v,1000,200).perHour>rate(v,c).ceilingPerHour);
+console.log('Orb sample, weighted bounds and invalid inputs passed');

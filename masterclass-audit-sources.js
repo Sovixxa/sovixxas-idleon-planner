@@ -32,7 +32,7 @@ function enrich(groups,systems,raw){
  // Paper Pint is its own factor in the shared W6 drop formula.
  for(const r of groups.vials||[])if(r.name==='Paper Pint'){const x=systems.get('alchemy')?.vials?.find(x=>x.name===r.name);if(x){r.effect=fmt(1+x.getBonus()/100)+'× Bones, Dust and Tachyons';r.calculationType='multi';r.note='Independent W6 masterclass resource factor. Does not apply to Royal Guardian.';r.mcKeys=['grimoire','compass','tesseract'];}}
  // Epilogue labels identify their output directly; generic word matching missed them.
- for(const r of groups.tomeBonuses||[]){const key=/\bBones\b/i.test(r.effect)?'grimoire':/\bDust\b/i.test(r.effect)?'compass':/\bTachyons?\b/i.test(r.effect)?'tesseract':null;if(key)r.mcKey=key;}
+ for(const r of groups.tomeBonuses||[]){const key=({'Epilogue 1':'grimoire','Epilogue 3':'compass','Epilogue 7':'tesseract'})[r.name]||(/\bBones\b/i.test(r.effect)?'grimoire':/\bDust\b/i.test(r.effect)?'compass':/\bTachyons?\b/i.test(r.effect)?'tesseract':null);if(key)r.mcKey=key;}
  for(const r of groups.holeGambit||[])if(/Extra Bones/i.test(r.name)){r.mcKey='grimoire';r.effect=r.name.replace(/^(\d+(?:\.\d+)?)/,'$1×');r.calculationType='multi';r.caps={maximum:'2× Bones',hard:'Bone multiplier capped at 2×.',soft:'No separate soft cap verified.',target:'Reach the 2× Gambit reward; further Gambit progress does not increase this bone factor.'};}
  return groups;
 }

@@ -1,4 +1,5 @@
 import './vendor/idleon-toolbox/polyfills';
+export {getParchmentContext} from './parchment-context';
 export {getDivinityBreakdown} from './divinity-breakdown';
 export {getOutpostCombatContext} from './outpost-eta-context';
 export {parseData} from './vendor/idleon-toolbox/parsers/index';

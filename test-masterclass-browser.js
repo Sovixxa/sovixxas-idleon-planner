@@ -32,13 +32,15 @@ await page.setViewportSize({width:390,height:844});assert(await page.evaluate(()
  await page.screenshot({path:'../audit/rg-rank-rewards-mobile.png'});
  await page.setViewportSize({width:1440,height:1000});
  await page.getByRole('tab',{name:'Verminous',exact:true}).click();
- assert(await page.locator('.mc-verminous-stats').isVisible());
- assert((await page.locator('.mc-verminous-stats').innerText()).includes('Castle damage (max)'));
- await page.locator('[name=verminous-companion]').fill('100');await page.locator('[name=verminous-jelly]').fill('0');
- assert(!(await page.locator('.mc-verminous-stats').innerText()).includes('subtotal'));
- const parchmentText=await page.locator('.mc-verminous-upgrades .mc-upgrade').filter({hasText:'Parchment of Enchantment'}).innerText();assert(!parchmentText.includes('Context-dependent'));assert(!parchmentText.includes('1 in —'));assert(!parchmentText.includes('Subtotal:'));
+ await page.locator('.mc-parchment-result').waitFor({timeout:60000});
+ assert((await page.locator('.mc-parchment-result').innerText()).includes('Estimated parchments / hour'));
+ assert(!(await page.locator('.mc-parchment-result').innerText()).includes('unavailable'));
+ assert.equal(await page.locator('[name=parchment-kills], [name=parchment-minutes], [name=verminous-companion]').count(),0);
+ assert(await page.locator('[name=parchment-character] option').count()>0);
+ await page.locator('.mc-parchment-result').scrollIntoViewIfNeeded();
  await page.screenshot({path:'../audit/verminous-desktop.png'});
  await page.setViewportSize({width:390,height:844});assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
+ await page.locator('.mc-parchment-result').scrollIntoViewIfNeeded();
  await page.screenshot({path:'../audit/verminous-mobile.png'});
  await nav('masterclasses');assert.equal(await page.locator('[data-mc-nav]').count(),4);assert.deepEqual(errors,[]);console.log('Masterclass browser checks passed');
  }finally{await browser.close();}
