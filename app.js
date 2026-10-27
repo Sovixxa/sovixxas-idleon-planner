@@ -95,6 +95,7 @@
     milkOpti:{title:'Milktimizer',world:'Misc',copy:''},
     communitySheets:{title:"Community Sheets",world:'Misc',copy:''},
     greenstacks:{title:'Greenstacks',world:'Misc',copy:'Track storage stacks toward 10m items.'},
+    qolRecommendations:{title:'QOL Recommendations',world:'Misc',copy:'Quality-of-life recommendations.'},
     pocketWatches:{title:'Pocket Watches',world:'Misc',copy:''},
     skills:{title:'Skills',world:'Optimizers',copy:'Plan skill gains and compare AFK progress.'},
     accountReview:{title:'Account Review',world:'Optimizers',copy:'Review saved progress and plan your next account milestones.'},
@@ -201,8 +202,8 @@ SKILL_PAGES.holeFloors={title:'Floors',world:'World 5',copy:'All 18 Hole caverns
     updateRoute(name);
     window.plannerQoL?.onNavigate(name);
     if(name!=='jelly'){stopSearch();cancelJellyPanels();initialUpgradesPending=true;initialPracticePending=true;if(practice?.playing)stopPracticePlayback();}
-    if(!state)$('workspace').classList.toggle('hidden',!['library','dailies','accountReview','skills','loadouts','statConnections','shadowCaps','trueDr','milkOpti','communitySheets','pocketWatches','credits','connectedBonuses','greenstacks'].includes(name));
-    if(!state)$('inputPanel').classList.toggle('hidden',['loadouts','statConnections','shadowCaps','trueDr','milkOpti','communitySheets','pocketWatches','credits'].includes(name));
+    if(!state)$('workspace').classList.toggle('hidden',!['library','dailies','accountReview','skills','loadouts','statConnections','shadowCaps','trueDr','milkOpti','communitySheets','qolRecommendations','pocketWatches','credits','connectedBonuses','greenstacks'].includes(name));
+    if(!state)$('inputPanel').classList.toggle('hidden',['loadouts','statConnections','shadowCaps','trueDr','milkOpti','communitySheets','qolRecommendations','pocketWatches','credits'].includes(name));
     const selected=SKILL_PAGES[name]?.parent||name;
     for(const id of ['navHome','navJelly',...Object.keys(SKILL_PAGES).map(key=>'nav'+key[0].toUpperCase()+key.slice(1))]){const button=$(id);if(!button)continue;const active=id===('nav'+selected[0].toUpperCase()+selected.slice(1));button.classList.toggle('active',active);if(active)button.setAttribute('aria-current','page');else button.removeAttribute('aria-current');}
     if(!['home','credits'].includes(name)&&window.PlannerFeatures?.toolsReady?.()===false){
@@ -778,6 +779,10 @@ SKILL_PAGES.holeFloors={title:'Floors',world:'World 5',copy:'All 18 Hole caverns
         host.querySelector('#milkMessage').value=pick(['just one more aisle','the queue has a second phase','forgot which house','milk drop rate got nerfed','do we need eggs?','getting cigarettes too, back in five','they have a sale on extension cords','ask your mother where we live','found a shortcut, only adds two hours','tell the dog I said hi','this queue has grandchildren now']);
         optimize();
       };
+      return;
+    }
+    if(name==='qolRecommendations'){
+      window.QolRecommendations.render($('worldContent'));
       return;
     }
     if(name==='communitySheets'){
