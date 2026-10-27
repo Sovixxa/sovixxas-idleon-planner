@@ -3,3 +3,56 @@
 @media(max-width:700px){.talent-page-tabs{overflow-x:auto;justify-content:flex-start}.talent-page-tabs button{flex:0 0 58px}}
 
 @media(max-width:380px){.game-talent-book .talent-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+/* Talent book shares the planner's dark, framed cards. */
+.game-talent-book { max-width:1000px; padding:16px; border:1px solid #554460; border-radius:12px; background:linear-gradient(145deg,#221a30,#141923); color:#e9e0f2; box-shadow:0 8px 24px #0003; }
+.game-talent-book>header h3 { margin:0 0 12px; font-size:17px; letter-spacing:0; text-align:left; text-shadow:none; text-transform:capitalize; }
+.talent-page-tabs { justify-content:flex-start; padding:5px; border:1px solid #40374e; border-radius:8px; background:#11131e; gap:5px; }
+.talent-page-tabs button { width:52px; height:44px; border:1px solid transparent; background:transparent; }
+.talent-page-tabs img { width:30px; height:30px; }
+.talent-page-tabs button.active { background:#3e2a50; border-color:#b181d4; box-shadow:0 0 10px #af64dd20; }
+.game-talent-book .talent-grid { padding:12px 0; gap:8px; }
+.game-talent-book .talent-card { display:flex; flex-direction:column; align-items:center; justify-content:flex-start; gap:6px; min-width:0; min-height:142px; padding:12px 7px 9px; border:1px solid #5b4d6a; background:linear-gradient(145deg,#33253f,#191e2a); box-shadow:inset 0 0 0 1px #ffffff08; color:#eee7f5; cursor:pointer; transition:background 150ms,border-color 150ms,transform 150ms; }
+.game-talent-book .talent-card.supered { border-color:#688e83; box-shadow:inset 0 0 0 1px #9bdfb512; }
+.game-talent-book .talent-card:hover { transform:translateY(-2px); border-color:#c59bea; background:linear-gradient(145deg,#49305b,#222536); }
+.game-talent-book button:focus-visible { outline:2px solid #d4aff4; outline-offset:3px; }
+.game-talent-book .talent-icon { width:48px; height:48px; margin:0; padding:2px; border:1px solid #7c6a8a; background:#101520; border-radius:8px; }
+.game-talent-book .talent-card>strong { font-size:11px; height:auto; overflow:visible; line-height:1.3; }
+.game-talent-book .talent-card>span { margin-top:auto; color:#d9bceb; font-size:12px; font-weight:600; text-shadow:none; }
+.super-badge { top:4px; right:4px; font-size:7px; padding:2px 4px; color:#a7e6c7; background:#233e35; }
+.game-talent-book>footer { min-height:72px; padding:12px 210px 8px 4px; border-top:1px solid #51415e; background:transparent; font-size:12px; }
+.game-talent-book>footer>span { margin-top:4px; color:#b4a4bf; }
+.preset-books { gap:7px; right:0; bottom:0; }
+.preset-books button { color:#e4d0f3; }
+.preset-books small { color:#a5d9bf; }
+.preset-books em { display:none; }
+.talent-detail-dialog { width:min(460px,calc(100vw - 32px)); box-sizing:border-box; max-height:80vh; overflow:auto; padding:20px; border:1px solid #9471ae; border-radius:12px; background:linear-gradient(145deg,#2e203d,#151a27); color:#ece3f4; box-shadow:0 20px 80px #0009; }
+.talent-detail-dialog::backdrop { background:#080b15b8; backdrop-filter:blur(3px); }
+.talent-detail-dialog header { display:flex; align-items:center; gap:12px; }
+.talent-detail-dialog header img { width:48px; height:48px; image-rendering:pixelated; }
+.talent-detail-dialog h3 { margin:0 0 4px; font-size:17px; }
+.talent-detail-dialog header span,.talent-detail-dialog small { color:#baa8cc; font-size:12px; }
+.talent-detail-dialog header button { margin-left:auto; padding:3px 9px; background:#ffffff08; border:1px solid #725586; color:#e8d6f4; font-size:22px; }
+.talent-detail-dialog p { font-size:14px; line-height:1.6; margin:18px 0 10px; }
+@media(max-width:700px) { .game-talent-book>footer { padding:10px 0 80px; } .preset-books { left:0; right:auto; } }
+@media(prefers-reduced-motion:reduce) { .game-talent-book .talent-card { transition:none; } }
+
+.talent-page-tabs{justify-content:center}
+.game-talent-book .special-talent-grid{display:flex;flex-wrap:wrap;justify-content:center}
+.game-talent-book .special-talent-grid>.talent-card{box-sizing:border-box;flex:0 0 calc((100% - 32px)/5)}
+.game-talent-book .special-talent-grid>.talent-card.empty{display:none}
+@media(max-width:700px){.talent-page-tabs{justify-content:safe center}.game-talent-book .special-talent-grid>.talent-card{flex-basis:calc((100% - 16px)/3)}}
+@media(max-width:380px){.game-talent-book .special-talent-grid>.talent-card{flex-basis:calc((100% - 8px)/2)}}
+
+.talent-character-picker{max-width:100%}
+#talentCharacter,#talentCharacterMenu button{display:flex;align-items:center;gap:11px;font:inherit;font-size:.9rem;color:#e9e0f2;cursor:pointer}
+#talentCharacter{padding:10px 13px;border:1px solid #705383;border-radius:11px;background:linear-gradient(120deg,#392746,#202031);box-shadow:0 4px 12px #0002;max-width:100%}
+#talentCharacter img,#talentCharacterMenu img{width:29px;height:29px;object-fit:contain;image-rendering:pixelated;flex-shrink:0}
+#talentCharacter small,#talentCharacterMenu small{color:#b7a7c8;font-size:.75rem;white-space:nowrap}
+#talentCharacter .picker-chevron{width:7px;height:7px;border-right:2px solid #baa0ce;border-bottom:2px solid #baa0ce;transform:rotate(45deg);margin:0 3px 4px 6px}
+#talentCharacterMenu{position:fixed;margin:0;padding:6px;width:min(360px,calc(100vw - 16px));box-sizing:border-box;inset:auto;border:1px solid #715785;border-radius:13px;background:#211c2d;box-shadow:0 16px 44px #0009;overflow-y:auto;scrollbar-width:thin;scrollbar-color:#685179 transparent}
+#talentCharacterMenu button{width:100%;padding:9px 10px;border:0;border-radius:8px;background:transparent;text-align:left}
+#talentCharacterMenu button span{flex:1;overflow-wrap:anywhere}
+#talentCharacterMenu button b{width:13px;color:#addecf;font-size:.8rem}
+#talentCharacterMenu button:hover{background:#43334f}
+#talentCharacterMenu button[aria-pressed="true"]{background:#513668;color:#fff}
+#talentCharacter:focus-visible,#talentCharacterMenu button:focus-visible{outline:2px solid #c69fe3;outline-offset:1px}

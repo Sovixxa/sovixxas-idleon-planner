@@ -188,6 +188,7 @@ SKILL_PAGES.holeFloors={title:'Floors',world:'World 5',copy:'All 18 Hole caverns
     if(changed){$('routeStatus').textContent=title+' page';if(document.activeElement?.matches('.side-link,.skill-tab'))$('pageHeading').focus({preventScroll:true});}
   }
   function selectSideNav(name){
+    if(name==='dailies'){name='home';if(routeName()==='dailies')history.replaceState(null,'','#/home');}
     clearTimeout($('worldContent')?.milkTimer);
     window.StatConnections?.dispose();
     window.LibraryPage?.dispose();
@@ -202,7 +203,7 @@ SKILL_PAGES.holeFloors={title:'Floors',world:'World 5',copy:'All 18 Hole caverns
     updateRoute(name);
     window.plannerQoL?.onNavigate(name);
     if(name!=='jelly'){stopSearch();cancelJellyPanels();initialUpgradesPending=true;initialPracticePending=true;if(practice?.playing)stopPracticePlayback();}
-    if(!state)$('workspace').classList.toggle('hidden',!['library','dailies','accountReview','skills','loadouts','statConnections','shadowCaps','trueDr','milkOpti','communitySheets','qolRecommendations','pocketWatches','credits','connectedBonuses','greenstacks'].includes(name));
+    if(!state)$('workspace').classList.toggle('hidden',!['home','library','dailies','accountReview','skills','loadouts','statConnections','shadowCaps','trueDr','milkOpti','communitySheets','qolRecommendations','pocketWatches','credits','connectedBonuses','greenstacks'].includes(name));
     if(!state)$('inputPanel').classList.toggle('hidden',['loadouts','statConnections','shadowCaps','trueDr','milkOpti','communitySheets','qolRecommendations','pocketWatches','credits'].includes(name));
     const selected=SKILL_PAGES[name]?.parent||name;
     for(const id of ['navHome','navJelly',...Object.keys(SKILL_PAGES).map(key=>'nav'+key[0].toUpperCase()+key.slice(1))]){const button=$(id);if(!button)continue;const active=id===('nav'+selected[0].toUpperCase()+selected.slice(1));button.classList.toggle('active',active);if(active)button.setAttribute('aria-current','page');else button.removeAttribute('aria-current');}
@@ -213,7 +214,7 @@ SKILL_PAGES.holeFloors={title:'Floors',world:'World 5',copy:'All 18 Hole caverns
     }
     const jelly=name==='jelly';$('operationStatePanel').classList.toggle('hidden',!jelly);$('jellyTabs').classList.toggle('hidden',!jelly);
     document.querySelector('.hero')?.classList.toggle('hidden',name!=='home'&&!jelly);
-    if(name==='home'){selectWorkspaceTab('home');return;}
+    if(name==='home'){selectWorkspaceTab('home');renderHomeActivities(true);renderHome();return;}
     if(jelly){if(state&&jellyReadyState!==state){renderInitial();jellyReadyState=state;}selectWorkspaceTab('optimizer');return;}
     window.PlannerAnalytics?.page(name);
     document.querySelectorAll('.tab-panel').forEach(panel=>panel.classList.add('hidden'));$('panelWorld').classList.remove('hidden');renderWorldPage(name);
@@ -230,7 +231,7 @@ SKILL_PAGES.holeFloors={title:'Floors',world:'World 5',copy:'All 18 Hole caverns
   document.querySelectorAll('.side-group>span').forEach(label=>{
     label.parentElement.classList.add('collapsed');
     label.tabIndex=0;label.setAttribute('role','button');label.setAttribute('aria-expanded','false');
-    const toggle=()=>{const collapsed=label.parentElement.classList.toggle('collapsed');label.setAttribute('aria-expanded',String(!collapsed));};
+    const toggle=()=>{const collapsed=label.parentElement.classList.toggle('collapsed');label.setAttribute('aria-expanded',String(!collapsed));const reveal=label.parentElement.querySelector('.side-group-reveal');if(reveal)reveal.inert=collapsed;};
     label.addEventListener('click',toggle);label.addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();toggle();}});
   });
 
@@ -483,13 +484,31 @@ SKILL_PAGES.holeFloors={title:'Floors',world:'World 5',copy:'All 18 Hole caverns
       return {id,name:names[id]||`Character ${id+1}`,target:humanTarget(prettyTarget||rawTarget),afk:afkDuration(seconds),level,classId:data['CharacterClass_'+id],classIcon:classIcon(data['CharacterClass_'+id]),activity,world};
     });
   }
+  let homeActivitiesSave;
+  function renderHomeActivities(force=false){
+    if(activePage!=='home')return;
+    const raw=loadedExport||state?.rawRoot||null,host=$('homeActivities');
+    if(!force&&homeActivitiesSave===raw)return;
+    homeActivitiesSave=raw;
+    if(window.PlannerFeatures?.toolsReady?.()===false){
+      host.textContent='Loading your daily overview…';
+      window.PlannerFeatures.loadTools().then(()=>{if(activePage==='home')renderHomeActivities(true);}).catch(()=>{
+        if(activePage!=='home')return;
+        host.textContent='Daily overview could not load. ';
+        const retry=document.createElement('button');retry.textContent='Retry';retry.onclick=()=>renderHomeActivities(true);host.append(retry);
+      });return;
+    }
+    window.Dashboard.render(host,raw||{});
+  }
   function renderHome(){
     const raw=loadedExport||state?.rawRoot;
     if(raw&&homeRosterSave!==raw){homeRosterSave=raw;homeDecodedPlayers=[];window.BonusSystems.getRosterAsync(raw).then(players=>{if(homeRosterSave!==raw)return;homeDecodedPlayers=players;renderHome();}).catch(error=>console.warn('Could not decode roster activities.',error));}
     const rows=characterRows();
+    renderHomeActivities();
     const fighting=rows.filter(x=>x.activity.kind==='fighting').length,skills=rows.length-fighting;
     $('homeRosterSummary').innerHTML=rows.length?`<span><strong>${rows.length}</strong> characters</span><span><strong>${fighting}</strong> fighting</span><span><strong>${skills}</strong> elsewhere</span>`:'<span>No roster loaded</span>';
     $('characterDashboard').innerHTML=rows.map(row=>`<article class="character-card activity-${row.activity.kind}" style="--card-index:${row.id}"><header><div class="character-avatar" title="Class ${esc(row.classId??'—')}"><img src="assets/ClassIcons${esc(row.classId??0)}.png" alt="" data-image-fallback="avatar"><span hidden>${row.classIcon}</span></div><div class="character-identity"><h3>${esc(row.name)}</h3><strong>Lv. ${row.level??'—'}</strong></div>${row.world?`<span class="character-world">W${esc(row.world)}</span>`:''}</header><div class="character-timer"><span class="timer-icon">◷</span><strong>${esc(row.afk)}</strong><small>saved AFK</small></div><div class="character-assignment"><span class="assignment-icon">${row.activity.icon}</span><div><strong>${esc(row.activity.label)}</strong><small>${esc(row.target)}</small></div><span class="assignment-mark">${row.activity.kind==='fighting'?'⚔':row.activity.kind==='idle'?'—':'›'}</span></div></article>`).join('')||'<div class="home-empty"><strong>No character roster yet</strong><p>Load a full IdleOn save to populate this page.</p></div>';
+    if(rows.length===11)$('characterDashboard').insertAdjacentHTML('beforeend','<article class="character-card character-placeholder"><span class="character-placeholder-mark" aria-hidden="true">?</span><h3>Character 12</h3><p>Will be added in 3–5 business years.<br><em>Maybe…</em></p></article>');
   }
   function stampLevels(){
     const raw=state?.rawData?.StampLv;if(!Array.isArray(raw))return [[],[],[]];
@@ -530,9 +549,9 @@ SKILL_PAGES.holeFloors={title:'Floors',world:'World 5',copy:'All 18 Hole caverns
     if(roster.length&&!roster.some(c=>c.id===postCharacter))postCharacter=roster[0].id;
     const points=id=>P.level(state?.rawData,postCharacter,id),pretty=t=>String(t).replaceAll('_',' ').trim(),fmt=n=>n.toLocaleString(undefined,{maximumFractionDigits:2});
     const effect=(row,id,slot)=>{const v=P.bonus(row,points(id),slot);return (v==null?'Unknown':`+${fmt(v)}`)+(String(row[4+slot*4]).startsWith('%')?'':' ')+pretty(row[4+slot*4]);};
-    $('worldContent').innerHTML=`<div class="section-head compact"><div><p class="eyebrow">World 2 · character investments</p><h2>Post Office</h2><p>All ${catalog.length} boxes. Select a character to see their invested points and three bonuses per box.</p></div></div><label>Character <select id="postCharacter">${roster.map(c=>`<option value="${c.id}" ${c.id===postCharacter?'selected':''}>${esc(c.name)}</option>`).join('')}</select></label>${!state?'<p>Load a complete export to see your Post Office investments.</p>':''}<p class="muted">Bonuses are calculated from saved box investments. Missing fields show Unknown; zero points do not establish whether a box is unlocked.</p><div class="post-grid compact-upgrades">${catalog.map((row,id)=>{const n=points(id);return `<button type="button" class="arcade-tile post-tile" data-post="${id}" aria-pressed="${id===postSelected}"><img class="arcade-icon" src="assets/UIboxUpg${id}.png" alt="" loading="lazy"><span class="arcade-name">${esc(pretty(row[0]))}</span><strong>${n==null?'Unknown':fmt(n)+' points'}</strong><span class="upgrade-tip"><strong>${esc(pretty(row[0]))}</strong>${[0,1,2].map(slot=>`<span class="post-effect">${esc(effect(row,id,slot))}</span>`).join('')}</span></button>`;}).join('')}</div><section id="postDetail" class="exp-card upgrade-detail detail-dismissed" aria-live="polite"></section>`;
+    $('worldContent').innerHTML=`<div class="section-head compact"><div><h2>Post Office</h2></div></div><details class="post-character-picker"><summary><span>Character</span><strong>${esc(roster.find(c=>c.id===postCharacter)?.name||'Choose character')}</strong><i aria-hidden="true">⌄</i></summary><div>${roster.map(c=>`<button type="button" data-post-character="${c.id}" aria-pressed="${c.id===postCharacter}">${esc(c.name)}${c.id===postCharacter?'<span>✓</span>':''}</button>`).join('')}</div></details>${!state?'<p>Load a complete export to see your Post Office investments.</p>':''}<details class="post-calculation"><summary>How bonuses are calculated</summary><p>Bonuses use saved box investments. Missing fields show Unknown; zero points do not establish whether a box is unlocked.</p></details><div class="post-grid compact-upgrades post-refreshed">${catalog.map((row,id)=>{const n=points(id);return `<button type="button" class="arcade-tile post-tile" data-post="${id}" aria-pressed="${id===postSelected}"><img class="arcade-icon" src="assets/UIboxUpg${id}.png" alt="" loading="lazy"><span class="arcade-name">${esc(pretty(row[0]))}</span><strong>${n==null?'Unknown':fmt(n)+' points'}</strong><span class="upgrade-tip"><strong>${esc(pretty(row[0]))}</strong>${[0,1,2].map(slot=>`<span class="post-effect">${esc(effect(row,id,slot))}</span>`).join('')}</span></button>`;}).join('')}</div><section id="postDetail" class="exp-card upgrade-detail detail-dismissed" aria-live="polite"></section>`;
     const show=id=>{postSelected=id;const row=catalog[id],n=points(id);$('worldContent').querySelectorAll('[data-post]').forEach(b=>{const active=Number(b.dataset.post)===id;b.classList.toggle('selected',active);b.setAttribute('aria-pressed',String(active));});$('postDetail').innerHTML=`<button type="button" class="secondary upgrade-close" id="postDetailClose" aria-label="Close post details">Close</button><h3>${esc(pretty(row[0]))}</h3><p>${n==null?'Investment data unavailable':fmt(n)+' points invested on this character'}</p>${[0,1,2].map(slot=>{const threshold=slot?Math.ceil(Number(row[12+slot])+.5):1;return `<p><strong>${esc(effect(row,id,slot))}</strong><br><span class="muted">${n==null?'Activation unknown':n>=threshold?'Active':'Starts at '+threshold+' invested points'}${slot?' · Uses points beyond '+Math.round(Number(row[12+slot])):''}</span></p>`;}).join('')}<p class="muted">Calculated using the installed client’s Post Office formulas. These are individual box contributions, not your final combined character stats.</p>`;};
-    $('postCharacter').onchange=e=>{postCharacter=Number(e.target.value);renderPostOffice();};$('worldContent').querySelectorAll('[data-post]').forEach(b=>b.onclick=()=>{show(Number(b.dataset.post));$('postDetail').classList.remove('detail-dismissed');$('postDetailClose').onclick=()=>$('postDetail').classList.add('detail-dismissed');});show(postSelected);
+    $('worldContent').querySelectorAll('[data-post-character]').forEach(b=>b.onclick=()=>{postCharacter=Number(b.dataset.postCharacter);renderPostOffice();addSubtabs();});$('worldContent').querySelectorAll('[data-post]').forEach(b=>b.onclick=()=>{show(Number(b.dataset.post));$('postDetail').classList.remove('detail-dismissed');$('postDetailClose').onclick=()=>$('postDetail').classList.add('detail-dismissed');});show(postSelected);
   }
   let selectedArcade=0;
   function renderArcade(){

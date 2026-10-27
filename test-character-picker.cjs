@@ -1,0 +1,25 @@
+const {chromium}=require('playwright'),fs=require('fs'),assert=require('assert');
+(async()=>{const b=await chromium.launch();try{
+const p=await b.newPage({viewport:{width:1100,height:900}});
+await p.goto('http://127.0.0.1:3000');
+for(const url of ['/talents-data.js','/character-talents.js'])await p.addScriptTag({url});
+await p.addStyleTag({url:'/character-talents.css'});
+await p.evaluate(raw=>{document.body.innerHTML='<main style="padding:20px" id="preview"></main>';CharacterTalents.render(document.querySelector('main'),raw.data,raw)},JSON.parse(fs.readFileSync('../example json.txt')));
+await p.locator('#talentCharacter').click();
+assert(await p.locator('#talentCharacterMenu').isVisible());
+await p.locator('[data-character-choice="1"]').click();
+assert((await p.locator('#talentCharacter').innerText()).includes('LumbaJacker'));
+await p.locator('#talentCharacter').click();
+await p.keyboard.press('Escape');
+assert(!(await p.locator('#talentCharacterMenu').isVisible()));
+await p.locator('#talentCharacter').click();
+await p.locator('[data-character-choice="0"]').focus();await p.keyboard.press('ArrowDown');
+assert.equal(await p.evaluate(()=>document.activeElement.dataset.characterChoice),'1');
+await p.screenshot({path:'../audit/character-picker.png'});
+await p.mouse.click(1000,10);
+assert(!(await p.locator('#talentCharacterMenu').isVisible()));
+await p.setViewportSize({width:390,height:844});
+await p.locator('#talentCharacter').click();
+const box=await p.locator('#talentCharacterMenu').boundingBox();assert(box.x>=0&&box.x+box.width<=390);
+console.log('Character selection, keyboard navigation, Escape, outside click and mobile picker bounds passed.');
+}finally{await b.close()}})().catch(e=>{console.error(e);process.exitCode=1});

@@ -76,7 +76,9 @@
     shell.prepend(bar);
     const dialog=doc.createElement('dialog');dialog.className='qol-dialog';dialog.setAttribute('aria-labelledby','qolDialogTitle');doc.body.append(dialog);
     const homeGoals=doc.createElement('section');homeGoals.className='qol-home-goals';homeGoals.setAttribute('aria-label','Pinned goals');doc.getElementById('characterDashboard')?.before(homeGoals);
-    const homeFavorites=doc.createElement('section');homeFavorites.className='qol-home-favorites';homeFavorites.setAttribute('aria-labelledby','qolHomeFavoritesTitle');doc.getElementById('panelHome')?.prepend(homeFavorites);
+    const homeFavorites=doc.createElement('div');homeFavorites.id='qolFavoritesDropdown';homeFavorites.className='qol-favorites-dropdown';homeFavorites.setAttribute('popover','auto');homeFavorites.setAttribute('aria-label','Favorites');doc.body.append(homeFavorites);
+    const favoriteButton=doc.getElementById('qolFavorite');favoriteButton.removeAttribute('aria-pressed');favoriteButton.setAttribute('aria-expanded','false');favoriteButton.setAttribute('aria-controls',homeFavorites.id);
+    homeFavorites.addEventListener('toggle',e=>favoriteButton.setAttribute('aria-expanded',String(e.newState==='open')));
     const button=(id,fn)=>doc.getElementById(id).addEventListener('click',fn);
     function openDialog(heading,html){
       dialog.innerHTML=`<header><h2 id="qolDialogTitle">${esc(heading)}</h2><button class="secondary" data-close aria-label="Close dialog">Close</button></header><div class="qol-dialog-body">${html}</div>`;
@@ -84,14 +86,16 @@
     }
     dialog.addEventListener('click',e=>{if(e.target===dialog)dialog.close();});
     function paintFavorites(){
-      doc.getElementById('qolFavorite').classList.remove('qol-sparkle');
-      const saved=settings.favorites.filter(k=>registry[k]);
-      homeFavorites.hidden=current!=='home';
-      homeFavorites.innerHTML=`<div class="qol-section-head"><h3 id="qolHomeFavoritesTitle"><span aria-hidden="true">★</span> Favorites</h3><span class="qol-help">${saved.length} saved ${saved.length===1?'page':'pages'}</span></div>${saved.length?`<nav class="qol-home-favorites-grid" aria-label="Your favorite pages">${saved.map(k=>`<button class="secondary qol-home-favorite" data-go="${esc(k)}"><span>${esc(title(k))}</span><span aria-hidden="true">→</span></button>`).join('')}</nav>`:'<p class="qol-help">Keep your go-to pages close. Open a page and select ☆ Favorite to add it here.</p>'}`;
-      homeFavorites.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>go(b.dataset.go));
-      doc.getElementById('qolFavorite').textContent=settings.favorites.includes(current)?'★ Favorited':'☆ Favorite';doc.getElementById('qolFavorite').setAttribute('aria-pressed',String(settings.favorites.includes(current)));
+      const saved=settings.favorites.filter(k=>registry[k]),isSaved=saved.includes(current);
+      homeFavorites.innerHTML=`<button type="button" id="qolFavoriteCurrent">${isSaved?'★ Remove current page':'☆ Add current page'}</button><nav aria-label="Favorite pages">${saved.map(k=>`<button type="button" data-go="${esc(k)}">${esc(title(k))}<span aria-hidden="true">↗</span></button>`).join('')||'<p>No favorites yet.</p>'}</nav>`;
+      homeFavorites.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>{homeFavorites.hidePopover();go(b.dataset.go);});
+      homeFavorites.querySelector('#qolFavoriteCurrent').onclick=()=>{settings.favorites=isSaved?settings.favorites.filter(k=>k!==current):[...settings.favorites,current];save();paintFavorites();homeFavorites.querySelector('#qolFavoriteCurrent').focus();};
+      favoriteButton.textContent='★ Favorites ▾';
     }
-    button('qolFavorite',()=>{settings.favorites=settings.favorites.includes(current)?settings.favorites.filter(k=>k!==current):[...settings.favorites,current];save();paintFavorites();if(settings.favorites.includes(current))doc.getElementById('qolFavorite').classList.add('qol-sparkle');});
+    button('qolFavorite',()=>{
+      if(homeFavorites.matches(':popover-open')){homeFavorites.hidePopover();return;}
+      paintFavorites();const rect=favoriteButton.getBoundingClientRect();homeFavorites.style.left=Math.max(8,Math.min(rect.left,root.innerWidth-288))+'px';homeFavorites.style.top=(rect.bottom+6)+'px';homeFavorites.style.maxHeight=Math.max(120,root.innerHeight-rect.bottom-14)+'px';homeFavorites.showPopover();
+    });
     function search(){
       openDialog('Find a page or bonus','<label>Search pages, systems, and imported bonuses<input id="qolQuery" type="search" autocomplete="off" placeholder="Printer, stamps, damage…"></label><p class="qol-help">Enter opens the first result. Tab moves through results. Escape closes.</p><div id="qolResults"></div>');
       const input=doc.getElementById('qolQuery');input.value=searchQuery;input.oninput=()=>{searchQuery=input.value;paintSearch();};input.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();dialog.querySelector('[data-open-result]')?.click();}if(e.key==='ArrowDown'){e.preventDefault();dialog.querySelector('[data-open-result]')?.focus();}};paintSearch();input.focus();
@@ -186,7 +190,7 @@
     }
     doc.getElementById('qolHideDone').onchange=e=>{pref().hideDone=e.target.checked;save();hideCompleted();};
     new MutationObserver(()=>{if(pending)return;pending=true;queueMicrotask(()=>{pending=false;restore();hideCompleted();});}).observe(content,{childList:true,subtree:true});
-    function applyGroups(){doc.querySelectorAll('.side-group>span').forEach(label=>{const collapsed=settings.groups[label.textContent.trim()];if(collapsed!==undefined){label.parentElement.classList.toggle('collapsed',collapsed);label.setAttribute('aria-expanded',String(!collapsed));}});}
+    function applyGroups(){doc.querySelectorAll('.side-group>span').forEach(label=>{const collapsed=settings.groups[label.textContent.trim()];if(collapsed!==undefined){label.parentElement.classList.toggle('collapsed',collapsed);label.setAttribute('aria-expanded',String(!collapsed));const reveal=label.parentElement.querySelector('.side-group-reveal');if(reveal)reveal.inert=collapsed;}});}
     doc.querySelectorAll('.side-group>span').forEach(label=>{const record=()=>{settings.groups[label.textContent.trim()]=label.parentElement.classList.contains('collapsed');save();};label.addEventListener('click',record);label.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' ')record();});});applyGroups();
     function onNavigate(page){
       if(registry[page]?.parent){const parent=registry[page].parent;settings.pages[parent]||={};settings.pages[parent].lastSubtab=page;}

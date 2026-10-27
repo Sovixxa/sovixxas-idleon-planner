@@ -52,3 +52,29 @@
 /* Keep the default floating notepad clear of the command bar. */
 .quick-notes:not([style*="left"]){top:auto;bottom:18px}
 
+/* Favorites stay in a single compact, wrapping shortcut bar. */
+.qol-home-favorites { display:flex; align-items:center; flex-wrap:wrap; gap:8px 12px; margin-bottom:12px; padding:8px 10px; border-radius:8px; }
+.qol-home-favorites .qol-section-head { flex:0 0 auto; gap:7px; margin:0; }
+.qol-home-favorites h3 { font-size:12px; }
+.qol-home-favorites .qol-section-head>.qol-help { display:none; }
+.qol-home-favorites-grid { display:flex; flex-wrap:wrap; gap:6px; min-width:0; }
+.qol-home-favorites .qol-home-favorite { min-height:30px; max-width:100%; padding:5px 9px; gap:8px; border-radius:6px; font-size:12px; font-weight:500; }
+.qol-home-favorites p { font-size:11px; line-height:1.4; }
+/* One wrapping toolbar for shortcuts, filters, and account controls. */
+.qol-bar { display:flex; align-items:center; flex-wrap:wrap; gap:6px 10px; padding:8px 10px; margin-bottom:12px; }
+.qol-bar .qol-actions,.qol-bar .qol-meta { display:contents; }
+.qol-bar .qol-actions button { min-height:32px; padding:6px 8px; white-space:nowrap; }
+.qol-bar .qol-actions #qolSearchOpen { flex:1 1 160px; max-width:260px; margin-right:0; padding:6px 9px; }
+.qol-bar #qolPageName { display:none; }
+.qol-bar #qolFreshness,.qol-bar #qolHiddenCount,.qol-bar .qol-completion-filter { font-size:11px; color:#95a3bb; }
+.qol-bar .qol-meta .qol-completion-filter { flex-basis:auto; margin-left:auto; white-space:nowrap; gap:6px; }
+.qol-bar #qolStatus { flex-basis:100%; margin:0; }
+.qol-bar .live-connection { gap:6px; padding-left:10px; }
+@media(max-width:600px) { .qol-bar .qol-actions #qolSearchOpen { flex-basis:100%; max-width:none; } .qol-bar .qol-meta .qol-completion-filter { margin-left:0; } .qol-bar .live-connection { padding-left:0; } }
+/* Favorites live in the toolbar popover, never in the page layout. */
+.qol-favorites-dropdown { position:fixed; inset:auto; margin:0; width:280px; max-width:calc(100vw - 16px); box-sizing:border-box; overflow:auto; padding:6px; border:1px solid #705584; border-radius:9px; background:linear-gradient(145deg,#292034,#141823); color:#e9def2; box-shadow:0 10px 30px #0008; }
+.qol-favorites-dropdown button { display:flex; align-items:center; justify-content:space-between; gap:12px; width:100%; padding:9px 10px; border:0; border-radius:5px; background:transparent; color:inherit; text-align:left; font-size:12px; cursor:pointer; }
+.qol-favorites-dropdown button:hover { background:#b982e420; }
+.qol-favorites-dropdown button:focus-visible { outline:2px solid #c49aef; outline-offset:-2px; }
+.qol-favorites-dropdown nav { margin-top:5px; padding-top:5px; border-top:1px solid #ffffff16; }
+.qol-favorites-dropdown p { margin:8px 10px; font-size:12px; color:#b5a7c2; }

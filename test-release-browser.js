@@ -12,10 +12,11 @@ const root=path.join(__dirname,'dist'),base='http://localhost:7339/planner/';
  assert(!requests.some(url=>url.includes('beanstalk-engine.js')),'No large account engine on the empty shell');
  assert(!requests.some(url=>url.includes('planner.features.')),'Home and Credits must not eagerly download tool scripts or styles');
  assert(fs.statSync(path.join(root,'planner.bundle.js')).size<300000,'Keep the startup JS below 300 KB');assert(fs.statSync(path.join(root,'planner.bundle.css')).size<120000,'Keep startup CSS below 120 KB');
- failTools=true;await page.locator('#navDailies').click();await page.getByRole('button',{name:'Retry loading',exact:true}).waitFor();await page.locator('#navHome').click();assert.match(await page.title(),/^Home/);await page.locator('#navDailies').click();await page.waitForFunction(()=>window.PlannerFeatures.toolsReady());
- await page.locator('#navHome').click();await page.locator('#navDailies').click();assert.match(page.url(),/#\/dailies$/);assert.equal(await page.locator('#pageHeading').evaluate(e=>e===document.activeElement),true);
- await page.goBack();assert.match(await page.title(),/^Home/);await page.goForward();assert.match(await page.title(),/^Activity dashboard/);
- await page.reload();assert.equal(await page.locator('#navDailies').getAttribute('aria-current'),'page');
+ await page.locator('.side-group').filter({has:page.locator('#navSkills')}).locator(':scope > span').click();
+ failTools=true;await page.locator('#navSkills').click();await page.getByRole('button',{name:'Retry loading',exact:true}).waitFor();await page.locator('#navHome').click();assert.match(await page.title(),/^Home/);await page.locator('#navSkills').click();await page.waitForFunction(()=>window.PlannerFeatures.toolsReady());
+ await page.locator('#navHome').click();await page.locator('#navSkills').click();assert.match(page.url(),/#\/skills$/);assert.equal(await page.locator('#pageHeading').evaluate(e=>e===document.activeElement),true);
+ await page.goBack();assert.match(await page.title(),/^Home/);await page.goForward();assert.match(await page.title(),/^Skills/);
+ await page.reload();assert.equal(await page.locator('#navSkills').getAttribute('aria-current'),'page');
  await page.keyboard.press('Tab');await page.locator('.skip-link').focus();const beforeSkip=page.url();await page.keyboard.press('Enter');assert.equal(page.url(),beforeSkip);assert.equal(await page.locator('#pageHeading').evaluate(e=>e===document.activeElement),true);
  await page.locator('#navHome').click();await page.locator('#jsonInput').fill('{invalid');await page.locator('#parseBtn').click();assert(await page.locator('#error').isVisible());assert(!requests.some(url=>url.includes('beanstalk-engine.js')),'Invalid imports do not download the account engine');
  // Synthetic fixture: no personal save, authentication or private client is required in CI.
