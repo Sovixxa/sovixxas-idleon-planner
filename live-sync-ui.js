@@ -10,11 +10,22 @@
   try{$('cloudRemember').checked=localStorage.getItem(SESSION)==='1';}catch{}
   const login=(method,credentials)=>controller.connect(method,credentials,{remember:$('cloudRemember').checked});
   const canRetry=status=>(status.connected||status.method==='resume')&&['error','reconnecting'].includes(status.phase);
+  let lastDisplayStatus=null;
+  const freshnessNode=$('qolFreshness');
+  if(freshnessNode)freshnessNode.hidden=true;
+  function combinedStatus(status){
+    lastDisplayStatus=status;
+    const reading=freshnessNode?.textContent==='Reading save…';
+    $('cloudSummary').textContent=status.busy?'Connecting…':status.phase==='error'?'Sync error':status.connected&&navigator.onLine===false?'Offline':status.phase==='reconnecting'?'Reconnecting…':reading?'Reading save…':status.connected?(status.pending?'Update ready':'Synced'):(freshnessNode?.textContent||'');
+    $('cloudSummary').title=[freshnessNode?.title,$('cloudStatus').textContent,$('cloudTimes').textContent].filter(Boolean).join(' · ');
+  }
+  if(freshnessNode)new MutationObserver(()=>{if(lastDisplayStatus)combinedStatus(lastDisplayStatus);}).observe(freshnessNode,{childList:true,subtree:true,characterData:true,attributes:true,attributeFilter:['title']});
   function draw(status){
+    $('liveConnection').classList.toggle('is-cloud-connected',!!status.connected);
     $('cloudStatus').textContent=navigator.onLine===false&&status.connected?'Offline · showing the last loaded save':status.message;
     $('cloudLoginStatus').textContent=status.message;
     $('cloudTimes').textContent=[status.lastReceived?'Received '+new Date(status.lastReceived).toLocaleTimeString():'',status.lastApplied?'Applied '+new Date(status.lastApplied).toLocaleTimeString():''].filter(Boolean).join(' · ');
-    $('cloudSummary').textContent=status.busy?'Connecting…':status.phase==='error'?'Sync error':status.connected?(navigator.onLine===false?'Offline':status.phase==='reconnecting'?'Reconnecting…':status.pending?'Update ready':'Synced'):'';
+    combinedStatus(status);
     $('liveConnection').title=[$('cloudStatus').textContent,$('cloudTimes').textContent].filter(Boolean).join(' · ');
     $('cloudConnect').hidden=status.connected||status.busy;
     $('cloudDisconnect').hidden=!status.connected&&!status.busy&&status.phase!=='error';

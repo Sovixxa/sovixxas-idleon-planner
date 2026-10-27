@@ -3,12 +3,22 @@
  const decode=v=>typeof v==='string'?JSON.parse(v):v;
  if(typeof module!=='undefined'&&!root.ConnectedPrimaryStats)require('./connected-primary-stats');
  const names=['character','mining','smithing','chopping','fishing','alchemy','catching','trapping','construction','worship','cooking'];
- const foodEffects={0:['ClassEXP','MoveSpdBoosts','BaseDmgBoosts','WeaponPowerBoosts'],1:['MiningSpeedBoosts'],3:['ChoppinSpeedBoosts'],4:['FishingSpeedBoosts'],6:['CatchingSpeedBoosts']};
+ const foodEffects={
+  0:['ClassEXP','MoveSpdBoosts','BaseDmgBoosts','WeaponPowerBoosts','HpBaseBoosts','MaxHPpct','Damage','Defence','BaseDamage','AllStatz','ClassEXPz','AllAFK','BaseAcc','ShrineEffect'],
+  1:['MiningSpeedBoosts','MiningEff','SkillExp','AllStatz','AllAFK','HpBaseBoosts','MaxHPpct','ShrineEffect'],
+  2:['SkillExp'],3:['ChoppinSpeedBoosts','SkillExp','AllStatz','AllAFK','ShrineEffect'],
+  4:['FishingSpeedBoosts','FishingEff','SkillExp','AllStatz','AllAFK','ShrineEffect'],5:['SkillExp'],
+  6:['CatchingSpeedBoosts','SkillExp','AllStatz','AllAFK','ShrineEffect'],
+  7:['TrappingSpeedBoosts','SkillExp'],8:['SkillExp'],9:['WorshipSoulBoosts','SkillExp'],10:['SkillExp'],
+  19:['SpelunkEXPz','SkillExp','AllAFK']
+ };
+ function validFood(item,skill){return ['BOOST_FOOD','GOLDEN_FOOD'].includes(item?.Type)&&(foodEffects[skill]||[]).includes(item.Effect);}
+
  function foodSlots(data,id){
   const saved=Number(data['FoodSlO_'+id]);
-  if(Number.isFinite(saved)&&saved>=0)return Math.min(16,Math.floor(saved));
+  if(Number.isFinite(saved)&&saved>=0)return Math.min(6,Math.floor(saved));
   const gems=decode(data.GemItemsPurchased)||[],tasks=decode(data.Tasks)||[];
-  return Math.min(16,Math.max(2,Math.round(2+Number(gems[59]||0)+Math.floor(Number(tasks[2]?.[2]?.[0]||0)/2))));
+  return Math.min(6,Math.max(2,Math.round(2+Number(gems[59]||0)+Math.floor(Number(tasks[2]?.[2]?.[0]||0)/2))));
  }
  function prepare(raw,M,options={}){
   const copy=JSON.parse(JSON.stringify(raw)),data=decode(copy.data)||copy;
@@ -19,6 +29,11 @@
    else if(Number(categories[0])===26)categories[0]=-1;
    copy.serverVars.voteCat2=categories;
   }
+  const foodCaps={};
+  if(options.boostFoods&&options.autoFoodStacks&&(options.sharedFoods||[]).some(id=>M.stampItemCatalog?.[id]?.Type==='GOLDEN_FOOD')){
+   const parsed=M.parseData(data,copy.charNames,copy.companion,copy.guildData,copy.serverVars||{},copy.accountCreateTime,copy.tournament);
+   for(const ch of parsed.characters||[]){const cap=M.getItemCapacity('cFood',ch,parsed.account,false).value;if(!Number.isSafeInteger(cap)||cap<1)throw Error('Could not calculate food capacity from this save.');foodCaps[ch.playerId]=cap;}
+  }
   for(const key of Object.keys(data).filter(k=>/^Lv0_\d+$/.test(k))){
    const id=Number(key.slice(4)),order=decode(data['EquipOrder_'+id]),qty=decode(data['EquipQTY_'+id]);
    if(options.activeBuffs===false)data['BuffsActive_'+id]=[];
@@ -28,18 +43,20 @@
    if(options.boostFoods&&Array.isArray(options.sharedFoods)){
     const selected=[...new Set(options.sharedFoods)],allowed=foodEffects[options.skill]||[];
     if(selected.length>slots)throw Error('Selected boost foods exceed a character’s unlocked food slots.');
-    if(selected.some(id=>M.stampItemCatalog?.[id]?.Type!=='BOOST_FOOD'||!allowed.includes(M.stampItemCatalog[id].Effect)))throw Error('Invalid boost food for the selected skill.');
+    if(selected.some(id=>!validFood(M.stampItemCatalog?.[id],options.skill)))throw Error('Invalid boost food for the selected skill.');
     const planned=Array.from({length:slots},(_,slot)=>Number(qty[2][slot])>0?order[2][slot]||'Blank':'Blank');
-    for(let slot=0;slot<slots;slot++)if(allowed.includes(M.stampItemCatalog?.[planned[slot]]?.Effect)&&!selected.includes(planned[slot]))planned[slot]='Blank';
+    for(let slot=0;slot<slots;slot++)if(M.stampItemCatalog?.[planned[slot]]?.Type==='BOOST_FOOD'&&allowed.includes(M.stampItemCatalog?.[planned[slot]]?.Effect)&&!selected.includes(planned[slot]))planned[slot]='Blank';
     for(const food of selected){if(planned.includes(food))continue;let slot=planned.indexOf('Blank');if(slot<0)slot=planned.findLastIndex(id=>!selected.includes(id));planned[slot]=food;}
-    choices=Object.fromEntries(planned.flatMap((food,slot)=>food===order[2][slot]&&Number(qty[2][slot])>0?[]:[[slot,food]]));
+    choices=Object.fromEntries(planned.flatMap((food,slot)=>food===order[2][slot]&&Number(qty[2][slot])>0&&!(selected.includes(food)&&(options.foodQuantities?.[food]!=null||options.autoFoodStacks&&M.stampItemCatalog?.[food]?.Type==='GOLDEN_FOOD'))?[]:[[slot,food]]));
    }
    for(let slot=0;slot<16;slot++){
     const selected=choices?.[slot],item=M.stampItemCatalog?.[selected];
-    // Ignore retired health-potion simulations restored from older browser preferences.
-    if(slot<slots&&selected!==undefined&&item?.Effect!=='HpBaseBoosts'){
-     if(selected!=='Blank'&&!(item?.Type==='BOOST_FOOD'&&(foodEffects[options.skill]||[]).includes(item.Effect)))throw Error('Invalid boost food for the selected skill.');
-     order[2][slot]=selected;qty[2][slot]=selected==='Blank'?0:1;
+    // Apply selected foods to a copy; golden foods require their actual stack size.
+    if(slot<slots&&selected!==undefined){
+     if(selected!=='Blank'&&!(validFood(item,options.skill)))throw Error('Invalid boost food for the selected skill.');
+     const stack=Number((options.autoFoodStacks?foodCaps[id]:options.foodQuantities?.[selected])??(order[2][slot]===selected?qty[2][slot]:1));
+     if(item?.Type==='GOLDEN_FOOD'&&(!Number.isSafeInteger(stack)||stack<1))throw Error('Golden food stack must be a positive whole number.');
+     order[2][slot]=selected;qty[2][slot]=selected==='Blank'?0:item?.Type==='GOLDEN_FOOD'?stack:1;
     }
     // Native TotalFoodBonuses only visits owned slots with nonzero quantities.
     if(slot>=slots||!(Number(qty[2][slot])>0))order[2][slot]='Blank';
@@ -91,7 +108,7 @@
     row.loadout.starSigns=(ch.starSigns||[]).map(label).filter(Boolean);
     row.loadout.talents=(ch.talentsLoadout||[]).filter(Boolean).map(t=>label(t)+' (level '+(t.level??t.baseLevel??0)+')');
     row.loadout.obols=[...(ch.obols?.list||[]),...(account.obols?.list||[])].filter(x=>x.rawName&&x.rawName!=='Blank').map(label);
-    row.foodChoices=Object.entries(M.stampItemCatalog||{}).filter(([,item])=>item.Type==='BOOST_FOOD'&&(foodEffects[skill]||[]).includes(item.Effect)).map(([id,item])=>({id,label:label(item),effect:item.Effect,bonus:item.Amount}));
+    row.foodChoices=Object.entries(M.stampItemCatalog||{}).filter(([,item])=>validFood(item,skill)).map(([id,item])=>({id,label:label(item),effect:item.Effect,bonus:item.Amount,golden:item.Type==='GOLDEN_FOOD'}));
     if(skill===20&&Number.isFinite(account?.research?.researchEXPrateTOT)&&account.research.researchEXPrateTOT>=0){row.rate=account.research.researchEXPrateTOT;row.rateSource='Calculated from saved Research observations, shapes, insight and EXP bonuses. Excludes extra gains from future tournament registration.';continue;}
     if(missing.length){row.error='Save is missing '+missing.join(', ')+'. Import a complete export or enter an override.';continue;}
     try{
@@ -132,5 +149,5 @@
   }
   return result;
  }
- const api={calculate,combatMaps,prepare,foodSlots,foodEffects};if(typeof module!=='undefined')module.exports=api;else root.AfkSaveModel=api;
+ const api={calculate,combatMaps,prepare,foodSlots,foodEffects,validFood};if(typeof module!=='undefined')module.exports=api;else root.AfkSaveModel=api;
 })(globalThis);

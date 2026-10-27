@@ -183,7 +183,7 @@ const VERSION='0.9.9-alchemy-bubbles';
   function reviveCount(state){return Math.round(upgradeQty(state,35));}
   function bossHP(n){return n<12?[100,200,400,1000,2000,4000,6000,10000,15000,30000,50000,100000][n]:1e5*Math.pow(1.65,n-11)*(1+0.9*Math.floor((n-11)/12));}
   function bossTime(n){return 30+5*Math.floor(n/12);}
-  function bossAtkCD(n){return Math.max(10,120-20*Math.floor(n/6));}
+  function bossAtkCD(n){return Math.max(10,120-20*n/6);}
   function obstructionTier(state){return Math.max(0,Math.min(5,Math.floor(state.obstruction/12)));}
   function unlockedSlots(state){
     const s=new Set();
@@ -326,8 +326,8 @@ const VERSION='0.9.9-alchemy-bubbles';
   function bloodcellBonuses(state){
     const arcade=arcadeBloodcellBonus(state),grid=researchGridBonus(state,187),atoms=rawArray(state,'Atoms'),bundles=parsedObject(state.rawData?.BundlesReceived);
     const total=state.cellLevels.reduce((a,b)=>a+asNum(b),0),q=id=>upgradeQty(state,id);
-    const factors={upgrades:1+(q(23)+q(24)+q(25)+q(33)*total)/100,arcade:1+arcade.value/100,grid:1+grid.value/100,
-      sepsis:feverUnlocked(state)&&Math.round(state.fever)===2?2:1,bundle:1+bundleFlag(state,'ban_j'),obstruction24:1+rogBonus(state,24)/100,
+    const factors={upgrades:1+(q(23)+q(24)+q(25)+q(33)*total+11)/100,eventShop:1+eventShopOwned(state,56),arcade:1+arcade.value/100,grid:1+grid.value/100,
+      sepsis:feverUnlocked(state)&&Math.round(state.fever)===2?4:1,bundle:1+bundleFlag(state,'ban_j'),obstruction24:1+rogBonus(state,24)/100,
       savedDps:dpsBloodcellMultiplier(state.bestDps),tribunalI:1+q(26)/100,tribunalII:1+q(27)/100,atom15:1+asNum(atoms?.[15])/100};
     const missing=[];if(!arcade.known)missing.push('Arcade #72 / companion #27');if(!grid.known)missing.push('Research Grid #187 account multiplier');if(!atoms)missing.push('Atoms');if(!bundles)missing.push('BundlesReceived');
     const multiplier=missing.length?null:Object.values(factors).reduce((a,b)=>a*b,1);
@@ -369,7 +369,8 @@ const VERSION='0.9.9-alchemy-bubbles';
         boosted:units.filter(u=>u.orgBoost>1).length,infected:units.filter(u=>u.cells.some(c=>model.infected.has(c))).length};
     });
   }
-  function slotPurchasesLeft(state){return Math.round(upgradeQty(state,9)+upgradeQty(state,8)+rogBonus(state,44)+bundleFlag(state,'ban_j')-state.plots.length);}
+  function eventShopOwned(state,id){const options=rawArray(state,'OptionsListAccount')||rawArray(state,'OptLacc')||[];const chars='_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ肥肢肖肋肉職耐者箱管算箔策答筒筍';return typeof options[311]==='string'&&chars[id]&&options[311].includes(chars[id])?1:0;}
+  function slotPurchasesLeft(state){return Math.round(upgradeQty(state,9)+upgradeQty(state,8)+rogBonus(state,44)+bundleFlag(state,'ban_j')+Math.min(3,Math.ceil(asNum(rawArray(state,'Spelunk')?.[18]?.[41])/2))+3*eventShopOwned(state,57)-state.plots.length);}
   function plotCells(index){const p=PLOTS[index];if(!p)return[];const [start,w,h]=p.split(',').map(Number),out=[];for(let dy=0;dy<h;dy++)for(let dx=0;dx<w;dx++)out.push(start+dx+COLS*dy);return out;}
   function plotLabel(index){const p=PLOTS[index];if(!p)return`Plot ${index+1}`;const [start,w,h]=p.split(',').map(Number),row=Math.floor(start/COLS),col=start%COLS;const vertical=row<3?'upper':row<7?'middle':'lower',horizontal=col<7?'west':col<11?'central':'east';return `Plot ${index+1} · ${vertical} ${horizontal} · ${w*h} slots`;}
   function organelleBoosted(arr){
@@ -583,7 +584,7 @@ const VERSION='0.9.9-alchemy-bubbles';
         const p=projectiles[i];if(events&&dead[p.sourceAnchor])events.push({type:'posthumousHit',time:elapsed,anchor:p.sourceAnchor,damage:p.damage});hp-=p.damage;bucketDamage+=p.damage;
         // Client pays per hit, including failed attempts and the full finishing hit.
         totalDamage+=p.damage;
-        if(currencyBase!==null)bloodcellsGained+=p.damage*currencyBase*dpsBloodcellMultiplier(bestDps)*(1+(upgradeQty(state,23)+upgradeQty(state,24)+upgradeQty(state,25)+upgradeQty(state,33)*runtimeLevels.reduce((a,b)=>a+b,0))/100);
+        if(currencyBase!==null)bloodcellsGained+=p.damage*currencyBase*dpsBloodcellMultiplier(bestDps)*(1+(upgradeQty(state,23)+upgradeQty(state,24)+upgradeQty(state,25)+upgradeQty(state,33)*runtimeLevels.reduce((a,b)=>a+b,0)+11)/100);
         if(upgradeQty(state,28)>=1&&p.type===0)stack++;
         if(levelingEnabled)runtimeExp[p.type]=asNum(runtimeExp[p.type],0)+expMulti;
         projectiles.splice(i,1);

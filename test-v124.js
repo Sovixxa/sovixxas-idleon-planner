@@ -1,0 +1,26 @@
+'use strict';
+const fs=require('fs'),vm=require('vm'),assert=require('node:assert/strict'),path=require('path'),esbuild=require('esbuild');
+const E=require('./engine'),S=require('./sushi-model'),B=require('./bubba-optimizer'),{catalogs}=require('./inspect-bonus-freshness');
+const native=catalogs(fs.readFileSync('../audit/N.js','utf8')).values;
+const raw=JSON.parse(fs.readFileSync('../example json.txt','utf8')),read=v=>typeof v==='string'?JSON.parse(v):v,near=(a,b)=>assert(Math.abs(a-b)<Math.max(1,Math.abs(b))*1e-10,`${a} != ${b}`);
+const box={window:{}};vm.runInNewContext(fs.readFileSync('world7-data.js','utf8'),box);
+assert.deepEqual(JSON.parse(JSON.stringify(box.window.WORLD7_CATALOG.SushiUPG)),native.get('SushiUPG'));
+const changed=structuredClone(raw),options=read(changed.data.OptionsListAccount??changed.data.OptLacc);options[311]='肋肉職答';changed.data.OptionsListAccount=options;changed.data.OptLacc=options;
+const plain=structuredClone(changed);plain.data.OptionsListAccount=structuredClone(options);plain.data.OptionsListAccount[311]='';plain.data.OptLacc=plain.data.OptionsListAccount;
+const jelly=E.parseInput(JSON.stringify(plain)),event=E.parseInput(JSON.stringify(changed));
+near(E.bloodcellBonuses(event).multiplier/E.bloodcellBonuses(jelly).multiplier,2);
+assert.equal(E.slotPurchasesLeft(event)-E.slotPurchasesLeft(jelly),3);
+const sushi0=S.decode(plain,box.window.WORLD7_CATALOG),sushi1=S.decode(changed,box.window.WORLD7_CATALOG);
+near(S.calculate(sushi1).cap/S.calculate(sushi0).cap,10);
+near(S.calculate(sushi1).fuel,S.calculate(sushi0).fuel);
+const b0=B.decode(plain),b1=B.decode(changed);near(B.rate(b1)/B.rate(b0),3);near(B.cost(b1,0)/B.cost(b0,0),.5);
+const vendor=path.resolve('vendor/idleon-toolbox');
+const build=esbuild.buildSync({stdin:{contents:`export * from './vendor/idleon-toolbox/parsers/world-7/menagerie';`,resolveDir:process.cwd()},bundle:true,write:false,format:'iife',globalName:'Patch',alias:{'@parsers':vendor+'/parsers','@utility':vendor+'/utility','@website-data':vendor+'/data/website-data/index.js'}});
+const ctx={};vm.runInNewContext(build.outputFiles[0].text,ctx);
+const account={menagerie:[[],[],Array(25).fill(0)],rawBoats:[[0,0,0,600,0,600]]};
+for(const index of [0,1]){assert.equal(ctx.Patch.getNightmarinerBonus(account,index),1);account.menagerie[2][13]=1;near(ctx.Patch.getNightmarinerBonus(account,index),1+600/10600*(index===0?1999:499));account.menagerie[2][13]=0;}
+const slab=require('./vendor/idleon-toolbox/data/website-data/slab.json');assert(!slab.includes('EquipmentNametagReplica43'));
+for(const id of ['EquipmentHats145','EquipmentHats146','EquipmentHats147','EquipmentNametag44'])assert(slab.includes(id));
+assert.equal(require('./vendor/idleon-toolbox/data/website-data/companions.json')[173].bonus,2);
+for(let id=56;id<68;id++)assert(fs.statSync(`assets/EventShopBuy${id}.png`).size>100);
+console.log('v1.24: event ownership, Jelly slots/currency, Sushi capacity, Bubba rates/costs, Nightmariner gating, current cap/catalogs and assets pass.');

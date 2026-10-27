@@ -1,6 +1,6 @@
 'use strict';
 const fs=require('node:fs'),vm=require('node:vm'),{expressionEnd}=require('./client-source-utils'),{catalogs}=require('./inspect-bonus-freshness');
-const source=fs.readFileSync('../audit/N.js','utf8'),slab=catalogs(source).values.get('SlabItemSort'),ids=['Spelunking6','EquipmentNametagReplica43','EquipmentGown9','Crystal6','CKsing'];
+const source=fs.readFileSync('../audit/N.js','utf8'),slab=catalogs(source).values.get('SlabItemSort'),ids=process.argv.slice(2).length?process.argv.slice(2):['Spelunking6','EquipmentNametagReplica43','EquipmentGown9','Crystal6','CKsing'];
 const box={window:{}};vm.runInNewContext(fs.readFileSync('item-name-data.js','utf8'),box);
 const file='vendor/idleon-toolbox/data/website-data/items.json',items=JSON.parse(fs.readFileSync(file,'utf8'));
 let bundle=fs.readFileSync('beanstalk-engine.js','utf8');

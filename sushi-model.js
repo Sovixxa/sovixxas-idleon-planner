@@ -6,7 +6,8 @@ function decode(raw,catalog,context){
   const data=parse(raw?.data)||raw||{},s=parse(data.Sushi);
   if(!Array.isArray(s)||s.length<8||s.slice(0,8).some(x=>!Array.isArray(x)))return null;
   const research=parse(data.Research)||[],bundles=parse(data.BundlesReceived)||{},doublers=parse(data.Spelunk)?.[52]||[];
-  return {catalog,context,doublers,tiers:Array.from({length:120},(_,i)=>num(s[0][i]??-1)),plates:Array.from({length:120},(_,i)=>num(s[1][i]??-1)),fires:Array.from({length:15},(_,i)=>num(s[3][i]??-1)),levels:s[2].map(num),misc:s[4].map(num),tracking:s[5].map(num),xp:s[6].map(num),knowledge:s[7].map(num),bundle:num(bundles.bon_v)>0?2:1,jellyBundle:num(bundles.ban_j)===1?2:1,jellyDiscount:num(research[7]?.[9])>18?num(catalog.Research[47]?.[18]):0};
+  const eventOwned=String((parse(data.OptionsListAccount??data.OptLacc)||[])[311]||'');
+  return {catalog,context,doublers,eventFuelCap:eventOwned.includes('答')?10:1,tiers:Array.from({length:120},(_,i)=>num(s[0][i]??-1)),plates:Array.from({length:120},(_,i)=>num(s[1][i]??-1)),fires:Array.from({length:15},(_,i)=>num(s[3][i]??-1)),levels:s[2].map(num),misc:s[4].map(num),tracking:s[5].map(num),xp:s[6].map(num),knowledge:s[7].map(num),bundle:num(bundles.bon_v)>0?2:1,jellyBundle:num(bundles.ban_j)===1?2:1,jellyDiscount:num(research[7]?.[9])>18?num(catalog.Research[47]?.[18]):0};
 }
 function knowledge(s){
   const r=s.catalog.Research;
@@ -30,7 +31,7 @@ function calculate(s){
   for(const i of [9,10,11,12])fuelFactors.push(factor(words(s.catalog.SushiUPG[i][0])+' extra',1+lv(i)/100));
   const orange=s.tiers.reduce((total,tier,i)=>total+(tier>=0&&s.fires[i%15]===0?(tier+1)*fireBase:0),0);
   fuelFactors.push(factor('Red fireplaces',1+orange/100));
-  const fuel=50*product(fuelFactors),cap=(200+t(3))*s.bundle*(1+sum([1,2,3,4,5])/100)*[2,3,4,5].reduce((v,i)=>v*(1+lv(i)/100),1);
+  const fuel=50*product(fuelFactors),cap=(200+t(3))*s.bundle*(s.eventFuelCap||1)*(1+sum([1,2,3,4,5])/100)*[2,3,4,5].reduce((v,i)=>v*(1+lv(i)/100),1);
   const best=Math.max(0,num(s.misc[8])),over=Math.max(0,best-1500),combo=1+Math.min(10,best**.3)+90*over/(20000+over);
   const overflow=Math.max(1,num(s.misc[1])/1e6),overtuned=5*Math.log2(overflow)+10*Math.log(overflow)/2.302585;
   const currencyFactors=[factor('Discoveries',1.1**unique),factor('Best combo',combo),factor('Bon V bundle',s.bundle),factor('Ban J bundle',s.jellyBundle),factor('Surcharges + Gaming superbit',1+(sum([30,31,32,33,34])+num(s.context?.superbit))/100,'gaming'),factor('Bucks knowledge',1+t(0)/100),factor('No Tax on Tips',1+q(40)/100),factor('Hourly Wage + Tier Vision',1+sum([41,43])/100),factor('Overtuned Fuel',1+overtuned/100),...(s.context?.factors||[])];

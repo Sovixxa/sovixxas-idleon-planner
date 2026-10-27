@@ -7,6 +7,7 @@ export const hasMenagerieUnlock = (account: any, index: number): boolean =>
   Number(account?.menagerie?.[2]?.[index]) >= 1;
 
 export const getNightmarinerBonus = (account:any,index:number):number => {
+ if(!hasMenagerieUnlock(account,13))return 1;
  const levels=(account?.rawBoats||[]).slice(0,20).reduce((sum:number,b:any)=>sum+Math.max(0,(Number(b?.[3])||0)+(Number(b?.[5])||0)-600),0);
  return 1+levels/(levels+10000)*(index===0?1999:499);
 };

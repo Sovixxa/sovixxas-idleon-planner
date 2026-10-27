@@ -204,7 +204,7 @@ SKILL_PAGES.holeFloors={title:'Floors',world:'World 5',copy:'All 18 Hole caverns
     window.plannerQoL?.onNavigate(name);
     if(name!=='jelly'){stopSearch();cancelJellyPanels();initialUpgradesPending=true;initialPracticePending=true;if(practice?.playing)stopPracticePlayback();}
     if(!state)$('workspace').classList.toggle('hidden',!['home','library','dailies','accountReview','skills','loadouts','statConnections','shadowCaps','trueDr','milkOpti','communitySheets','qolRecommendations','pocketWatches','credits','connectedBonuses','greenstacks'].includes(name));
-    if(!state)$('inputPanel').classList.toggle('hidden',['loadouts','statConnections','shadowCaps','trueDr','milkOpti','communitySheets','qolRecommendations','pocketWatches','credits'].includes(name));
+
     const selected=SKILL_PAGES[name]?.parent||name;
     for(const id of ['navHome','navJelly',...Object.keys(SKILL_PAGES).map(key=>'nav'+key[0].toUpperCase()+key.slice(1))]){const button=$(id);if(!button)continue;const active=id===('nav'+selected[0].toUpperCase()+selected.slice(1));button.classList.toggle('active',active);if(active)button.setAttribute('aria-current','page');else button.removeAttribute('aria-current');}
     if(!['home','credits'].includes(name)&&window.PlannerFeatures?.toolsReady?.()===false){
@@ -235,7 +235,7 @@ SKILL_PAGES.holeFloors={title:'Floors',world:'World 5',copy:'All 18 Hole caverns
     label.addEventListener('click',toggle);label.addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();toggle();}});
   });
 
-  function fail(msg){$('error').textContent=msg;$('error').classList.remove('hidden');}
+  function fail(msg){$('inputPanel').classList.remove('hidden');$('error').textContent=msg;$('error').classList.remove('hidden');}
   function clearFail(){$('error').classList.add('hidden');$('error').textContent='';}
   function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
   function pct(x,d=0){return Number.isFinite(x)?(100*x).toFixed(d)+'%':'—';}

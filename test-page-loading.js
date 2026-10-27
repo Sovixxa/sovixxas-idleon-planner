@@ -10,7 +10,10 @@ vm.createContext(context);vm.runInContext(navigation,context);
 for(const name of ['communitySheets','credits','shadowCaps','loadouts']){
  context.selectSideNav(name);
  assert(!$('workspace').classList.values.has('hidden'),`${name} must be visible without a save`);
- assert($('inputPanel').classList.values.has('hidden'));
+ assert(!$('inputPanel').classList.values.has('hidden'),`${name} must preserve an open import panel`);
+ $('inputPanel').classList.add('hidden');context.selectSideNav(name);
+ assert($('inputPanel').classList.values.has('hidden'),`${name} must preserve a closed import panel`);
+ $('inputPanel').classList.remove('hidden');
 }
 context.selectSideNav('home');assert(!$('inputPanel').classList.values.has('hidden'));
 const html=fs.readFileSync('dist/index.html','utf8');

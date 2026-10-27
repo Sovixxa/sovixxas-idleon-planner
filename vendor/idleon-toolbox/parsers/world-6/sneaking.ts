@@ -139,7 +139,7 @@ const parseSneaking = (rawSneaking: any, rawSpelunking: any, serverVars: any, ch
     return {
       ...upgrade,
       level,
-      value: (level ?? 0) * (upgrade.modifier ?? 1),
+      value: ((level ?? 0) + (index < 17 ? Number(account?.menagerie?.[7]?.[index]) || 0 : 0)) * (upgrade.modifier ?? 1),
       isUnlocked,
       isSpecialUpgrade,
       prerequisiteIndex: !isSpecialUpgrade ? upgrade.x9 : null,
@@ -253,7 +253,8 @@ const parseSneaking = (rawSneaking: any, rawSpelunking: any, serverVars: any, ch
 
 export const getLocalNinjaUpgradeBonus = (upgrades: any, index: any, gemstones: any, inventory: any, account: any) => {
   const { level: rawLevel, modifier } = upgrades?.[index] ?? {};
-  const level = rawLevel ?? 0;
+  const omniLevel = index < 17 ? Number(account?.menagerie?.[7]?.[index]) || 0 : 0;
+  const level = (rawLevel ?? 0) + omniLevel;
   const masteryLootLevel = upgrades?.[3]?.level || 0;
   const selectedMasteryLevel = account?.accountOptions?.[231] || 0;
 
@@ -273,7 +274,7 @@ export const getLocalNinjaUpgradeBonus = (upgrades: any, index: any, gemstones: 
     );
   }
   if (index === 6 || index === 7 || index === 10 || index === 12) {
-    return level * modifier + masteryLootLevel * selectedMasteryLevel;
+    return level * modifier + (masteryLootLevel + omniLevel) * selectedMasteryLevel;
   }
   return level * modifier;
 };

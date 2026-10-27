@@ -806,8 +806,8 @@
     "tourPower": 140,
     "upgradeCost": 2800,
     "upgradedTourPower": 220,
-    "upgradedEffect": "200x_Gaming_Bits_gained_(World_5_feature)",
-    "upgradedBonus": 199
+    "upgradedEffect": "500x_Gaming_Bits_gained_(World_5_feature)",
+    "upgradedBonus": 499
   },
   {
     "name": "Neonscale",
@@ -819,9 +819,9 @@
     "z": "-26",
     "filler": "1",
     "tourPower": 165,
-    "upgradeCost": 3900,
+    "upgradeCost": 3100,
     "upgradedTourPower": 250,
-    "upgradedEffect": "{1_new_Research_Shape,_and_a_new_1.15x_Research_EXP_multi",
+    "upgradedEffect": "{1_Research_Shape,_and_a_new_1.50x_Research_EXP_multi",
     "upgradedBonus": 1
   },
   {
@@ -834,7 +834,7 @@
     "z": "-28",
     "filler": "1",
     "tourPower": 200,
-    "upgradeCost": 4100,
+    "upgradeCost": 3750,
     "upgradedTourPower": 300,
     "upgradedEffect": "Multiplies_ALL_Research_Grid_bonuses_by_1.25x_(World_7_feature)",
     "upgradedBonus": 25
@@ -1406,7 +1406,8 @@
     "upgradeCost": 9999,
     "upgradedTourPower": 99,
     "upgradedEffect": "Not_officially_in_the_game_and_may_never_be",
-    "upgradedBonus": 1
+    "upgradedBonus": 1,
+    "name": "shovel"
   },
   {
     "name": "Xylobone",
@@ -1465,7 +1466,8 @@
     "upgradeCost": 9999,
     "upgradedTourPower": 99,
     "upgradedEffect": "Not_officially_in_the_game_and_may_never_be",
-    "upgradedBonus": 1
+    "upgradedBonus": 1,
+    "name": "slimmer"
   },
   {
     "name": "Snelbie",
@@ -1637,9 +1639,9 @@
     "rawName": "w4b3",
     "effect": "10x_Farming_Sticker_find_chance",
     "bonus": 9,
-    "x": "0",
+    "x": "-18",
     "y": "0",
-    "z": "0",
+    "z": "-15",
     "filler": "1",
     "tourPower": 180,
     "upgradeCost": 2500,
@@ -1740,17 +1742,17 @@
   {
     "name": "Maccie",
     "rawName": "w5a2",
-    "effect": "Not_officially_in_the_game_and_may_never_be",
-    "bonus": 1,
+    "effect": "{30%_Lumi_Hourly_Gains_for_the_Luminous_Menagerie",
+    "bonus": 30,
     "x": "0",
     "y": "0",
     "z": "0",
     "filler": "1",
-    "tourPower": 100,
-    "upgradeCost": 9999,
-    "upgradedTourPower": 99,
-    "upgradedEffect": "Not_officially_in_the_game_and_may_never_be",
-    "upgradedBonus": 1
+    "tourPower": 160,
+    "upgradeCost": 4250,
+    "upgradedTourPower": 250,
+    "upgradedEffect": "+80%_Lumi_Hourly_Gains_for_the_Luminous_Menagerie",
+    "upgradedBonus": 80
   },
   {
     "name": "Mister_Brightside",
@@ -2220,11 +2222,11 @@
   {
     "name": "Glowfish",
     "rawName": "w7b8",
-    "effect": "Both_+200_and_1.20x_Max_Stamina_for_Spelunking!",
+    "effect": "Both_{200_and_1.20x_Max_Stamina_for_Spelunking!",
     "bonus": 20,
-    "x": "0",
+    "x": "-32",
     "y": "0",
-    "z": "0",
+    "z": "-23",
     "filler": "1",
     "tourPower": 185,
     "upgradeCost": 3500,
@@ -2235,17 +2237,17 @@
   {
     "name": "Ancientfish",
     "rawName": "w7b9",
-    "effect": "Not_officially_in_the_game_and_may_never_be",
+    "effect": "{1_Minehead_Doubler,_{1_Sushi_Doubler,_and_{1_Jelly_Operator_Doubler",
     "bonus": 1,
-    "x": "0",
+    "x": "-35",
     "y": "0",
-    "z": "0",
+    "z": "-35",
     "filler": "1",
     "tourPower": 220,
     "upgradeCost": 4150,
     "upgradedTourPower": 320,
-    "upgradedEffect": "Not_officially_in_the_game_and_may_never_be",
-    "upgradedBonus": 1
+    "upgradedEffect": "{2_Minehead_Doublers,_{2_Sushi_Doublers,_and_{2_Jelly_Operator_Doublers",
+    "upgradedBonus": 2
   },
   {
     "name": "Bronze_Champion_Ram",
@@ -2595,8 +2597,8 @@
   {
     "name": "Pipsqueak",
     "rawName": "r0d",
-    "effect": "The_lord_of_amber_herself_is_keeping_her_bonus_a_secret..._for_now...",
-    "bonus": 1,
+    "effect": "Get_+2_Omnijade._Each_one_now_gives_+2_LVs_daily_without_raising_cost.",
+    "bonus": 2,
     "x": "-100",
     "y": "0",
     "z": "-60",
@@ -2604,8 +2606,8 @@
     "tourPower": 480,
     "upgradeCost": 7200,
     "upgradedTourPower": 650,
-    "upgradedEffect": "Bonus_still_unknown..._for_now...",
-    "upgradedBonus": 1
+    "upgradedEffect": "Get_+3_Omnijade._Each_now_gives_+3_LVs_daily_without_raising_cost.",
+    "upgradedBonus": 3
   },
   {
     "name": "Verminous",
@@ -2621,5 +2623,65 @@
     "upgradedTourPower": 410,
     "upgradedEffect": "+20000%_additive_Gold_Food_bonus_effect_and_2x_multiplier_to_Gold_Food",
     "upgradedBonus": 2
+  },
+  {
+    "name": "T3a",
+    "rawName": "T3a",
+    "effect": "Congratulations_on_winning_the_Tournament!",
+    "bonus": 1,
+    "x": "-9",
+    "y": "0",
+    "z": "-17",
+    "filler": "1",
+    "tourPower": 10,
+    "upgradeCost": 9999,
+    "upgradedTourPower": 12,
+    "upgradedEffect": "Congratulations_on_winning_the_Tournament!",
+    "upgradedBonus": 1
+  },
+  {
+    "name": "T3b",
+    "rawName": "T3b",
+    "effect": "Congratulations_on_winning_the_Tournament!",
+    "bonus": 1,
+    "x": "-9",
+    "y": "0",
+    "z": "-17",
+    "filler": "1",
+    "tourPower": 10,
+    "upgradeCost": 9999,
+    "upgradedTourPower": 12,
+    "upgradedEffect": "Congratulations_on_winning_the_Tournament!",
+    "upgradedBonus": 1
+  },
+  {
+    "name": "T3c",
+    "rawName": "T3c",
+    "effect": "Congratulations_on_winning_the_Tournament!",
+    "bonus": 1,
+    "x": "-9",
+    "y": "0",
+    "z": "-17",
+    "filler": "1",
+    "tourPower": 10,
+    "upgradeCost": 9999,
+    "upgradedTourPower": 12,
+    "upgradedEffect": "Congratulations_on_winning_the_Tournament!",
+    "upgradedBonus": 1
+  },
+  {
+    "name": "w7c3",
+    "rawName": "w7c3",
+    "effect": "Guppy_got_memory_of_goldfish..._Guppy_forgot_what_his_bonus_is,_for_now...",
+    "bonus": 1,
+    "x": "-40",
+    "y": "0",
+    "z": "-42",
+    "filler": "1",
+    "tourPower": 480,
+    "upgradeCost": 7200,
+    "upgradedTourPower": 650,
+    "upgradedEffect": "Bonus_still_unknown..._for_now...",
+    "upgradedBonus": 1
   }
 ]

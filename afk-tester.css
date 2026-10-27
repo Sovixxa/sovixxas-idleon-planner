@@ -30,3 +30,46 @@
 .afk-food-plan label{flex:0 1 auto;gap:8px;margin:4px 0;min-width:0}
 .afk-food-plan label span{flex:0 1 auto}.afk-food-plan label small{margin-left:4px}
 .afk-help{font-size:.85rem;opacity:.8}
+
+/* Six compact character cards per desktop row. */
+.afk-roster{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;margin:12px 0;align-items:start}
+.afk-character{display:flex;flex-direction:column;align-items:stretch;gap:10px;min-width:0;padding:12px;border:1px solid var(--border,#42516a);border-radius:10px}
+.afk-character h4{margin:0;min-height:2.5em;overflow-wrap:anywhere;line-height:1.25}
+.afk-character .afk-fields{gap:10px;min-width:0}
+.afk-character .afk-fields label{min-width:0;margin:0;font-size:.75rem;flex:1 1 100%}
+.afk-character .afk-fields input{padding:8px;min-height:40px;font-size:.9rem}
+.afk-row-result{font-size:.85rem;overflow-wrap:anywhere;min-height:3em}
+.afk-row-result p{margin:0;line-height:1.5}
+.afk-character .afk-rate-details{margin:0!important;opacity:1;min-width:0}
+.afk-rate-details summary,.afk-planning>summary{cursor:pointer;min-height:32px;align-content:center}
+.afk-character .afk-rate-details[open]{padding-top:8px;border-top:1px solid var(--border,#42516a)}
+.afk-character .afk-detail-fields{margin-top:12px}
+.afk-rate-details p{overflow-wrap:anywhere}
+.afk-tester .afk-planning{margin:12px 0}
+.afk-planning>summary{font-size:.9rem}
+.afk-planning>summary small{margin-left:10px;color:var(--muted,#b4bccc);font-size:.8rem}
+.afk-planning .afk-options{margin:8px 0}
+@media(max-width:1199px){.afk-roster{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:700px){.afk-roster{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:400px){.afk-roster{grid-template-columns:minmax(0,1fr)}.afk-character h4,.afk-row-result{min-height:0}}
+@media(max-width:600px){.afk-planning>summary small{display:block;margin:4px 0 0 16px}}
+
+.afk-character-placeholder{align-self:stretch;display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:0;padding:20px 12px;border:1px dashed var(--border,#42516a);border-radius:10px;text-align:center;color:var(--muted,#b4bccc)}
+.afk-character-placeholder>span{font-size:2rem;opacity:.55}
+.afk-character-placeholder h4{margin:8px 0;color:var(--text,#e8e3ef)}
+.afk-character-placeholder p{margin:0;font-size:.85rem;line-height:1.6}
+
+.afk-food-choice{min-width:0}.afk-food-plan .afk-food-stack{display:flex;font-size:.75rem;margin:4px 0 10px}.afk-food-stack input{max-width:130px;padding:6px}
+
+.afk-details-button{align-self:flex-start;padding:5px 10px;font-size:.8rem}
+.afk-details-popup{box-sizing:border-box;width:340px;max-width:calc(100vw - 24px);max-height:calc(100dvh - 32px);overflow:auto;position:fixed;inset:auto 20px 20px auto;margin:0;padding:16px;border:1px solid var(--border,#42516a);border-radius:12px;background:var(--panel,#172131);color:var(--text,#e8e3ef);box-shadow:0 12px 40px #0008}
+.afk-details-popup::backdrop{background:transparent}
+.afk-popup-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+.afk-popup-head button{padding:3px 9px;font-size:1.25rem;border:1px solid var(--border,#42516a);border-radius:6px;background:transparent;color:inherit;cursor:pointer}
+.afk-details-popup .afk-detail-fields{display:grid;grid-template-columns:1fr 1fr;margin:0;gap:12px}
+.afk-details-popup [data-afk-source]{font-size:.8rem;line-height:1.4;margin:12px 0;overflow-wrap:anywhere}
+.afk-basic-stats{margin:0;font-size:.85rem}.afk-basic-stats>div{display:flex;justify-content:space-between;gap:12px;margin:6px 0}.afk-basic-stats dd{margin:0;font-weight:600}
+
+@media(max-width:600px){.afk-details-popup{right:12px;bottom:12px}}
+
+.afk-food-heading{display:flex;justify-content:space-between;gap:12px}.afk-food-plan .afk-food-group{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:6px 16px}.afk-food-plan .afk-food-hint{margin:6px 0 10px}

@@ -1,7 +1,7 @@
 import { getCrucibleBonus, getMenagerieBonus, getNightmarinerBonus } from '@parsers/world-7/menagerie';
 import { commaNotation, lavaLog, lavaLog2, notateNumber, tryToParse } from '@utility/helpers';
 import { bubbaUpgrades, generalSpelunky } from '@website-data';
-import { isCompanionBonusActive } from '@parsers/misc';
+import { isCompanionBonusActive, getEventShopBonus } from '@parsers/misc';
 import { getUpgradeVaultBonus } from '@parsers/misc/upgradeVault';
 import { getSushiBonus } from '@parsers/world-7/sushiStation';
 import { getFountainBonusTotal } from '@parsers/world-5/caverns/the-fountain';
@@ -47,7 +47,7 @@ const parseBubba = (rawBubba: any, account: any) => {
       level: rawBubba?.[1]?.[index] || 0,
       prestige: rawBubba?.[2]?.[index] || 0,
       realLV: getRealLV(rawBubba, index),
-      cost: getUpgradeCost(rawBubba, index) / (index === 0 ? 1 + getMenagerieBonus(account, 20) / 100 : 1),
+      cost: getUpgradeCost(rawBubba, index) / (1 + getEventShopBonus(account,58)) / (index === 0 ? 1 + getMenagerieBonus(account, 20) / 100 : 1),
       bonus: getTotUpgBonus(rawBubba, index),
       description: formatUpgradeDescription(rawBubba, index),
       unlocked: index < totalUpgTypesAvailable
@@ -392,7 +392,7 @@ const getMeatsliceRate = (rawBubba: any, account: any) => {
   const spareCoinsMulti = getSpareCoinsMulti(rawBubba);
   const vaultBonus65 = getUpgradeVaultBonus(account?.upgradeVault?.upgrades, 65);
 
-  return baseRate * (1 + 2 * getCrucibleBonus(account, 10))
+  return baseRate * (1 + 2 * getCrucibleBonus(account, 10)) * (1 + 2 * getEventShopBonus(account,58))
     * (1 + percentageBonus)
     * happinessBonus
     * diceMulti

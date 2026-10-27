@@ -78,3 +78,9 @@
 .qol-favorites-dropdown button:focus-visible { outline:2px solid #c49aef; outline-offset:-2px; }
 .qol-favorites-dropdown nav { margin-top:5px; padding-top:5px; border-top:1px solid #ffffff16; }
 .qol-favorites-dropdown p { margin:8px 10px; font-size:12px; color:#b5a7c2; }
+
+.qol-bar .live-connection{margin-left:auto;justify-content:flex-end;}
+
+.live-connection.is-cloud-connected #changeJsonBtn{display:none!important}
+
+#qolFreshness[hidden]{display:none!important;}

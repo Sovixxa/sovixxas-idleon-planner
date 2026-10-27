@@ -1455,7 +1455,8 @@ export const getSkillExpMulti = (skillName: string, character: any, characters: 
     const talent = character?.flatTalents?.find((t: any) => t.skillIndex === 236);
     const factors = [
       {name:'Mastery, exotic, cards & chapters',value:1+(25*isMasteryBonusUnlocked(account?.rift,account?.totalSkillsLevels?.spelunking?.rank,0)+getExoticMarketBonus(account,47)+getCardBonusByEffect(character?.cards?.equippedCards,'Spelunking_EXP')+chapter(1,1)+chapter(6,0)+chapter(3,1))/100},
-      {name:'Killroy, Arcade & shop',value:1+(getKillRoyShopBonus(account,5)+(account?.arcade?.shop?.[56]?.bonus||0)+getSpelunkingBonus(account,59))/100},
+      {name:'Arcade & shop',value:1+((account?.arcade?.shop?.[56]?.bonus||0)+getSpelunkingBonus(account,59))/100},
+      {name:'Killroy',value:Math.max(1,getKillRoyShopBonus(account,5))},
       {name:'Shared skill EXP multiplier',value:allSkillExpMultiplier},
       {name:'Shop, food, meals, stamps & statue',value:1+(getSpelunkingBonus(account,45)+food+getMealsBonusByEffectOrStat(account,null,'SplkExp')+getStampsBonusByStat(account,'spelunkxp',character)+getStatueBonus(account,30,character?.flatTalents))/100},
       {name:'One tenth of shared additive skill EXP',value:1+allSkillExp.value/1000},

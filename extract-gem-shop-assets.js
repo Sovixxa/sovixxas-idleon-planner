@@ -1,6 +1,6 @@
 'use strict';
 const fs=require('node:fs'),path=require('node:path'),zlib=require('node:zlib');
-const ROOT=__dirname,archive=path.resolve(ROOT,'../Idleon resources/app.asar'),fd=fs.openSync(archive,'r');
+const ROOT=__dirname,archive=path.resolve(process.argv[2]||path.join(ROOT,'../Idleon resources/app.asar')),fd=fs.openSync(archive,'r');
 try{
  const pre=Buffer.alloc(16);fs.readSync(fd,pre,0,16,0);
  const head=Buffer.alloc(pre.readUInt32LE(12));fs.readSync(fd,head,0,head.length,16);

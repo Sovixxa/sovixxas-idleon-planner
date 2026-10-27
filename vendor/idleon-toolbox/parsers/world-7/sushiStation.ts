@@ -171,6 +171,7 @@ export const getSushiStation = (idleonData: any, account: any) => {
 
   // --- Fuel ---
   const fuelCap = (200 + (knowledgeTotals[3] ?? 0))
+    * (1 + 9 * getEventShopBonus(account,66))
     * (1 + Math.min(1, bonVBundle))
     * (1 + (getUpgradeQTY(upgradeLevels, 1) + getUpgradeQTY(upgradeLevels, 2)
       + getUpgradeQTY(upgradeLevels, 3) + getUpgradeQTY(upgradeLevels, 4)

@@ -6,7 +6,7 @@
     "test:research-notes": "node test-research-notes.js && node test-research-optimizer-browser.js",
     "test:research-shapes": "node test-research-shapes.js && node test-research-optimizer-browser.js",
     "test:afk-client": "node test-afk-skills-client.js",
-    "test:afk-tester": "node test-afk-tester.js && node test-afk-save.js && node test-afk-shared-location.js && node test-afk-shared-foods.js && node test-afk-scenarios.js && node test-afk-food-checkboxes.js && node test-afk-combat-bonuses.js && node test-afk-exp-client.js && node test-afk-candy.js && node test-afk-gathering.js && node test-afk-spelunking.js && node test-afk-tester-browser.js && node test-afk-persistence-browser.js",
+    "test:afk-tester": "node test-afk-tester.js && node test-afk-save.js && node test-afk-shared-location.js && node test-afk-shared-foods.js && node test-afk-golden-foods.js && node test-afk-scenarios.js && node test-afk-food-checkboxes.js && node test-afk-combat-bonuses.js && node test-afk-exp-client.js && node test-afk-candy.js && node test-afk-gathering.js && node test-afk-spelunking.js && node test-afk-tester-browser.js && node test-afk-persistence-browser.js",
     "test:jelly-objectives": "node test-jelly-comparison.js && node test-jelly-clear-search.js && node test-jelly-objectives.js && node test-jelly-objectives-browser.js",
     "test:jelly-speed": "node test-jelly-speed.js && node test-jelly-performance-browser.js",
     "test:jelly-quality": "node test-jelly-search-quality.js && node test-jelly-objectives.js && node test-jelly-speed.js && node test-jelly-clear-search.js",

@@ -72,7 +72,7 @@
     const go=key=>{if(registry[key])navigate(key);};
     const shell=doc.querySelector('.shell');
     const bar=doc.createElement('section');bar.className='qol-bar';bar.setAttribute('aria-label','Planner shortcuts');
-    bar.innerHTML='<div class="qol-actions"><button id="qolSearchOpen" class="secondary" aria-label="Search pages and bonuses" aria-haspopup="dialog" aria-keyshortcuts="Control+K Meta+K"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4.5 4.5"/></svg><span>Search pages & bonuses…</span><kbd>Ctrl K</kbd></button><button id="qolFavorite" class="secondary" aria-pressed="false">☆ Favorite</button><button id="qolNotesOpen" class="secondary">Page notes</button><button id="qolPlanOpen" class="secondary">Goals & checklist</button><button id="qolChangesOpen" class="secondary">Changes</button><button id="qolBackupOpen" class="secondary">Backup</button></div><div class="qol-meta"><span id="qolPageName">Home</span><span id="qolFreshness">No save loaded</span><label class="qol-completion-filter"><input id="qolHideDone" type="checkbox"> Hide maxed / completed</label><span id="qolHiddenCount"></span></div><p id="qolStatus" role="status"></p>';
+    bar.innerHTML='<div class="qol-actions"><button id="qolSearchOpen" class="secondary" aria-label="Search pages and bonuses" aria-haspopup="dialog" aria-keyshortcuts="Control+K Meta+K"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4.5 4.5"/></svg><span>Search pages & bonuses…</span><kbd>Ctrl K</kbd></button><button id="qolFavorite" class="secondary" aria-pressed="false">☆ Favorite</button><button id="qolNotesOpen" class="secondary">Page notes</button><button id="qolPlanOpen" class="secondary">Goals & checklist</button><button id="qolChangesOpen" class="secondary">Changes</button><button id="qolBackupOpen" class="secondary">Backup</button></div><div class="qol-meta"><span id="qolPageName">Home</span><span id="qolFreshness">No save loaded</span></div><p id="qolStatus" role="status"></p>';
     shell.prepend(bar);
     const dialog=doc.createElement('dialog');dialog.className='qol-dialog';dialog.setAttribute('aria-labelledby','qolDialogTitle');doc.body.append(dialog);
     const homeGoals=doc.createElement('section');homeGoals.className='qol-home-goals';homeGoals.setAttribute('aria-label','Pinned goals');doc.getElementById('characterDashboard')?.before(homeGoals);
@@ -181,20 +181,12 @@
         for(const [key,value] of Object.entries(p)){if(!key.startsWith('tab:'))continue;const b=[...content.querySelectorAll('button')].find(b=>{const attr=tabKey(b);return attr?.name===key.slice(4)&&attr.value===value;});if(b&&!b.disabled&&!b.classList.contains('active')&&!b.classList.contains('selected')&&b.getAttribute('aria-selected')!=='true'&&b.getAttribute('aria-pressed')!=='true'){restoreBudget--;b.click();return;}}
       }finally{restoring=false;}
     }
-    function hideCompleted(){
-      const enabled=!!pref().hideDone;doc.getElementById('qolHideDone').checked=enabled;
-      let count=0;const candidates=content.querySelectorAll('.arcade-tile,.bonus-system-grid>article,.bonus-system-card,.collection-card,.gem-shop-tile,.review-plan-item,.research-square,[data-qol-complete]');
-      const completedNames=new Set(Object.values(latest?.rows||{}).filter(r=>r.page===current&&r.complete).map(r=>r.name));
-      for(const el of candidates){const explicit=el.dataset.qolComplete==='true'||el.classList.contains('maxed')||el.classList.contains('complete');const marker=[...el.querySelectorAll('strong,b,.gem-shop-state')].some(n=>/^(?:✓\s*)?(?:MAX(?:ED)?|Completed)$/i.test(n.textContent.trim())||completed({level:n.textContent.trim()}));const name=el.querySelector('.arcade-name,h3')?.textContent.trim();const hide=enabled&&(explicit||marker||completedNames.has(name));el.classList.toggle('qol-completed-hidden',hide);if(hide)count++;}
-      doc.getElementById('qolHiddenCount').textContent=enabled?count+' completed hidden':'';
-    }
-    doc.getElementById('qolHideDone').onchange=e=>{pref().hideDone=e.target.checked;save();hideCompleted();};
-    new MutationObserver(()=>{if(pending)return;pending=true;queueMicrotask(()=>{pending=false;restore();hideCompleted();});}).observe(content,{childList:true,subtree:true});
+    new MutationObserver(()=>{if(pending)return;pending=true;queueMicrotask(()=>{pending=false;restore();});}).observe(content,{childList:true,subtree:true});
     function applyGroups(){doc.querySelectorAll('.side-group>span').forEach(label=>{const collapsed=settings.groups[label.textContent.trim()];if(collapsed!==undefined){label.parentElement.classList.toggle('collapsed',collapsed);label.setAttribute('aria-expanded',String(!collapsed));const reveal=label.parentElement.querySelector('.side-group-reveal');if(reveal)reveal.inert=collapsed;}});}
     doc.querySelectorAll('.side-group>span').forEach(label=>{const record=()=>{settings.groups[label.textContent.trim()]=label.parentElement.classList.contains('collapsed');save();};label.addEventListener('click',record);label.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' ')record();});});applyGroups();
     function onNavigate(page){
       if(registry[page]?.parent){const parent=registry[page].parent;settings.pages[parent]||={};settings.pages[parent].lastSubtab=page;}
-      current=page;settings.lastPage=page;restoreBudget=24;save();doc.getElementById('qolPageName').textContent=title(page);paintFavorites();paintNotes();paintHomeGoals();doc.getElementById('qolHideDone').checked=!!pref().hideDone;queueMicrotask(()=>{restore();hideCompleted();});
+      current=page;settings.lastPage=page;restoreBudget=24;save();doc.getElementById('qolPageName').textContent=title(page);paintFavorites();paintNotes();paintHomeGoals();queueMicrotask(()=>{restore();});
     }
     async function onImport(raw){
       const token=++importToken;doc.getElementById('qolFreshness').textContent='Reading save…';
@@ -202,7 +194,7 @@
         searchRows=Object.entries(next.rows).filter(([,r])=>registry[r.page]).map(([id,r])=>({id,...r}));
         for(const g of settings.goals)if(g.metric&&g.account===activeAccount&&next.rows[g.metric]?.value!=null)g.current=next.rows[g.metric].value;
         save();try{localStorage.setItem(SNAPSHOT_KEY,JSON.stringify(next));}catch{notice('Import comparison is available this session. Browser storage could not save its baseline.');}
-        doc.getElementById('qolChangesOpen').textContent=changes.length?`Changes (${changes.length})`:'Changes';freshness();paintSearch();hideCompleted();paintHomeGoals();
+        doc.getElementById('qolChangesOpen').textContent=changes.length?`Changes (${changes.length})`:'Changes';freshness();paintSearch();paintHomeGoals();
       }catch(error){if(token===importToken){doc.getElementById('qolFreshness').textContent='Import summary unavailable';notice('Could not prepare import comparison: '+error.message);}}
     }
     function clear(){importToken++;latest=null;searchRows=[];changes=[];previous=null;doc.getElementById('qolChangesOpen').textContent='Changes';freshness();}

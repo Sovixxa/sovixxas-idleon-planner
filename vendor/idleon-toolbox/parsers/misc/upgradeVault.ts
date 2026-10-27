@@ -1,5 +1,5 @@
 import { commaNotation, notateNumber, tryToParse, lavaLog } from '@utility/helpers';
-import { upgradeVault } from '@website-data';
+import { upgradeVault, research } from '@website-data';
 import { liveEntries } from '@parsers/catalog';
 import { isBundlePurchased, getEventShopBonus, isCompanionBonusActive } from '@parsers/misc';
 import { getResearchGridBonus } from '@parsers/world-7/research';
@@ -152,7 +152,7 @@ const getVaultDollarValue = (index: number, bonus: number, ctx: any): string | n
 
 
 const getVaultUpgMaxLevel = (index: any, baseMaxLevel: any, accountData: any) => {
-  const base = Number(baseMaxLevel) || 0;
+  const base = (Number(baseMaxLevel) || 0) + ((research[63] || []).includes(String(index)) ? 25 * getEventShopBonus(accountData,65) : 0);
   const bundlePurchased = isBundlePurchased(accountData?.bundles, 'bon_u') ? 1 : 0;
   const bundleBonus = Math.max(0, Math.min(10, 10 * bundlePurchased));
 

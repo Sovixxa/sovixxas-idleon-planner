@@ -1,10 +1,12 @@
 'use strict';
 // Installed before the older decoder's dependency passes, so downstream totals
 // see the updated values too. Never changes the imported save.
-function installLegacyMenagerie(systems,raw,quantities){
+function installLegacyMenagerie(systems,raw,quantities,vaultEligible=[]){
  const parse=v=>{try{return typeof v==='string'?JSON.parse(v):v;}catch{return undefined;}};
  const m=parse(raw.Menagerie)||[],s=parse(raw.Spelunk)||[],q=i=>(Number(m[3]?.[i])||0)*(Number(quantities[i])||0),multi=i=>1+q(i)/100;
  const options=parse(raw.OptLacc)||parse(raw.OptionsListAccount)||[],waves=[5,10,15,20,25,35,50,60,70,85,100,125,150,175,200,250],cruc=i=>Number(m[2]?.[8])>=1&&Number(options[628]||0)>=waves[i]?1:0;
+ const meatmaxxing=typeof options[311]==='string'&&options[311].includes('職');
+ if(String(options[311]||'').includes('策'))for(const upgrade of systems.get('upgradeVault')?.bonuses||[])if(vaultEligible.includes(String(upgrade.id)))upgrade.data={...upgrade.data,max_level:Number(upgrade.data.max_level)+25};
  const breeding=systems.get('breeding'),rawBreeding=parse(raw.Breeding),maxShiny=Number(m[2]?.[11])>=1?30:20;
  let overLevels=0;
  for(const pet of breeding?.basePets||[]){
@@ -24,9 +26,10 @@ function installLegacyMenagerie(systems,raw,quantities){
   const original=obj.__menagerieOriginal[key]||obj[key];obj.__menagerieOriginal[key]=original;
   obj[key]=function(...args){return change(original.apply(this,args),args,this);};
  };
- for(const [name,id] of [['orion',16],['poppy',18],['bubba',20]])wrap(systems.get(name),'getUpgradeCost',(value,args)=>value/(Number(args[0])===0?multi(id):1));
+ for(const upgrade of systems.get('sneaking')?.sneakingUpgrades||[])if(upgrade.index<17)wrap(upgrade,'getBonus',(value,args)=>value+(Number(m[7]?.[upgrade.index])||0)*upgrade.bonusPerLvl);
+ for(const [name,id] of [['orion',16],['poppy',18],['bubba',20]])wrap(systems.get(name),'getUpgradeCost',(value,args)=>value/(Number(args[0])===0?multi(id):1)/(name==='bubba'&&meatmaxxing?2:1));
  wrap(systems.get('orion'),'getFeatherRate',value=>value*(1+4*cruc(1)));
- wrap(systems.get('bubba'),'getMeatSliceRate',value=>value*(1+2*cruc(10)));
+ wrap(systems.get('bubba'),'getMeatSliceRate',value=>value*(1+2*cruc(10))*(meatmaxxing?3:1));
  for(const slot of systems.get('forge')?.slots||[])wrap(slot,'getSpeed',value=>value*multi(11));
  for(const kitchen of systems.get('cooking')?.kitchens||[])wrap(kitchen,'getMealSpeed',value=>value*multi(4)*(1+9*cruc(5)+20*cruc(12)));
  for(const boat of systems.get('sailing')?.boats||[])wrap(boat,'getLootValue',(value,args,obj)=>{

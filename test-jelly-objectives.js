@@ -18,7 +18,7 @@ assert(clear.clear);assert(clear.totalDamage>E.bossHP(fixed.obstruction));
 assert(Math.abs(clear.bloodcellsGained/clear.totalDamage/E.bloodcellBonuses(fixed).multiplier-1)<1e-10);
 const sepsis=E.cloneState(fixed);sepsis.upgrades[16]=6;sepsis.fever=2;
 const rash=E.cloneState(sepsis);rash.fever=3;
-assert.equal(E.bloodcellBonuses(sepsis).multiplier/E.bloodcellBonuses(rash).multiplier,2);
+assert.equal(E.bloodcellBonuses(sepsis).multiplier/E.bloodcellBonuses(rash).multiplier,4);
 const stats=E.simulateMany(state,arr,{runs:4,seed:9,keepRuns:true});
 assert.equal(stats.avgBloodcells,stats.results.reduce((n,x)=>n+x.bloodcellsGained,0)/4);
 const missing=E.cloneState(state);missing.rawData={};

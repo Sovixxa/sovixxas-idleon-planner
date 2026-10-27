@@ -11,11 +11,20 @@ for(const rank of [0,1,20,100])for(const level of [0,1,7])for(const wave of [0,2
  const attrs={Menagerie:men,CustomLists:{h:{Research:catalog.get('Research')}},DNSM:{h:{AlchVials:{h:{'7lumiadd':36}}}}};
  const q={},env={a:{engine:{getGameAttribute:k=>attrs[k]}},c:{asNumber:Number},q,m:{
   _customBlock_Thingies:(name,id)=>({CoralKidUpgBonus:40,ClamWorkBonus:1,ZenithMarketBonus:13,DancingCoralBonus:29,Have_ban_k:1,Have_ban_l:0,Have_ban_m:1})[name],
-  _customBlock_GamingStatType:()=>1,_customBlock_Ninja:()=>1,
+  _customBlock_GamingStatType:()=>1,_customBlock_Ninja:()=>1,_customBlock_Summoning:()=>0,_customBlock_Companions:()=>0,
   _customBlock_ResearchStuff:(_,id,mode)=>account.research.gridSquares[id].bonuses[mode],_customBlock_AtomCollider:()=>8
  },p:{_customBlock_ArcadeBonus:()=>35,_customBlock_Breeding:(_,unused,index)=>catalog.get('RANDOlist')[115].filter(x=>wave>=Number(x)).length>index?1:0},x:{_customBlock_RunCodeOfTypeXforThingY:()=>5}};
  q._customBlock_MenagerieStuff=vm.runInNewContext('('+handler(source,'_customBlock_MenagerieStuff')+')',env);
+ data.companion={l:[]};
  const actual=box.PrayerMath.getMenagerieAnalysis(data,account),expected=q._customBlock_MenagerieStuff('LumiGainRate',0,0);
  assert(actual.complete);assert(Math.abs(actual.rate-expected)<Math.max(1,expected)*1e-12,`${actual.rate} != ${expected}`);assert.equal(actual.missionSlots,9);checks++;
+ assert.equal(actual.omnijade.total,null,'Missing Ninja data must not appear as zero Omnijade');
+ const partial=box.PrayerMath.getMenagerieAnalysis({...data,companion:undefined},account);assert.equal(partial.rate,null);assert.equal(partial.omnijade.dailyLevels,null);assert(partial.missing.includes('Companion ownership'));
+ if(rank===1&&level===1&&wave===0){
+  data.Ninja=Array.from({length:104},()=>[]);data.Ninja[103][31]=4;
+  for(const value of [0,2,3]){account.companions={list:Array.from({length:179},(_,i)=>({acquired:i===173&&value>0,bonus:i===173?value:0}))};env.m._customBlock_Companions=id=>id===173?value:0;
+   const result=box.PrayerMath.getMenagerieAnalysis(data,account);assert.equal(result.omnijade.total,4+value);assert.equal(result.omnijade.dailyLevels,q._customBlock_MenagerieStuff('OmniJadeDailyLVs',0,0));
+  }
+ }
 }
 console.log(`Lumi/hour: ${checks} native-handler comparisons across ranks, boost levels, Crucible milestones, all source groups and export aliases pass.`);
