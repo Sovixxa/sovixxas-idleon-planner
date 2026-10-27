@@ -23,7 +23,9 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci
-      - run: npx playwright install --with-deps chromium
+      # Ubuntu runners already provide Chromium runtime libraries. Avoid redundant apt font downloads.
+      - run: npx playwright install chromium
+        timeout-minutes: 5
       - run: npm run build
       - run: npm run test:release
       - uses: actions/configure-pages@v5
