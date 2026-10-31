@@ -54,6 +54,38 @@
 
   }
 
+  // Event simulation: all assigned copies stay in the yard, including after their target.
+  function estimateLineup(allPets,targets,speed,kills,enhanced,additive=1){
+    const results=allPets.map((p,i)=>estimate(p,targets[i],p.copies,speed,kills,enhanced));
+    const states=allPets.map((p,i)=>({...p,index:i,progress:Number(p.progress),level:p.level}));
+    const initialOver=states.reduce((n,p)=>n+Math.max(0,(p.level||0)-20),0);
+    let over=initialOver,added=0,elapsed=0;
+    const pending=new Set(results.flatMap((r,i)=>!r.error&&r.passive>0?[i]:[]));
+    const threshold=level=>Math.floor((1+(level-1)**1.6)*1.7**(level-1));
+    const boost=enhanced&&numeric(kills)&&Number(kills)>=0?1+Number(kills)*1.5/3600:1;
+    for(let step=0;pending.size&&step<allPets.length*31;step++){
+      const moving=states.filter(p=>p.level>0&&p.level<(p.maxLevel||20)&&numeric(allPets[p.index].progress)&&Number.isInteger(Number(p.copies))&&Number(p.copies)>0&&Number(p.copies)<=27);
+      const rate=Number(speed)*(1+over/10)/(1+initialOver/10)*(1+added/Math.max(1,additive));
+      const events=moving.map(p=>({p,dt:Math.max(Number.EPSILON*Math.max(1,threshold(p.level+1)),threshold(p.level+1)-p.progress)*86400/(rate*p.copies)}));
+      const dt=Math.min(...events.map(e=>e.dt));
+      if(!Number.isFinite(dt))break;
+      elapsed+=dt;
+      for(const p of moving)p.progress+=dt*rate*p.copies/86400;
+      for(const {p,dt:next} of events){
+        if(Math.abs(next-dt)>Math.max(1e-9,dt*1e-12))continue;
+        p.level++;
+        p.progress=Math.max(p.progress,threshold(p.level));
+        if(p.level>20)over++;
+        if(p.bonusId===16)added+=(Number(String(p.perLevel||'').match(/[\d.]+/)?.[0])||0)/100;
+        if(pending.has(p.index)&&p.level>=targets[p.index]){
+          results[p.index]={...results[p.index],passive:elapsed,active:enhanced&&!numeric(kills)?null:elapsed/boost};
+          pending.delete(p.index);
+        }
+      }
+    }
+    return results;
+  }
+
   const duration=seconds=>seconds===null?'Enter full-map clear time':seconds===0?'Target reached':seconds<1?'<1 second':seconds<3600?`${Math.ceil(seconds/60).toLocaleString()} min`:seconds<86400?`${(seconds/3600).toLocaleString('en-US',{maximumFractionDigits:1})} hours`:`${(seconds/86400).toLocaleString('en-US',{maximumFractionDigits:1})} days`;
 
   let timeWorker,timeTimer;
@@ -64,18 +96,72 @@
 
     const pets=model.pets;if(!pets.length)return;
 
-    host.innerHTML=`<h3>Shiny leveling time</h3><p>Compare passive Fenceyard progress while AFK with active Beast Master / Wind Walker farming.</p><div class="shiny-time-fields"><label>Pet<select data-time="pet" aria-label="Timing pet">${pets.map((p,i)=>`<option value="${i}">${esc(name(p))} · ${p.level===null?'Unknown':`Lv ${p.level}`}</option>`).join('')}</select></label><label>Target level<input data-time="target" aria-label="Target shiny level" type="number" min="1" step="1"></label><label>Shiny copies in Fenceyard<input data-time="copies" aria-label="Shiny copies" type="number" min="0" max="27" step="1"></label><label>Character bonus setup<select data-time="character" aria-label="Shiny timing character"><option>Loading saved bonuses…</option></select></label><label>Shiny speed multiplier (×)<input data-time="speed" aria-label="Shiny speed multiplier" type="number" min="0" step="any" placeholder="Loading…"></label><label>Clear-time calculation<select data-time="mode" aria-label="Clear-time calculation"><option value="auto">Automatic · basic-attack baseline</option><option value="manual">Measured clear time</option></select></label><label>Full-map clear time (seconds)<input data-time="clear" aria-label="Full-map clear time" type="number" min="0.1" step="any" placeholder="Calculated per map" disabled></label><label>Map<select data-time="map" aria-label="Shiny farming map"><option>Loading maps...</option></select></label></div><label class="shiny-time-enhanced"><input data-time="uwu" type="checkbox"> Compare while UWU Rawrrr is active</label><label class="shiny-time-enhanced"><input data-time="enhanced" type="checkbox"> Enhanced Whale Wallop is enabled on the active character</label><p class="shiny-time-source"></p><div class="shiny-time-results" aria-live="polite"></div><small>Active adds an average 1.5 seconds of Fenceyard time per actual kill (50% × 3 seconds), on top of passive time. Requires Whale Wallop and Enhancement Eclipse Lv 150; confirm the checkbox for your active setup. Automatic mode estimates each map from saved damage, accuracy, attack cadence, movement speed and catalog monster spacing. It models sequential basic attacks; WW AoE, skill cooldowns, platforms, targeting and survival are not simulated. Use measured mode for your actual WW clears: enter the time to kill a full spawn, excluding respawn wait. Measured mode applies that time to every map for comparison. Map access is not checked. UWU compares buff-active conditions only, not average uptime. Special spawns and multikill are excluded. Estimates hold the selected speed and copies fixed; future shiny-speed and OverLV gains can shorten the time. Reimport after leveling. These are elapsed durations, not a countdown.</small>`;
+    host.innerHTML=`<h3>Leveling time</h3><div class="shiny-time-fields"><label>Pet<select data-time="pet" aria-label="Timing pet">${pets.map((p,i)=>`<option value="${i}">${esc(name(p))} · ${p.level===null?'Unknown':`Lv ${p.level}`}</option>`).join('')}</select></label><label>Target level<input data-time="target" aria-label="Target shiny level" type="number" min="1" step="1"></label><label>Copies in Fenceyard<input data-time="copies" aria-label="Shiny copies" type="number" min="0" max="27" step="1"></label><label>Character<select data-time="character" aria-label="Shiny timing character"><option>Loading saved bonuses…</option></select></label><label>Shiny speed (×)<input data-time="speed" aria-label="Shiny speed multiplier" type="number" min="0" step="any" placeholder="Loading…"></label><label>Clear time<select data-time="mode" aria-label="Clear-time calculation"><option value="auto">Automatic estimate</option><option value="manual">Measured clear time</option></select></label><label>Seconds per clear<input data-time="clear" aria-label="Full-map clear time" type="number" min="0.1" step="any" placeholder="Calculated per map" disabled></label><label>Map<input type="search" data-time="mapSearch" aria-label="Search shiny farming maps" placeholder="Search mob or map name…"><select data-time="map" aria-label="Shiny farming map"><option>Loading maps...</option></select></label></div><label class="shiny-time-enhanced"><input data-time="uwu" type="checkbox"> UWU Rawrrr active</label><label class="shiny-time-enhanced"><input data-time="enhanced" type="checkbox"> Enhanced Whale Wallop active</label><p class="shiny-time-source"></p><div class="shiny-time-results" aria-live="polite"></div><small class="shiny-time-note">Estimates from your imported save.</small>`;
 
     const field=k=>host.querySelector(`[data-time="${k}"]`),results=host.querySelector('.shiny-time-results'),source=host.querySelector('.shiny-time-source');
 
-    let manual=false,characters=[],kills='',request=0,rankRequest=0;
+    const settings=document.createElement('details');settings.className='shiny-time-settings';
+    settings.innerHTML='<summary>Settings</summary><div class="shiny-time-fields"></div>';
+    results.before(settings);
+    for(const key of ['character','speed','mode','clear'])settings.querySelector('.shiny-time-fields').append(field(key).closest('label'));
+    host.querySelectorAll('.shiny-time-enhanced').forEach(el=>settings.append(el));
+    settings.append(source);
+    const note=document.createElement('p');note.className='shiny-time-note';
+    note.textContent='Automatic clears estimate basic attacks. For better active times, enter a measured clear time (excluding respawn). Enhanced Whale Wallop requires Enhancement Eclipse Lv 150. UWU assumes the buff stays active. Includes shiny-speed and overlevel gains. Copies stay in the Fenceyard after reaching their target; other bonuses stay fixed.';
+    settings.append(note);
+    field('map').closest('label').classList.add('shiny-map-field');
+    let manual=false,characters=[],maps=[],kills='',request=0,rankRequest=0;
+    const current=document.createElement('section');current.className='shiny-current';host.prepend(current);
+    const yardControls=document.createElement('div');yardControls.className='shiny-yard-controls';
+    const yardCap=Math.max(...pets.map(p=>p.maxLevel||20));
+    yardControls.innerHTML='<h3>In the Fenceyard</h3><label>Level all to <input type="number" min="1" max="'+yardCap+'" step="1" placeholder="Next level" aria-label="Fenceyard target level"></label>';
+    current.before(yardControls);
+    const yardTarget=yardControls.querySelector('input');
+    yardTarget.oninput=()=>paintCurrent();
+    const paintCurrent=()=>{
+      const active=pets.filter(p=>Number(p.copies)>0),unknown=pets.some(p=>p.copies==null);
+      const custom=yardTarget.value!=='';
+      const wanted=Number(yardTarget.value);
+      if(yardTarget.validity.badInput||(custom&&(!Number.isInteger(wanted)||wanted<1||wanted>yardCap))){current.innerHTML='<p>Enter a level from 1 to '+yardCap+'.</p>';return;}
+      const targets=pets.map(p=>custom?wanted:Math.min(p.maxLevel||20,(p.level||0)+1));
+      const projected=estimateLineup(pets,targets,field('speed').value,kills,field('enhanced').checked,characters[Number(field('character').value)]?.additive||1);
+      const timeFor=p=>{
+        const r=projected[pets.indexOf(p)];
+        if(r.error)return Infinity;
+        const seconds=field('enhanced').checked?(r.active??r.passive):r.passive;
+        return Number.isFinite(seconds)?seconds:Infinity;
+      };
+      active.sort((a,b)=>timeFor(a)-timeFor(b)||name(a).localeCompare(name(b)));
+      const estimates=[];
+      current.innerHTML=(!active.length?'<p>'+ (unknown?'Fenceyard records unavailable. Import a complete save to see your current shinies.':'No shiny pets in the saved Fenceyard.')+'</p>':active.map(p=>{
+        const capped=p.level!==null&&p.level>=(p.maxLevel||20),target=custom?wanted:Math.min(p.maxLevel||20,(p.level||0)+1);
+        const r=projected[pets.indexOf(p)];
+        estimates.push(r);
+        const timing=custom&&p.level!==null&&p.level>=target?'Target reached':capped?'Max level reached':r.error?(!numeric(field('speed').value)?'Set shiny speed in Settings.':r.error):'Passive: '+duration(r.passive)+(field('enhanced').checked?' · Active estimate: '+(r.active===null?'map rate needed':duration(r.active)):'');
+        return '<article class="shiny-current-pet"><div class="shiny-current-heading">'+(p.icon?'<img src="'+esc(p.icon)+'" alt="" loading="lazy">':'')+'<strong>'+esc(name(p))+'</strong></div><span>'+p.copies+' shiny '+(p.copies===1?'copy':'copies')+' · '+(p.level===null?'Level unknown':'Lv '+p.level+(capped?'':' → '+target))+'</span><div class="shiny-current-times">'+timing.split(' · ').map(t=>'<span>'+esc(t.replace('Active estimate:', 'Active:'))+'</span>').join('')+'</div></article>';
+      }).join(''));
+      if(custom&&active.length){
+        const summary=document.createElement('p');summary.className='shiny-yard-total';
+        summary.textContent=estimates.some(r=>r.error)?'Total time unavailable for this target.':'All reach Lv '+wanted+' · Passive: '+duration(Math.max(...estimates.map(r=>r.passive)))+(field('enhanced').checked?' · Active estimate: '+(estimates.some(r=>r.active===null)?'map rate needed':duration(Math.max(...estimates.map(r=>r.active)))):'');
+        current.prepend(summary);
+      }
+    };
+    const filterMaps=()=>{
+      const selected=field('map').value,q=field('mapSearch').value.trim().toLowerCase();
+      const shown=maps.map((m,i)=>({...m,rank:i+1})).filter(m=>(m.name+' '+(m.mob||'')).toLowerCase().includes(q));
+      field('map').innerHTML=shown.map(m=>'<option value="'+m.id+'">'+m.rank+'. '+esc(m.name)+(m.mob?' · '+esc(m.mob):'')+(Object.hasOwn(m,'kills')?' - '+(m.kills===null?'Clear time needed':Math.round(m.kills).toLocaleString()+' kills/hr'):'')+'</option>').join('')||'<option value="">No maps match your search</option>';
+      field('map').disabled=!shown.length;
+      if(shown.some(m=>String(m.id)===selected))field('map').value=selected;
+      selectMap();
+    };
+    field('mapSearch').oninput=filterMaps;
 
     const mapRate=document.createElement('p');mapRate.className='shiny-time-source';source.after(mapRate);
 
-    const selectMap=()=>{kills='';paint();if(!timeWorker||!characters.length)return;mapRate.textContent='Estimating active kills on this map...';timeWorker.postMessage({type:'map',character:characters[Number(field('character').value)].index,clearSeconds:field('clear').value,mode:field('mode').value,uwu:field('uwu').checked,map:Number(field('map').value),request:++request});};
+    const selectMap=()=>{++request;kills='';paint();if(!field('map').value){mapRate.textContent='No maps match your search.';return;}if(!timeWorker||!characters.length)return;mapRate.textContent='Estimating active kills on this map...';timeWorker.postMessage({type:'map',character:characters[Number(field('character').value)].index,clearSeconds:field('clear').value,mode:field('mode').value,uwu:field('uwu').checked,map:Number(field('map').value),request:++request});};
 
     const rankMaps=()=>{++request;field('map').disabled=true;mapRate.textContent='Ranking maps from best to worst...';kills='';paint();timeWorker.postMessage({type:'rank',character:characters[Number(field('character').value)].index,clearSeconds:field('clear').value,mode:field('mode').value,uwu:field('uwu').checked,request:++rankRequest});};
-    const paint=()=>{const p=pets[Number(field('pet').value)],r=estimate(p,Number(field('target').value),field('copies').value,field('speed').value,kills,field('enhanced').checked);results.innerHTML=r.error?`<p>${esc(r.error)}</p>`:`<article><span>AFK / passive</span><strong>${duration(r.passive)}</strong></article><article><span>Active · ${r.active===null?'rate needed':`${r.boost.toLocaleString('en-US',{maximumFractionDigits:2})}× speed`}</span><strong>${duration(r.active)}</strong></article>`;};
+    const paint=()=>{paintCurrent();const p=pets[Number(field('pet').value)],r=estimateLineup(pets.map(x=>x===p?{...x,copies:field('copies').value}:x),pets.map(x=>x===p?Number(field('target').value):(x.level||1)),field('speed').value,kills,field('enhanced').checked,characters[Number(field('character').value)]?.additive||1)[Number(field('pet').value)];results.innerHTML=r.error?`<p>${esc(r.error)}</p>`:`<article><span>AFK / passive</span><strong>${duration(r.passive)}</strong></article><article><span>Active · ${r.active===null?'rate needed':`${r.boost.toLocaleString('en-US',{maximumFractionDigits:2})}× speed`}</span><strong>${duration(r.active)}</strong></article>`;};
 
     const selectPet=()=>{const p=pets[Number(field('pet').value)];field('target').max=p.maxLevel||20;field('target').value=p.target||Math.min(p.maxLevel||20,(p.level||0)+1);field('copies').value=p.copies??'';paint();};
 
@@ -83,9 +169,9 @@
 
     for(const k of ['target','copies','enhanced'])field(k).oninput=paint;
 
-    field('speed').oninput=()=>{manual=true;source.textContent='Using your manual shiny speed multiplier.';paint();};
+    field('speed').oninput=()=>{manual=true;source.textContent='Custom speed.';paint();};
 
-    const selectCharacter=()=>{const c=characters[Number(field('character').value)];if(!c||!numeric(c.rate)||c.rate<=0)return;field('speed').value=c.rate;source.textContent=`Saved bonuses for ${c.name}, including the saved OverLV multiplier. Adjust the multiplier if your in-game setup differs.`;manual=false;rankMaps();};
+    const selectCharacter=()=>{const c=characters[Number(field('character').value)];if(!c||!numeric(c.rate)||c.rate<=0)return;field('speed').value=Number(c.rate.toPrecision(8));source.textContent=`Saved speed · ${c.name}`;manual=false;rankMaps();};
 
     field('mode').onchange=()=>{field('clear').disabled=field('mode').value==='auto';field('clear').placeholder=field('mode').value==='auto'?'Calculated per map':'Enter observed clear time';if(characters.length)rankMaps();};field('character').onchange=selectCharacter;field('map').onchange=selectMap;field('clear').oninput=()=>{if(characters.length)rankMaps();};field('uwu').onchange=()=>{if(characters.length)rankMaps();};selectPet();
 
@@ -105,10 +191,7 @@
         if(data.request!==rankRequest)return;
         field('map').disabled=false;
         if(data.error){mapRate.textContent='Map ranking unavailable.';return;}
-        const selected=field('map').value;
-        field('map').innerHTML=data.maps.map((m,i)=>`<option value="${m.id}">${i+1}. ${esc(m.name)} - ${m.kills===null?'Clear time needed':Math.round(m.kills).toLocaleString()+' kills/hr'}</option>`).join('');
-        if(data.maps.some(m=>String(m.id)===selected))field('map').value=selected;
-        selectMap();return;
+        maps=data.maps;filterMaps();return;
       }
       if(data.type==='map'){if(data.request!==request)return;kills=data.error||data.kills===null?'':data.kills;mapRate.textContent=kills===''?(field('mode').value==='auto'?'Automatic estimate unavailable for this map. Use measured clear time.':'Enter an observed full-map clear time to compare maps.'):`${data.mode==='auto'?`Automatic baseline: ${Number(data.clear?.seconds).toLocaleString('en-US',{maximumFractionDigits:2})} seconds per full clear (${Number(data.clear?.combatSeconds).toLocaleString('en-US',{maximumFractionDigits:2})} attacking + ${Number(data.clear?.travelSeconds).toLocaleString('en-US',{maximumFractionDigits:2})} travel).`:'Full-clear scenario:'} ${Math.round(kills).toLocaleString()} kills/hour - normal monsters`;paint();return;}
 
@@ -116,6 +199,7 @@
 
       field('character').innerHTML=characters.map((c,i)=>`<option value="${i}">${esc(c.name)}</option>`).join('');
 
+      maps=data.maps||[];
       field('map').innerHTML=(data.maps||[]).map(m=>`<option value="${m.id}">${esc(m.name)}</option>`).join('');
 
       if((data.maps||[]).some(m=>m.id===Number(characters[0].map)))field('map').value=characters[0].map;
@@ -146,11 +230,11 @@
 
   function render(host,groups,raw){
 
-    const model=plan(groups),maxLevel=model.pets.some(p=>p.maxLevel===30)?30:20,overLevels=model.pets.reduce((n,p)=>n+Math.max(0,(p.level??0)-20),0),complete=model.pets.length>0&&model.pets.every(p=>p.level!==null&&p.level>=(p.maxLevel||20)),name=p=>String(root.WORLD4_CATALOG?.MonsterNames?.[p.id]||p.id).replaceAll('_',' ');
+    const model=plan(groups),maxLevel=model.pets.some(p=>p.maxLevel===30)?30:20,overLevels=model.pets.reduce((n,p)=>n+Math.max(0,(p.level??0)-20),0),name=p=>String(root.WORLD4_CATALOG?.MonsterNames?.[p.id]||p.id).replaceAll('_',' ');
 
     let query='',filter='all';
 
-    host.innerHTML=`<section class="shiny-planner"><header class="section-head compact"><div><p class="eyebrow">World 4 · Breeding</p><h2>Shiny pet leveling plan</h2><p>Build shiny speed, then rotate through the bonuses your account needs.</p><p>${maxLevel===30?`Menagerie unlocked: shiny level cap 30. ${overLevels} total levels above 20 give ${(1+overLevels/10).toLocaleString('en-US',{maximumFractionDigits:1})}× shiny leveling speed.`:'Shiny level cap: 20. Buy the +10 Max Shiny LV unlock in the Menagerie to raise it to 30.'}</p></div></header>${maxLevel===30?`<section class="shiny-guide"><h3>Level 20 → 30</h3><p>${model.pets.filter(p=>p.maxLevel===30&&p.level>=20).length} pets at Lv 20 or higher · ${model.pets.filter(p=>p.maxLevel===30&&p.level>=30).length} at Lv 30.</p><p>Rotate one level at a time: 21 → 22 → 23 → 24 → 25 → 26 → 27 → 28 → 29 → 30. Every level above 20 adds 0.1× to the shared OverLV multiplier. Lower-level pets catch up first; bonus tiers decide the order within each milestone.</p><p>Next overlevel: ${(1+overLevels/10).toLocaleString('en-US',{maximumFractionDigits:1})}× → ${(1+(overLevels+1)/10).toLocaleString('en-US',{maximumFractionDigits:1})}× shared speed (+${(100/(10+overLevels)).toLocaleString('en-US',{maximumFractionDigits:2})}% relative), while other bonuses stay fixed.</p><small>A general rotation, not a fastest-time optimization. Copy counts and partial progress can change which pet reaches its next level soonest.</small></section>`:''}<details class="shiny-guide shiny-combined" open><summary>Current combined bonuses</summary><div class="shiny-bonus-grid">${groups.map(g=>`<p>${esc(g.effect)} <small>(${esc(g.level)})</small></p>`).join('')}</div></details><section class="shiny-next"><span class="eyebrow">${esc(model.stage?.name||'Saved progress')}</span><h3>${model.next?`${esc(name(model.next))} → Lv ${model.next.target}`:complete?`All shiny pets are Lv ${maxLevel}`:'No available target found'}</h3><p>${model.next?`${model.next.level===0?'Hatch a shiny first, then place it':'Place shiny copies'} in the Fenceyard. Current level: ${model.next.level}. Bonus per level: ${esc(model.next.perLevel)}.`:complete?'All listed shinies have reached the modeled maximum. Use the tier list below as a reference.':'Load complete breeding records to see targets. Locked species must be unlocked before leveling.'}</p></section><details class="shiny-guide"><summary>How to speed up shinies with Wind Walker + VMan</summary><ol><li>Unlock shiny breeding with <strong>Paint Bucket</strong>. Hatch shiny pets and place them in the <strong>Fenceyard</strong>; stored pets do not gain Fenceyard time.</li><li>On Voidwalker, get <strong>Enhancement Eclipse to level 150</strong> on the preset you use. This enhances Beast Master’s <strong>Whale Wallop</strong>, inherited by Wind Walker.</li><li>On Beast Master / Wind Walker, learn Whale Wallop and use an active combat setup. The enhancement gives kills a <strong>50% chance to advance incubator time by 3 seconds</strong> and also advances Fenceyard progress. It is a kill effect, not three seconds awarded per whale cast.</li><li>Play Wind Walker actively on a map you clear quickly. Use your respawn and combat talents to sustain kills. Compare actual active kill speed; the offline AFK estimate is not this effect’s trigger rate.</li><li>Stack shiny copies of your chosen species in the Fenceyard to focus progress. When you reach the target, rotate to the next species. Earned shiny bonuses persist after moving pets out.</li></ol><p>Start with shiny-speed pets to Lv 5, bring available shinies to Lv 2, then shiny-speed pets to Lv 10. Continue in tier order through Lv 5, 10, 15 and 20; After the Menagerie unlock, rotate through one-level milestones from 21 to 30. Bring available pets to each milestone before pushing the next, using bonus tiers within each rotation. The Menagerie unlock raises the cap to 30. Grand Martial of Shinytown also improves shiny leveling. Each shiny level above 20 adds 10% to a shared shiny-speed multiplier, so all pets can help speed up later leveling.</p><small>The guide is general setup advice; your talent preset and active kill rate are not verified here.</small></details><details class="shiny-guide"><summary>Tier order · first to last</summary>${tiers.map(t=>`<p><strong>${t.name}</strong><br>${t.why}</p>`).join('')}<p>This is a general progression ranking, not a calculated best return for every account. Within a bonus, lower levels come first. Locked pets stay in the reference list.</p></details><div class="arcade-page-controls"><input type="search" aria-label="Search shiny pets" placeholder="Search pets or bonuses…"><select aria-label="Shiny pet filter"><option value="all">All pets · tier order</option><option value="ready">Current milestone queue</option><option value="unleveled">No shiny levels yet</option></select><span class="shiny-count"></span></div><div class="shiny-list"></div></section>`;
+    host.innerHTML=`<section class="shiny-planner"><header class="section-head compact"><div><p class="eyebrow">World 4 · Breeding</p><h2>Shiny pet leveling plan</h2><p>Build shiny speed, then rotate through the bonuses your account needs.</p><p>${maxLevel===30?`Menagerie unlocked: shiny level cap 30. ${overLevels} total levels above 20 give ${(1+overLevels/10).toLocaleString('en-US',{maximumFractionDigits:1})}× shiny leveling speed.`:'Shiny level cap: 20. Buy the +10 Max Shiny LV unlock in the Menagerie to raise it to 30.'}</p></div></header><details class="shiny-guide shiny-combined"><summary>Current combined bonuses</summary><div class="shiny-bonus-grid">${groups.map(g=>`<p>${esc(g.effect)} <small>(${esc(g.level)})</small></p>`).join('')}</div></details><details class="shiny-guide"><summary>How to speed up shinies with Wind Walker + VMan</summary><ol><li>Unlock shiny breeding with <strong>Paint Bucket</strong>. Hatch shiny pets and place them in the <strong>Fenceyard</strong>; stored pets do not gain Fenceyard time.</li><li>On Voidwalker, get <strong>Enhancement Eclipse to level 150</strong> on the preset you use. This enhances Beast Master’s <strong>Whale Wallop</strong>, inherited by Wind Walker.</li><li>On Beast Master / Wind Walker, learn Whale Wallop and use an active combat setup. The enhancement gives kills a <strong>50% chance to advance incubator time by 3 seconds</strong> and also advances Fenceyard progress. It is a kill effect, not three seconds awarded per whale cast.</li><li>Play Wind Walker actively on a map you clear quickly. Use your respawn and combat talents to sustain kills. Compare actual active kill speed; the offline AFK estimate is not this effect’s trigger rate.</li><li>Stack shiny copies of your chosen species in the Fenceyard to focus progress. When you reach the target, rotate to the next species. Earned shiny bonuses persist after moving pets out.</li></ol><p>Start with shiny-speed pets to Lv 5, bring available shinies to Lv 2, then shiny-speed pets to Lv 10. Continue in tier order through Lv 5, 10, 15 and 20; After the Menagerie unlock, rotate through one-level milestones from 21 to 30. Bring available pets to each milestone before pushing the next, using bonus tiers within each rotation. The Menagerie unlock raises the cap to 30. Grand Martial of Shinytown also improves shiny leveling. Each shiny level above 20 adds 10% to a shared shiny-speed multiplier, so all pets can help speed up later leveling.</p><small>The guide is general setup advice; your talent preset and active kill rate are not verified here.</small></details><details class="shiny-guide"><summary>Tier order · first to last</summary>${tiers.map(t=>`<p><strong>${t.name}</strong><br>${t.why}</p>`).join('')}<p>This is a general progression ranking, not a calculated best return for every account. Within a bonus, lower levels come first. Locked pets stay in the reference list.</p></details><div class="arcade-page-controls"><input type="search" aria-label="Search shiny pets" placeholder="Search pets or bonuses…"><select aria-label="Shiny pet filter"><option value="all">All pets · tier order</option><option value="ready">Current milestone queue</option><option value="unleveled">No shiny levels yet</option></select><span class="shiny-count"></span></div><div class="shiny-list"></div></section>`;
 
     function paint(){
 
@@ -166,10 +250,10 @@
 
     host.querySelector('[aria-label="Shiny pet filter"]').onchange=e=>{filter=e.target.value;paint();};paint();
 
-    const timing=document.createElement('section');timing.className='shiny-guide shiny-time';host.querySelector('.shiny-next').after(timing);mountTime(timing,model,raw,name);
+    const timing=document.createElement('section');timing.className='shiny-guide shiny-time';host.querySelector('.shiny-combined').after(timing);mountTime(timing,model,raw,name);
 
   }
 
-  const api={plan,render,tiers,estimate};if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.ShinyPlanner=api;
+  const api={plan,render,tiers,estimate,estimateLineup};if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.ShinyPlanner=api;
 
 })(typeof window!=='undefined'?window:globalThis);

@@ -52,11 +52,11 @@ onmessage=e=>{
   }
   const raw=e.data,d=typeof raw.data==='string'?JSON.parse(raw.data):raw.data||raw;
   parsed=PrayerMath.parseData(d,raw.charNames,raw.companion,raw.guildData,raw.serverVars||{},raw.accountCreateTime,raw.tournament);
-  const characters=parsed.characters.map((c,index)=>({index,eligible:['Beast_Master','Wind_Walker'].includes(c.class),name:c.name,map:c.mapIndex,rate:PrayerMath.calcShinyLvMulti(parsed.account,[c]).value}));
+  const characters=parsed.characters.map((c,index)=>({index,eligible:['Beast_Master','Wind_Walker'].includes(c.class),name:c.name,map:c.mapIndex,rate:PrayerMath.calcShinyLvMulti(parsed.account,[c]).value,additive:1+PrayerMath.calcShinyLvMulti(parsed.account,[c]).breakdown.categories.find(g=>g.name==='Additive').sources.reduce((n,s)=>n+Number(s.value),0)}));
   rankings.clear();clearCache.clear();
   maps=Object.entries(PrayerMath.mapEnemiesArray).flatMap(([id,target])=>{
    const m=PrayerMath.monsters[target];
-   return m?.Type==='Monster'&&m.SpecialType!=='a'&&Number(PrayerMath.mapMonsterCounts[id])>0&&Number.isFinite(m.RespawnTime)?[{id:Number(id),name:String(PrayerMath.mapNames[id]||m.Name).replaceAll('_',' ')}]:[];
+   return m?.Type==='Monster'&&m.SpecialType!=='a'&&Number(PrayerMath.mapMonsterCounts[id])>0&&Number.isFinite(m.RespawnTime)?[{id:Number(id),mob:String(m.Name||target).replaceAll('_',' '),name:String(PrayerMath.mapNames[id]||m.Name).replaceAll('_',' ')}]:[];
   });
   postMessage({characters,maps});
  }catch(error){postMessage({type:e.data.type,request:e.data.request,error:error.message});}
