@@ -70,7 +70,7 @@
     window.PlannerAnalytics?.page(name==='home'?'home':'jelly/'+name);
     $('panelWorld').classList.add('hidden');
     $('panelHome').classList.toggle('hidden',name!=='home');
-    const tabs={optimizer:['tabOptimizer','panelOptimizer'],practice:['tabPractice','panelPractice'],upgrades:['tabUpgrades','panelUpgrades'],doublers:['tabDoublers','panelDoublers'],bonuses:['tabBonuses','panelBonuses']};
+    const tabs={optimizer:['tabOptimizer','panelOptimizer'],practice:['tabPractice','panelPractice'],upgrades:['tabUpgrades','panelUpgrades'],obstructions:['tabObstructions','panelObstructions'],doublers:['tabDoublers','panelDoublers'],bonuses:['tabBonuses','panelBonuses']};
     for(const [key,[button,panel]] of Object.entries(tabs)){
       const active=key===name;$(button).classList.toggle('active',active);$(button).setAttribute('aria-selected',String(active));$(panel).classList.toggle('hidden',!active);
     }
@@ -79,6 +79,15 @@
     if(name==='upgrades'&&initialUpgradesPending){initialUpgradesPending=false;renderUpgrades(currentArrangement,currentStats,calibration?.scale);}
     if(name==='practice'&&initialPracticePending){initialPracticePending=false;refreshPracticeFevers();refreshPracticeCells();runPractice(true,true);}
     if(name==='doublers')renderJellyDoublers();
+    if(name==='obstructions')renderJellyObstructions();
+  }
+  function renderJellyObstructions(){
+    const all=E.obstructionRewards(state),query=$('jellyObstructionSearch').value.trim().toLowerCase(),filter=$('jellyObstructionFilter').value;
+    const rows=all.filter(r=>(filter==='all'||r.status===filter)&&`${r.number} ${r.name} ${r.bonus}`.toLowerCase().includes(query));
+    const cleared=all.filter(r=>r.status==='Cleared').length,current=all.find(r=>r.status==='Current');
+    $('jellyObstructionSummary').textContent=`${cleared}/${all.length} cleared${current?` · Next: ${current.name}`:''} · ${rows.length} shown`;
+    $('jellyObstructionList').innerHTML=rows.map(r=>`<article class="obstruction-row obstruction-${r.status.toLowerCase()}" data-obstruction="${r.index}"><span class="obstruction-number">${r.number}</span><img src="assets/JellyOp${r.index}.png" alt="" loading="lazy" width="40" height="40"><div class="obstruction-name"><strong>${esc(r.name)}</strong><span>Tier ${r.tier} <b class="obstruction-status">${r.status}</b></span></div><div class="obstruction-reward">${esc(r.bonus)}</div><div class="obstruction-stats"><span>${E.formatNumber(r.hp)} HP</span><span>${E.formatTime(r.timer)}</span></div></article>`).join('')||'<p>No matches.</p>';
+
   }
   function renderJellyDoublers(){
     if(!state){$('jellyDoublerSummary').textContent='Load your save to compare doubler effects.';$('jellyDoublerList').replaceChildren();return;}
@@ -223,6 +232,9 @@ SKILL_PAGES.holeFloors={title:'Floors',world:'World 5',copy:'All 18 Hole caverns
   $('tabOptimizer').addEventListener('click',()=>selectSideNav('jelly'));
   $('tabPractice').addEventListener('click',()=>{selectSideNav('jelly');selectWorkspaceTab('practice');});
   $('tabUpgrades').addEventListener('click',()=>{selectSideNav('jelly');selectWorkspaceTab('upgrades');});
+  $('tabObstructions').addEventListener('click',()=>{selectSideNav('jelly');selectWorkspaceTab('obstructions');});
+  $('jellyObstructionSearch').addEventListener('input',renderJellyObstructions);
+  $('jellyObstructionFilter').addEventListener('change',renderJellyObstructions);
   $('tabDoublers').addEventListener('click',()=>{selectSideNav('jelly');selectWorkspaceTab('doublers');});
   $('tabBonuses').addEventListener('click',()=>{selectSideNav('jelly');selectWorkspaceTab('bonuses');});
   $('navHome').addEventListener('click',()=>selectSideNav('home'));
