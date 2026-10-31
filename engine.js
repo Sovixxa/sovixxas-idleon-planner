@@ -1305,7 +1305,7 @@ const VERSION='0.9.9-alchemy-bubbles';
     const out=[];
     for(let oi=0;oi<Math.min(40,UPGRADE_ORDER.length);oi++){
       const id=UPGRADE_ORDER[oi],m=UPGRADE_META[id];if(!m)continue;const lv=asNum(state.upgrades[id]);
-      const prevOk=oi===0||asNum(state.upgrades[UPGRADE_ORDER[oi-1]])>=1,levelOk=state.researchLevel===0||state.researchLevel>=upgradeLevelReq(oi);if(!prevOk||!levelOk||lv>=m.max)continue;
+      const prevOk=oi===0||asNum(state.upgrades[UPGRADE_ORDER[oi-1]])>=1,levelOk=state.researchLevel>=upgradeLevelReq(oi);if(!prevOk||!levelOk||(m.max<=998&&lv>=m.max))continue;
       const cost=upgradeCost(state,oi),affordable=state.bloodcells>=cost,st=cloneState(state);st.upgrades[id]=lv+1;
       const boardChanging=BOARD_PROGRESS_UPGRADES.has(id),directCombat=DIRECT_COMBAT_UPGRADES.has(id);
       let timed=null;
@@ -1318,7 +1318,7 @@ const VERSION='0.9.9-alchemy-bubbles';
     out.sort((a,b)=>{if(a.affordable!==b.affordable)return a.affordable?-1:1;if(a.category!==b.category){const rank={combat:0,board:1,economy:2,progression:3};return rank[a.category]-rank[b.category];}if(a.timed||b.timed)return b.impact-a.impact||a.cost-b.cost;return a.cost-b.cost;});return out;
   }
   function upgradeRoadmap(state,arr,options={}){
-    const baseDamage=Math.max(1e-12,layoutScore(state,arr).withJellyUpgrades),baseCurrency=bloodcellBonuses(state),baseCurrencyMulti=baseCurrency.known?baseCurrency.multiplier:null;
+    const baseDamage=Math.max(1e-12,layoutScore(state,arr).withJellyUpgrades),baseCurrency=bloodcellBonuses(state),baseCurrencyMulti=baseCurrency.factors.upgrades*baseCurrency.factors.tribunalI*baseCurrency.factors.tribunalII;
     const unlockNote=id=>{
       if(id>=0&&id<=7)return 'One-time cell unlock; re-optimize to value its new shape and passive.';
       if(id===8)return 'One-time plot-purchase unlock; re-optimize after buying a plot.';
@@ -1333,7 +1333,7 @@ const VERSION='0.9.9-alchemy-bubbles';
     };
     return upgradeCandidates(state,arr,options).map(u=>{
       const next=cloneState(state);next.upgrades[u.id]=asNum(next.upgrades[u.id])+1;
-      const damageRatio=layoutScore(next,arr).withJellyUpgrades/baseDamage,nextCurrency=bloodcellBonuses(next),currencyRatio=baseCurrencyMulti&&nextCurrency.known?nextCurrency.multiplier/baseCurrencyMulti:1;
+      const damageRatio=Math.max(1e-12,layoutScore(next,arr).withJellyUpgrades)/baseDamage,nextCurrency=bloodcellBonuses(next),currencyRatio=(nextCurrency.factors.upgrades*nextCurrency.factors.tribunalI*nextCurrency.factors.tribunalII)/baseCurrencyMulti;
       const oneOff=UPGRADE_META[u.id].max===1||u.boardChanging,note=unlockNote(u.id);
       const gain=(damageRatio-1)*100+(currencyRatio-1)*65+(u.boardChanging?8:0)+(oneOff?3:0);
       return {...u,damageRatio,currencyRatio,oneOff,note,mathScore:gain/Math.max(1,u.cost),gain};
@@ -1342,14 +1342,59 @@ const VERSION='0.9.9-alchemy-bubbles';
   function planUpgradePurchases(state,arr,options={}){
     const projected=cloneState(state),budget=Math.max(0,state.bloodcells)*(1-Math.max(0,Math.min(75,asNum(options.reserve)))/100);
     const limit=Math.max(1,Math.min(1000,Math.floor(asNum(options.count,100)))),steps=[];
+    const goal=['damage','bloodcells','killEta','overall'].includes(options.goal)?options.goal:'damage';
+    const started=performanceNow(),deadline=started+Math.max(1,Math.min(30000,asNum(options.timeMs,10000)));
+    let timeLimited=false;
+    options.onProgress?.({completed:0,total:limit,phase:'Simulating current board'});
+    const combatOptions={runs:6,seed:0x5150,useSteroid:true,damageScale:options.damageScale??(goal==='killEta'?autoDamageScale(state,arrangementFromBoard(state)).scale:1),reviveDelaySeconds:asNum(options.reviveDelaySeconds)};
+    const combatValue=s=>1+100*s.clearRate+(s.clearRate?100*s.clearRate/Math.max(1,s.medianClearTime):0)+(1-(s.medianHpRemaining??1));
+    let combat=goal==='killEta'?simulateMany(projected,arr,combatOptions):null;
+    const initialCombat=combat;
     let spent=0;
     for(let i=0;i<limit;i++){
-      const candidates=upgradeRoadmap(projected,arr,{skipSimulation:true}).map(u=>({...u,score:options.goal==='bloodcells'?(u.currencyRatio-1)/u.cost:(u.damageRatio-1)/u.cost})).filter(u=>Number.isFinite(u.cost)&&u.cost>0&&u.score>0&&(options.mode==='future'||u.cost<=budget-spent)).sort((a,b)=>b.score-a.score||a.cost-b.cost);
+      if(performanceNow()>=deadline){timeLimited=true;break;}
+      const candidates=upgradeRoadmap(projected,arr,{skipSimulation:true}).filter(u=>Number.isFinite(u.cost)&&u.cost>=0&&(options.mode==='future'||u.cost<=budget-spent)).map(u=>{
+        if(performanceNow()>=deadline){timeLimited=true;return null;}
+        options.onProgress?.({completed:i,total:limit,phase:'Comparing '+u.name});
+        const next=cloneState(projected);next.upgrades[u.id]=asNum(next.upgrades[u.id])+1;
+        const expRatio=cellExpMultiplier(next)/cellExpMultiplier(projected);
+        const savingsRatio=(1+upgradeQty(next,34)/100)/(1+upgradeQty(projected,34)/100);
+        const dailyRatio=(1+upgradeQty(next,38)/100)/(1+upgradeQty(projected,38)/100);
+        // Explicit heuristic credit for effects requiring board changes or active play.
+        const progressionCredit=(u.boardChanging||u.oneOff||[13,29,35].includes(u.id))?Math.log(1.01):0;
+        const overallRatio=Math.exp((Math.log(Math.max(1,u.damageRatio))+Math.log(Math.max(1,u.currencyRatio))+Math.log(expRatio)+Math.log(savingsRatio)+Math.log(dailyRatio))/5+progressionCredit);
+        const timed=goal==='killEta'&&u.directCombat&&!u.boardChanging?simulateMany(next,arr,combatOptions):null;
+        const killRatio=timed&&timed.clearRate>=combat.clearRate?combatValue(timed)/combatValue(combat):1;
+        const ratio=goal==='bloodcells'?u.currencyRatio:goal==='killEta'?killRatio:goal==='overall'?overallRatio:u.damageRatio;
+        let score=(ratio-1)/Math.max(1e-12,u.cost),prerequisiteFor=null;
+        // Price the entire first-purchase chain to the next measurable benefit.
+        // Only its first currently legal step is returned, so every purchase is
+        // checked again against research, budget and prerequisites on the next pass.
+        if(goal!=='overall'&&u.level===0&&score<=0){
+          const chain=cloneState(next);let chainCost=u.cost;
+          const baseDamage=Math.max(1e-12,layoutScore(projected,arr).withJellyUpgrades);
+          const currency=x=>{const f=bloodcellBonuses(x).factors;return f.upgrades*f.tribunalI*f.tribunalII;};
+          const baseCurrency=currency(projected);
+          for(let oi=u.orderIndex+1;oi<40;oi++){
+            const id=UPGRADE_ORDER[oi],meta=UPGRADE_META[id];
+            if(projected.researchLevel<upgradeLevelReq(oi)||meta.max===0)break;
+            if(asNum(chain.upgrades[id])>0)continue;
+            chainCost+=upgradeCost(chain,oi);chain.upgrades[id]=1;
+            if(!Number.isFinite(chainCost)||(options.mode!=='future'&&chainCost>budget-spent))break;
+            const benefit=goal==='bloodcells'?currency(chain)/baseCurrency-1:layoutScore(chain,arr).withJellyUpgrades/baseDamage-1;
+            if(benefit>0){score=benefit/Math.max(1e-12,chainCost);prerequisiteFor=meta.name;break;}
+          }
+        }
+        // The zero-cost starter is always useful, even before a board exists.
+        if(u.cost===0&&u.level===0){score=Number.MAX_VALUE;prerequisiteFor='Jelly upgrade tree';}
+        return {...u,expRatio,savingsRatio,dailyRatio,overallRatio,killRatio,timed,prerequisiteFor,score};
+      }).filter(u=>u&&Number.isFinite(u.score)&&u.score>0).sort((a,b)=>b.score-a.score||a.cost-b.cost);
+      if(timeLimited)break; // Never pick from an incompletely evaluated purchase step.
       const next=candidates[0];if(!next)break;
-      spent+=next.cost;projected.upgrades[next.id]++;projected.bloodcells=Math.max(0,budget-spent);
+      spent+=next.cost;if(next.timed)combat=next.timed;projected.upgrades[next.id]=asNum(projected.upgrades[next.id])+1;projected.bloodcells=Math.max(0,budget-spent);
       steps.push({...next,endLevel:next.level+1,spent,remaining:Math.max(0,budget-spent),shortfall:Math.max(0,spent-budget)});
     }
-    return {steps,budget,spent,remaining:Math.max(0,budget-spent),shortfall:Math.max(0,spent-budget)};
+    return {steps,budget,spent,goal,timeLimited,requestedCount:limit,elapsedMs:performanceNow()-started,initialCombat,finalCombat:combat,remaining:Math.max(0,budget-spent),shortfall:Math.max(0,spent-budget)};
   }
   function findUpgradeTarget(state,arr,options={}){
     // Greedy marginal damage-per-cost progression, validated by the timed model.
@@ -1360,7 +1405,7 @@ const VERSION='0.9.9-alchemy-bubbles';
       const base=layoutScore(st,arr).withJellyUpgrades;let best=null;
       for(let oi=0;oi<40;oi++){
         const id=UPGRADE_ORDER[oi],m=UPGRADE_META[id];
-        if(![17,18,19,20,21,22,32].includes(id)||st.upgrades[id]>=m.max||st.researchLevel<upgradeLevelReq(oi)||(oi>0&&st.upgrades[UPGRADE_ORDER[oi-1]]<1))continue;
+        if(![17,18,19,20,21,22,32].includes(id)||(m.max<=998&&st.upgrades[id]>=m.max)||st.researchLevel<upgradeLevelReq(oi)||(oi>0&&st.upgrades[UPGRADE_ORDER[oi-1]]<1))continue;
         const price=upgradeCost(st,oi),next=cloneState(st);next.upgrades[id]++;
         const gain=layoutScore(next,arr).withJellyUpgrades/base-1,efficiency=gain/price;
         if(gain>0&&(!best||efficiency>best.efficiency))best={id,price,efficiency};

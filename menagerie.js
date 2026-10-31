@@ -108,7 +108,7 @@ function render(host,raw){const model=decode(raw),token={};host._menagerieToken=
   host.querySelectorAll('[data-mena-boost]').forEach(b=>b.onclick=()=>{const id=Number(b.dataset.menaBoost);selectedBoost=selectedBoost===id?null:id;paint();host.querySelector(`[data-mena-boost="${id}"]`).focus({preventScroll:true});});host.querySelectorAll('[data-mena-tab]').forEach(b=>b.onclick=()=>{tab=b.dataset.menaTab;paint();});const select=host.querySelector('[data-mena-filter]');if(select){select.value=filter;select.onchange=()=>{filter=select.value;paint();};}
  }
  paint();
- if(model.known&&typeof Worker!=='undefined'){const worker=new Worker('menagerie-worker.js');worker.onmessage=({data})=>{analysis=data;worker.terminate();if(host._menagerieToken===token&&host.querySelector('.menagerie-page'))paint();};worker.onerror=()=>worker.terminate();worker.postMessage(raw);}
+ if(model.known&&typeof Worker!=='undefined'){const worker=new Worker('menagerie-worker.js');worker.onmessage=({data})=>{analysis=data;const opals=model.missions[12];if(opals&&number(data.totalOpals)!=null){opals.value=number(data.totalOpals);opals.ready=opals.target==null?null:opals.value>=opals.target;}worker.terminate();if(host._menagerieToken===token&&host.querySelector('.menagerie-page'))paint();};worker.onerror=()=>worker.terminate();worker.postMessage(raw);}
 }
 const api={decode,boostCost,unlockCost,render};if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.Menagerie=api;
 })(typeof window!=='undefined'?window:globalThis);

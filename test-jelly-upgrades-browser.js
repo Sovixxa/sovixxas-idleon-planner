@@ -8,5 +8,12 @@ await page.evaluate(()=>document.querySelector('#navJelly').click());await page.
 await page.locator('#jellyUpgradeMode').selectOption('future');await page.locator('#jellyUpgradeCount').selectOption('1000');await page.waitForFunction(()=>document.querySelectorAll('#jellyUpgradePlan tbody tr').length===1000,null,{timeout:120000});
 await page.locator('#jellyUpgradeCompress').check();await page.locator('#jellyUpgradePlan tbody tr').first().waitFor({timeout:120000});assert((await page.locator('#jellyUpgradePlan tbody tr').count())<=1000);
 await page.locator('#jellyUpgradeGoal').selectOption('bloodcells');await page.locator('#jellyUpgradeReserve').selectOption('50');await page.locator('#jellyUpgradePlan tbody tr').first().waitFor({timeout:120000});assert((await page.locator('#jellyUpgradeWallet').innerText()).includes('Additional Bloodcells'));
+await page.locator('#jellyUpgradeCount').selectOption('25');
+for(const goal of ['killEta','overall']){
+ await page.locator('#jellyUpgradeGoal').selectOption(goal);
+ await page.waitForFunction(label=>document.querySelector('#jellyUpgradePlan').textContent.includes(label),goal==='killEta'?'six paired combat simulations':'heuristic score',{timeout:120000});
+ assert(await page.locator('#jellyUpgradePlan tbody tr').count()>0);
+ if(goal==='killEta')assert((await page.locator('#jellyUpgradeWallet').innerText()).includes('Before:'));
+}
 await page.screenshot({path:'../audit/jelly-upgrades-desktop.png',fullPage:true});await page.setViewportSize({width:390,height:844});assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));await page.screenshot({path:'../audit/jelly-upgrades-mobile.png',fullPage:true});assert.deepEqual(errors,[]);console.log('Jelly upgrade desktop/mobile, controls, 1000 purchases, compression, and browser errors pass.');
 }finally{await browser.close();}})().catch(e=>{console.error(e);process.exitCode=1;});

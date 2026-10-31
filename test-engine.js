@@ -173,7 +173,7 @@ console.log('Manual practice action regression OK');
 {
  const s=E.cloneState(searchState),roadmap=E.upgradeRoadmap(s,E.arrangementFromBoard(s),{damageScale:1});
  assert(roadmap.length>0&&roadmap.every(x=>Number.isFinite(x.damageRatio)&&Number.isFinite(x.currencyRatio)),'upgrade roadmap computes damage and currency math');
- const unlockState=E.makeState(Array.from({length:19},()=>[])),unlockRoadmap=E.upgradeRoadmap(unlockState,[],{damageScale:1});
+ const unlockState=E.makeState(Array.from({length:19},()=>[]),15),unlockRoadmap=E.upgradeRoadmap(unlockState,[],{damageScale:1});
  assert(unlockRoadmap.some(x=>x.oneOff&&x.note),'upgrade roadmap explains a reachable one-off effect');
 }
 console.log('Upgrade roadmap regressions OK');

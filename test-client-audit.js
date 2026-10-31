@@ -116,3 +116,20 @@ assert(state.cellLevels.every(n=>n===0),'operation panel blocks banked EXP level
 actor._UIinventory17[88]={get_x:()=>0};levelStep.call(actor);
 assert.equal(state.cellLevels[0],1,'same client block levels cells when idle');
 console.log('Client level-up audit OK: banked EXP waits until the idle panel is visible');
+
+// Purchase rules evaluated by the extracted client, including its uncapped marker.
+attrs.CustomLists.h.Research=[];attrs.CustomLists.h.Research[44]=E.UPGRADE_ORDER;
+state.researchLevel=100;state.bloodcells=1e100;state.research[7][11]=state.bloodcells;
+for(const doubled of [false,true]){
+ attrs.Spelunk[53]=doubled?[34]:[];state.rawData.Spelunk[53]=attrs.Spelunk[53];
+ for(const lv of [0,1,20,9999,10000]){
+  state.upgrades.fill(lv);state.research[17]=state.upgrades;
+  const eligible=new Set(E.upgradeCandidates(state,arr,{skipSimulation:true}).filter(u=>u.affordable).map(u=>u.orderIndex));
+  for(let oi=0;oi<40;oi++){
+   if(Number.isFinite(E.upgradeCost(state,oi)))close(game('UpgCost',oi,0),E.upgradeCost(state,oi),'upgrade price '+oi);else assert.equal(game('UpgCost',oi,0),E.upgradeCost(state,oi));
+   close(game('UpgLvREQ',oi,0),E.upgradeLevelReq(oi),'research gate '+oi);
+   assert.equal(eligible.has(oi),game('CanWeBuyUpg',oi,0)===1,'client purchase eligibility '+oi+' level '+lv);
+  }
+ }
+}
+console.log('Client purchase audit OK: all 40 upgrades, prerequisite and cap boundaries, doubled cost reduction.');

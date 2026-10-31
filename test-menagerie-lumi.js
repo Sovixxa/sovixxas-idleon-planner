@@ -28,3 +28,13 @@ for(const rank of [0,1,20,100])for(const level of [0,1,7])for(const wave of [0,2
  }
 }
 console.log(`Lumi/hour: ${checks} native-handler comparisons across ranks, boost levels, Crucible milestones, all source groups and export aliases pass.`);
+const opalHoles=Array.from({length:14},()=>[]);opalHoles[7]=[100,200,75];opalHoles[13][102]=1;
+const opalSave={Menagerie:[[0,0,10]],Holes:opalHoles,GemItemsPurchased:[0,0,0,0,0,15],companion:{l:[]}};
+const opalAccount={grimoire:{upgrades:[]},compass:{upgrades:[]},tesseract:{upgrades:[]},emperor:{bonuses:[{rawIndex:3,totalBonus:12.8}]},companions:{list:Array(14).fill(null)},sushiStation:{uniqueSushi:0}};
+opalAccount.grimoire.upgrades[11]={bonus:20};opalAccount.compass.upgrades[52]={bonus:30};opalAccount.tesseract.upgrades[25]={bonus:40};opalAccount.companions.list[13]={acquired:true,bonus:1};
+assert.equal(box.PrayerMath.getMenagerieAnalysis(opalSave,opalAccount).totalOpals,518);
+opalSave.Holes=JSON.stringify(opalHoles);
+assert.equal(box.PrayerMath.getMenagerieAnalysis({data:opalSave},opalAccount).totalOpals,518);
+delete opalSave.companion;
+assert.equal(box.PrayerMath.getMenagerieAnalysis(opalSave,opalAccount).totalOpals,null);
+console.log('Opal mission: cavern rewards, purchased and bonus Opals, JSON wrappers, and missing companion data pass.');

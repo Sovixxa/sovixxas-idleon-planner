@@ -88,7 +88,8 @@ self.onmessage=event=>{
       state=E.cloneState(state);state.fever=options.fever;
       postMessage({type:'result',value:E.simulateOne(state,options.arrangement,{...options,damageScale:options.damageScale??E.autoDamageScale(event.data.state,E.arrangementFromBoard(event.data.state)).scale})});
     }else if(job==='upgrades'){
-      postMessage({type:'result',value:E.planUpgradePurchases(state,options.arrangement,options)});
+      let lastProgress=0;
+      postMessage({type:'result',value:E.planUpgradePurchases(state,options.arrangement,{...options,onProgress:progress=>{const now=Date.now();if(now-lastProgress>=200){lastProgress=now;postMessage({type:'progress',progress});}}})});
     }else if(job==='initial'||job==='calibrate'){
       const arrangement=E.arrangementFromBoard(state);
       let calibration;

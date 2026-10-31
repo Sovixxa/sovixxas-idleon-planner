@@ -2,6 +2,11 @@ import { getResearchGridBonus } from './vendor/idleon-toolbox/parsers/world-7/re
 import { getVialsBonusByStat } from './vendor/idleon-toolbox/parsers/world-2/alchemy';
 import { randomList, research, atomsInfo } from './vendor/idleon-toolbox/data/website-data';
 import { getEventShopBonus, isCompanionBonusActive } from './vendor/idleon-toolbox/parsers/misc';
+import { getGrimoireBonus } from './vendor/idleon-toolbox/parsers/class-specific/grimoire';
+import { getCompassBonus } from './vendor/idleon-toolbox/parsers/class-specific/compass';
+import { getTesseractBonus } from './vendor/idleon-toolbox/parsers/class-specific/tesseract';
+import { getEmperorBonus } from './vendor/idleon-toolbox/parsers/world-6/emperor';
+import { getSushiBonus } from './vendor/idleon-toolbox/parsers/world-7/sushiStation';
 
 const read=(v:any)=>{try{return typeof v==='string'?JSON.parse(v):v;}catch{return undefined;}};
 const n=(v:any)=>Number(v)||0;
@@ -11,6 +16,14 @@ export function getMenagerieAnalysis(raw:any,account:any){
  const rank=n(m[0]?.[2]),boost=(i:number)=>n(m[3]?.[i])*n(research[58][i]);
  const companion=read(raw?.companion??d.companion??d.Companion);
  const companionsKnown=Array.isArray(read(companion?.l));
+ // Client Stuff2("TotalOpalsEarned"): bonus Opals plus every cavern reward.
+ const holes=read(d.Holes),gems=read(d.GemItemsPurchased);
+ const opalsKnown=Array.isArray(holes?.[7])&&holes[7].every((v:any)=>v!=null&&v!==''&&Number.isFinite(Number(v)))&&companionsKnown;
+ const bonusOpals=Math.round(n(gems?.[5])+getGrimoireBonus(account?.grimoire?.upgrades,11)
+  +25*(isCompanionBonusActive(account,13)?n(account?.companions?.list?.[13]?.bonus):0)
+  +getCompassBonus(account,52)+Math.floor(getEmperorBonus(account,3)+(n(holes?.[13]?.[102])>0?1:0))
+  +getTesseractBonus(account,25)+getSushiBonus(account,56));
+ const totalOpals=opalsKnown?holes[7].reduce((total:number,v:any)=>Math.round(total+Number(v)),bonusOpals):null;
  const bundles=read(d.BundlesReceived)||{},owned=(id:string)=>n((bundles.h||bundles)[id])===1;
  const jade=account?.sneaking?.jadeEmporium?.[47]?.unlocked?1:0;
  const crucible=n(m[2]?.[8])>=1?(randomList[115]||[]).slice(0,16).filter((v:any)=>n(o[628])>=n(v)).length:0;
@@ -48,6 +61,6 @@ export function getMenagerieAnalysis(raw:any,account:any){
  const pipsqueak=companionsKnown?(isCompanionBonusActive(account,173)?n(account?.companions?.list?.[173]?.bonus):0):null;
  const ninja=read(d.Ninja)||[];
  const omnijade={dailyLevels:pipsqueak==null?null:Math.max(1,Math.min(5,Math.round(1+Math.ceil(pipsqueak/2)))),total:pipsqueak==null||ninja[103]?.[31]==null?null:Math.round(n(ninja[103][31])+pipsqueak),assigned:Array.isArray(m[6])?m[6].slice(0,17).filter((v:any)=>n(v)>0).length:null,pipsqueak};
- return {available:true,complete:missing.length===0,missing,rate:missing.length?null:rate,factors,additive,missionSlots,crucible,milestones,omnijade,bestCrucibleWave:n(o[628]),
+ return {available:true,totalOpals,complete:missing.length===0,missing,rate:missing.length?null:rate,factors,additive,missionSlots,crucible,milestones,omnijade,bestCrucibleWave:n(o[628]),
   nextLumiBoost:{level:lv,cost,gain:missing.length?null:gain,paybackHours:missing.length||gain<=0?null:cost/gain,affordable:n(m[0]?.[0])>=cost}};
 }

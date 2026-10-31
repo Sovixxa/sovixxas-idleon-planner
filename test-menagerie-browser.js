@@ -11,6 +11,10 @@ const fs=require('node:fs'),path=require('node:path'),assert=require('node:asser
  assert.equal(await page.locator('.mena-tile').count(),33);
  for(const [tab,count] of [['Unlocks',25],['Boosts',25],['Jellyfish',6],['Singularity',6],['Scurge',9],['Nightmariners',2],['Lumi sources',18]]){await page.locator('[data-mena-tab="'+tab+'"]').click();assert.equal(await page.locator('.mena-tile').count(),count);for(const src of await page.locator('.mena-tile img').evaluateAll(nodes=>nodes.map(n=>n.getAttribute('src'))))assert(fs.existsSync(src),src);}
  await page.locator('.mena-analysis').waitFor({timeout:60000});
+ await page.locator('[data-mena-tab="Missions"]').click();
+ const opalCard=page.locator('.mena-tile').filter({hasText:'Opals Earned'});
+ assert(!/Unknown/.test(await opalCard.innerText()),await opalCard.innerText());
+ await page.locator('[data-mena-tab="Lumi sources"]').click();
  assert(!/Unknown Lumi \/ hour/.test(await page.locator('.mena-analysis').innerText()));
  await page.locator('[data-mena-tab="Crucible"]').click();assert.equal(await page.locator('.mena-tile').count(),16);
  await page.locator('[data-mena-tab="Boosts"]').click();

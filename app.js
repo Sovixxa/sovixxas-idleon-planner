@@ -293,10 +293,12 @@ SKILL_PAGES.holeFloors={title:'Floors',world:'World 5',copy:'All 18 Hole caverns
     jellyPanelJobs.get(job)?.();
     return new Promise((resolve,reject)=>{
       const worker=new Worker('solver-worker.js');
-      const finish=()=>{worker.terminate();if(jellyPanelJobs.get(job)===cancel)jellyPanelJobs.delete(job);};
+      let watchdog;
+      const finish=()=>{clearTimeout(watchdog);worker.terminate();if(jellyPanelJobs.get(job)===cancel)jellyPanelJobs.delete(job);};
       const cancel=()=>{finish();resolve(null);};
       jellyPanelJobs.set(job,cancel);
-      worker.onmessage=({data})=>{if(data.type==='result'){finish();resolve(data.value);}else if(data.type==='error'){finish();reject(new Error(data.message));}};
+      watchdog=setTimeout(()=>{finish();reject(new Error('Calculation took too long. Try fewer purchases or the Overall upgrades goal.'));},60000);
+      worker.onmessage=({data})=>{if(data.type==='progress'&&job==='upgrades'){$('jellyUpgradePlan').textContent=`Calculating upgrade plan: ${data.progress.completed} / ${data.progress.total} purchases evaluated. ${data.progress.phase}…`;}else if(data.type==='result'){finish();resolve(data.value);}else if(data.type==='error'){finish();reject(new Error(data.message));}};
       worker.onerror=error=>{finish();reject(new Error(error.message||'Worker failed.'));};
       try{worker.postMessage({job,state,options});}catch(error){finish();reject(error);}
     });
@@ -916,14 +918,22 @@ SKILL_PAGES.holeFloors={title:'Floors',world:'World 5',copy:'All 18 Hole caverns
   async function renderUpgradePlan(arr){
     if(!state||!arr)return;
     $('jellyUpgradePlan').textContent='Calculating upgrade plan…';
+    $('jellyUpgradeWallet').textContent='Evaluating current settings…';
     let plan;
-    try{plan=await jellyPanelJob('upgrades',{arrangement:arr,mode:$('jellyUpgradeMode').value,goal:$('jellyUpgradeGoal').value,reserve:Number($('jellyUpgradeReserve').value),count:Number($('jellyUpgradeCount').value)});}
+    try{plan=await jellyPanelJob('upgrades',{arrangement:arr,mode:$('jellyUpgradeMode').value,goal:$('jellyUpgradeGoal').value,damageScale:calibration?.scale,reviveDelaySeconds:currentReviveDelay(),reserve:Number($('jellyUpgradeReserve').value),count:Number($('jellyUpgradeCount').value)});}
     catch(error){$('jellyUpgradePlan').textContent=error.message;return;}
     if(!plan)return;
     const fmt=E.formatNumber;
     $('jellyUpgradeWallet').innerHTML=`<span>Saved Bloodcells <strong>${fmt(state.bloodcells)}</strong></span><span>Budget <strong>${fmt(plan.budget)}</strong></span><span>${plan.steps.length} purchases · ${fmt(plan.spent)} cost</span><span>${plan.shortfall?'Additional Bloodcells':'Budget remaining'} <strong>${fmt(plan.shortfall||plan.remaining)}</strong></span>`;
-    const goalLabel=$('jellyUpgradeGoal').value==='bloodcells'?'Bloodcell gain':'Board damage';
-    const ratioKey=$('jellyUpgradeGoal').value==='bloodcells'?'currencyRatio':'damageRatio';
+    const limitNote=plan.timeLimited?`Time limit reached: ${plan.steps.length} of up to ${plan.requestedCount} purchases completed. This is a partial plan; only fully compared steps are included. Try fewer purchases or Overall for a longer plan.`:'';
+    const goal=plan.goal||$('jellyUpgradeGoal').value;
+    const goalLabel={bloodcells:'Bloodcell gain',damage:'Board damage',killEta:'Clear score',overall:'Overall planning score'}[goal];
+    const ratioKey={bloodcells:'currencyRatio',damage:'damageRatio',killEta:'killRatio',overall:'overallRatio'}[goal];
+    const explanation=goal==='overall'?'Balances relative damage, Bloodcell multiplier, Cell EXP, daily transfusion rate and cheaper upgrades equally, with 1% planning credit for unlocks and active combat tools. This is a heuristic score, not an output percentage. Re-optimize the board after unlocks.':goal==='killEta'?'Uses six paired combat simulations per candidate on this layout and Fever. Scores clear chance, speed and damage progress. Cell levels stay fixed; Prerequisite steps can unlock later damage upgrades; their own clear-score gain may be zero. New layouts are not simulated. ETA is the median successful attempt.':'Uses the current layout and saved cell levels; future records and layout changes are not projected.';
+    if(plan.initialCombat){
+      const summary=s=>`${(s.clearRate*100).toFixed(0)}% clears / ${s.medianClearTime==null?'no successful kill':E.formatTime(s.medianClearTime)+' kill ETA'}`;
+      $('jellyUpgradeWallet').insertAdjacentHTML('beforeend',`<span>Before: <strong>${summary(plan.initialCombat)}</strong></span><span>After: <strong>${summary(plan.finalCombat)}</strong></span>`);
+    }
     const percent=ratio=>{const value=(ratio-1)*100;return value>0&&value<0.01?'+<0.01%':`${value>=0?'+':''}${value.toLocaleString(undefined,{maximumFractionDigits:2})}%`;};
     const rows=[];let totalRatio=1;
     for(const [index,step] of plan.steps.entries()){
@@ -933,7 +943,7 @@ SKILL_PAGES.holeFloors={title:'Floors',world:'World 5',copy:'All 18 Hole caverns
       else rows.push({...step,start:index+1,end:index+1,gainRatio:step[ratioKey],totalRatio});
     }
     $('jellyUpgradeWallet').insertAdjacentHTML('beforeend',`<span>Projected ${goalLabel.toLowerCase()} <strong>${percent(totalRatio)}</strong></span>`);
-    $('jellyUpgradePlan').innerHTML=rows.length?`<p class="fountain-note">${goalLabel}: row gain compares against the previous step; total gain compares against the start of this plan. Compressed rows compound all included purchases.</p><div class="fountain-plan"><table><thead><tr><th>Step</th><th>Upgrade</th><th>Level</th><th>${goalLabel} gain</th><th>Total gain</th><th>Cost</th><th>Budget left</th><th>Extra needed</th></tr></thead><tbody>${rows.map(u=>`<tr><td>${u.start===u.end?u.start:`${u.start}–${u.end}`}</td><td><img src="assets/JellyUpg${u.id}.png" width="24" height="24" alt=""> ${esc(u.name)}</td><td>${u.level} → ${u.endLevel}</td><td>${percent(u.gainRatio)}</td><td>${percent(u.totalRatio)}</td><td>${fmt(u.cost)}</td><td>${fmt(u.remaining)}</td><td>${u.shortfall?fmt(u.shortfall):'—'}</td></tr>`).join('')}</tbody></table></div>`:'<p class="fountain-note">No qualifying purchases for this goal and budget. Try Plan ahead, reduce your reserve, or review the unlock alternatives below.</p>';
+    $('jellyUpgradePlan').innerHTML=rows.length?`<p class="fountain-note">${limitNote} ${explanation} ${goalLabel}: row gain compares against the previous step; total gain compares against the start of this plan. Compressed rows compound all included purchases.</p><div class="fountain-plan"><table><thead><tr><th>Step</th><th>Upgrade</th><th>Level</th><th>${goalLabel} gain</th><th>Total gain</th><th>Cost</th><th>Budget left</th><th>Extra needed</th></tr></thead><tbody>${rows.map(u=>`<tr><td>${u.start===u.end?u.start:`${u.start}–${u.end}`}</td><td><img src="assets/JellyUpg${u.id}.png" width="24" height="24" alt=""> ${esc(u.name)}${u.prerequisiteFor?`<small>Prerequisite for ${esc(u.prerequisiteFor)}</small>`:''}</td><td>${u.level} → ${u.endLevel}</td><td>${percent(u.gainRatio)}</td><td>${percent(u.totalRatio)}</td><td>${fmt(u.cost)}</td><td>${fmt(u.remaining)}</td><td>${u.shortfall?fmt(u.shortfall):'—'}</td></tr>`).join('')}</tbody></table></div>`:`<p class="fountain-note">${limitNote||'No qualifying purchases for this goal, budget and Research level. Plan ahead still respects your current Research unlocks. Try reducing your reserve or review the unlock alternatives below.'}</p>`;
   }
   $('jellyUpgradeControls').addEventListener('change',()=>renderUpgradePlan(lastResult?.arrangement||currentArrangement));
 
