@@ -971,7 +971,7 @@ export const getSkillExpMulti = (skillName: string, character: any, characters: 
     const upgradeVaultBonus = getUpgradeVaultBonus(account?.upgradeVault?.upgrades, 60);
     const leftHandTalentBonus = getMaestroHand(character, 'cooking', characters, account, 'LEFT_HAND_OF_LEARNING');
     const mealBonus = getMealsBonusByEffectOrStat(account, null, 'CookExp');
-    const postOfficeBonus = getPostOfficeBonus(character?.postOffice, 'Cooking_EXP_gain', 1);
+    const postOfficeBonus = getPostOfficeBonus(character?.postOffice, 'Chefs_Essentials', 1);
     const talentBonus = getTalentBonus(character?.flatTalents, 'APOCALYPSE_CHOW');
     const chows = character?.chow?.finished?.[0] ?? 1;
     const cardBonus = getCardBonusByEffect(account?.cards, 'Cooking_EXP_gain')
@@ -998,19 +998,21 @@ export const getSkillExpMulti = (skillName: string, character: any, characters: 
     return {
       value,
       breakdown: [
-        { name: 'Shared skill EXP multiplier', value: allSkillExpMultiplier, formatted: 'x' + allSkillExpMultiplier },
-        { name: 'All skill exp', value: allSkillExp?.value / 100 },
-        { name: 'Upgrade vault', value: upgradeVaultBonus / 100 },
-        { name: 'Cooking Eff', value: cookingEff / 100 },
-        { name: 'Prowess', value: 0.25 + getCookingProwess(character, account) / 100 },
-        { name: 'Left hand', value: leftHandTalentBonus / 100 },
-        { name: 'Meal', value: mealBonus / 100 },
-        { name: 'Post office', value: postOfficeBonus / 100 },
-        { name: 'Card', value: cardBonus / 100 },
-        { name: 'Talent', value: (talentBonus * chows) + talentBonus2 / 100 },
-        { name: 'Statue', value: statueBonus / 100 },
-        { name: 'Skill mastery', value: 25 * masteryBonus / 100 },
-        { name: 'Vote', value: voteBonus / 100 }
+        {name:'Cooking efficiency and prowess', value:Math.min(Math.pow(cookingEff/(10*cookingDef),0.25+getCookingProwess(character,account)),1), kind:'base'},
+        ...allSkillExp.breakdown.map(s=>({...s,kind:'shared'})),
+        {name:'Left Hand of Learning',value:leftHandTalentBonus/100,kind:'add'},
+        {name:'Cooking EXP meals',value:mealBonus/100,kind:'add'},
+        {name:"Chef's Essentials",value:postOfficeBonus/100,kind:'add'},
+        {name:'Cooking EXP cards',value:cardBonus/100,kind:'add'},
+        {name:'Apocalypse Chow',value:talentBonus*chows/100,kind:'add'},
+        {name:'Tempestuous Emotions',value:talentBonus2/100,kind:'add'},
+        {name:'Ladle statue',value:statueBonus/100,kind:'add'},
+        {name:'Cooking Skill Mastery',value:25*masteryBonus/100,kind:'add'},
+        {name:'Cooking ballot',value:voteBonus/100,kind:'add'},
+        {name:'Cooking Knowledge',value:1+upgradeVaultBonus/100,kind:'multi'},
+        {name:'Skill EXP Meritocracy',value:1+getMeritocracyBonus(account,10)/100,kind:'multi'},
+        {name:'Skillium Fancyson',value:1+getLegendTalentBonus(account,20)/100,kind:'multi'},
+        {name:'Whale companion',value:1+(isCompanionBonusActive(account,32)?(account?.companions?.list?.[32]?.bonus??0):0),kind:'multi'}
       ]
     }
   }
@@ -1597,7 +1599,38 @@ export const getAllSkillsExp = (character: any, characters: any[], account: any)
   return {
     value,
     breakdown: [
-      { name: '', value: 1 }
+      { name: 'Star signs', value: (starSignBonus) / 100 },
+      { name: 'Chaotic Efaunt card', value: (cEfauntCardBonus) / 100 },
+      { name: 'Passive Skill EXP cards', value: (passiveCardBonus) / 100 },
+      { name: 'Arcade Skill EXP', value: (arcadeBonus) / 100 },
+      { name: 'Golden Ham', value: (goldenFoodBonus) / 100 },
+      { name: 'Card set', value: (cardSetBonus) / 100 },
+      { name: 'Green Tube enhancement', value: (bubonicGreen * Math.min(1, greenTubeEnhancement ? bubonicGreen : 0)) / 100 },
+      { name: 'Lucky Charm enhancement', value: (Math.min(150,100*(checkCharClass(character?.class,CLASSES.Maestro)?Number(luckyCharmEnhancement):0))) / 100 },
+      { name: 'EXP shrine', value: (shrineBonus) / 100 },
+      { name: 'Seesaw statue', value: (statueBonus) / 100 },
+      { name: 'Unending Energy', value: (unendingEnergyBonus) / 100 },
+      { name: 'Balance of Proficiency', value: (balanceOfEffBonus) / 100 },
+      { name: 'Skilled Dimwit curse', value: (-skilledDimwitCurse) / 100 },
+      { name: 'Royal Sampler curse', value: (-theRoyalSamplerCurse) / 100 },
+      { name: 'Skill EXP equipment', value: (equipmentBonus) / 100 },
+      { name: 'Maestro Transfusion', value: (maestroTransfusionTalentBonus) / 100 },
+      { name: 'Salt Lick', value: (saltLickBonus) / 100 },
+      { name: 'Dungeon Flurbo EXP', value: (dungeonSkillExpBonus) / 100 },
+      { name: 'Myriad Crate', value: (myriadPostOfficeBox) / 100 },
+      { name: 'Flutterbis', value: (godBonus) / 100 },
+      { name: 'Achievements', value: (10*firstAchievementBonus+25*secondAchievementBonus+10*thirdAchievementBonus+15*fourthAchievementBonus) / 100 },
+      { name: '400-level Skill Mastery', value: (smithingSkillMasteryBonus) / 100 },
+      { name: 'All Skill Mastery', value: (allSkillMasteryBonus) / 100 },
+      { name: 'Shiny pets', value: (shinyBonus) / 100 },
+      { name: 'MSA Skill EXP superbit', value: (superbitBonus) / 100 },
+      { name: 'Bloque companion', value: (companionBonus) / 100 },
+      { name: 'Summoning rewards', value: (winnerBonus) / 100 },
+      { name: 'Guild Skill EXP', value: (guildBonus) / 100 },
+      { name: 'Owl Skill XP', value: (owlBonus) / 100 },
+      { name: 'Chizoar armor set', value: (armorSetBonus) / 100 },
+      { name: 'Hole schematic', value: (schematicBonus) / 100 },
+      { name: 'Friend bonus', value: (getFriendBonus(account,4)) / 100 }
     ]
   }
 }

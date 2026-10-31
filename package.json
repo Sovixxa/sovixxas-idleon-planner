@@ -3,6 +3,7 @@
   "version": "0.9.9",
   "private": true,
   "scripts": {
+    "test:cooking-exp": "node test-cooking-exp.js && node test-cooking-exp-browser.js",
     "test:research-notes": "node test-research-notes.js && node test-research-optimizer-browser.js",
     "test:research-shapes": "node test-research-shapes.js && node test-research-optimizer-browser.js",
     "test:afk-client": "node test-afk-skills-client.js",
@@ -85,7 +86,8 @@
     "test:artifact-pools": "node test-artifact-source-pools.js && node test-sailing-artifact-model.js && node test-sailing-artifact-browser.js",
     "test:sneaking": "node test-sneaking-optimizer.js && node test-sneaking-optimizer-browser.js",
     "test:blue-jelly": "node test-blue-jelly.js && node test-blue-jelly-browser.js",
-    "test:divinity": "node test-divinity.js && node test-divinity-client.js && node test-divinity-planner-client.js && node test-divinity-browser.js && node test-divinity-planner-browser.js"
+    "test:divinity": "node test-divinity.js && node test-divinity-client.js && node test-divinity-planner-client.js && node test-divinity-browser.js && node test-divinity-planner-browser.js",
+    "test:sneaking-gemstones": "node test-sneaking-gemstones.js && node test-sneaking-gemstones-client.js && node test-sneaking-gemstones-browser.js"
   },
   "devDependencies": {
     "esbuild": "0.28.1",

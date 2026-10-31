@@ -27,6 +27,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'playwright');
  await page.locator('[aria-label="Timing pet"]').selectOption({label:'Green Mushroom · Lv 1'});
  await page.locator('[aria-label="Shiny copies"]').fill('2');
  await page.locator('[aria-label="Shiny speed multiplier"]').fill('100');
+ await page.locator('[aria-label="Clear-time calculation"]').selectOption('manual');
  await page.locator('[aria-label="Full-map clear time"]').fill('2');
  await page.locator('[aria-label="Shiny farming map"]').selectOption({index:1});
  await page.waitForFunction(()=>document.querySelector('.shiny-time').innerText.includes('Full-clear scenario:'),null,{timeout:60000});

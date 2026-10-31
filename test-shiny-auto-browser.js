@@ -1,0 +1,24 @@
+'use strict';
+const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
+const {chromium}=require('playwright');
+(async()=>{const browser=await chromium.launch();try{
+ const page=await browser.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));
+ await page.route('http://shiny.test/**',route=>{const name=new URL(route.request().url()).pathname.slice(1);if(!name)return route.fulfill({contentType:'text/html',body:'<main id="host"></main><script src="shiny-planner.js"></script>'});const file=path.join(__dirname,name);return route.fulfill({contentType:'text/javascript',body:fs.readFileSync(file)});});
+ await page.goto('http://shiny.test/');
+ const raw=JSON.parse(fs.readFileSync('../example json.txt','utf8'));
+ await page.evaluate(raw=>ShinyPlanner.render(document.querySelector('#host'),[{bonusId:16,pets:[{id:'test',level:20,maxLevel:30,unlocked:true,progress:100000,copies:1,world:1,order:0}]}],raw),raw);
+ await page.waitForFunction(()=>document.querySelector('.shiny-time').innerText.includes('Automatic baseline:'),null,{timeout:60000});
+ assert.equal(await page.locator('[data-time="mode"]').inputValue(),'auto');
+ assert(await page.locator('[data-time="clear"]').isDisabled());
+ assert.equal(await page.locator('[data-time="target"]').inputValue(),'21');
+ const rates=await page.locator('[data-time="map"] option').allTextContents();
+ const values=rates.map(s=>Number(s.match(/([\d,]+) kills\/hr/)?.[1].replaceAll(',','')||-1));
+ assert(values.some(n=>n>0));assert(values.every((n,i)=>!i||values[i-1]>=n));
+ await page.locator('[data-time="mode"]').selectOption('manual');
+ await page.locator('[data-time="clear"]').fill('2');
+ await page.waitForFunction(()=>document.querySelector('.shiny-time').innerText.includes('Full-clear scenario:'),null,{timeout:60000});
+ await page.locator('[data-time="mode"]').selectOption('auto');
+ await page.waitForFunction(()=>document.querySelector('.shiny-time').innerText.includes('Automatic baseline:'),null,{timeout:60000});
+ assert.deepEqual(errors,[]);
+ console.log('Real-save browser: automatic WW clear estimates, sorted maps, Lv21 timing and measured/automatic switching pass.');
+}finally{await browser.close();}})().catch(e=>{console.error(e.message);process.exitCode=1;});

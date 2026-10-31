@@ -1,0 +1,28 @@
+'use strict';
+const {chromium}=require('playwright'),assert=require('node:assert/strict');
+(async()=>{const browser=await chromium.launch();try{
+ const page=await browser.newPage();await page.setContent('<main></main>');for(const path of ['progression-models.js','json-compare.js'])await page.addScriptTag({path});await page.addStyleTag({path:'json-compare.css'});
+ await page.evaluate(()=>{
+  const groups=second=>({tome:[{id:0,name:'Account Level',value:100,score:second?20:10,status:'active'}],vials:[{name:'Copper',level:second?'Lv 5':'Lv 4',effect:'Bonus',status:'active'}],sigils:[{name:'Sigil',level:second?'Boost 2':'Boost 1',effect:'Bonus',status:'active'}],upgradeVault:[{name:'Vault upgrade',level:second?'Lv 2':'Lv 1',effect:'Bonus',status:'active'}],slab:[{id:'item',name:'Copper ore',level:second?'Found':'Missing',status:second?'maxed':'missing'}],slabGreenStacks:[{id:'item',name:'Copper ore',level:second?'Greenstacked':'Not greenstacked',status:second?'maxed':'missing'}],shinyPets:[{bonusId:0,name:'Shiny speed',effect:'Shared bonus',pets:[{id:'mushG',level:second?5:4,unlocked:true}]}]});
+  window.BonusSystems={getRowsAsync:async raw=>groups(raw.second)};window.WORLD4_CATALOG={MonsterNames:{mushG:'Green_Mushroom'}};JsonCompare.render(document.querySelector('main'),()=>({}));
+ });
+ assert.equal(await page.locator('[data-world-tabs] button').count(),8);
+ await page.locator('[data-world-tabs]').getByText('W4',{exact:true}).click();await page.locator('textarea').fill('{"second":true}');await page.locator('[data-compare]').click();await page.waitForSelector('tbody tr');assert.match(await page.locator('tbody').innerText(),/10\s+20\s+\+10/);
+ for(const [world,names] of [[1,['Upgrade Vault']],[2,['Alchemy · Vials','Alchemy · Sigils']],[4,['Shiny Pets','Tome']],[5,['Slab','Greenstacks']]]){
+  await page.locator('[data-world-tabs]').getByText('W'+world,{exact:true}).click();
+  for(const name of names){await page.locator('[data-category-tabs]').getByText(name,{exact:true}).click();assert.equal(await page.locator('tbody tr').count(),1);assert(!/No matching/.test(await page.locator('tbody').innerText()));}
+ }
+ await page.locator('[data-world-tabs]').getByText('W4',{exact:true}).click();await page.locator('[data-category-tabs]').getByText('Shiny Pets',{exact:true}).click();assert.match(await page.locator('tbody').innerText(),/Green Mushroom/);
+ await page.getByLabel('Search comparison',{exact:true}).fill('no match');assert.match(await page.locator('tbody').innerText(),/No matching/);
+ await page.locator('[data-world-tabs]').getByText('W3',{exact:true}).click();assert.match(await page.locator('[data-results]').innerText(),/unavailable/);
+ await page.setViewportSize({width:390,height:844});assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
+ await page.locator('textarea').evaluate(el=>{el.value='{}';el.dispatchEvent(new Event('input'));});await page.locator('[data-world-tabs]').getByText('W5',{exact:true}).click();assert.match(await page.locator('[data-results]').innerText(),/Compare two saves/);
+ await page.evaluate(()=>{BonusSystems.getRowsAsync=async raw=>({cmp_gallery:[{id:'trophy:1',name:'Test trophy',value:1,level:'Copies 1',effect:raw.second?'0 stored, 1 displayed':'1 stored, 0 displayed',status:'active'}]});});
+ await page.locator('[data-input]').evaluate(el=>el.open=true);await page.locator('textarea').fill('{"second":true}');await page.locator('[data-compare]').click();await page.locator('[data-world-tabs]').getByText('W7',{exact:true}).click();await page.locator('[data-category-tabs]').getByText('Gallery',{exact:true}).click();await page.waitForSelector('tbody tr');assert.match(await page.locator('tbody').innerText(),/Updated/);
+
+ await page.getByLabel('Sort comparison',{exact:true}).selectOption('value');assert.match(await page.locator('.json-tome-controls button').innerText(),/Descending/);await page.locator('.json-tome-controls button').click();assert.match(await page.locator('.json-tome-controls button').innerText(),/Ascending/);
+ await page.evaluate(()=>{BonusSystems.getRowsAsync=async raw=>({cmp_gallery:[{id:'trophy:1',name:'Unknown trophy',value:raw.second?null:1,level:raw.second?'Unavailable':'Copies 1',status:raw.second?'unknown':'active'}]});});await page.locator('[data-input]').evaluate(el=>el.open=true);await page.locator('[data-compare]').click();await page.waitForFunction(()=>document.querySelector('tbody')?.innerText.includes('Unknown trophy'));assert.equal(await page.locator('tbody td').last().innerText(),'Unavailable');
+
+ await page.evaluate(()=>{BonusSystems.getRowsAsync=async raw=>({tome:raw.second?[{id:1,name:'Added metric',value:20,score:2,status:'active'}]:[{id:0,name:'Removed metric',value:10,score:1,status:'active'}]});});await page.locator('[data-input]').evaluate(el=>el.open=true);await page.locator('[data-compare]').click();await page.locator('[data-world-tabs]').getByText('W4',{exact:true}).click();await page.locator('[data-category-tabs]').getByText('Tome',{exact:true}).click();await page.waitForSelector('tbody tr');assert.equal(await page.locator('tbody tr').count(),2);assert.match(await page.locator('tbody').innerText(),/Added metric/);assert.match(await page.locator('tbody').innerText(),/Removed metric/);assert.equal(await page.locator('tbody tr td:last-child').filter({hasText:'Unavailable'}).count(),2);assert.match(await page.locator('.json-tome-totals').innerText(),/incomplete/);
+ console.log('All seven world tabs, seven categories, Tome points, pet names, search, invalidation and mobile layout passed');
+}finally{await browser.close();}})().catch(e=>{console.error(e);process.exitCode=1;});

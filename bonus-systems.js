@@ -203,7 +203,7 @@ function getRowsAsync(rawRoot={}){
 
  const job=Promise.resolve().then(()=>{
 
-  if(typeof Worker==='undefined'){const groups={...getRows(rawRoot)};for(const model of [root.ArcadePageModels,root.ProgressionModels,root.EndgameModels])if(model)Object.assign(groups,model.build(systems(rawRoot),rawRoot));return groups;}
+  if(typeof Worker==='undefined'){const groups={...getRows(rawRoot)};for(const model of [root.ArcadePageModels,root.ProgressionModels,root.EndgameModels,root.JsonCompareModels])if(model)Object.assign(groups,model.build(systems(rawRoot),rawRoot));return groups;}
 
   return new Promise((resolve,reject)=>{const worker=new Worker('bonus-worker.js');worker.onmessage=event=>{worker.terminate();if(event.data?.error){reject(new Error(event.data.error));return;}rosters.set(rawRoot,event.data.roster||[]);clickers.set(rawRoot,event.data.clickers||{});root.BeanValueEngine?.primeCalculated?.(rawRoot,event.data.goldFood);resolve(event.data.groups||{});};worker.onerror=event=>{worker.terminate();reject(new Error(event.message||'Bonus decoder failed'));};try{worker.postMessage(rawRoot);}catch(error){worker.terminate();reject(error);}});
 

@@ -5,8 +5,8 @@ assert.equal(plan([group(0,0),group(16,5)]).next.bonusId,0);
 assert.equal(plan([group(0,2),group(16,5)]).next.target,10);
 assert.equal(plan([group(0,2),group(16,10)]).next.target,5);
 assert.equal(plan([group(0,20),group(16,20)]).next,undefined);
-assert.equal(plan([group(0,20,{maxLevel:30}),group(16,20,{maxLevel:30})]).next.target,25);
-assert.equal(plan([group(0,25,{maxLevel:30})]).next.target,30);
+assert.equal(plan([group(0,20,{maxLevel:30}),group(16,20,{maxLevel:30})]).next.target,21);
+assert.equal(plan([group(0,25,{maxLevel:30})]).next.target,26);
 assert.equal(plan([group(0,30,{maxLevel:30})]).next,undefined);
 assert.equal(plan([group(16,null)]).next,undefined);
 assert.equal(plan([group(16,0,{unlocked:false})]).next,undefined);
@@ -16,7 +16,7 @@ assert.equal(new Set(tiers.flatMap(t=>t.ids)).size,26);
 assert.equal(plan([]).next,undefined);
 console.log('Shiny planner: staged milestones, priority, locked/missing records and completed pets pass.');
 
-assert.equal(plan([group(0,20,{maxLevel:20}),group(16,25,{maxLevel:30})]).next.target,30,'Completed level-20 pets must not reenter an expanded queue');
+assert.equal(plan([group(0,20,{maxLevel:20}),group(16,25,{maxLevel:30})]).next.target,26,'Completed level-20 pets must not reenter an expanded queue');
 
 const {estimate}=require('./shiny-planner');
 const pet={level:1,maxLevel:30,progress:1};
@@ -36,3 +36,12 @@ assert(estimate(pet,2,1,'',0,false).error);
 assert(estimate(pet,2,1.5,1,0,false).error);
 assert(estimate({...pet,level:20,progress:1e5},25,1,1000,2400,true).active>0);
 console.log('Shiny timing: passive and active rates, copy scaling, thresholds, cap, missing values and hatch requirements pass.');
+
+for(let level=20;level<30;level++)assert.equal(plan([group(0,level,{maxLevel:30})]).next.target,level+1);
+const rotation=plan([group(16,24,{maxLevel:30}),group(6,20,{maxLevel:30})]);
+assert.equal(rotation.next.bonusId,6,'Lower-level pets get the earlier overlevel milestone before higher-tier pets');
+assert.equal(rotation.next.target,21);
+assert.equal(rotation.pets.find(p=>p.bonusId===16).target,null);
+assert.equal(plan([group(6,20,{maxLevel:30}),group(16,20,{maxLevel:30})]).next.bonusId,16);
+assert.equal(plan([group(0,20,{maxLevel:20}),group(16,25,{maxLevel:30})]).pets.find(p=>p.bonusId===0).target,null);
+console.log('Overlevel rotations: every level 21–30, tier tie breaks, catch-up and mixed caps pass.');
