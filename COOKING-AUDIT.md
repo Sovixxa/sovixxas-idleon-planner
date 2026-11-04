@@ -97,3 +97,13 @@ Replaced the truncated gain chain with the client Ninja("coin") factors: gem sho
 The UI explicitly reports per-successful-find jade and selected mastery; this is not the optional in-game hourly display, which also uses action speed, detection and knockout time. Imported LumbaJacker yields 1.005359536e96 per find. User reports approximately 1e94 from the live game; exact parity remains unconfirmed without matching character, floor, save and display units. Do not calibrate the formula to that rough number.
 
 Tests: client constant/mastery ratio at 0/6/7, Malachite and Gold Envelope removal, additive belts with individual symbols, isolated meal bracket, immutable save, full mastery integration, and build pass.
+
+## Blue Jellyfish distinct-meal audit (2026-11-04)
+
+The duplicate Sushi Roll and Durian Fruit recommendations came from an intentional subset-partition optimizer: it allowed several kitchens to produce the same meal and repeated the shared projection on each kitchen card. The total counted each shared meal once, but assignments were not distinct.
+
+Per the requested behavior, the optimizer now uses one-to-one meal/kitchen assignment. Each meal transition consumes exactly one kitchen bit. It fills min(eligible meals, kitchens) slots and maximizes added whole levels, then fractional progress, within that constraint. When eligible meals are scarce, it selects the best kitchen subset and explicitly leaves remaining kitchens unassigned. Stacking is prohibited even if it could earn more levels. Stock, progress, cost and cap projections retain their existing formulas.
+
+The local audit/N.js daily-reset branch adds 3600 * Menagerie[0][5] to ActorEvents_510._GenINFO[70], without an Overflowing Ladle multiplier, consistent with the current deposited-hour calculation. This is a check against the installed client snapshot, not a live-version claim.
+
+Validation: independent exhaustive distinct-allocation oracle over 30 uneven three-kitchen fixtures; regressions for beneficial-but-disallowed stacking, scarce meals, strongest kitchen selection, existing stock already reaching cap, invalid inputs and immutable input. Browser coverage checks ten distinct recommendations, eight explicit unassigned slots with only two eligible meals, descending kitchen order, compact desktop grid, mobile overflow, invalid-input recovery and no page errors. Shared cooking formula tests pass.

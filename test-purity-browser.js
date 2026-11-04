@@ -1,0 +1,64 @@
+'use strict';
+const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
+const {chromium}=require(process.env.PLAYWRIGHT_PATH||'playwright');
+(async()=>{const browser=await chromium.launch({headless:true});try{
+ const page=await browser.newPage({viewport:{width:1440,height:1000}}),errors=[];page.on('pageerror',e=>errors.push(e.message));
+ await page.route('http://localhost:7332/**',async route=>{const pathname=decodeURIComponent(new URL(route.request().url()).pathname);if(pathname.startsWith('/__'))return route.fulfill({contentType:'application/json',body:'{}'});const file=path.resolve(__dirname,'.'+(pathname==='/'?'/index.html':pathname));if(!file.startsWith(__dirname+path.sep)||!fs.existsSync(file)||fs.statSync(file).isDirectory())return route.fulfill({status:404,body:''});return route.fulfill({contentType:({'.js':'text/javascript','.css':'text/css','.html':'text/html','.png':'image/png'})[path.extname(file)]||'application/octet-stream',body:fs.readFileSync(file)});});
+
+
+
+ await page.goto('http://localhost:7332/');
+ const raw=JSON.parse(fs.readFileSync('../example json.txt'));
+ await page.evaluate(raw=>window.PlannerLiveBridge.apply(raw),raw);
+ await page.evaluate(()=>window.dispatchEvent(new CustomEvent('idleon:navigate',{detail:'royalArmory'})));
+ await page.getByRole('tab',{name:'Purity ranks',exact:true}).click();
+ await page.locator('.mc-purity-ranks').waitFor({timeout:60000});
+ assert(await page.locator('[data-purity-map]').count()>0);
+ assert.match(await page.locator('.mc-purity-ranks').innerText(),/EXP\/hr/);
+ assert(!(await page.locator('.mc-grid').isVisible()));
+ assert(await page.locator('.mc-purity-ranks').evaluate(el=>getComputedStyle(el).gridTemplateColumns.split(' ').length>=3));
+ assert((await page.locator('.mc-purity-tile').first().boundingBox()).height<180);
+ const before=await page.locator('[data-purity-map]').evaluateAll(els=>els.map(el=>({top:el.offsetTop,height:el.offsetHeight})));
+ await page.locator('.mc-purity-open').first().click();
+ assert(await page.locator('.mc-purity-dialog').isVisible());
+ const popupBox=await page.locator('.mc-purity-dialog').boundingBox();
+ assert(popupBox.width<=340);assert(Math.abs(popupBox.x+popupBox.width-1420)<2);assert(Math.abs(popupBox.y+popupBox.height-980)<2);
+ assert.equal(await page.locator('.mc-purity-close').evaluate(el=>getComputedStyle(el).appearance),'none');
+ assert.match(await page.locator('.mc-purity-dialog').innerText(),/Spelunking Purity Hardhat/);
+
+ assert.match(await page.locator('.mc-purity-dialog').innerText(),/State-Wide Propoganda/);
+ assert(!(await page.locator('.mc-purity-dialog').innerText()).includes('Spelunking slot 77'));
+ assert(!(await page.locator('.mc-purity-dialog').innerText()).includes('Public client checked'));
+ assert(!(await page.locator('.mc-purity-dialog').innerText()).includes('Warbound Politics'));
+ assert.deepEqual(await page.locator('[data-purity-map]').evaluateAll(els=>els.map(el=>({top:el.offsetTop,height:el.offsetHeight}))),before);
+ await page.screenshot({path:'../audit/rg-purity-popup-desktop.png'});
+ await page.mouse.click(240,80);
+ assert(!(await page.locator('.mc-purity-dialog').isVisible()));
+ await page.locator('.mc-purity-open').first().click();
+ await page.keyboard.press('Escape');
+ assert(!(await page.locator('.mc-purity-dialog').isVisible()));
+ assert(await page.locator('.mc-purity-open').first().evaluate(el=>el===document.activeElement));
+ await page.locator('.mc-purity-ranks').scrollIntoViewIfNeeded();
+ await page.screenshot({path:'../audit/rg-purity-desktop.png'});
+ await page.locator('[name=purity-show]').selectOption('pending');
+ assert(!(await page.locator('.mc-purity-ranks').innerText()).includes('· Purified'));
+ await page.locator('[name=purity-search]').fill('no matching map');
+ assert.equal(await page.locator('[data-purity-map]').count(),0);
+ await page.locator('[name=purity-search]').fill('');
+ await page.locator('[name=purity-show]').selectOption('all');
+ await page.setViewportSize({width:390,height:844});
+ assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
+ assert(await page.locator('.mc-purity-ranks').evaluate(el=>getComputedStyle(el).gridTemplateColumns.split(' ').length===2));
+ await page.locator('.mc-purity-tile').first().scrollIntoViewIfNeeded();
+ await page.locator('.mc-purity-open').first().click();
+ assert(await page.locator('.mc-purity-dialog').isVisible());
+ assert(await page.locator('.mc-purity-dialog').evaluate(el=>el.scrollWidth<=el.clientWidth+1));
+ await page.screenshot({path:'../audit/rg-purity-mobile.png'});
+ await page.mouse.click(5,5);
+ assert(!(await page.locator('.mc-purity-dialog').isVisible()));
+ await page.locator('.mc-purity-open').first().click();
+ await page.getByRole('button',{name:'Close bonus breakdown'}).click();
+ assert(!(await page.locator('.mc-purity-dialog').isVisible()));
+ assert.deepEqual(errors,[]);
+ console.log('Purity ranks browser: real save, estimates, filters and mobile layout passed.');
+ }finally{await browser.close();}})().catch(e=>{console.error(e);process.exitCode=1;});

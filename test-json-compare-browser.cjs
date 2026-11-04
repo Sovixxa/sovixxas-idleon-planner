@@ -6,7 +6,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
   const groups=second=>({tome:[{id:0,name:'Account Level',value:100,score:second?20:10,status:'active'}],vials:[{name:'Copper',level:second?'Lv 5':'Lv 4',effect:'Bonus',status:'active'}],sigils:[{name:'Sigil',level:second?'Boost 2':'Boost 1',effect:'Bonus',status:'active'}],upgradeVault:[{name:'Vault upgrade',level:second?'Lv 2':'Lv 1',effect:'Bonus',status:'active'}],slab:[{id:'item',name:'Copper ore',level:second?'Found':'Missing',status:second?'maxed':'missing'}],slabGreenStacks:[{id:'item',name:'Copper ore',level:second?'Greenstacked':'Not greenstacked',status:second?'maxed':'missing'}],shinyPets:[{bonusId:0,name:'Shiny speed',effect:'Shared bonus',pets:[{id:'mushG',level:second?5:4,unlocked:true}]}]});
   window.BonusSystems={getRowsAsync:async raw=>groups(raw.second)};window.WORLD4_CATALOG={MonsterNames:{mushG:'Green_Mushroom'}};JsonCompare.render(document.querySelector('main'),()=>({}));
  });
- assert.equal(await page.locator('[data-world-tabs] button').count(),8);
+ assert.equal(await page.locator('[data-world-tabs] button').count(),9);
  await page.locator('[data-world-tabs]').getByText('W4',{exact:true}).click();await page.locator('textarea').fill('{"second":true}');await page.locator('[data-compare]').click();await page.waitForSelector('tbody tr');assert.match(await page.locator('tbody').innerText(),/10\s+20\s+\+10/);
  for(const [world,names] of [[1,['Upgrade Vault']],[2,['Alchemy · Vials','Alchemy · Sigils']],[4,['Shiny Pets','Tome']],[5,['Slab','Greenstacks']]]){
   await page.locator('[data-world-tabs]').getByText('W'+world,{exact:true}).click();

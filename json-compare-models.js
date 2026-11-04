@@ -9,6 +9,12 @@ function build(systems,raw){
  const player=i=>names[i]||'Character '+(Number(i)+1),has=(...keys)=>keys.some(k=>d[k]!=null),prefix=p=>Object.keys(d).some(k=>k.startsWith(p));
  const row=(id,name,value,icon,unit='Level',detail='')=>({id:String(id),name:clean(name),value:number(value),level:number(value)==null?'Unavailable':unit+' '+fmt(Number(value)),icon:icon?'assets/'+String(icon).replace(/^ConTowerB/,'ConTower')+'.png':null,effect:detail,status:number(value)==null?'unknown':'active'});
  const put=(key,known,fn)=>{out['cmp_'+key]=known?fn():[];};
+ // Save skill slots match the character parser; slot 0 is combat level.
+ const skillNames=['Mining','Smithing','Chopping','Fishing','Alchemy','Catching','Trapping','Construction','Worship','Cooking','Breeding','Laboratory','Sailing','Divinity','Gaming','Farming','Sneaking','Summoning','Spelunking','Research'];
+ put('skills',prefix('Lv0_'),()=>Object.keys(d).filter(k=>/^Lv0_\d+$/.test(k)).sort((a,b)=>Number(a.slice(4))-Number(b.slice(4))).flatMap(k=>{
+  const character=Number(k.slice(4)),levels=parse(d[k]),classId=number(d['CharacterClass_'+character]),className=classId===null?'Class unavailable':clean(root.FAMILY_CATALOG?.names?.[classId]||'Class '+classId).toLowerCase().replace(/\b\w/g,c=>c.toUpperCase());
+  return skillNames.map((name,index)=>({...row(character+':'+(index+1),player(character)+' · '+name,number(levels?.[index+1]),'ClassIcons'+(42+index)),characterName:player(character),classId,className,characterLevel:number(levels?.[0])}));
+ }));
  const items=new Map((systems.get('itemsData')||[]).map(x=>[x.internalName,x]));
  const itemName=id=>items.get(id)?.displayName||clean(id);
  const art=x=>{try{return x?.getImageData?.()?.location||null;}catch{return null;}};
@@ -89,6 +95,7 @@ function build(systems,raw){
   for(const x of ninja?.pristineCharms||[])out.cmp_sneaking.push(section({...row('charm:'+x.index,x.data.name,Number(x.unlocked),x.data.internalId),level:x.unlocked?'Collected':'Not collected'},'Pristine Charms'));
  }
 
+ if(root.JsonCompareCharacters)Object.assign(out,root.JsonCompareCharacters.build(systems,raw,out));
  return out;
 }
 root.JsonCompareModels={build};

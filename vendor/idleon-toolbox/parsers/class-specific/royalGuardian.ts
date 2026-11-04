@@ -374,7 +374,7 @@ const toNum = (value: any): number => {
 // game: "OutpostEXPformula" - i is the bar type, t the rank being tested.
 export const getOutpostExpFormula = (rank: number, type: number): number => {
   if (type === 4) return 1e5 * Math.pow(10, rank);
-  if (type === 2) return (50 + 50 * rank) * Math.pow(1.6, rank);
+  if (type === 2) return (50 + 50 * rank) * Math.pow(1.8, rank);
   return (10 + 5 * rank) * Math.pow(1.3, rank);
 };
 
@@ -482,6 +482,8 @@ export const getRoyalResourcePerHour = (
 export const getRoyalGuardian = (idleonData: IdleonData, account: Account, characters?: any[]) => {
   const raw = tryToParse((idleonData as any)?.RoyalG) || (idleonData as any)?.RoyalG || [];
   const rawMaps = tryToParse((idleonData as any)?.RoyalMaps) || (idleonData as any)?.RoyalMaps || [];
+  const rawResearch = tryToParse((idleonData as any)?.Research) || (idleonData as any)?.Research || [];
+  const jellyReward = (id: number) => Number(rawResearch?.[7]?.[9]) > id ? Number(research[47]?.[id]) || 0 : 0;
   const rawSpelunking = tryToParse((idleonData as any)?.Spelunk) || (idleonData as any)?.Spelunk || [];
 
   const royalStatueLevels: any[] = raw?.[0] ?? [];
@@ -634,16 +636,12 @@ export const getRoyalGuardian = (idleonData: IdleonData, account: Account, chara
   // they sit in the farming character's inventory until deposited; the chest alone reads 0 mid-farm.
   const orblets = calcTotalItemOwned((account as any)?.storage, characters, 'Orblet');
 
-  // game: "BarExpRate_Base" - the per-Rank-Type EXP/hr rate behind Peacetime Militia (17) and the
-  // five specialist Rank-unit tooltips (20 Trade, 22 Intel, 24 Command, 25 Military, 26 Purity).
-  // The live game's own "chosen Rank Type" propaganda multiplier reads CustomLists.SpelunkUpg[77],
-  // past the end of that catalog's 68 rows in 2.3.525 (verified live via the debug server), so it
-  // can never actually trigger and is omitted here as permanently dead code.
+  // Native BarExpRate_Base: specialist, Stronk Rank, Hardhat and selected-rank shop bonus.
   const RANK_TYPE_ARMORY_ID = [20, 22, 24, 25, 26]; // Trade, Intel, Command, Military, Purity
   const getBarExpRateBase = (rankType: number): number => {
     const stronkRank = 1 + orbletBonus(6) / 100; // game: OrbletMarketBonus(6), orblet "STRONK_RANK"
     const purityHardhat = rankType === 4 ? 1 + getSpelunkingBonus(account, 65) / 100 : 1; // ShopUpgBonus(65)
-    return (1 + armoryBonus(RANK_TYPE_ARMORY_ID[rankType]) / 100) * stronkRank * purityHardhat;
+    return (1 + armoryBonus(RANK_TYPE_ARMORY_ID[rankType]) / 100) * stronkRank * purityHardhat * (rankType === Number(raw?.[3]?.[7]) ? 1 + getSpelunkingBonus(account, 77) / 100 : 1);
   };
 
   // game: "XtraClearKillz" / "UnitSpecEffect"(4) - the militia/active-kill clear rate behind Mighty
@@ -660,25 +658,21 @@ export const getRoyalGuardian = (idleonData: IdleonData, account: Account, chara
   const xtraClearKillz = warboundPoliticsBonus * (1 + (orbletBonus(3) + getAdviceFishBonus(account, 6)) / 100);
   const militiaClearRate = 4000 * (1 + armoryBonus(23) / 100) * xtraClearKillz; // game: "UnitSpecEffect"(4)
 
-  // game: "BarExpRate" - EXP/hr into one rank bar of one outpost. The purity term still looks
-  // wrong and still is deliberate: the game passes the RANK TYPE to isMapPurified, which takes a
-  // MAP, so it reads maps 0-4 rather than the outpost's own. Replicated so the site matches what
-  // the game prints. The Glorified 2x used to be dead here (it doubled rBarXPdn, which
-  // BarExpRate_Base then reassigned); 2.3.527 moved it onto rBarXPdn2 so it now applies.
-  const getBarExpRate = (rankType: number, mapIndex: number): number => {
-    const intelRank = getOutpostExpRank(rawMaps?.[mapIndex], 1);
-    const glorified = toNum(rawMaps?.[mapIndex]?.[12]) >= 1 ? 2 : 1;
-    // game: 2.3.530 fixed Greater Education (3rd outpost upgrade, OutpostLV_Bonuses(2) = 10 per
-    // level) to actually pay out - it now seeds rBarXPdn2 before the Glorified 2x, so Glorified
-    // doubles the educated rate rather than replacing it.
-    const greaterEducation = 1 + (10 * toNum(rawMaps?.[mapIndex]?.[2])) / 100;
-    return getBarExpRateBase(rankType)
-      * greaterEducation
-      * glorified
-      * (1 + (200 * isMapPurified(rawMaps?.[rankType])) / 100)
-      * (1 + (intelRank * armoryBonus(72)) / 100)
-      * (1 + (200 * (1 + armoryBonus(43) / 100) * (supportCounts.get(mapIndex) ?? 0)) / 100);
-  };
+  // Matches the local October client BarExpRate, including Jelly and the target map.
+  const getRankFactors = (rankType: number, mapIndex: number) => [
+    {name: 'Specialist Armory upgrade', value: 1 + armoryBonus(RANK_TYPE_ARMORY_ID[rankType]) / 100},
+    {name: 'Stronk Rank', value: 1 + orbletBonus(6) / 100},
+    {name: 'Spelunking Purity Hardhat', value: rankType === 4 ? 1 + getSpelunkingBonus(account, 65) / 100 : 1},
+    {name: 'State-Wide Propoganda (client-applied)', value: rankType === Number(raw?.[3]?.[7]) ? 1 + getSpelunkingBonus(account, 77) / 100 : 1},
+    {name: 'Greater Education', value: 1 + toNum(rawMaps?.[mapIndex]?.[2]) / 10},
+    {name: 'Glorification', value: toNum(rawMaps?.[mapIndex]?.[12]) >= 1 ? 2 : 1},
+    {name: 'Map purified', value: 1 + 2 * isMapPurified(rawMaps?.[mapIndex])},
+    {name: 'Intel rank', value: 1 + getOutpostExpRank(rawMaps?.[mapIndex], 1) * armoryBonus(72) / 100},
+    {name: 'Support Camps (including Jelly)', value: 1 + (200 * (1 + armoryBonus(43) / 100) + jellyReward(41)) * (supportCounts.get(mapIndex) ?? 0) / 100},
+    {name: 'Jelly rank EXP', value: 1 + jellyReward(1) / 100}
+  ];
+  const getBarExpRate = (rankType: number, mapIndex: number): number =>
+    getRankFactors(rankType, mapIndex).reduce((total, factor) => total * factor.value, 1);
 
   // game: "ActiveKillClear" - kills/hr you clear yourself, gated behind armory 58.
   const activeKillClear = armoryBonus(58) >= 1
@@ -1128,6 +1122,17 @@ export const getRoyalGuardian = (idleonData: IdleonData, account: Account, chara
           : 0,
         units,
         expPerUnit,
+        factors: getRankFactors(type, mapIndex),
+        propaganda: {
+          level: toNum(armoryLevels[77]),
+          selectedRank: OUTPOST_RANK_NAMES[Number(raw?.[3]?.[7])] ?? 'Unknown',
+          selected: type === Number(raw?.[3]?.[7]),
+          advertisedMultiplier: 1 + armoryBonus(77) / 100,
+          appliedMultiplier: type === Number(raw?.[3]?.[7]) ? 1 + getSpelunkingBonus(account, 77) / 100 : 1,
+          note: 'Public client checked 2026-11-01: the EXP formula reads Spelunking slot 77 instead of Armory slot 77. The Spelunking table has 68 entries, so this multiplier does not activate.'
+        },
+        supportBonus: 200 * (1 + armoryBonus(43) / 100) + jellyReward(41),
+        militiaExpPerHour: type === militiaBarType ? (getBarExpRate(3, mapIndex) / 2) * militiaUnits : 0,
         expPerHour,
         hoursToNextRank: expPerHour > 0 ? Math.max(0, required - exp) / expPerHour : 0
       };

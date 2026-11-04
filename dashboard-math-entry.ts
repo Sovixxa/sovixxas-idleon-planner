@@ -23,3 +23,11 @@ export {getSailingArtifactData,sailingChestChance} from './sailing-artifact-math
 export {getSailingTradeContext} from './sailing-trade-math';
 export {getBreedingExpBonuses} from './breeding-exp-bonuses-math';
 export {getSushiContext} from './sushi-context';
+
+
+
+
+
+export {getRoyalGuardian as getPurityRankContext} from "./vendor/idleon-toolbox/parsers/class-specific/royalGuardian";
+
+export {getPurityForecast} from "./purity-context";

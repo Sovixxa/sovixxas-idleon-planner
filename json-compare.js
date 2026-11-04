@@ -34,6 +34,9 @@
     ['cmp_minehead','Minehead',7,'MineH0.png'],['cmp_jelly','Jelly Operator',7,'JellyOp0.png'],['clamworks','Clamworks',7,'nav-Clamworks.png'],['coralReef','Coral Reef',7,'nav-CoralReef.png'],['coralKid','Coral Kid',7,'nav-Divinity.png'],['bigFish','Big Fish',7,'nav-CoralReef.png'],['meritocracy','Meritocracy',7,'nav-Meritocracy.png'],['zenithMarket','Zenith Market',7,'nav-ZenithMarket.png']
   ];
   for(const [id,name,world,icon] of moreCategories){categories.push({id,name,world});categoryIcons[id]=icon;}
+  categories.push({id:'cmp_skills',name:'Skills',world:'skills'});
+  categoryIcons.cmp_skills='ClassIcons42.png';
+  for(const [id,name,icon] of [['equipment','Equipment','EquipmentHats1.png'],['loadouts','Loadouts','nav-StarSigns.png'],['inventory','Inventory & Capacity','InvBag1.png'],['progress','Progress','Quest1.png']]){categories.push({id:'cmp_'+id,name,world:'skills'});categoryIcons['cmp_'+id]=icon;}
   const holeSections={holeSchematics:'Engineer',holeMajik:'Majik',holeStudies:'Studies',holeMeasurements:'Measurements',holeFloors:'Cavern Floors',holeResources:'Resource Caverns',holeBravery:'Bravery',holeJustice:'Justice',holeWisdom:'Wisdom',holeSanctum:'Sanctum',holeBell:'Bell',holeWell:'Well',holeFountain:'Fountain',holeHarp:'Harp',holeLamp:'Lamp',holeDawgDen:'Dawg Den',holeJars:'Jars',holeGambit:'Gambit'};
   const worldIcons=['StampA1.png','nav-Alchemy.png','nav-Construction.png','nav-Breeding.png','nav-Sailing.png','nav-Farming.png','nav-Spelunking.png'];
   function withIcon(element,label,source,fallback='assets/TomeClaim.png'){
@@ -58,6 +61,76 @@
     for(let world=1;world<=7;world++){const section=document.createElement('section'),heading=document.createElement('h4');withIcon(heading,'World '+world,'assets/'+worldIcons[world-1]);section.append(heading);
       for(const category of categories.filter(c=>c.world===world)){const {left,right,pairs}=pairsFor(first,second,category.id),count=pairs.filter(isChanged).length,button=document.createElement('button');button.type='button';withIcon(button,category.name,'assets/'+categoryIcons[category.id]);const badge=document.createElement('span');badge.className='json-overview-count';badge.textContent=!left.length||!right.length?'Unavailable':count?count+' changed':'No changes';button.append(badge);button.onclick=()=>select(category);section.append(button);}grid.append(section);
     }
+  }
+  function renderSkills(host,first,second){
+    const {pairs}=pairsFor(first,second,'cmp_skills');
+    if(!pairs.length){host.textContent='Skill levels are unavailable in these saves.';return;}
+    const characterId=r=>String(r.id).split(':')[0],characterName=r=>r.name.split(' · ').slice(0,-1).join(' · '),skillName=r=>r.name.split(' · ').at(-1);
+    const characters=new Map(pairs.map(p=>{const r=p.b||p.a;return [characterId(r),characterName(r)];}));
+    const controls=document.createElement('div');controls.className='json-tome-controls json-skills-controls';
+    controls.innerHTML='<input type="search" aria-label="Search characters or skills" placeholder="Find a character, class or skill…"><label><input type="checkbox" checked> Show unchanged</label>';
+    const search=controls.querySelector('input[type=search]'),all=controls.querySelector('input[type=checkbox]');
+    const note=document.createElement('p'),panels=document.createElement('div');note.className='json-skills-note';note.textContent='Matched by character slot · Levels: loaded → pasted';panels.className='json-character-grid';host.append(controls,note,panels);
+    const format=v=>typeof v==='number'?v.toLocaleString('en-US'):'—';
+    function paint(){
+      panels.replaceChildren();
+      for(const [id,name] of characters){
+        const selected=pairs.filter(p=>characterId(p.b||p.a)===id).sort((x,y)=>Number(String((x.b||x.a).id).split(':')[1])-Number(String((y.b||y.a).id).split(':')[1]));
+        const meta=selected[0].b||selected[0].a,query=search.value.toLowerCase(),matchesCharacter=(name+' '+(selected[0].a?.className||'')+' '+(meta.className||'')).toLowerCase().includes(query);
+        const shown=selected.filter(p=>(all.checked||isChanged(p))&&(matchesCharacter||skillName(p.b||p.a).toLowerCase().includes(query)));
+        if(query&&!shown.length)continue;
+        const panel=document.createElement('section'),header=document.createElement('header'),heading=document.createElement('h3'),subtitle=document.createElement('p'),grid=document.createElement('div');panel.className='json-character-panel';grid.className='json-skills-grid';
+        if(meta.classId!=null)withIcon(heading,name,'assets/ClassIcons'+meta.classId+'.png');else heading.textContent=name;
+        const oldMeta=selected[0].a,newMeta=selected[0].b,oldClass=oldMeta?.className,newClass=newMeta?.className;
+        subtitle.textContent='Slot '+(Number(id)+1)+' · '+(oldClass&&newClass&&oldClass!==newClass?'Loaded: '+oldClass+' · Pasted: '+newClass:meta.className||'Class unavailable')+' · '+selected.filter(isChanged).length+' skills changed';header.append(heading,subtitle);panel.append(header,grid);panels.append(panel);
+        for(const p of shown){
+        const r=p.b||p.a,card=document.createElement('article'),title=document.createElement('h4'),levels=document.createElement('div'),delta=document.createElement('span');card.className='json-skill-tile';withIcon(title,skillName(r),r.icon);
+        const known=typeof p.a?.value==='number'&&typeof p.b?.value==='number',diff=known?p.b.value-p.a.value:null;
+        levels.className='json-skill-levels'+(Math.max(p.a?.value||0,p.b?.value||0)>=1000?' json-levels-long':'');const before=document.createElement('span'),arrow=document.createElement('span'),after=document.createElement('strong');before.textContent=typeof p.a?.value==='number'?String(p.a.value):'—';before.title='Loaded level';arrow.textContent='→';arrow.setAttribute('aria-hidden','true');after.textContent=typeof p.b?.value==='number'?String(p.b.value):'—';after.title='Pasted level';levels.append(before,arrow,after);levels.setAttribute('aria-label','Loaded level '+format(p.a?.value)+', pasted level '+format(p.b?.value));
+        delta.className='json-skill-delta'+(diff>0?' json-gain':diff<0?' json-loss':'');delta.textContent=diff===null?'Unavailable':diff===0?'No change':(diff>0?'+':'')+format(diff);card.append(title,levels,delta);grid.append(card);
+      }
+        if(!grid.children.length){const empty=document.createElement('p');empty.className='json-character-empty';empty.textContent='No skill changes';grid.append(empty);}
+      }
+      if(!panels.children.length)panels.textContent='No matching characters or skills.';
+    }
+    search.oninput=paint;all.onchange=paint;paint();
+  }
+  function renderCharacterComparison(host,first,second,category){
+    const {pairs}=pairsFor(first,second,category.id);
+    if(!pairs.length){host.textContent='This character data is unavailable in these saves.';return;}
+    const controls=document.createElement('div');controls.className='json-tome-controls';
+    controls.innerHTML='<input type="search" aria-label="Search character comparisons" placeholder="Find a character or entry…"><label>Character <select aria-label="Comparison character"><option value="">All characters</option></select></label><label>Section <select aria-label="Character comparison section"><option value="">All sections</option></select></label><label><input type="checkbox"> Show unchanged</label>';
+    const search=controls.querySelector('input[type=search]'),all=controls.querySelector('input[type=checkbox]'),character=controls.querySelectorAll('select')[0],section=controls.querySelectorAll('select')[1];
+    const roster=new Map(pairs.map(p=>{const r=p.b||p.a;return [r.characterId,r];}));
+    for(const [id,r] of roster){const option=document.createElement('option');option.value=id;option.textContent=r.characterName;character.append(option);}
+    for(const name of new Set(pairs.map(p=>(p.b||p.a).section))){const option=document.createElement('option');option.value=name;option.textContent=name;section.append(option);}
+    const note=document.createElement('p');note.className='json-skills-note';note.textContent='Loaded → pasted · Matched by character slot · Select an entry for details';
+    const panels=document.createElement('div');panels.className='json-character-grid json-character-comparisons';
+    const popup=document.createElement('div');popup.className='json-character-popup';popup.setAttribute('popover','auto');popup.setAttribute('role','dialog');popup.setAttribute('aria-label','Character comparison details');host.append(controls,note,panels,popup);
+    const showDetails=(pair)=>{
+      popup.replaceChildren();const close=document.createElement('button');close.type='button';close.className='json-character-close';close.setAttribute('aria-label','Close comparison details');close.textContent='×';close.onclick=()=>popup.hidePopover();
+      const heading=document.createElement('h3');heading.textContent=(pair.b||pair.a).label;const who=document.createElement('p');who.textContent=(pair.b||pair.a).characterName;popup.append(close,heading,who);
+      for(const [label,r] of [['Loaded',pair.a],['Pasted',pair.b]]){const title=document.createElement('h4'),value=document.createElement('p');title.textContent=label;value.textContent=r?.level||'Unavailable';popup.append(title,value);if(r?.details?.length){const list=document.createElement('ul');for(const text of r.details){const li=document.createElement('li');li.textContent=text;list.append(li);}popup.append(list);}else if(r?.effect){const detail=document.createElement('p');detail.textContent=r.effect;popup.append(detail);}}
+      popup.showPopover();
+    };
+    function paint(){
+      if(popup.matches(':popover-open'))popup.hidePopover();panels.replaceChildren();const query=search.value.trim().toLowerCase();
+      for(const [id,meta] of roster){
+        if(character.value&&character.value!==id)continue;
+        const selected=pairs.filter(p=>(p.b||p.a).characterId===id&&(!section.value||(p.b||p.a).section===section.value));
+        const shown=selected.filter(p=>(all.checked||isChanged(p))&&[p.a?.name,p.b?.name,p.a?.level,p.b?.level,p.a?.effect,p.b?.effect].join(' ').toLowerCase().includes(query));
+        if(!shown.length)continue;
+        const panel=document.createElement('section'),header=document.createElement('header'),heading=document.createElement('h3'),subtitle=document.createElement('p'),grid=document.createElement('div');panel.className='json-character-panel';grid.className='json-character-entry-grid';
+        withIcon(heading,meta.characterName,'assets/ClassIcons'+(meta.classId??0)+'.png');subtitle.textContent='Slot '+(+id+1)+' · '+selected.filter(isChanged).length+' changes';header.append(heading,subtitle);panel.append(header,grid);panels.append(panel);
+        for(const pair of shown){const r=pair.b||pair.a,button=document.createElement('button'),title=document.createElement('strong'),from=document.createElement('span'),to=document.createElement('span'),change=document.createElement('small');button.type='button';button.className='json-character-entry';withIcon(title,r.label,r.icon||'assets/'+categoryIcons[category.id]);from.textContent='Loaded: '+(pair.a?.level||'Unavailable');to.textContent='Pasted: '+(pair.b?.level||'Unavailable');
+          const numeric=pair.a&&pair.b&&typeof pair.a.value==='number'&&typeof pair.b.value==='number',delta=numeric?pair.b.value-pair.a.value:0;
+          change.textContent=r.section+' · '+(!pair.a||!pair.b||pair.a.status==='unknown'||pair.b.status==='unknown'?'Unavailable':!isChanged(pair)?'No change':numeric&&delta?(delta>0?'+':'')+root.ProgressionModels.fmt(delta):'Updated');
+          button.append(title,from,to,change);if(r.section==='Items'){const quantity=document.createElement('span');quantity.textContent=(pair.a?.effect||'—')+' → '+(pair.b?.effect||'—');button.append(quantity);}button.onclick=()=>showDetails(pair);grid.append(button);
+        }
+      }
+      if(!panels.children.length){const empty=document.createElement('p');empty.className='json-character-empty';empty.textContent=query?'No matching entries.':all.checked?'No entries in this section.':'No changes. Enable Show unchanged to see all entries.';panels.append(empty);}
+    }
+    search.oninput=paint;all.onchange=paint;character.onchange=paint;section.onchange=paint;paint();
   }
   function renderComparison(host,first,second,category){
     const left=comparisonRows(first,category.id),right=comparisonRows(second,category.id);
@@ -144,6 +217,7 @@
     function tabs(){
       worlds.replaceChildren();categoryTabs.replaceChildren();
       const overview=document.createElement('button');overview.type='button';overview.className='skill-tab'+(activeWorld===0?' active':'');overview.textContent='Overview';overview.setAttribute('aria-pressed',String(activeWorld===0));overview.onclick=()=>{activeWorld=0;activeCategory='overview';tabs();show();};worlds.append(overview);
+      const skills=document.createElement('button');skills.type='button';skills.className='skill-tab'+(activeWorld==='skills'?' active':'');skills.textContent='Characters';skills.setAttribute('aria-pressed',String(activeWorld==='skills'));skills.onclick=()=>{activeWorld='skills';activeCategory='cmp_skills';tabs();show();};worlds.append(skills);
       for(let world=1;world<=7;world++){const button=document.createElement('button');button.type='button';button.className='skill-tab'+(activeWorld===world?' active':'');withIcon(button,'W'+world,'assets/'+worldIcons[world-1]);button.setAttribute('aria-pressed',String(activeWorld===world));button.onclick=()=>{activeWorld=world;activeCategory=categories.find(c=>c.world===world)?.id;tabs();show();};worlds.append(button);}
       for(const category of categories.filter(c=>c.world===activeWorld)){const button=document.createElement('button');button.type='button';button.className='skill-tab'+(category.id===activeCategory?' active':'');withIcon(button,category.name,'assets/'+categoryIcons[category.id]);button.setAttribute('aria-pressed',String(category.id===activeCategory));button.onclick=()=>{activeCategory=category.id;tabs();show();};categoryTabs.append(button);}
     }
@@ -157,7 +231,7 @@
       const key=category.id==='cmp_hole'?'cmp_hole_section':category.id;categoryIcons[key]=categoryIcons[category.id];const prepare=groups=>({...filtered(groups),[key]:filtered(groups)[category.id]});
       renderComparison(content,prepare(first),prepare(second),{...category,id:key,name:category.name+' · '+active});
     }
-    function show(){results.replaceChildren();if(!activeCategory){results.textContent='No comparisons added for World '+activeWorld+' yet.';return;}if(!decoded){results.textContent='Compare two saves to see this category.';return;}const [first,second]=decoded;status.textContent='Comparison ready. Select a world and category.';if(activeCategory==='overview')renderOverview(results,first,second,category=>{activeWorld=category.world;activeCategory=category.id;tabs();show();});else if(activeCategory==='cmp_spelunking')renderSpelunking(first,second);else if(activeCategory==='cmp_obols')renderObols(results,first,second);else if(activeCategory==='cmp_gallery')renderGallery(first,second);else if(['cmp_hole','cmp_minehead','cmp_jelly','cmp_sneaking','cmp_equinox','dungeons','clamworks'].includes(activeCategory))renderSections(first,second,categories.find(c=>c.id===activeCategory));else if(activeCategory==='tome')renderTome(first,second);else renderComparison(results,first,second,categories.find(c=>c.id===activeCategory));}
+    function show(){results.replaceChildren();if(!activeCategory){results.textContent='No comparisons added for World '+activeWorld+' yet.';return;}if(!decoded){results.textContent='Compare two saves to see this category.';return;}const [first,second]=decoded;status.textContent='Comparison ready. Select a world and category.';if(activeCategory==='overview')renderOverview(results,first,second,category=>{activeWorld=category.world;activeCategory=category.id;tabs();show();});else if(activeCategory==='cmp_skills')renderSkills(results,first,second);else if(['cmp_equipment','cmp_loadouts','cmp_inventory','cmp_progress'].includes(activeCategory))renderCharacterComparison(results,first,second,categories.find(c=>c.id===activeCategory));else if(activeCategory==='cmp_spelunking')renderSpelunking(first,second);else if(activeCategory==='cmp_obols')renderObols(results,first,second);else if(activeCategory==='cmp_gallery')renderGallery(first,second);else if(['cmp_hole','cmp_minehead','cmp_jelly','cmp_sneaking','cmp_equinox','dungeons','clamworks'].includes(activeCategory))renderSections(first,second,categories.find(c=>c.id===activeCategory));else if(activeCategory==='tome')renderTome(first,second);else renderComparison(results,first,second,categories.find(c=>c.id===activeCategory));}
     tabs();show();
     area.value=draft;
     const saveNote=host.querySelector('[data-save-note]');
