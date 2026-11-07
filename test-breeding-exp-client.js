@@ -28,7 +28,7 @@ const breedHandler=vm.runInNewContext('('+extract('p._customBlock_Breeding=')+')
 env.p._customBlock_AchieveStatus=()=>1;
 env.p._customBlock_Breeding=(name,...args)=>name==='TotPetsFound'?50:breedHandler(name,...args);
 const action=vm.runInNewContext('('+extract('p._customBlock_ActionBlock=')+')',env);let awarded;
-env.w={_customBlock_giveEXP:(skill,exp)=>{assert.equal(skill,11.5);awarded=exp;}};
+env.v=env.w={_customBlock_giveEXP:(skill,exp)=>{assert.equal(skill,11.5);awarded=exp;}};
 for(let tier=1;tier<=11;tier++){breeding[0][0]=tier;action('GiveBreedEXP','0',0,0);near(awarded,M.exp(tier,50,model.total));}
 for(let level=0;level<=10;level++){
  breeding[2][11]=level;near(breedHandler('PetUpgBONUS','0',11,0),Math.ceil(12*level**.698));

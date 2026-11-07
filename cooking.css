@@ -78,3 +78,5 @@
  .cook-exp-account .artifact-table td:nth-child(3)::before{content:'Maximum / hard cap'}
  .cook-exp-account .artifact-table td:nth-child(4)::before{content:'Breakpoints / soft caps'}
 }
+
+.cook-source-value{text-align:right}.cook-source-value small{display:block;color:#d9c5ee;font-size:.75rem;line-height:1.3}

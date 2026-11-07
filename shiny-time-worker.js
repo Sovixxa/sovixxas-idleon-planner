@@ -26,8 +26,9 @@ function autoClear(character,map){
  clearCache.set(key,result);return result;
 }
 function rate(character,map,clearSeconds,uwu,mode){
+   if(mode==='kills'){const hourly=Number(clearSeconds)*60;return String(clearSeconds??'').trim()!==''&&Number.isFinite(hourly)&&Number(clearSeconds)>=0?hourly:null;}
    if(mode==='auto')clearSeconds=autoClear(character,map)?.seconds;
-   if(!(Number(clearSeconds)>0))return null;
+   if(!Number.isFinite(Number(clearSeconds))||!(Number(clearSeconds)>0))return null;
    const c=parsed.characters[character];
    const onMap={...c,mapIndex:Number(map),targetMonster:PrayerMath.mapEnemiesArray[map]};
    const reduction=uwu&&c.flatTalents?.some(t=>t.name==='UWU_RAWRRR'&&t.level>0)?PrayerMath.getTalentBonus(c.flatTalents,'UWU_RAWRRR'):0;
@@ -48,11 +49,12 @@ onmessage=e=>{
   if(e.data.type==='map'){
    const {character,map,request,clearSeconds,uwu,mode}=e.data;
    const kills=rate(character,map,clearSeconds,uwu,mode);
-   postMessage({type:'map',request,kills:Number.isFinite(kills)?kills:null,clear:mode==='auto'?autoClear(character,map):null,mode});return;
+   const wwKills=rate(character,map,e.data.wwClearSeconds,uwu,'manual');
+   postMessage({type:'map',request,wwKills:Number.isFinite(wwKills)?wwKills:null,kills:Number.isFinite(kills)?kills:null,clear:mode==='auto'?autoClear(character,map):null,mode});return;
   }
   const raw=e.data,d=typeof raw.data==='string'?JSON.parse(raw.data):raw.data||raw;
   parsed=PrayerMath.parseData(d,raw.charNames,raw.companion,raw.guildData,raw.serverVars||{},raw.accountCreateTime,raw.tournament);
-  const characters=parsed.characters.map((c,index)=>({index,eligible:['Beast_Master','Wind_Walker'].includes(c.class),name:c.name,map:c.mapIndex,rate:PrayerMath.calcShinyLvMulti(parsed.account,[c]).value,additive:1+PrayerMath.calcShinyLvMulti(parsed.account,[c]).breakdown.categories.find(g=>g.name==='Additive').sources.reduce((n,s)=>n+Number(s.value),0)}));
+  const characters=parsed.characters.map((c,index)=>({index,eligible:['Beast_Master','Wind_Walker'].includes(c.class),name:c.name,map:c.mapIndex,enhanced:c.flatTalents?.some(t=>t.name==='WHALE_WALLOP'&&t.level>0)&&PrayerMath.getHighestTalentAcrossCharacters(parsed.characters,'ENHANCEMENT_ECLIPSE',c)>=150,rate:PrayerMath.calcShinyLvMulti(parsed.account,[c]).value,additive:1+PrayerMath.calcShinyLvMulti(parsed.account,[c]).breakdown.categories.find(g=>g.name==='Additive').sources.reduce((n,s)=>n+Number(s.value),0)}));
   rankings.clear();clearCache.clear();
   maps=Object.entries(PrayerMath.mapEnemiesArray).flatMap(([id,target])=>{
    const m=PrayerMath.monsters[target];

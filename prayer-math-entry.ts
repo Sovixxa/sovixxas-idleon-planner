@@ -16,7 +16,7 @@ export {getAllCap} from "./vendor/idleon-toolbox/parsers/misc";
 export {getGoldenFoodMulti,getGoldenFoodBonus} from "./vendor/idleon-toolbox/parsers/misc";
 export {getShinyChance} from "./vendor/idleon-toolbox/parsers/world-3/traps";
 export {getStarSignBonus} from "./vendor/idleon-toolbox/parsers/starSigns";
-export {getTalentBonus} from "./vendor/idleon-toolbox/parsers/talents";
+export {getTalentBonus, getHighestTalentAcrossCharacters} from "./vendor/idleon-toolbox/parsers/talents";
 export {getGiantMobChance} from './vendor/idleon-toolbox/parsers/misc';
 export {mapNames,mapEnemiesArray,mapDetails,trappingInfo} from './vendor/idleon-toolbox/data/website-data';
 export {getExoticMarketRotations,getTotalCrop} from './vendor/idleon-toolbox/parsers/world-6/farming';

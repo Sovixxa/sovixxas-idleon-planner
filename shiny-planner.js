@@ -78,7 +78,7 @@
         if(p.level>20)over++;
         if(p.bonusId===16)added+=(Number(String(p.perLevel||'').match(/[\d.]+/)?.[0])||0)/100;
         if(pending.has(p.index)&&p.level>=targets[p.index]){
-          results[p.index]={...results[p.index],passive:elapsed,active:enhanced&&!numeric(kills)?null:elapsed/boost};
+          results[p.index]={...results[p.index],passive:elapsed,active:enhanced&&(!numeric(kills)||Number(kills)<0)?null:elapsed/boost};
           pending.delete(p.index);
         }
       }
@@ -96,21 +96,21 @@
 
     const pets=model.pets;if(!pets.length)return;
 
-    host.innerHTML=`<h3>Leveling time</h3><div class="shiny-time-fields"><label>Pet<select data-time="pet" aria-label="Timing pet">${pets.map((p,i)=>`<option value="${i}">${esc(name(p))} · ${p.level===null?'Unknown':`Lv ${p.level}`}</option>`).join('')}</select></label><label>Target level<input data-time="target" aria-label="Target shiny level" type="number" min="1" step="1"></label><label>Copies in Fenceyard<input data-time="copies" aria-label="Shiny copies" type="number" min="0" max="27" step="1"></label><label>Character<select data-time="character" aria-label="Shiny timing character"><option>Loading saved bonuses…</option></select></label><label>Shiny speed (×)<input data-time="speed" aria-label="Shiny speed multiplier" type="number" min="0" step="any" placeholder="Loading…"></label><label>Clear time<select data-time="mode" aria-label="Clear-time calculation"><option value="auto">Automatic estimate</option><option value="manual">Measured clear time</option></select></label><label>Seconds per clear<input data-time="clear" aria-label="Full-map clear time" type="number" min="0.1" step="any" placeholder="Calculated per map" disabled></label><label>Map<input type="search" data-time="mapSearch" aria-label="Search shiny farming maps" placeholder="Search mob or map name…"><select data-time="map" aria-label="Shiny farming map"><option>Loading maps...</option></select></label></div><label class="shiny-time-enhanced"><input data-time="uwu" type="checkbox"> UWU Rawrrr active</label><label class="shiny-time-enhanced"><input data-time="enhanced" type="checkbox"> Enhanced Whale Wallop active</label><p class="shiny-time-source"></p><div class="shiny-time-results" aria-live="polite"></div><small class="shiny-time-note">Estimates from your imported save.</small>`;
+    host.innerHTML=`<h3>Leveling time</h3><div class="shiny-time-fields"><label>Pet<select data-time="pet" aria-label="Timing pet">${pets.map((p,i)=>`<option value="${i}">${esc(name(p))} · ${p.level===null?'Unknown':`Lv ${p.level}`}</option>`).join('')}</select></label><label>Target level<input data-time="target" aria-label="Target shiny level" type="number" min="1" step="1"></label><label>Copies in Fenceyard<input data-time="copies" aria-label="Shiny copies" type="number" min="0" max="27" step="1"></label><label>Character<select data-time="character" aria-label="Shiny timing character"><option>Loading saved bonuses…</option></select></label><label>Shiny speed (×)<input data-time="speed" aria-label="Shiny speed multiplier" type="number" min="0" step="any" placeholder="Loading…"></label><label>Clear time<select data-time="mode" aria-label="Clear-time calculation"><option value="auto">Basic-attack baseline</option><option value="kills">Measured kills/minute</option><option value="manual">Measured clear time</option></select></label><label><span data-time="clearLabel">Seconds per clear</span><input data-time="clear" aria-label="Full-map clear time" type="number" min="0.1" step="any" placeholder="Calculated per map" disabled></label><label>WW full-clear seconds (assumed)<input data-time="wwClear" aria-label="WW assumed clear seconds" type="number" min="0.1" step="any" value="2"></label><label>Map<input type="search" data-time="mapSearch" aria-label="Search shiny farming maps" placeholder="Search mob or map name…"><select data-time="map" aria-label="Shiny farming map"><option>Loading maps...</option></select></label></div><label class="shiny-time-enhanced"><input data-time="uwu" type="checkbox"> UWU Rawrrr active</label><label class="shiny-time-enhanced"><input data-time="enhanced" type="checkbox"> Enhanced Whale Wallop active</label><p class="shiny-time-source"></p><div class="shiny-time-results" aria-live="polite"></div><small class="shiny-time-note">Estimates from your imported save.</small>`;
 
     const field=k=>host.querySelector(`[data-time="${k}"]`),results=host.querySelector('.shiny-time-results'),source=host.querySelector('.shiny-time-source');
 
     const settings=document.createElement('details');settings.className='shiny-time-settings';
     settings.innerHTML='<summary>Settings</summary><div class="shiny-time-fields"></div>';
     results.before(settings);
-    for(const key of ['character','speed','mode','clear'])settings.querySelector('.shiny-time-fields').append(field(key).closest('label'));
+    for(const key of ['character','speed','mode','clear','wwClear'])settings.querySelector('.shiny-time-fields').append(field(key).closest('label'));
     host.querySelectorAll('.shiny-time-enhanced').forEach(el=>settings.append(el));
     settings.append(source);
     const note=document.createElement('p');note.className='shiny-time-note';
-    note.textContent='Automatic clears estimate basic attacks. For better active times, enter a measured clear time (excluding respawn). Enhanced Whale Wallop requires Enhancement Eclipse Lv 150. UWU assumes the buff stays active. Includes shiny-speed and overlevel gains. Copies stay in the Fenceyard after reaching their target; other bonuses stay fixed.';
+    note.textContent='Use measured kills/minute for active timing; count monster deaths, without multikill. The basic-attack baseline excludes combat skills. Measured clear time excludes respawn. Enhanced Whale Wallop requires Enhancement Eclipse Lv 150. UWU assumes the buff stays active. Includes shiny-speed and overlevel gains. Copies stay in the Fenceyard after reaching their target; other bonuses stay fixed.';
     settings.append(note);
     field('map').closest('label').classList.add('shiny-map-field');
-    let manual=false,characters=[],maps=[],kills='',request=0,rankRequest=0;
+    let manual=false,characters=[],maps=[],preferredMap='',kills='',wwKills='',request=0,rankRequest=0;
     const current=document.createElement('section');current.className='shiny-current';host.prepend(current);
     const yardControls=document.createElement('div');yardControls.className='shiny-yard-controls';
     const yardCap=Math.max(...pets.map(p=>p.maxLevel||20));
@@ -118,6 +118,7 @@
     current.before(yardControls);
     const yardTarget=yardControls.querySelector('input');
     yardTarget.oninput=()=>paintCurrent();
+    const wwTime=r=>r.passive===0?0:numeric(wwKills)&&Number(wwKills)>=0?r.passive/(1+Number(wwKills)*1.5/3600):null;
     const paintCurrent=()=>{
       const active=pets.filter(p=>Number(p.copies)>0),unknown=pets.some(p=>p.copies==null);
       const custom=yardTarget.value!=='';
@@ -137,43 +138,49 @@
         const capped=p.level!==null&&p.level>=(p.maxLevel||20),target=custom?wanted:Math.min(p.maxLevel||20,(p.level||0)+1);
         const r=projected[pets.indexOf(p)];
         estimates.push(r);
-        const timing=custom&&p.level!==null&&p.level>=target?'Target reached':capped?'Max level reached':r.error?(!numeric(field('speed').value)?'Set shiny speed in Settings.':r.error):'Passive: '+duration(r.passive)+(field('enhanced').checked?' · Active estimate: '+(r.active===null?'map rate needed':duration(r.active)):'');
-        return '<article class="shiny-current-pet"><div class="shiny-current-heading">'+(p.icon?'<img src="'+esc(p.icon)+'" alt="" loading="lazy">':'')+'<strong>'+esc(name(p))+'</strong></div><span>'+p.copies+' shiny '+(p.copies===1?'copy':'copies')+' · '+(p.level===null?'Level unknown':'Lv '+p.level+(capped?'':' → '+target))+'</span><div class="shiny-current-times">'+timing.split(' · ').map(t=>'<span>'+esc(t.replace('Active estimate:', 'Active:'))+'</span>').join('')+'</div></article>';
+        const timing=custom&&p.level!==null&&p.level>=target?'Target reached':capped?'Max level reached':r.error?(!numeric(field('speed').value)?'Set shiny speed in Settings.':r.error):'Passive: '+duration(r.passive)+(field('enhanced').checked?' · '+'Active (no whales): '+duration(r.passive)+' · Estimated WW: '+(wwTime(r)===null?'rate needed':'~'+duration(wwTime(r))):'');
+        return '<article class="shiny-current-pet"><div class="shiny-current-heading">'+(p.icon?'<img src="'+esc(p.icon)+'" alt="" loading="lazy">':'')+'<strong>'+esc(name(p))+'</strong></div><span>'+p.copies+' shiny '+(p.copies===1?'copy':'copies')+' · '+(p.level===null?'Level unknown':'Lv '+p.level+(capped?'':' → '+target))+'</span><div class="shiny-current-times">'+timing.split(' · ').map(t=>'<span>'+esc(t)+'</span>').join('')+'</div></article>';
       }).join(''));
+      if(active.length&&field('enhanced').checked){
+        const note=document.createElement('p');note.className='shiny-yard-baseline';note.textContent=field('mode').value==='kills'?'WW estimate uses measured kills and a 50% chance of +3 seconds per kill.':`WW estimate: ${maps.find(m=>String(m.id)===field('map').value)?.name||'select a map'} · ${numeric(wwKills)?Math.round(Number(wwKills)/60).toLocaleString()+' kills/min, '+(1+Number(wwKills)*1.5/3600).toLocaleString('en-US',{maximumFractionDigits:2})+'× progress':'rate needed'}. ${field('mode').value==='manual'?'Uses measured':'Assumes'} ${field(field('mode').value==='manual'?'clear':'wwClear').value||'—'}s clears + respawn${field('uwu').checked?' with UWU':''}; 50% chance of +3 seconds per kill. Adjust in Settings.`;current.prepend(note);
+      }
       if(custom&&active.length){
         const summary=document.createElement('p');summary.className='shiny-yard-total';
-        summary.textContent=estimates.some(r=>r.error)?'Total time unavailable for this target.':'All reach Lv '+wanted+' · Passive: '+duration(Math.max(...estimates.map(r=>r.passive)))+(field('enhanced').checked?' · Active estimate: '+(estimates.some(r=>r.active===null)?'map rate needed':duration(Math.max(...estimates.map(r=>r.active)))):'');
+        summary.textContent=estimates.some(r=>r.error)?'Total time unavailable for this target.':'All reach Lv '+wanted+' · Passive: '+duration(Math.max(...estimates.map(r=>r.passive)))+(field('enhanced').checked?' · Active (no whales): '+duration(Math.max(...estimates.map(r=>r.passive))):'');
+        if(field('enhanced').checked&&!estimates.some(r=>r.error))summary.textContent+=' · Estimated WW: '+(estimates.some(r=>wwTime(r)===null)?'rate needed':'~'+duration(Math.max(...estimates.map(wwTime))));
         current.prepend(summary);
       }
     };
     const filterMaps=()=>{
-      const selected=field('map').value,q=field('mapSearch').value.trim().toLowerCase();
+      const selected=preferredMap||field('map').value,q=field('mapSearch').value.trim().toLowerCase();
       const shown=maps.map((m,i)=>({...m,rank:i+1})).filter(m=>(m.name+' '+(m.mob||'')).toLowerCase().includes(q));
       field('map').innerHTML=shown.map(m=>'<option value="'+m.id+'">'+m.rank+'. '+esc(m.name)+(m.mob?' · '+esc(m.mob):'')+(Object.hasOwn(m,'kills')?' - '+(m.kills===null?'Clear time needed':Math.round(m.kills).toLocaleString()+' kills/hr'):'')+'</option>').join('')||'<option value="">No maps match your search</option>';
       field('map').disabled=!shown.length;
       if(shown.some(m=>String(m.id)===selected))field('map').value=selected;
+      else if(shown.length){field('map').insertAdjacentHTML('afterbegin','<option value="" disabled hidden>Choose a matching map</option>');field('map').value='';}
       selectMap();
     };
     field('mapSearch').oninput=filterMaps;
 
     const mapRate=document.createElement('p');mapRate.className='shiny-time-source';source.after(mapRate);
 
-    const selectMap=()=>{++request;kills='';paint();if(!field('map').value){mapRate.textContent='No maps match your search.';return;}if(!timeWorker||!characters.length)return;mapRate.textContent='Estimating active kills on this map...';timeWorker.postMessage({type:'map',character:characters[Number(field('character').value)].index,clearSeconds:field('clear').value,mode:field('mode').value,uwu:field('uwu').checked,map:Number(field('map').value),request:++request});};
+    const selectMap=()=>{++request;kills='';wwKills='';if(field('mode').value==='kills'){const value=field('clear').value;const hourly=Number(value)*60;kills=numeric(value)&&Number(value)>=0&&Number.isFinite(hourly)?hourly:'';wwKills=kills;mapRate.textContent=kills===''?'Enter observed monster kills per minute.':`Measured active rate: ${Math.round(kills).toLocaleString()} kills/hour - normal monsters`;paint();return;}paint();if(!field('map').value){mapRate.textContent=field('map').disabled?'No maps match your search.':'Choose a matching map to calculate its rate.';return;}if(!timeWorker||!characters.length)return;mapRate.textContent='Estimating active kills on this map...';timeWorker.postMessage({type:'map',wwClearSeconds:field('mode').value==='manual'?field('clear').value:field('wwClear').value,character:characters[Number(field('character').value)].index,clearSeconds:field('clear').value,mode:field('mode').value,uwu:field('uwu').checked,map:Number(field('map').value),request:++request});};
 
-    const rankMaps=()=>{++request;field('map').disabled=true;mapRate.textContent='Ranking maps from best to worst...';kills='';paint();timeWorker.postMessage({type:'rank',character:characters[Number(field('character').value)].index,clearSeconds:field('clear').value,mode:field('mode').value,uwu:field('uwu').checked,request:++rankRequest});};
-    const paint=()=>{paintCurrent();const p=pets[Number(field('pet').value)],r=estimateLineup(pets.map(x=>x===p?{...x,copies:field('copies').value}:x),pets.map(x=>x===p?Number(field('target').value):(x.level||1)),field('speed').value,kills,field('enhanced').checked,characters[Number(field('character').value)]?.additive||1)[Number(field('pet').value)];results.innerHTML=r.error?`<p>${esc(r.error)}</p>`:`<article><span>AFK / passive</span><strong>${duration(r.passive)}</strong></article><article><span>Active · ${r.active===null?'rate needed':`${r.boost.toLocaleString('en-US',{maximumFractionDigits:2})}× speed`}</span><strong>${duration(r.active)}</strong></article>`;};
+    const rankMaps=()=>{if(!timeWorker&&field('mode').value!=='kills'){++request;kills='';wwKills='';mapRate.textContent='Map estimate unavailable. Use measured kills/minute.';paint();return;}if(field('mode').value==='kills'){++rankRequest;selectMap();return;}++request;field('map').disabled=true;mapRate.textContent='Ranking maps from best to worst...';kills='';wwKills='';paint();timeWorker.postMessage({type:'rank',character:characters[Number(field('character').value)].index,clearSeconds:field('clear').value,mode:field('mode').value,uwu:field('uwu').checked,request:++rankRequest});};
+    const paint=()=>{paintCurrent();const p=pets[Number(field('pet').value)],r=estimateLineup(pets.map(x=>x===p?{...x,copies:field('copies').value}:x),pets.map(x=>x===p?Number(field('target').value):(x.level||1)),field('speed').value,kills,field('enhanced').checked,characters[Number(field('character').value)]?.additive||1)[Number(field('pet').value)];results.innerHTML=r.error?`<p>${esc(r.error)}</p>`:`<article><span>AFK / passive</span><strong>${duration(r.passive)}</strong></article><article><span>Active (no whales)</span><strong>${duration(r.passive)}</strong></article>${field('enhanced').checked?`<article><span>Estimated WW time</span><strong>${wwTime(r)===null?'Rate needed':'~'+duration(wwTime(r))}</strong></article>`:''}`;};
 
     const selectPet=()=>{const p=pets[Number(field('pet').value)];field('target').max=p.maxLevel||20;field('target').value=p.target||Math.min(p.maxLevel||20,(p.level||0)+1);field('copies').value=p.copies??'';paint();};
 
     field('pet').onchange=selectPet;
+    field('wwClear').oninput=selectMap;
 
     for(const k of ['target','copies','enhanced'])field(k).oninput=paint;
 
     field('speed').oninput=()=>{manual=true;source.textContent='Custom speed.';paint();};
 
-    const selectCharacter=()=>{const c=characters[Number(field('character').value)];if(!c||!numeric(c.rate)||c.rate<=0)return;field('speed').value=Number(c.rate.toPrecision(8));source.textContent=`Saved speed · ${c.name}`;manual=false;rankMaps();};
+    const selectCharacter=()=>{const c=characters[Number(field('character').value)];if(!c||!numeric(c.rate)||c.rate<=0)return;field('enhanced').checked=!!c.enhanced;field('speed').value=Number(c.rate.toPrecision(8));source.textContent=`Saved speed · ${c.name}`;manual=false;rankMaps();};
 
-    field('mode').onchange=()=>{field('clear').disabled=field('mode').value==='auto';field('clear').placeholder=field('mode').value==='auto'?'Calculated per map':'Enter observed clear time';if(characters.length)rankMaps();};field('character').onchange=selectCharacter;field('map').onchange=selectMap;field('clear').oninput=()=>{if(characters.length)rankMaps();};field('uwu').onchange=()=>{if(characters.length)rankMaps();};selectPet();
+    field('mode').onchange=()=>{field('wwClear').disabled=field('mode').value!=='auto';field('map').closest('label').hidden=field('mode').value==='kills';field('clear').value='';field('clearLabel').textContent=field('mode').value==='kills'?'Monster kills per minute':'Seconds per clear';field('clear').min=field('mode').value==='kills'?'0':'0.1';field('clear').disabled=field('mode').value==='auto';field('clear').placeholder=field('mode').value==='auto'?'Calculated per map':field('mode').value==='kills'?'Enter observed kills/min':'Enter observed clear time';if(characters.length)rankMaps();};field('character').onchange=selectCharacter;field('map').onchange=()=>{preferredMap=field('map').value;selectMap();};field('clear').oninput=()=>{if(characters.length)rankMaps();};field('uwu').onchange=()=>{if(characters.length)rankMaps();};selectPet();
 
     if(!raw){field('mode').value='manual';field('mode').disabled=true;field('clear').disabled=false;field('map').innerHTML='<option>Map estimate unavailable</option>';field('character').innerHTML='<option>Manual setup</option>';field('speed').placeholder='Enter in-game multiplier';return;}
 
@@ -181,7 +188,7 @@
 
     const finish=()=>{worker.terminate();if(timeWorker===worker){timeWorker=null;clearTimeout(timeTimer);}};
 
-    const fail=()=>{finish();if(!host.isConnected)return;field('map').innerHTML='<option>Map estimate unavailable</option>';field('character').innerHTML='<option>Manual setup</option>';field('speed').placeholder='Enter in-game multiplier';if(!manual)source.textContent='Saved speed unavailable. Enter your in-game shiny speed multiplier.';};
+    const fail=()=>{finish();++request;++rankRequest;kills='';wwKills='';if(!host.isConnected)return;paint();field('map').innerHTML='<option>Map estimate unavailable</option>';field('character').innerHTML='<option>Manual setup</option>';field('speed').placeholder='Enter in-game multiplier';if(!manual)source.textContent='Saved speed unavailable. Enter your in-game shiny speed multiplier.';};
 
     worker.onerror=fail;timeTimer=setTimeout(fail,60000);
 
@@ -193,7 +200,7 @@
         if(data.error){mapRate.textContent='Map ranking unavailable.';return;}
         maps=data.maps;filterMaps();return;
       }
-      if(data.type==='map'){if(data.request!==request)return;kills=data.error||data.kills===null?'':data.kills;mapRate.textContent=kills===''?(field('mode').value==='auto'?'Automatic estimate unavailable for this map. Use measured clear time.':'Enter an observed full-map clear time to compare maps.'):`${data.mode==='auto'?`Automatic baseline: ${Number(data.clear?.seconds).toLocaleString('en-US',{maximumFractionDigits:2})} seconds per full clear (${Number(data.clear?.combatSeconds).toLocaleString('en-US',{maximumFractionDigits:2})} attacking + ${Number(data.clear?.travelSeconds).toLocaleString('en-US',{maximumFractionDigits:2})} travel).`:'Full-clear scenario:'} ${Math.round(kills).toLocaleString()} kills/hour - normal monsters`;paint();return;}
+      if(data.type==='map'){if(data.request!==request)return;wwKills=data.error||data.wwKills==null?'':data.wwKills;kills=data.error||data.kills===null?'':data.kills;mapRate.textContent=kills===''?(field('mode').value==='auto'?'Automatic estimate unavailable for this map. Use measured clear time.':field('mode').value==='kills'?'Enter observed monster kills per minute.':'Enter an observed full-map clear time to compare maps.'):`${data.mode==='auto'?`Automatic baseline: ${Number(data.clear?.seconds).toLocaleString('en-US',{maximumFractionDigits:2})} seconds per full clear (${Number(data.clear?.combatSeconds).toLocaleString('en-US',{maximumFractionDigits:2})} attacking + ${Number(data.clear?.travelSeconds).toLocaleString('en-US',{maximumFractionDigits:2})} travel).`:data.mode==='kills'?'Measured active rate:':'Full-clear scenario:'} ${Math.round(kills).toLocaleString()} kills/hour - normal monsters`;paint();return;}
 
       clearTimeout(timeTimer);if(data.error){fail();return;}characters=(data.characters||[]).filter(c=>c.eligible);if(!characters.length){fail();source.textContent='A saved Beast Master or Wind Walker is required for active shiny farming.';return;}
 
@@ -202,9 +209,10 @@
       maps=data.maps||[];
       field('map').innerHTML=(data.maps||[]).map(m=>`<option value="${m.id}">${esc(m.name)}</option>`).join('');
 
-      if((data.maps||[]).some(m=>m.id===Number(characters[0].map)))field('map').value=characters[0].map;
+      const defaultMap=maps.find(m=>m.name.toLowerCase()==='hell hath frozen over')||maps.find(m=>m.id===Number(characters[0].map));
+      if(defaultMap){preferredMap=String(defaultMap.id);field('map').value=preferredMap;}
 
-      if(!manual)selectCharacter();else rankMaps();};
+      if(!manual)selectCharacter();else{field('enhanced').checked=!!characters[Number(field('character').value)]?.enhanced;rankMaps();}};
 
     worker.postMessage(raw);
 

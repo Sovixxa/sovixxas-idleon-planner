@@ -35,3 +35,12 @@ context.PrayerMath.getMaxDamage=()=>({hitChance:100,movementSpeed:100,actionWait
 context.PrayerMath.mapDetails={};vm.runInContext('clearCache.clear()',context);
 assert.equal(vm.runInContext('autoClear(0,1)',context),null,'Missing spacing is not zero travel');
 console.log('Automatic clear baseline: attack cadence, HP, accuracy, movement, manual override and missing stats pass.');
+
+assert.equal(vm.runInContext("rate(0,1,200,true,'kills')",context),12000);
+assert.equal(vm.runInContext("rate(0,1,0,true,'kills')",context),0);
+for(const value of ['',-1,'bad'])assert.equal(vm.runInContext(`rate(0,1,${JSON.stringify(value)},true,'kills')`,context),null);
+
+assert.equal(vm.runInContext("rate(0,1,Infinity,true,'manual')",context),null);
+assert.equal(vm.runInContext("rate(0,1,1e308,true,'kills')",context),null);
+const {estimateLineup}=require('./shiny-planner');
+assert.equal(estimateLineup([{level:1,progress:1,copies:1,maxLevel:20}],[2],1,-1,true)[0].active,null);

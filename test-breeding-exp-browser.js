@@ -16,6 +16,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'playwright');
 
  await page.goto('http://localhost:7331/');
  const raw=JSON.parse(fs.readFileSync('../example json.txt','utf8'));
+ await page.locator('#changeJsonBtn').click();
  await page.locator('#jsonInput').fill(JSON.stringify(raw));await page.locator('#parseBtn').click();
  await page.waitForFunction(()=>/^(Save age|Imported):/.test(document.getElementById('qolFreshness').textContent),{},{timeout:60000});
 
@@ -34,7 +35,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'playwright');
  await page.locator('[name="rarity"]').fill('0');await page.locator('button[type="submit"]').filter({hasText:'Optimize EXP'}).click();
  assert((await page.locator('.breed-exp-best').innerText()).includes('Normal'));
  await page.locator('[name="rarity"]').fill('10');await page.locator('button[type="submit"]').filter({hasText:'Optimize EXP'}).click();
- await page.locator('#quickNotesToggle').click();
+ if(await page.locator('#quickNotes').evaluate(el=>!el.classList.contains('collapsed')))await page.locator('.quick-notes-toggle').click();
  assert.equal(await page.locator('[name="capacity"]').inputValue(),'15','Imported merit-shop egg slots are included');
  const estimate=await page.locator('[data-breed-egg-estimate]').innerText();
  assert(/ESTIMATE: Use about [\d,.]+ egg items per \w+ hatch on average/.test(estimate),estimate);

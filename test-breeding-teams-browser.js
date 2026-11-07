@@ -16,6 +16,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'playwright');
 
  await page.goto('http://localhost:7331/');
  const raw=JSON.parse(fs.readFileSync('../example json.txt','utf8'));
+ await page.locator('#changeJsonBtn').click();
  await page.locator('#jsonInput').fill(JSON.stringify(raw));await page.locator('#parseBtn').click();
  await page.waitForFunction(()=>/^(Save age|Imported):/.test(document.getElementById('qolFreshness').textContent),{},{timeout:60000});
 

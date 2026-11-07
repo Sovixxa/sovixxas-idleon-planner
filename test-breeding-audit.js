@@ -2,6 +2,7 @@
 const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),assert=require('node:assert/strict'),esbuild=require('esbuild');
 const source=fs.readFileSync(process.env.IDLEON_CLIENT_PATH||'../audit/N.js','utf8');
 function extract(marker){
+ if(!source.includes(marker)){const name=marker.split('.').at(-1).replace('=','');const match=source.match(new RegExp('[A-Za-z_$][\\w$]*\\.'+name+'=function'));if(match)marker=match[0].replace('function','');}
  const at=source.indexOf(marker);assert(at>=0,marker);const start=at+marker.length;
  let depth=0,quote='',escape=false;
  for(let i=start;i<source.length;i++){
@@ -18,7 +19,7 @@ const b=Array.from({length:26},()=>Array(24).fill(0));b[0]=[1,0,0];b[1]=[1,0,0,0
 const gen=[];gen[10]=0;gen[44]=0;gen[53]=[0,0,0,0];
 const attrs={Breeding:b,Pets:Array.from({length:140},()=>['none',0,0,0]),Territory:Array.from({length:28},()=>[0,0]),GemItemsPurchased:Array(150).fill(0),OptionsListAccount:Array(130).fill(0),CustomLists:{h:{PetGenes:genes,PetUpgradeINFO:upgrades,TerritoryInfo:territories}},DNSM:{h:{CalcTalentMAP:{h:{arena:0}}}},PixelHelperActor:Array.from({length:23},()=>({behaviors:{getBehavior:()=>({_GenINFO:gen})}}))};
 let vault=0;
-const env={Math,c:{asNumber:Number},a:{engine:{getGameAttribute:key=>attrs[key]}},p:{},m:{_customBlock_Summoning:()=>vault,_customBlock_Minehead:()=>0},D:{contains:(a,v)=>a.includes(v)},n:{__cast:x=>x},ib:{}};
+const env={Math,q:{_customBlock_MenagerieStuff:()=>0},c:{asNumber:Number},a:{engine:{getGameAttribute:key=>attrs[key]}},p:{},m:{_customBlock_Summoning:()=>vault,_customBlock_Minehead:()=>0},D:{contains:(a,v)=>a.includes(v)},n:{__cast:x=>x},ib:{},hb:{}};
 env.p._customBlock_Breeding=vm.runInNewContext('('+extract('p._customBlock_Breeding=')+')',env);
 env.p._customBlock_PetStuff=vm.runInNewContext('('+extract('p._customBlock_PetStuff=')+')',env);
 env.p._customBlock_AchieveStatus=()=>0;

@@ -19,7 +19,6 @@
 .hug-button:hover { background: #452c51; border-color: #efadd1; }
 .hug-button:active { background: #593361; }
 .hug-button:focus-visible { outline: 3px solid #f8b9db; outline-offset: 3px; }
-.hug-button[aria-disabled="true"] { opacity: .65; cursor: wait; background: #302039; }
 .hug-count {
   min-width: 1.8em;
   padding: 2px 7px;

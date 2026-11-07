@@ -40,3 +40,10 @@ assert.equal(C.targets({...input,speed:null})[0].ladles,null);
 assert.equal(C.targets({...input,stock:null})[0].ladles,null);
 assert.deepEqual([{id:1,ladles:null},{id:2,ladles:4},{id:3,ladles:0},{id:4,ladles:4}].sort(C.compareLadles).map(x=>x.id),[3,2,4,1]);
 console.log('Cooking planner: cumulative stock/progress, single rounding, level caps, missing rates and cheapest-first ordering pass.');
+
+const shares=C.bonusShares([{name:'Base',value:10},{name:'Small',value:10},{name:'Large',value:100},{name:'Inactive',value:1}]);
+assert.deepEqual(shares.map(s=>[s.name,s.share]),[['Large',66.7],['Small',33.3],['Inactive',0]]);
+assert.equal(C.bonusShares(Array.from({length:7},(_,i)=>({name:String(i),value:2}))).reduce((sum,s)=>sum+Math.round(s.share*10),0),1000);
+assert.equal(C.bonusShares([{name:'Inactive',value:1}])[0].share,0);
+assert.deepEqual(C.bonusShares([]),[]);
+console.log('Bonus shares: logarithmic ranking, base exclusion, exact 100% rounding and inactive bonuses pass.');
