@@ -23,7 +23,7 @@ const candidates=M.candidates(s,{target:0});assert(!candidates.some(a=>a.kind===
 assert(!M.candidates(s,{target:0,active:false}).some(a=>a.water===0&&a.index===12&&a.gain>0),'Away mode must not value Water Bender');
 assert(!M.candidates(s,{target:0,overflow:false}).some(a=>a.water===0&&a.index===8&&a.gain>0),'Capacity mode controls retention benefit');
 const raw=JSON.parse(fs.readFileSync('../example json.txt')),original=JSON.stringify(raw),decoded=M.decode(raw),snapshot=JSON.stringify(decoded);
-assert(decoded);assert.deepEqual(M.decode(raw.data),decoded);
+assert(decoded);const dataOnly=M.decode(raw.data);assert.deepEqual({...dataOnly,external:decoded.external},decoded);assert.equal(dataOnly.external.speed,null,'Data-only exports lack companion speed evidence');
 for(let target=0;target<9;target++)for(const active of [true,false]){
  const result=M.plan(decoded,{target,active,steps:50});assert(result.state.balances.every(n=>n>=0));
  const replay=JSON.parse(snapshot);for(const a of result.steps){assert(M.unlocked(replay,a));near(M.cost(replay,a,a.kind),a.cost);assert(replay.balances[a.currency]>=a.cost);replay.balances[a.currency]-=a.cost;replay[a.kind==='marble'?'marbles':'levels'][a.water][a.index]++;assert(a.gain>0);}
@@ -113,3 +113,102 @@ assert(M.candidates(timerState,{goal:'fillTime',active:false}).filter(a=>a.gain>
 assert(M.candidates(timerState,{goal:'fillTime',active:true}).some(a=>a.index===12&&a.gain>0));
 timerState.levels[0][9]++;assert(M.metric(timerState,{goal:'fillTime'})>timerBase);
 console.log('Fountain fill-time goal: speed-only ranking and active Water Bender pass.');
+
+const rateState=blank();rateState.levels.forEach(r=>r.fill(20));rateState.balances.fill(1e12);
+const rateOpts={goal:'outside',target:'all',active:true};
+const rateChoices=M.candidates(rateState,rateOpts).filter(a=>a.gain>0);
+for(const a of rateChoices)near(Math.exp(a.score),a.gain/a.earningEffort);
+const poor=JSON.parse(JSON.stringify(rateState));poor.balances.fill(0);
+assert.deepEqual(M.candidates(poor,rateOpts).map(a=>a.score),M.candidates(rateState,rateOpts).map(a=>a.score),'Stockpiles must not masquerade as earning speed');
+const faster=JSON.parse(JSON.stringify(rateState));faster.levels[0][3]+=100;
+const silver=a=>a.currency===1&&a.gain>0&&a.kind==='level';
+const oldSilver=M.candidates(rateState,rateOpts).find(silver),newSilver=M.candidates(faster,rateOpts).find(silver);
+assert.equal(oldSilver.currency,1);assert(newSilver.score>oldSilver.score,'Faster Silver income promotes the same Silver purchase');
+assert(newSilver.earningEffort<oldSilver.earningEffort);
+poor.ignored='abcdefgh';
+assert(M.earningRates(poor,{...rateOpts,mode:'roadmap'}).slice(0,9).every(r=>r>0),'Roadmaps allow switching payment currencies');
+console.log('Fountain earning effort: rate-based scores, wallet independence, faster Silver and ignored funding pass.');
+
+
+const cheapState=blank();cheapState.levels.forEach(r=>r.fill(20));cheapState.levels[0][10]=1;cheapState.balances.fill(1e30);
+const cheapPlan=M.plan(cheapState,{goal:'all',mode:'roadmap',steps:40});
+const cheapReplay=JSON.parse(JSON.stringify(cheapState));
+for(const step of cheapPlan.steps){
+ const available=M.catalog.filter(u=>M.unlocked(cheapReplay,u));
+ const rates=M.earningRates(cheapReplay,{goal:'all'});
+ near(step.earningEffort,Math.min(...available.map(u=>rates[u.currency]>0?M.cost(cheapReplay,u)/rates[u.currency]:Infinity)));
+ assert.equal(step.kind,'level');cheapReplay.levels[step.water][step.index]++;
+}
+assert(cheapPlan.steps.length===40);
+const cheapest=M.candidates(cheapState,{goal:'all'})[0];
+assert.equal(cheapest.earningEffort,Math.min(...M.candidates(cheapState,{goal:'all'}).map(a=>a.earningEffort))); 
+const unfunded=JSON.parse(JSON.stringify(cheapState));unfunded.balances.fill(0);
+assert.equal(M.plan(unfunded,{goal:'all',mode:'now'}).steps.length,0);
+assert.equal(M.plan(unfunded,{goal:'all',mode:'roadmap',steps:1}).steps[0].cost,cheapest.cost);
+console.log('Fountain All: lowest earning effort at each step, roadmap funding and ordinary levels only pass.');
+
+const switchState=JSON.parse(JSON.stringify(unfunded));switchState.ignored='0abcdefgh';switchState.desired=8;
+const switchOpts={goal:'all',mode:'roadmap',steps:60,active:true};
+const allRates=M.earningRates(switchState,switchOpts);
+assert(allRates.slice(0,9).every(n=>n>0),'Every unlocked currency can be earned after switching');
+for(let c=0;c<9;c++)near(allRates[c],M.incomeFactor({...switchState,desired:c},c,switchOpts)/7200);
+const alternate={...switchState,ignored:'',desired:0};
+assert.deepEqual(M.plan(switchState,switchOpts).steps,M.plan(alternate,switchOpts).steps,'All ignores saved desired/ignored choices');
+const lockedRates=M.earningRates(blank(),switchOpts);assert(lockedRates.slice(1,9).every(n=>n===0),'Locked currencies stay unavailable');
+const availableSwitch=M.candidates(switchState,switchOpts);
+const fundedChoice=availableSwitch.find(a=>a.currency!==availableSwitch[0].currency);
+switchState.balances[fundedChoice.currency]=fundedChoice.cost;
+const fundedPlan=M.plan(switchState,{...switchOpts,steps:1});
+assert.equal(fundedPlan.steps[0].currency,fundedChoice.currency);assert.equal(fundedPlan.steps[0].shortfall,0);
+const chosen=M.candidates(switchState,switchOpts).find(a=>a.water===fundedChoice.water&&a.index===fundedChoice.index);
+assert.equal(chosen.savingEffort,0);
+switchState.balances[fundedChoice.currency]=fundedChoice.cost*.9;
+const partial=M.candidates(switchState,switchOpts).find(a=>a.water===fundedChoice.water&&a.index===fundedChoice.index);
+near(partial.savingEffort,partial.earningEffort*.1);
+const replaySwitch=JSON.parse(JSON.stringify(switchState));
+for(const step of M.plan(switchState,switchOpts).steps){
+ const next=M.candidates(replaySwitch,switchOpts)[0];assert.equal(step.water,next.water);assert.equal(step.index,next.index);
+ near(step.shortfall,Math.max(0,step.cost-replaySwitch.balances[step.currency]));
+ replaySwitch.balances[step.currency]=Math.max(0,replaySwitch.balances[step.currency]-step.cost);replaySwitch.levels[step.water][step.index]++;
+}
+console.log('All switching: ignored/desired invariance, equal selection bonus, locked currencies, affordable-first, partial balances and sequential spending pass.');
+
+// Independent All-order oracle: enumerate normal upgrades, calculate shortfall
+// and switch-to-currency rates directly, then replay the chosen purchases.
+for(let trial=0;trial<12;trial++){
+ const account=blank();account.levels.forEach((r,w)=>r.forEach((_,i)=>r[i]=10+(trial*7+w*11+i*3)%40));
+ account.balances=account.balances.map((_,c)=>trial%3===0?0:10**((trial+c)%12));account.desired=trial%9;account.ignored='0abcdefgh';
+ const original=JSON.stringify(account),replay=JSON.parse(original),options={goal:'all',mode:trial%2?'now':'roadmap',steps:50,active:true};
+ const result=M.plan(account,options);
+ for(const step of result.steps){
+  const choices=M.catalog.filter(u=>M.unlocked(replay,u)).map(u=>{
+   const price=M.cost(replay,u),rate=M.targetOpen(replay,u.currency)?M.incomeFactor({...replay,desired:u.currency},u.currency,options):0;
+   const missing=Math.max(0,price-replay.balances[u.currency]);
+   return {u,price,missing,wait:missing===0?0:rate>0?missing/rate:Infinity,full:rate>0?price/rate:Infinity};
+  }).filter(a=>options.mode==='now'?a.missing===0:Number.isFinite(a.wait)).sort((a,b)=>a.wait-b.wait||a.full-b.full||a.price-b.price||a.u.water-b.u.water||a.u.index-b.u.index);
+  assert.equal(step.water,choices[0].u.water);assert.equal(step.index,choices[0].u.index);near(step.shortfall,choices[0].missing);
+  replay.balances[step.currency]=Math.max(0,replay.balances[step.currency]-step.cost);replay.levels[step.water][step.index]++;
+ }
+ assert.deepEqual(result.state,replay);assert.equal(JSON.stringify(account),original);
+ for(let c=0;c<10;c++)near(account.balances[c]+result.funding[c],result.spent[c]+result.state.balances[c]);
+}
+console.log('All independent audit: 12 mixed-balance scenarios, buy-now/roadmap ordering, replay, funding conservation and immutable saves pass.');
+
+const aliasRaw={...raw,data:{...raw.data,OptLacc:raw.data.OptionsListAccount||raw.data.OptLacc}};delete aliasRaw.data.OptionsListAccount;
+assert.equal(M.decode(aliasRaw).ducks,Number((typeof aliasRaw.data.OptLacc==='string'?JSON.parse(aliasRaw.data.OptLacc):aliasRaw.data.OptLacc)[601]));
+const externalState=blank();externalState.levels.forEach(r=>r.fill(20));
+const externalBoost={...externalState,external:{value:10000,speed:2,marble:7}};
+near(M.earningRates(externalBoost,{goal:'all'})[0]/M.earningRates(externalState,{goal:'all'})[0],20000);
+near(M.earningRates(externalBoost,{goal:'all'})[6]/M.earningRates(externalState,{goal:'all'})[6],200);
+near(M.earningRates(externalBoost,{})[9]/M.earningRates(externalState,{})[9],7);
+console.log('Raw option alias and external bonus placement/regional scaling pass.');
+
+for(const goal of M.goals){
+ const state=JSON.parse(snapshot);state.balances.fill(0);state.ignored='0abcdefgh';
+ const opts={goal:goal.id,target:'all',mode:'roadmap',active:true,marble:false,marbleBudget:'current',steps:5};
+ const result=M.plan(state,opts);
+ assert.equal(result.steps.length,5,goal.id+' regular roadmap');
+ assert(result.steps.every(a=>a.kind==='level'&&a.shortfall>0),goal.id);
+ assert.equal(M.plan(state,{...opts,mode:'now'}).steps.length,0,goal.id+' buy now');
+}
+console.log('All goals show unfunded regular roadmap upgrades; buy-now stays balance-limited.');

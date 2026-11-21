@@ -43,10 +43,11 @@ function promotionPlan(input,opts={}){
  const baseline=finish(start),save=Math.max(0,target-best.state.pearls);
  return {...best,target,baseline,time:bestTime,hours:rate>0?bestTime/rate:null,baselineHours:rate>0?baseline/rate:null,save,gain:production(best.state,opts)/initial-1,savedFraction:baseline>0?1-bestTime/baseline:0};
 }
-function farmerMultikill(character,promotion){
+function farmerMultikill(character,promotion,affliction=0){
  const loot=character?.loot;if(character?.error||character?.missing?.length||!Number.isFinite(loot?.damage)||!Number.isFinite(loot?.base)||!Number.isFinite(loot?.perTier?.[6]))return null;
  const diminish=v=>v>=250?98.14+(v-250)/50:v>=200?95.6+(v-200)/20:v>=150?90.6+(v-150)/10:v>=100?80.6+(v-100)/5:v>=50?47.3+(v-50)/1.5:v>=20?20+(v-20)/1.1:v;
- const hp=1e16*Math.pow(30,promotion);let tiers=1;for(let i=0;i<50&&loot.damage>=hp*5*Math.pow(5,i+1);i++)tiers=i+2;
+ // Wraith damage returns before the client's ordinary map-306 damage adjustment.
+ const damage=(loot.wraith?loot.damage:(loot.clamworksDamage??loot.damage))/ (loot.wraith?1:Math.pow(100,num(affliction))),hp=1e16*Math.pow(30,promotion);let tiers=1;for(let i=0;i<50&&damage>=hp*5*Math.pow(5,i+1);i++)tiers=i+2;
  return Math.floor(diminish(loot.base)+tiers*diminish(loot.perTier[6]));
 }
 function purchaseRows(steps,done=[],compress=false){

@@ -8,6 +8,7 @@ assert.equal(result.characters.length,raw.charNames.length);
 for(const ch of result.characters){assert(!ch.error,ch.error);assert(ch.rows.length>60);assert(Math.abs(ch.rows.at(-1).running-ch.normal)<ch.normal*1e-10);assert.equal(ch.missing.length,0);}
 assert.equal(D.calculate({}).characters.length,0);
 const p=M.parseData(raw.data,raw.charNames,raw.companion,raw.guildData,raw.serverVars,raw.accountCreateTime,raw.tournament),ch=p.characters[3],account=p.account;
+assert.equal(result.characters[3].loot.clamworksDamage,M.getMaxDamage({...ch,mapIndex:306,targetMonster:'w7a6'},p.characters,account).maxDamage,'Clamworks damage uses the destination without moving other characters');
 const rate=a=>M.getDropRate(ch,a,p.characters);
 const chanceGear=M.getDropRate({...ch,tools:[...ch.tools,{UQ1txt:'%_DROP_CHANCE',UQ1val:100}]},account,p.characters);
 assert.equal(chanceGear.pools.additive-rate(account).pools.additive,100,'DROP_CHANCE gear joins the additive pool');

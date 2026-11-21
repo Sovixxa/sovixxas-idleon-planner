@@ -31,3 +31,27 @@ for(let trial=0;trial<12;trial++){
 // Outside factors are present in actual game consumers, not inferred from names.
 for(const g of M.outsideGoals){const call=`("Fountain_BonTOT",${g.water},${g.index})/100`;assert(source.includes(call),g.label);}
 console.log(`Fountain client audit: ${comparisons} direct handler comparisons passed. N.js SHA256 ${crypto.createHash('sha256').update(source).digest('hex')}`);
+
+const notation=vm.runInNewContext('('+extract('_customBlock_NotateNumber=')+')',{Math,k:{_customBlock_getLOG:x=>Math.log(Math.max(1,x))/2.30259}});
+for(const value of [0,1.9,999,1000,9999,10000,99999,1.60e19,1.63e19,1.83e19,...Array.from({length:24},(_,i)=>10**i),...Array.from({length:200},(_,i)=>1.23456789*10**(i/8))])assert.equal(M.formatCurrency(value),notation(value,'TinyE'),`Fountain notation ${value}`);
+console.log('Fountain currency formatting matches client TinyE, including Q/QQ and scientific thresholds.');
+if(process.env.FOUNTAIN_SAVE_PATH){
+ const raw=JSON.parse(fs.readFileSync(process.env.FOUNTAIN_SAVE_PATH,'utf8')),parse=v=>typeof v==='string'?JSON.parse(v):v,state=M.decode(raw);
+ const attrs=Object.fromEntries(Object.entries(raw.data).map(([k,v])=>{try{return [k,parse(v)];}catch{return [k,v];}}));
+ attrs.OptionsListAccount=attrs.OptionsListAccount||attrs.OptLacc;
+ attrs.Cards=[attrs.Cards0,attrs.Cards1];
+ attrs.DNSM={h:{}};attrs.CustomLists={h:{HoleFountUPG:catalog,HolesInfo:info}};
+ for(const key of ['CosmoUpgrades','ZenithMarket','RandoListo2'])attrs.CustomLists.h[key]=vm.runInNewContext('('+extract(key+'=')+')()');
+ const m={},A=require('./arcade-model'),arcade=A.bonus({formula:'decay',base:30,scale:100},attrs.ArcadeUpg[68],A.companion(raw)).total;
+ const env={Math,m,c:{asNumber:Number,getCurrentSceneName:()=>'',randomInt:lo=>lo},a:{engine:{getGameAttribute:k=>{assert(k in attrs,'Unexpected attribute '+k);return attrs[k];}}},k:{_customBlock_getLOG:x=>Math.log(Math.max(x,1))/2.30259},h:{string:String},y:{replace:(s,a,b)=>s.split(a).join(b)},D:{contains:(a,v)=>a.includes(v)},p:{_customBlock_ArcadeBonus:i=>{assert.equal(i,68);return arcade;}}};
+ for(const name of ['Holes','Holes2','Thingies'])m['_customBlock_'+name]=vm.runInNewContext('('+extract('_customBlock_'+name+'=')+')',env);
+ assert.equal(state.ducks,Number(attrs.OptionsListAccount[601]));
+ for(const active of [false,true])for(const overflow of [false,true])for(let c=0;c<9;c++){
+  attrs.Holes[11][82]=c;attrs.DNSM.h={};
+  const expected=m._customBlock_Holes2('Fount_CurrencyTotValue',c,0)*m._customBlock_Holes2('FountainBar_Speed',0,0)/7200*(active?m._customBlock_Holes2('FountainBar_ActiveSpdMulti',0,0):1)*(overflow?m._customBlock_Holes2('Fount_CurrencyKEEP',0,0):1);
+  near(M.earningRates(state,{goal:'all',active,overflow})[c],expected);
+ }
+ for(const active of [false,true])near(M.earningRates(state,{active})[9],m._customBlock_Holes2('Fount_MarblePerFill',0,0)/36000*(active?m._customBlock_Holes2('FountainBar_ActiveSpdMulti',0,0):1));
+ console.log('Current save: absolute coin and marble formula rates match actual client handlers.');
+ console.log(JSON.stringify({ducks:state.ducks,external:state.external,rates:M.earningRates(state,{goal:'all',active:true}),first:M.plan(state,{goal:'all',active:true,mode:'roadmap',steps:10}).steps.map(a=>({name:a.name,currency:M.currencies[a.currency],cost:a.cost,saveSeconds:a.savingEffort}))},null,2));
+}
