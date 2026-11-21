@@ -103,3 +103,63 @@ Tests: client constant/mastery ratio at 0/6/7, Malachite and Gold Envelope remov
 The distinct-meal constraint was reverted at the user’s request. The original subset-partition optimizer again permits multiple kitchens per meal, counting stock and the total gain once per meal. A short note above the results explains that shared production maximizes levels, with progress breaking ties, and that repeated cards show a shared gain counted once. Per-card combined-kitchen labels are restored.
 
 Validation: exhaustive allocation oracle, split/stack/stock/cap cases, and desktop/mobile browser checks including the explanation and combined-kitchen labels.
+
+
+## Meal speed multiplier and percentage audit — 2026-11-08
+
+Reference: `../audit/purity-live-N-nov06.js`, the locally saved November 6 client. Extracted exact `CookingSPEED` branch: `../audit/meal-speed-client-formula.js.txt`. This is a comparison to that client snapshot, not a claim of fetching a newer client or exhaustively auditing every upstream account parser.
+
+The branch has base speed 10 and 32 multiplicative groups. Compared the complete multiplication chain with `parseKitchens` and its breakdown. Fixed:
+
+- Missing Clam Work: `1 + 9 * ClamWorkBonus(10)`. OptionsListAccount[464] > 10 unlocks 10x (+900%), not +10% or +1000%.
+- Troll Card: use native CardLv semantics, including one level for an owned zero-star card. Adds 6 percentage points per level to the achievement pool, capped together at +100%.
+- Passive cooking card w6c1: use exactly `5 * CardLv`, not generic amplified card effect values.
+- Worker: filter locked/null kitchens before collecting speeds and factors.
+- Display: explicitly label the normalized contribution metric `log share`.
+
+Formula groups checked:
+
+| Group | Factor / interpretation |
+| --- | --- |
+| Blood Marrow | 1 + compounded talent result / 100; exponent applied before conversion |
+| Crop Depot, Enhancement Eclipse | max(1, native multiplier) |
+| Dough Roller | 1 + ownership flag |
+| Clam Work | 1 + 9 * unlock flag |
+| Richelin | 3x for purchased kitchen, otherwise 1x |
+| Vote, Vault | independent 1 + bonus / 100 factors |
+| Marshmallow | 1 + meal pool * ceil((selected farming level + 1)/50) / 100 |
+| Diamond Chef | max(1, Prisma-adjusted per-meal factor raised to diamond meal count) |
+| Void Plate Chef | max(1, per-meal factor raised to void meal count) |
+| Superbit | 1 + bonus / 100 |
+| Speed Level | 1 + kitchen speed level / 10 |
+| Triagulon | 1 + bonus / 100 |
+| Crucible | 1 + 9 * reward5 + 20 * reward12; additive within one factor, maximum 30x |
+| Button, Arcade | independent 1 + bonus / 100 factors |
+| Turtle Vial, Cooking Speed Vials, Extra Vials | three independent pools, each 1 + pool / 100 |
+| Stamps + Jewel | 1 + (stamp pool + max(0, jewel bonus)) / 100 |
+| Meals (Cooking Speed) | 1 + summed Mcook meal pool / 100 |
+| Star Sign, Summoning, Menagerie, Monument | independent 1 + bonus / 100 factors |
+| Schematic | max(1, native multiplier) |
+| Card (Cooking Multi) | 1 + 5 * CardLv(w6c1) / 100 |
+| Lamp | 1 + bonus / 100 |
+| Amethyst Rhinestone | max(1, native Lab multiplier) |
+| Troll Card + Achievements | 1 + min(6 * CardLv(Boss4A) + 20 * achievement225 + 10 * achievement224, 100) / 100 |
+| Kitchen Eff | 1 + Cabbage pool * floor(sum of this kitchen's three upgrade levels / 10) / 100 |
+
+For a factor m, displayed equivalent bonus is `(m - 1) * 100%`. It is not m * 100%. Percentages in the meal and Prisma subsections are additive inputs to their parent pools, not extra independent factors.
+
+Normalized shares use `100 * ln(m) / sum(ln(all 32 factors))`; base 10 is excluded. These describe multiplicative growth for the first kitchen and are an attribution convention, not native game values, marginal upgrade benefits, removal losses, or attribution across the sum of all kitchens. Groups are ranked by unrounded logarithmic contribution. Largest-remainder allocation rounds to tenths with a displayed total of exactly 100.0%; neutral 1x sources get zero. With no positive growth, all shares are zero. Tiny nonzero contributions can round to 0.0%. Factors/bonus values retain existing compact display rounding.
+
+Validation: `test-cooking.js`, `test-cooking-worker.js`, `test-cooking-mastery.js`, `test-cooking-impact.js`, `test-menagerie-bonuses.js`, `test-update-buff-audit.js`, `test-cooking-speed-browser.js` all pass. Worker checks cover all characters/presets, factor-product reconciliation, logarithmic denominator reconciliation, exact 100% rounding, Clam Work unlock boundary and 10x speed ratio, owned zero-star/missing/capped cards, fixed passive coefficient, additive Crucible and locked kitchens. Existing checks cover Blood Marrow/Diamond Chef exponents, Prisma, selected farming scaling, meal pools, mutation safety and mastery edited-save parity. Browser verifies both presets, character changes, descending shares, 100% totals and 1440/390px layout. Screenshots: `../audit/meal-speed-audit-1440.png`, `../audit/meal-speed-audit-390.png`.
+
+
+### Arcade independent client recheck — 2026-11-08
+
+Added `test-cooking-arcade-client.js`. It extracts and executes `_customBlock_ArcadeBonus` and `_customBlock_ArbitraryCode5Inputs` directly from the November 6 client snapshot and uses that client's `ArcadeShopInfo` table. This avoids using the application's growth formula as its own oracle. Compared cooking upgrade 28 at levels 0, 1, 100, 101, 102 across no companion, base companion, upgraded companion and borrowed upgraded companion (20 cases). Checked parser bonus against the client, factor `1 + bonus/100`, inverse percent conversion, removal ratio in all unlocked kitchens, log share denominator, rounding error bound and exact 100% sum. All pass.
+
+Browser assertions now explicitly check Arcade's sample values after preset/character changes: `1.8×`, `+80.4%`, `0.2% log share`. Actual sample factor is 1.8039800995024877 (+80.39800995024878%). Character 0's exact logarithmic share is 0.2057158561% with saved presets and 0.1442092137% with the secondary Voidwalker preset. Both display 0.2% under largest-remainder rounding. This is coordinated rounding to tenths, not independent nearest-tenth rounding; each displayed share differs by less than 0.1 percentage point from its exact share. A displayed 0.3% was not reproduced from this local sample; the current user's browser save/state was not available to this test.
+
+No additional calculation defect found in this recheck. Client-oracle test, cooking unit/worker tests and expanded browser test pass. This verifies the local saved client and sample, not a newly downloaded game client or the user's currently loaded browser save.
+
+
+The expanded browser test initially matched two distinct Arcade rows, exposing an attribution-label ambiguity: direct Cooking Speed and the separate Prisma source. The primary row now reads `Arcade (direct cooking)` and the brief explanation states that Arcade's Prisma boost is included in Diamond Chef. Added a differential integration check: zero only the Prisma arcade upgrade, verify direct Arcade factor stays unchanged, Diamond Chef decreases, and total kitchen speed changes by exactly the Diamond Chef factor ratio. This confirms the two paths are present and not double-counted. The normalized ranking is of formula groups, not a roll-up of every downstream effect by original system (such as all Arcade upgrades).

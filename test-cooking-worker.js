@@ -35,4 +35,39 @@ near(M.getPrismaMulti(above).value-M.getPrismaMulti(below).value,.01);
 assert.equal(M.getPrismaMulti(above).breakdown.categories[0].sources.find(x=>x.name==='Jelly Operator').value,1);
 assert.equal(JSON.stringify(raw),before,'Preset simulation must not mutate the imported save');
 console.log('Secondary preset: Blood Marrow 1 -> 305 gives 8 ladles; Diamond Chef/Prisma exponent, Summoning, crops, meals and every kitchen multiplier verified.');
+for(const scenario of result.scenarios)for(const character of scenario.values){
+ const shares=C.bonusShares(character.sources);
+ assert.equal(shares.reduce((sum,s)=>sum+Math.round(s.share*10),0),1000);
+ assert(shares.every((s,i)=>!i||s.weight<=shares[i-1].weight));
+ const logTotal=Math.log(character.speeds[0]/10);
+ near(shares.reduce((sum,s)=>sum+s.weight,0),logTotal);
+ for(const s of shares)assert(Math.abs(s.share-100*Math.log(s.value)/logTotal)<=.10000001);
+}
+const kitchenFor=a=>M.parseKitchens(read(raw.data.Cooking),read(raw.data.Atoms),parsed.characters,a,{characterIndex:1})[0];
+const factor=(k,name)=>k.mealSpeedBreakdown.categories[0].sources.find(s=>s.name===name).value;
+const clamOff=JSON.parse(JSON.stringify(account)),clamOn=JSON.parse(JSON.stringify(account));
+clamOff.accountOptions[464]=10;clamOn.accountOptions[464]=11;
+near(factor(kitchenFor(clamOff),'Clam Work'),1);
+near(factor(kitchenFor(clamOn),'Clam Work'),10);
+near(kitchenFor(clamOn).mealSpeed/kitchenFor(clamOff).mealSpeed,10);
+const cardAccount=JSON.parse(JSON.stringify(account));
+cardAccount.cards.Massive_Troll={...cardAccount.cards.Massive_Troll,rawName:'Boss4A',amount:1,stars:0};
+const zeroStar=kitchenFor(cardAccount);
+cardAccount.cards.Massive_Troll.amount=0;
+const unowned=kitchenFor(cardAccount);
+near(factor(zeroStar,'Troll Card + Achievements')-factor(unowned,'Troll Card + Achievements'),.06);
+cardAccount.cards.Massive_Troll.amount=1;cardAccount.cards.Massive_Troll.stars=100;
+near(factor(kitchenFor(cardAccount),'Troll Card + Achievements'),2);
+const passive=Object.values(cardAccount.cards).find(c=>c.rawName==='w6c1');assert(passive);
+passive.amount=1;passive.stars=0;passive.cardValue=99999;
+near(factor(kitchenFor(cardAccount),'Card (Cooking Multi)'),1.05);
+passive.stars=6;near(factor(kitchenFor(cardAccount),'Card (Cooking Multi)'),1.35);
+passive.amount=0;near(factor(kitchenFor(cardAccount),'Card (Cooking Multi)'),1);
+const crucible=JSON.parse(JSON.stringify(account));crucible.accountOptions[628]=250;crucible.menagerie=Array.from({length:7},()=>Array(40).fill(0));crucible.menagerie[2][8]=1;
+near(factor(kitchenFor(crucible),'Crucible'),30);
+const lockedRaw=structuredClone(raw),tables=read(lockedRaw.data.Cooking);tables[9][0]=0;lockedRaw.data.Cooking=tables;
+c.onmessage({data:lockedRaw});assert(!result.error,result.error);assert(result.values.every(c=>c.kitchens===9));
+console.log('Meal-speed audit: shares total 100%, Clam Work 10x, zero-star/capped cards, additive Crucible and locked kitchens pass.');
 c.onmessage({data:{}});assert(result.error);console.log('Cooking save calculation passed: all characters, kitchen speed, effective ladle talent, rounding, ready stock, missing save and no mutation.');console.log('Example:',cook.name,'speed',cook.speed,'bonus',cook.ladleBonus,'first meal ladles',r.ladles);
+
+

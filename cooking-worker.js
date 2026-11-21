@@ -19,7 +19,7 @@ function build(parsed,save){
  const minehead={perHour:account.minehead?.currencyGain,meal:PrayerMath.getMealsBonusByEffectOrStat(account,null,'MineCurr'),grid:PrayerMath.getResearchGridBonus(account,147,0)+PrayerMath.getResearchGridBonus(account,166,0)};
  const nodes=account.cooking.meals.map(m=>({id:m.index,name:m.name||m.rawName,mealLevel:m.level,points:m.cookingMasteryNode?.level||0,stat:m.stat,effect:m.effect,bonus:mealBonuses.find(b=>b.id===m.index)?.bonus||0}));
  const values=parsed.characters.map((character,id)=>{
-  const kitchens=PrayerMath.parseKitchens(cooking,atoms,parsed.characters,account,{characterIndex:id});
+  const kitchens=PrayerMath.parseKitchens(cooking,atoms,parsed.characters,account,{characterIndex:id}).filter(Boolean);
   const farm=character.skillsInfo?.farming?.level||0;
   const farmRatio=(1+marshmallow*Math.ceil((farm+1)/50)/100)/(1+marshmallow*Math.ceil((highestFarm+1)/50)/100);
   const speeds=kitchens.map(k=>k.mealSpeed*farmRatio);

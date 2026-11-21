@@ -577,7 +577,8 @@ export const getPrismaMulti = (account: any) => {
   // JellyOperation RoG_BonusQTY(36): Research[7][9] > 36, Research[47][36] = 1.
   const jellyBonus = getJellyReward(account, 36);
 
-  const value = Math.min(4, 2 + (tesseractBonus
+  // Native ArcaneType("PrismaBonusMult") caps at 5, including Diamond Chef.
+  const value = Math.min(5, 2 + (tesseractBonus
     + (arcadeBonus + sushiBonus + jellyBonus + (trophyBonus + (paletteBonus
        + (sigilsBonus + exoticMarketBonus)))) + legendBonus + 50 * companionBonus) / 100);
 

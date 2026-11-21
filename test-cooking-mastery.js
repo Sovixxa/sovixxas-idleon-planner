@@ -16,6 +16,33 @@ const read=v=>typeof v==='string'?JSON.parse(v):v,account=parsed.account;
 const initial=c.PrayerMath.parseKitchens(read(raw.data.Cooking),read(raw.data.Atoms),parsed.characters,account,{characterIndex:1}).reduce((s,k)=>s+k.mealSpeed,0);
 for(const id of [1,12,13,43,55]){const meal=account.cooking.meals[id];if(!['Mcook','KitchenEff','zMealFarm'].includes(meal.stat))continue;const old=meal.cookingMasteryNode.multi;meal.cookingMasteryNode.multi=M.multi(meal.cookingMasteryNode.level+1);const changed=c.PrayerMath.parseKitchens(read(raw.data.Cooking),read(raw.data.Atoms),parsed.characters,account,{characterIndex:1}).reduce((s,k)=>s+k.mealSpeed,0);meal.cookingMasteryNode.multi=old;const current=result.scenarios[0];near(M.speedAt(current.mastery,current.values[1],{[id]:1})/current.values[1].speed,changed/initial);}
 console.log('Mastery: formula thresholds, Jelly points, locked flavors, point allocations, and yellow gains versus full kitchen formula pass.');console.log('Best yellow:',yellow[0].name,yellow[0].gain,'Purple:',purple.find(r=>r.unlocked&&r.isExpBoost)?.name,'Points',m.points);
+// Exercise saved ribbons, nonzero mastery allocations and Menagerie together.
+// Compare the optimizer's fast preview with a fresh decode of the edited save
+// for every character and kitchen, including the selected farming-level factor.
+const combinedRaw=structuredClone(raw),speedStats=new Set(['Mcook','KitchenEff','zMealFarm']);
+const ribbon=read(combinedRaw.data.Ribbon),master=read(combinedRaw.data.CookMaster);
+const speedMeals=account.cooking.meals.filter(meal=>speedStats.has(meal.stat)&&meal.level>0);
+assert(speedMeals.length>=3);
+for(const meal of speedMeals){ribbon[28+meal.index]=20+meal.index%5;master[0][meal.index]=5+meal.index%3;}
+combinedRaw.data.Ribbon=ribbon;combinedRaw.data.CookMaster=master;
+const menagerie=Array.from({length:7},()=>Array(40).fill(0));menagerie[3][4]=3;menagerie[3][21]=2;combinedRaw.data.Menagerie=menagerie;
+c.onmessage({data:combinedRaw});assert(!result.error,result.error);const combined=structuredClone(result.scenarios[0]);
+const nextRaw=structuredClone(combinedRaw),allocation={};
+for(const meal of speedMeals){allocation[meal.index]=master[0][meal.index]+1;nextRaw.data.CookMaster[0][meal.index]=allocation[meal.index];}
+c.onmessage({data:nextRaw});assert(!result.error,result.error);const next=structuredClone(result.scenarios[0]);
+for(const rate of combined.values)near(M.speedAt(combined.mastery,rate,allocation),next.values.find(row=>row.id===rate.id).speed);
+for(const meal of speedMeals){const id=meal.index;near(next.mealBonuses[id].bonus/combined.mealBonuses[id].bonus,M.multi(allocation[id])/M.multi(master[0][id]));}
+const noRibbon=structuredClone(combinedRaw);noRibbon.data.Ribbon=noRibbon.data.Ribbon.map(()=>0);
+c.onmessage({data:noRibbon});assert(!result.error,result.error);
+for(const meal of speedMeals)assert(combined.mealBonuses[meal.index].bonus>result.scenarios[0].mealBonuses[meal.index].bonus,'Equipped ribbon must reach meal bonus');
+assert(combined.values[1].speed>result.values[1].speed,'Equipped ribbons must reach kitchen speed');
+const noMenagerie=structuredClone(combinedRaw);noMenagerie.data.Menagerie[3][4]=0;noMenagerie.data.Menagerie[3][21]=0;
+c.onmessage({data:noMenagerie});assert(!result.error,result.error);
+const menagerieFactor=combined.values[0].sources.find(source=>source.name==='Menagerie').value;
+assert(menagerieFactor>1);
+for(const rate of combined.values)near(rate.speed/result.values.find(row=>row.id===rate.id).speed,menagerieFactor);
+assert(combined.mastery.expRate>result.scenarios[0].mastery.expRate,'Menagerie mastery EXP must be separate from cooking speed');
+console.log('Combined ribbons + nonzero yellow points + Menagerie: fresh-save parity across all characters and kitchen speeds passes.');
 const snapshot=JSON.stringify(m),setup=M.accountSetup(m,38);
 assert.equal(Object.values(setup).reduce((a,b)=>a+b,0),38);assert(setup[64]>0,'Balanced setup must consider Yumi');
 const excluded=M.accountSetup(m,38,{64:0});assert.equal(excluded[64],0);assert(Object.values(M.accountSetup(m,0)).every(v=>v===0));

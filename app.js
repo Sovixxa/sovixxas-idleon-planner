@@ -203,6 +203,7 @@ SKILL_PAGES.holeFloors={title:'Floors',world:'World 5',copy:'All 18 Hole caverns
     window.StatConnections?.dispose();
     window.LibraryPage?.dispose();
     window.SailingArtifactChance?.dispose();
+    window.GamingBonuses?.dispose();
     window.BreedingExpBonuses?.dispose();
     window.SailingTrade?.dispose();
     window.Dashboard?.dispose();

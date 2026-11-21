@@ -3,6 +3,7 @@
   "version": "0.9.9",
   "private": true,
   "scripts": {
+    "test:cooking-speed": "node test-cooking-speed-client.js && node test-cooking-worker.js && node test-cooking-mastery.js && node test-cooking-arcade-client.js && node test-menagerie-bonuses.js && node test-cooking-speed-browser.js",
     "test:cooking-exp": "node test-cooking-exp.js && node test-cooking-exp-browser.js",
     "test:research-notes": "node test-research-notes.js && node test-research-optimizer-browser.js",
     "test:research-shapes": "node test-research-shapes.js && node test-research-optimizer-browser.js",
@@ -59,6 +60,7 @@
     "test:shiny-loadouts": "node test-shiny-optimizer.js && node test-shiny-optimizer-browser.js",
     "test:summoning": "node test-summoning-optimizer.js && node test-summoning-browser.js",
     "test:library": "node test-library.js && node test-library-browser.js",
+    "test:gaming": "node test-gaming-bonuses.js && node test-gaming-nuggets.js && node test-world5.js && node test-gaming-bonuses-browser.js",
     "test:sailing": "node test-world5.js && node test-sailing-artifact-model.js && node test-sailing-artifact-browser.js",
     "test:farming-777": "node test-farming-trade.js && node test-farming-trade-browser.js",
     "test:777": "node test-sailing-trade.js && node test-sailing-trade-browser.js",

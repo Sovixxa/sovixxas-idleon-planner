@@ -1,3 +1,4 @@
+import { getClamWorkBonus } from '@parsers/world-7/clamWork';
 import { getCrucibleBonus, getMenagerieBonus, hasMenagerieUnlock } from '@parsers/world-7/menagerie';
 import { getJellyReward } from '@parsers/world-7/jellyRewards';
 import { atomsInfo, cookingMenu, monsters, randomList, randomList2, bonuses } from '@website-data';
@@ -18,7 +19,7 @@ import { getTalentBonus, getVoidWalkerTalentEnhancements, getBestActiveCharacter
 import { getEquinoxBonus } from '@parsers/world-3/equinox';
 import LavaRand from '@utility/lavaRand';
 import { allProwess, getAllBaseSkillEff, getAllEff } from '@parsers/efficiency';
-import { getCardBonusByEffect } from '@parsers/cards';
+import { getCardBonusByEffect, getCardLevel } from '@parsers/cards';
 import { getArcadeBonus } from '@parsers/world-2/arcade';
 import { getWinnerBonus } from '@parsers/world-6/summoning';
 import { getIsland } from '@parsers/world-2/islands';
@@ -511,9 +512,7 @@ export const parseKitchens = (cookingRaw: any, atomsRaw: any, characters: any, a
     const doughRoller = getEventShopBonus(account, 53);
     const diamondChef = getBubbleBonus(account, 'DIAMOND_CHEF', false);
     const kitchenEffMeals = getMealsBonusByEffectOrStat(account, null, 'KitchenEff');
-    const trollCard = account?.cards?.Massive_Troll; // Kitchen Eff card
-    const trollCardStars = trollCard?.stars ?? 0;
-    const trollBonus = trollCardStars === 0 ? 0 : trollCardStars + 1;
+    const trollBonus = getCardLevel(account?.cards, 'Boss4A');
     const allPurpleActive = account?.lab?.jewels?.slice(0, 3)?.every(({ active }: any) => active) ? 2 : 1;
     const amethystRhinestone = getJewelBonus(account?.lab?.jewels, 0) * allPurpleActive;
     const isRichelin = kitchenIndex < account?.gemShopPurchases?.find((value: any, index: any) => index === 120);
@@ -523,7 +522,7 @@ export const parseKitchens = (cookingRaw: any, atomsRaw: any, characters: any, a
     const firstAchievement = getAchievementStatus(account?.achievements, 225);
     const secondAchievement = getAchievementStatus(account?.achievements, 224);
     const marshmallowBonus = getMealsBonusByEffectOrStat(account, null, 'zMealFarm');
-    const cardCookingMulti = getCardBonusByEffect(account?.cards, 'Cooking_Spd_Multi_(Passive)');
+    const cardCookingMulti = 5 * getCardLevel(account?.cards, 'w6c1');
     const arcadeBonus = getArcadeBonus(account?.arcade?.shop, 'Cooking_Speed')?.bonus ?? 0;
     const winnerBonus = getWinnerBonus(account, '<x Cooking SPD');
     const highestFarming = getHighestCharacterSkill(characters, 'farming');
@@ -575,6 +574,7 @@ export const parseKitchens = (cookingRaw: any, atomsRaw: any, characters: any, a
       * Math.max(1, account?.farming?.cropDepot?.cookingSpeed?.value)
       * Math.max(1, voidWalkerApocalypseBonus)
       * (1 + doughRoller)
+      * (1 + 9 * getClamWorkBonus(account, 10))
       * (1 + richelinBonus)
       * (1 + voteBonus / 100)
       * (1 + upgradeVaultBonus / 100)
@@ -616,6 +616,7 @@ export const parseKitchens = (cookingRaw: any, atomsRaw: any, characters: any, a
             { name: "Crop Depot", value: Math.max(1, account?.farming?.cropDepot?.cookingSpeed?.value) },
             { name: "Enhancement Eclipse", value: Math.max(1, voidWalkerApocalypseBonus) },
             { name: "Dough Roller (Event Shop)", value: 1 + doughRoller },
+            { name: "Clam Work", value: 1 + 9 * getClamWorkBonus(account, 10) },
             { name: "Richelin Kitchen", value: 1 + richelinBonus },
             { name: "Vote Bonus", value: 1 + voteBonus / 100 },
             { name: "Upgrade Vault", value: 1 + upgradeVaultBonus / 100 },
