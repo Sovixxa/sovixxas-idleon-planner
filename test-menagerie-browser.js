@@ -18,12 +18,12 @@ const fs=require('node:fs'),path=require('node:path'),assert=require('node:asser
  assert(!/Unknown Lumi \/ hour/.test(await page.locator('.mena-analysis').innerText()));
  await page.locator('[data-mena-tab="Crucible"]').click();assert.equal(await page.locator('.mena-tile').count(),16);
  await page.locator('[data-mena-tab="Boosts"]').click();
- for(const id of [2,5,8,10,12,17,23]){
+ for(const id of [2,5,8,10,12,17,21,23,15]){
   if(await page.locator('[data-mena-close]').count())await page.locator('[data-mena-close]').click();
   await page.locator(`[data-mena-boost="${id}"]`).click();
   assert.equal(await page.locator('.mena-costs tbody tr').count(),10);
   const level=d.Menagerie[3][id],cost=require('./menagerie').boostCost(id,level);
-  assert.equal(await page.locator('.mena-costs tbody tr').first().locator('td').nth(1).innerText(),cost>=1e15?cost.toExponential(3):cost.toLocaleString('en',{notation:'compact',maximumFractionDigits:2}));
+  assert.equal(await page.locator('.mena-costs tbody tr').first().locator('td').nth(2).innerText(),cost>=1e15?cost.toExponential(3):cost.toLocaleString('en',{notation:'compact',maximumFractionDigits:2}));
   assert.equal(await page.locator('.mena-costs tbody tr').last().locator('td').first().innerText(),`${level+9} → ${level+10}`);
  }
  await page.screenshot({path:'../audit/menagerie-boost-costs-desktop.png'});

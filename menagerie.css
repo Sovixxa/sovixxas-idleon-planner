@@ -16,4 +16,4 @@
 
 .mena-crucible-reward{min-height:110px;border-color:#655175;background:#2a2035;gap:10px}.mena-crucible-reward.earned{border-color:#aa75c8;background:linear-gradient(135deg,#513263,#392547)}.mena-crucible-reward>strong{font-size:13px;color:#f0ddff}.mena-crucible-reward>span{font-size:13px;color:#f0e5f7}.mena-crucible-reward>small{font-size:11px;color:#c7afda}
 
-.mena-costs{inset:auto 18px 18px auto;color:#dfcafa}.mena-costs::backdrop{background:transparent}.mena-boost-increase{color:#dfcafa;font-weight:600}
+.mena-costs{inset:auto 18px 18px auto;color:#dfcafa}.mena-costs::backdrop{background:transparent}.mena-row-increase{display:block;margin-top:3px;color:#b8acc7;font-size:11px}.mena-costs th,.mena-costs td{padding:7px 4px}@media(max-width:480px){.mena-costs table{font-size:12px}}

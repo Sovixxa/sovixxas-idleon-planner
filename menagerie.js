@@ -63,11 +63,12 @@ function render(host,raw){const model=decode(raw),token={};host._menagerieToken=
  function boostPreview(x){
   const head='<section class="mena-analysis mena-costs" popover="auto" role="dialog" aria-label="Upcoming upgrade prices"><button type="button" class="mena-costs-close" data-mena-close aria-label="Close upgrade prices">×</button><h3>Upcoming upgrade prices</h3>';
   if(x.level==null)return head+'<p>Boost level unavailable.</p></section>';
-  const increase=x.name.includes('}')?`+${fmt(x.perLevel/100)}× to multiplier`:x.name.replace('{',fmt(x.perLevel));
-  const next=x.name.replace('{',fmt((x.level+1)*x.perLevel)).replace('}',fmt(1+(x.level+1)*x.perLevel/100));
+  const multiplier=x.name.includes('}'),unit=multiplier?'×':x.name.includes('{%')?'%':x.name.includes('{ sec')?' sec':'';
+  const amount=level=>fmt(multiplier?1+level*x.perLevel/100:level*x.perLevel)+unit;
+  const increase='+'+fmt(multiplier?x.perLevel/100:x.perLevel)+unit;
   let total=0;
-  const rows=Array.from({length:10},(_,i)=>{const level=x.level+i,cost=boostCost(x.id,level);total+=cost;return `<tr><td>${fmt(level)} → ${fmt(level+1)}</td><td>${price(cost)}</td><td>${price(total)}</td></tr>`;}).join('');
-  return `${head}<p>${esc(x.effect)}</p><p class="mena-boost-increase">Per level: ${esc(increase)}</p><p>Next level: ${esc(next)}</p><p>${status(x.available,'Available','Rank locked')}</p><table><thead><tr><th>Level</th><th>Price (Lumi)</th><th>Total (Lumi)</th></tr></thead><tbody>${rows}</tbody></table></section>`;
+  const rows=Array.from({length:10},(_,i)=>{const level=x.level+i,cost=boostCost(x.id,level);total+=cost;return `<tr><td>${fmt(level)} → ${fmt(level+1)}</td><td>${esc(amount(level+1))}<small class="mena-row-increase">${esc(increase)}</small></td><td>${price(cost)}</td><td>${price(total)}</td></tr>`;}).join('');
+  return `${head}<p>${esc(x.effect)}</p><p>${status(x.available,'Available','Rank locked')}</p><table><thead><tr><th>Level</th><th>Bonus</th><th>Price (Lumi)</th><th>Total (Lumi)</th></tr></thead><tbody>${rows}</tbody></table></section>`;
  }
  const status=(v,yes,no)=>v==null?'Unknown':v?yes:no;
  const tile=(icon,name,value,detail,upgrade='')=>`<article class="mena-tile"><img src="assets/${icon}.png" alt=""><div><strong>${esc(name)}</strong><span>${esc(value)}</span><small>${esc(detail)}</small>${upgrade?`<div class="mena-jelly-upgrade"><strong>Next upgrades</strong><small>${esc(upgrade)}</small></div>`:''}</div></article>`;
