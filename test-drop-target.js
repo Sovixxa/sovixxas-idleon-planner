@@ -2,7 +2,7 @@ const fs=require('fs'),vm=require('vm'),assert=require('assert/strict');
 const c={console};vm.createContext(c);
 // Keep JSON-save arrays in the engine realm so its Array helpers survive clones.
 vm.runInContext('structuredClone=value=>JSON.parse(JSON.stringify(value))',c);
-for(const f of ['prayer-math-engine.js','stat-todo-model.js','drop-rate-model.js','drop-source-info.js','drop-target-sources.js','drop-target-model.js','upgrade-icons.js','drop-rate.js'])vm.runInContext(fs.readFileSync(f,'utf8'),c);
+for(const f of ['prayer-math-engine.js','connected-primary-stats.js','stat-todo-model.js','drop-rate-model.js','drop-source-info.js','drop-target-sources.js','drop-target-model.js','upgrade-icons.js','drop-rate.js'])vm.runInContext(fs.readFileSync(f,'utf8'),c);
 const app=fs.readFileSync('app.js','utf8');for(const match of fs.readFileSync('drop-target-sources.js','utf8').matchAll(/page:'([^']+)'/g))assert(match[1]==='jelly'||app.includes(match[1]+':')||app.includes('SKILL_PAGES.'+match[1]+'='),'Valid upgrade navigation: '+match[1]);
 const raw=JSON.parse(fs.readFileSync('../example json.txt','utf8')),original=JSON.stringify(raw),M=c.PrayerMath,S=c.DropTargetSources;
 const parse=data=>M.parseData(c.structuredClone(data),raw.charNames,raw.companion,raw.guildData,raw.serverVars||{},raw.accountCreateTime,raw.tournament);

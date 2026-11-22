@@ -14,6 +14,8 @@ assert.equal(M.farmerMultikill(farmer,1),127);
 assert.equal(M.farmerMultikill(farmer,0,1),127,'Self Affliction reduces damage before tier selection');
 assert.equal(M.farmerMultikill({...farmer,loot:{...farmer.loot,wraith:true}},0,1),175,'Wraith returns before the normal damage penalty');
 assert.equal(M.farmerMultikill({...farmer,loot:{...farmer.loot,clamworksDamage:1e16}},0),127,'Use destination damage instead of saved-map damage');
+assert.equal(M.farmerMultikill({...farmer,loot:{...farmer.loot,damage:NaN,clamworksDamage:25e16}},0),175,'Validate rebuilt destination damage independently of stale saved-map damage');
+assert.equal(M.farmerMultikill({...farmer,loot:{...farmer.loot,clamworksDamage:NaN}},0),null,'Invalid destination damage must not produce a first-tier estimate');
 assert.equal(M.farmerMultikill({...farmer,missing:['PVStatList_']},0),null);
 assert.equal(M.farmerMultikill({loot:{base:100}},0),null);
 console.log('Automatic multikill: W7 diminishing returns, tier boundary, promotion HP and missing data passed.');

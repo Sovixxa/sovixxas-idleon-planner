@@ -1,7 +1,7 @@
 const fs=require('fs'),vm=require('vm'),assert=require('assert/strict');
 const c={console};vm.createContext(c);
 vm.runInContext('structuredClone=value=>JSON.parse(JSON.stringify(value))',c);
-for(const f of ['prayer-math-engine.js','stat-todo-model.js','drop-rate-model.js','drop-source-info.js','drop-target-sources.js','drop-target-model.js'])vm.runInContext(fs.readFileSync(f,'utf8'),c);
+for(const f of ['prayer-math-engine.js','connected-primary-stats.js','stat-todo-model.js','drop-rate-model.js','drop-source-info.js','drop-target-sources.js','drop-target-model.js'])vm.runInContext(fs.readFileSync(f,'utf8'),c);
 const raw=JSON.parse(fs.readFileSync('../example json.txt','utf8')),M=c.PrayerMath,S=c.DropTargetSources,build=S.build;
 const parse=r=>M.parseData(c.structuredClone(r.data),r.charNames,r.companion,r.guildData,r.serverVars,r.accountCreateTime,r.tournament);
 const initial=parse(raw),eqIndex=initial.account.equinox.upgrades.findIndex(s=>s.name==='Voter_Rights'),arcIndex=initial.account.arcade.shop.findIndex(s=>s.effect?.includes('Meritocracy_Bonus'));

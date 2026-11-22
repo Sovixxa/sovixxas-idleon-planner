@@ -168,6 +168,8 @@ export const getCoralKidUpgBonus = (account: any, index: any) => {
       return Math.round(2 * levelValue);
     case 5:
       return (levelValue / (40 + levelValue)) * 100;
+    case 11:
+      return Math.round(Number(accountOptions?.[621]) || 0);
     default:
       return 0;
   }

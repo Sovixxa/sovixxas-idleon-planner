@@ -1,6 +1,6 @@
 'use strict';
 const fs=require('fs'),vm=require('vm'),assert=require('node:assert/strict'),{handler}=require('./client-source-utils'),M=require('./clamworks-optimizer');
-const source=fs.readFileSync('../audit/N.js','utf8');
+const source=fs.readFileSync('../audit/live-N-nov15-hotfix-check.js','utf8');
 const attrs={CurrentMap:306,DNSM:{h:{StarSigns:{h:{}},AlchVials:{h:{}},BoxRewards:{h:{}},AlchBubbles:{h:{}}}},TowerInfo:[],OptionsListAccount:[],AFKtarget:'w7a6',MonsterDefinitionsGET:{h:{w7a6:{h:{}}}}};
 const zero=()=>0,p={},x={},ctx={a:{engine:{getGameAttribute:k=>attrs[k]}},c:{asNumber:v=>Number(v)||0},p,x,k:{_customBlock_StampBonusOfTypeX:zero,_customBlock_GetTalentNumber:zero},v:{_customBlock_EtcBonuses:zero,_customBlock_CardBonusREAL:zero},q:{_customBlock_chipBonuses:zero},m:{_customBlock_Holes:zero,_customBlock_Sailing:zero}};
 for(const key of ['SaltLick','AchieveStatus','getbonus2','ArcadeBonus','prayersReal','Breeding','CardSetBonuses'])p['_customBlock_'+key]=zero;
@@ -16,5 +16,5 @@ for(const base of [0,19,20,49,50,99,100,149,150,199,200,249,250,2000])for(const 
  x._customBlock_DamageDealed=()=>damage/100**affliction;
  assert.equal(M.farmerMultikill({loot:{damage,base,perTier:[0,0,0,0,0,0,perTier]}},promotion,affliction),native('MultiKillTOTAL',0,0));checks++;
 }
-assert.match(handler(source,'_customBlock_DamageDealed'),/306==a.engine.getGameAttribute\("CurrentMap"\).*?Math.pow\(100,c.asNumber\(a.engine.getGameAttribute\("Menagerie"\)\[5\]\[2\]\)\)/);
+assert.match(handler(source,'_customBlock_DamageDealed'),/306==a.engine.getGameAttribute\("CurrentMap"\).*?Math.pow\(100,c.asNumber\(a.engine.getGameAttribute\("Menagerie"\)\[5\]\[2\]\)\)/s);
 console.log(`Clamworks native multikill parity: ${checks} curve, tier, promotion and Self Affliction cases passed.`);

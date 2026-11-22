@@ -1,14 +1,17 @@
 'use strict';
 const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
 const context={console,structuredClone,setTimeout};vm.createContext(context);
-for(const file of ['prayer-math-engine.js','drop-rate-model.js'])vm.runInContext(fs.readFileSync(file,'utf8'),context);
+for(const file of ['prayer-math-engine.js','connected-primary-stats.js','drop-rate-model.js'])vm.runInContext(fs.readFileSync(file,'utf8'),context);
 const M=context.PrayerMath,D=context.DropRateModel,raw=JSON.parse(fs.readFileSync('../example json.txt','utf8')),original=JSON.stringify(raw);
 const result=D.calculate(raw);assert.equal(JSON.stringify(raw),original,'Never mutate the imported save');
 assert.equal(result.characters.length,raw.charNames.length);
 for(const ch of result.characters){assert(!ch.error,ch.error);assert(ch.rows.length>60);assert(Math.abs(ch.rows.at(-1).running-ch.normal)<ch.normal*1e-10);assert.equal(ch.missing.length,0);}
 assert.equal(D.calculate({}).characters.length,0);
 const p=M.parseData(raw.data,raw.charNames,raw.companion,raw.guildData,raw.serverVars,raw.accountCreateTime,raw.tournament),ch=p.characters[3],account=p.account;
-assert.equal(result.characters[3].loot.clamworksDamage,M.getMaxDamage({...ch,mapIndex:306,targetMonster:'w7a6'},p.characters,account).maxDamage,'Clamworks damage uses the destination without moving other characters');
+const rebuilt=p.characters.map(c=>({...c,stats:{...c.stats}})),totals=rebuilt.map(c=>context.ConnectedPrimaryStats.calculate(c,account,rebuilt,M,false));
+totals.forEach((stats,i)=>stats.forEach((s,j)=>rebuilt[i].stats[['strength','agility','wisdom','luck'][j]]=s.computed));
+assert.equal(result.characters[3].loot.clamworksDamage,M.getMaxDamage({...rebuilt[3],mapIndex:306,targetMonster:'w7a6'},rebuilt,account).maxDamage,'Clamworks uses rebuilt primary stats at the destination without moving other characters');
+assert.equal(result.characters[3].loot.damage,M.getMaxDamage(ch,p.characters,account).maxDamage,'The separate ordinary loot calculation keeps its existing inputs');
 const rate=a=>M.getDropRate(ch,a,p.characters);
 const chanceGear=M.getDropRate({...ch,tools:[...ch.tools,{UQ1txt:'%_DROP_CHANCE',UQ1val:100}]},account,p.characters);
 assert.equal(chanceGear.pools.additive-rate(account).pools.additive,100,'DROP_CHANCE gear joins the additive pool');

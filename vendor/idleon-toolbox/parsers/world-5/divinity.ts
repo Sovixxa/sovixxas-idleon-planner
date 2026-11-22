@@ -296,6 +296,23 @@ const isPocketDivinityOwned = (account: any, godIndex: number) => {
   return (first === godIndex && unlockedSpots > 0) || (second === godIndex && unlockedSpots > 1);
 }
 
+// Bonus_Minor for one character. Unlike Bonus_MAJOR, Coral Kid's chosen god
+// does not activate a personal minor bonus. Saved links are slots, not bonus IDs.
+export const getActiveMinorDivinityBonus = (character: any, account: any, godIndex: number) => {
+  const slot = (gods as any[]).findIndex(god => Number(god.godIndex) === godIndex);
+  if (slot < 0) return 0;
+  const globalLink = (isCompanionBonusActive(account, 0) && Number(character?.skillsInfo?.divinity?.level) >= 2) || isPocketDivinityOwned(account, godIndex)
+    || (godIndex === 2 && (account?.research?.gridSquares?.[173]?.bonuses?.[0] ?? 0) >= 1)
+    || (godIndex === 0 && Number(account?.gemShopPurchases?.[9]) === 1);
+  if (globalLink) return getMinorDivinityBonus(character, account, slot);
+  const linkedSlot = account?.divinity?.linkedDeities?.[character?.playerId];
+  if (linkedSlot == null || Number(linkedSlot) === -1) return 0;
+  if (Number(linkedSlot) === slot) return getMinorDivinityBonus(character, account, slot);
+  const secondSlot = character?.secondLinkedDeityIndex;
+  return secondSlot != null && Number(secondSlot) === slot && Number(account?.divinity?.unlockedDeities) > slot
+    ? getMinorDivinityBonus(character, account, slot) : 0;
+}
+
 // Divinity("W7divChosen", 0, 0). OptionsListAccount[425] is a 1-based god slot, 0 meaning nobody
 // has been chosen yet.
 export const getW7ChosenGodIndex = (account: any) => {

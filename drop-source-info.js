@@ -59,7 +59,9 @@ add('DR Vial','vials','Vials','The drop-rate multiplier vial supplies a separate
 add('Crystal Custard|Quenchie|Santa Snake|Clammie|Lucky Slug|Mama Troll|Crystal Glunko|Mallay|Glunko The Massive','pets','Pets','An active owned or borrowed companion supplies this drop-rate bonus. Some companions contribute to both additive and multiplier stages.','Obtain the companion and check its upgraded bonus on the Pets page. Availability and upgrade tier determine the practical limit.');
 // This is a dependency inventory, not a claim that one compared option covers
 // every route in a source. Keep it separate from account-specific candidates.
+add('Menagerie','menagerie','Menagerie','The Menagerie drop-rate boost multiplies total drop rate.','Depends on the saved boost level and its amplification.');
 function planning(names,modeled,review){for(const name of names.split('|'))Object.assign(entries[name.toLowerCase()],{modeled,review});}
+planning('Menagerie','Saved Menagerie drop-rate multiplier.','Menagerie boost purchases and amplification remain manual.');
 planning('Base','Fixed baseline.','No upgrade.');
 planning('Luck','Saved Luck only.','Primary-stat and Luck redistribution are not simulated.');
 planning('Talents|Graded Rate (Royal Guardian)|Archlord of the Pirates|Royal Guardian family','Plunder kills and family class-level milestones where relevant.','Talent allocation, library caps, Boss Battle Spillover boss count, Royal resource grades and The Family Guy remain manual.');

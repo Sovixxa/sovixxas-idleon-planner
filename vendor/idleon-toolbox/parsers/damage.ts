@@ -5,7 +5,7 @@ import type { Account, Character } from './types';
 import { checkCharClass, CLASSES, getTalentBonus, getTalentBonusIfActive, mainStatMap, getHighestTalentAcrossCharacters } from './talents';
 import { getPostOfficeBonus } from './world-3/postoffice';
 import { getDungeonFlurboStatBonus } from './dungeons';
-import { getCardBonusByEffect } from './cards';
+import { getCardBonusByEffect, getCardLevel } from './cards';
 import { getGuildBonusBonus } from './guild';
 import { getActiveBubbleBonus, getBubbleBonus, getSigilBonus, getVialsBonusByStat } from './world-2/alchemy';
 import { getStatsFromGear } from './items';
@@ -39,7 +39,7 @@ import { isSuperbitUnlocked } from './world-5/gaming';
 import { constructionMasteryThresholds } from './world-3/construction';
 import { getSaltLickBonus } from './world-3/saltLick';
 import { getAchievementStatus } from './achievements';
-import { getGodBlessingBonus, getMinorDivinityBonus, isMajorDivinityActive } from './world-5/divinity';
+import { getGodBlessingBonus, getActiveMinorDivinityBonus, isMajorDivinityActive } from './world-5/divinity';
 // getEquinoxBonus not used - AdditionExtraDMG uses talent-based calculation
 import { getMiningEff } from '@parsers/efficiency';
 import { getUpgradeVaultBonus } from './misc/upgradeVault';
@@ -67,6 +67,8 @@ import { getCglunkoBonus } from './world-5/caverns/crystal-glunko-cove';
 import { notateNumber } from '@utility/helpers';
 import { getSpelunkingBonus } from './world-7/spelunking';
 import { getRoyalStatueBonus } from './class-specific/royalGuardian';
+import { getResearchGridBonus } from './world-7/research';
+import { getCoralKidUpgBonus } from './world-7/coralReef';
 
 // The speedrun route re-runs this once per map with only mapIndex/targetMonster changed, so the
 // map-invariant stats can be computed once and passed back in via `shared` (one object per
@@ -235,7 +237,7 @@ const getDamagePercent = (character: Character, characters: Character[], account
   const pristineCharmBonus = getCharmBonus(account, 'Sparkle_Log');
   const summUpg79 = getSummoningUpgradeBonus(account, 79);
 
-  const activeBuff = getTalentBonusIfActive(character?.activeBuffs, 'NO_PAIN_NO_GAIN');
+  const activeBuff = getTalentBonusIfActive(character?.activeBuffs, 'NO_PAIN_NO_GAIN', 'y');
   const starSignBonus = getStarSignBonus(character, account, 'Total_Damage');
   const unlockedGods = account?.divinity?.unlockedDeities ?? 0;
   const godTalent = getHighestTalentAcrossCharacters(characters, 'GODS_CHOSEN_CHILDREN', character);
@@ -261,7 +263,7 @@ const getDamagePercent = (character: Character, characters: Character[], account
 
   const atomBonus = getAtomBonus(account, 'Neon_-_Damage_N\'_Cheapener') ?? 0;
   const shinyBonus = getShinyBonus(account?.breeding?.pets, 'Total_Damage');
-  const superbitBonus = isSuperbitUnlocked(account, 'MSA_Skill_EXP')?.bonus ?? 0;
+  const superbitBonus = isSuperbitUnlocked(account, 'MSA_Totalizer')?.bonus ?? 0;
   const shimmerBonus = Number(account?.accountOptions?.[178]) * (account?.islands?.allShimmerBonus || 0) || 0;
   const cropScBonus = account?.farming?.cropDepot?.damage?.value || 0;
   const vaultUpg41 = (getUpgradeVaultBonus(account?.upgradeVault?.upgrades, 41) || 0) * lavaLog(Number(account?.accountOptions?.[346]) || 0);
@@ -300,7 +302,8 @@ const getDamagePercent = (character: Character, characters: Character[], account
 
   const companion10 = isCompanionBonusActive(account, 10) ? account?.companions?.list?.at(10)?.bonus : 0;
   const companion156 = isCompanionBonusActive(account, 156) ? account?.companions?.list?.at(156)?.bonus : 0;
-  const cardBonus = getCardBonusByEffect(character?.cards?.equippedCards, 'Total_Damage');
+  const cardBonus = getCardBonusByEffect(Object.values(character?.cards?.equippedCards ?? {})
+    .filter((card: any) => card.effect === '+{%_Total_Damage'), 'Total_Damage');
   const cardSetBonus = character?.cards?.cardSet?.rawName === 'CardSet26' ? character?.cards?.cardSet?.bonus : 0;
 
   const arenaWave = account?.accountOptions?.[89];
@@ -331,7 +334,7 @@ const getDamagePercent = (character: Character, characters: Character[], account
   const secondGodBlessing = getGodBlessingBonus(account?.divinity?.deities, 'Kattlekruk')
 
   const curseTalent = getTalentBonus(character?.flatTalents, 'CURSE_OF_MR_LOOTY_BOOTY');
-  const activeDebuff = getTalentBonusIfActive(character?.activeBuffs, 'BALANCED_SPIRIT');
+  const activeDebuff = getTalentBonusIfActive(character?.activeBuffs, 'BALANCED_SPIRIT', 'y');
   const prayerCurse = getPrayerBonusAndCurse(character?.activePrayers, 'Balance_of_Precision', account)?.curse;
   const secondPrayerCurse = getPrayerBonusAndCurse(character?.activePrayers, 'Fibers_of_Absence', account)?.curse;
 
@@ -385,6 +388,9 @@ const getDamagePercent = (character: Character, characters: Character[], account
   // Royal Statue 0 (TOTAL DAMAGE) - returns 0 for accounts with no Royal Guardian.
   const royalStatueDmgBonus = getRoyalStatueBonus(account, 0);
   damage *= (1 + mineheadBonus / 100) * (1 + mineheadWepPow / 100) * (1 + getJellyReward(account, 37) / 100) * (1 + royalStatueDmgBonus / 100);
+  const coralKidDamageMulti = Math.pow(1 + getCoralKidUpgBonus(account, 11) / 100,
+    Math.max(0, unlockedGods - 35));
+  damage *= coralKidDamageMulti;
 
   // Weekly boss guild bonus
   const weeklyBossBonus = account?.weeklyBossesRaw?.g ?? 0;
@@ -410,7 +416,8 @@ const getDamagePercent = (character: Character, characters: Character[], account
   const postVoteBonus = getVoteBonus(account, 1) || 0;
   const postSuperbit64 = isSuperbitUnlocked(account, 'Destructive_Gamer') ? 1 : 0;
   const accountOpt232 = 10 * Math.floor((96 + (Number(account?.accountOptions?.[232]) || 0)) / 100);
-  const postCardBonus96 = getCardBonusByEffect(character?.cards?.equippedCards, 'Total_Damage_(Passive)') || 0;
+  // IDforCardBonus[96] is the equipped Total_Damage_Multi effect (e.g. Chaotic Kattlekruk).
+  const postCardBonus96 = getCardBonusByEffect(character?.cards?.equippedCards, 'Total_Damage_Multi') || 0;
   const stickerMulti = account?.farming?.dmgMulti ?? 1;
   const tomeBonus6 = account?.tome?.bonuses?.[6]?.bonus || 0;
   const achievePost = getAchievementStatus(account?.achievements, 371) + getAchievementStatus(account?.achievements, 384);
@@ -447,6 +454,12 @@ const getDamagePercent = (character: Character, characters: Character[], account
   const crystalCardBonus = Math.min(1.5 * (crystal6Card?.amount > 0 ? (crystal6Card?.stars ?? 0) + 1 : 0), 15);
   const meritBonus5 = getMeritocracyBonus(account, 5);
   damage *= (1 + crystalCardBonus / 100) * (1 + meritBonus5 / 100);
+
+  // DamageDealed: TotalGreenSigils * Grid_Bonus(127), capped at +100%,
+  // after the ordinary softcaps and before the Reliquarium exponent.
+  const greenSigilDamageBonus = Math.min(100,
+    (account?.alchemy?.p2w?.totalEclecticSigils ?? 0) * getResearchGridBonus(account, 127, 0));
+  damage *= 1 + greenSigilDamageBonus / 100;
 
   // Bundle bonus
   const hasDmgBundle = isBundlePurchased(account?.bundles, 'bon_a');
@@ -485,13 +498,14 @@ const getDamagePercent = (character: Character, characters: Character[], account
         { name: 'Minehead (WP DMG%)', value: mineheadWepPow },
         { name: 'Jelly damage', value: getJellyReward(account, 37) },
         { name: 'Royal Statue (Total Damage)', value: royalStatueDmgBonus },
+        { name: 'Coral Kid (God Ranks)', value: (coralKidDamageMulti - 1) * 100 },
         { name: 'Weekly Boss', value: Math.max(0, Math.min(150, weeklyBossBonus)) },
         { name: 'Equipment (Dmg Multi)', value: postEtcBonus72 },
         { name: 'Equipment (Dmg Bonus)', value: postEtcBonus75 },
         { name: 'Equipment (EtcBonus 104)', value: postEtcBonus104 },
         { name: 'Vote Bonus', value: postVoteBonus },
         { name: 'Superbit (Destructive Gamer)', value: 10 * postSuperbit64 },
-        { name: 'Card (Passive)', value: postCardBonus96 },
+        { name: 'Card Damage Multiplier', value: postCardBonus96 },
         { name: 'Sticker Multi', value: (Math.max(1, stickerMulti) - 1) * 100 },
         { name: 'Tome', value: tomeBonus6 },
         { name: 'Achievements (Final)', value: achievePost },
@@ -506,6 +520,7 @@ const getDamagePercent = (character: Character, characters: Character[], account
         { name: 'Account bonus (232)', value: accountOpt232 },
         { name: 'Crystal Card', value: crystalCardBonus },
         { name: 'Meritocracy', value: meritBonus5 },
+        { name: 'Green Sigil Research', value: greenSigilDamageBonus },
         { name: 'Bundle', value: hasDmgBundle ? 50 : 0 },
         { name: 'Family (DMG Multi)', value: famBonus80 },
       ]
@@ -657,13 +672,7 @@ const getDamageFromPerX = (character: Character, characters: Character[], accoun
   const totalQuestsCompleted = calcTotalQuestCompleted(characters);
   const questBonus = Math.min(totalQuestsCompleted as number, questTalent);
 
-  const hasDoot = isCompanionBonusActive(account, 0);
-  const coralKidLinked = Number(account?.accountOptions?.[425]) > 0 && account?.accountOptions?.[425] === 2;
-  const minorBonus = hasDoot || coralKidLinked ? getMinorDivinityBonus(character, account, 2) : character?.linkedDeity === 2
-    ? character?.deityMinorBonus
-    : character?.secondLinkedDeityIndex === 2
-      ? character?.secondDeityMinorBonus
-      : 0;
+  const minorBonus = getActiveMinorDivinityBonus(character, account, 7);
 
   const secondGoldenFoodBonus = getGoldenFoodBonus('Golden_Kebabs', character, account, characters) || 1;
 
@@ -822,6 +831,7 @@ const getBaseDamage = (character: Character, characters: Character[], account: A
   const mpBubble = getBubbleBonus(account, 'NAME_I_GUESS', false, mainStat === 'wisdom'); // 150 MP
   const cardBonus = getCardBonusByEffect(character?.cards?.equippedCards, 'Base_Damage');
   const sigilBonus = getSigilBonus(account?.alchemy?.p2w?.sigils, 'PLUNGING_SWORD');
+  const autumnCardBonus = getCardLevel(account?.cards, 'fallEvent2');
   const cosmoBonus = getCosmoBonus({ majik: account?.hole?.holesObject?.idleonMajiks, t: 2, i: 4 });
   const owlBonus = getOwlBonus(account?.owl?.bonuses, 'Base DMG') || 0;
   const vaultUpgBonus0 = getUpgradeVaultBonus(account?.upgradeVault?.upgrades, 0) || 0;
@@ -855,7 +865,7 @@ const getBaseDamage = (character: Character, characters: Character[], account: A
           * (lavaLog2(Math.max((playerInfo.movementSpeed / 100) - 0.1, 0)) / .25)
           + (mpBubble
             * lavaLog(Math.max(playerInfo.maxMp - 150, 1))
-            + (cardBonus + sigilBonus)))));
+            + (cardBonus + sigilBonus + autumnCardBonus)))));
   if (damage > 4e3) {
     damage = 4e3 + Math.max(Math.pow(damage - 4e3, .91), 0);
   }
@@ -886,6 +896,7 @@ const getBaseDamage = (character: Character, characters: Character[], account: A
       { name: 'MP Bubble', value: mpBubble * lavaLog(Math.max(playerInfo.maxMp - 150, 1)) },
       { name: 'Cards', value: cardBonus },
       { name: 'Sigil', value: sigilBonus },
+      { name: 'Autumn Event Card', value: autumnCardBonus },
       { name: 'Cosmo', value: cosmoBonus },
       { name: 'Food (post-softcap)', value: foodBonus },
     ]
@@ -940,14 +951,7 @@ const getAccuracy = (character: Character, characters: Character[], account: Acc
   const kangarooBonus = getKangarooBonus(account?.kangaroo?.bonuses, 'Accuracy') || 0;
   const voteBonus = getVoteBonus(account, 3) || 0;
   const amarokSetBonus = getArmorSetBonus(account, 'AMAROK_SET') || 0;
-  const hasDoot = isCompanionBonusActive(account, 0);
-  // Snehebatu's minor bonus is the accuracy/defence one, and gem shop item 9 grants it account-wide
-  // whoever you are linked to: `GemItemsPurchased[9] == 1 && 0 == i` in the game's Bonus_Minor.
-  const snehebatuUnlocked = Number(account?.gemShopPurchases?.[9]) > 0;
-  const minorBonus = hasDoot || snehebatuUnlocked ? getMinorDivinityBonus(character, account, 0)
-    : character?.linkedDeity === 0 ? character?.deityMinorBonus
-      : character?.secondLinkedDeityIndex === 0 ? character?.secondDeityMinorBonus
-        : 0;
+  const minorBonus = getActiveMinorDivinityBonus(character, account, 0);
 
   let accuracy = (character?.stats as any)?.[accuracyStat]
     * (1 + bubbleBonus / 100) *
@@ -1300,8 +1304,6 @@ const getPlayerDefence = (character: Character, characters: Character[], account
   const activeBuff = getTalentBonusIfActive(character?.activeBuffs, 'BALANCED_SPIRIT');
   const flurboBonus = getDungeonFlurboStatBonus(account?.dungeons?.upgrades, 'Defence');
   const chipBonus = getPlayerLabChipBonus(character, account, 0);
-  const hasDoot = isCompanionBonusActive(account, 0);
-  const coralKidLinked = account?.accountOptions?.[425] === 0;
 
   // Missing bonuses from obfuscated code
   const vaultUpgBonus46 = getUpgradeVaultBonus(account?.upgradeVault?.upgrades, 46) || 0;
@@ -1312,12 +1314,7 @@ const getPlayerDefence = (character: Character, characters: Character[], account
   const vaultUpgBonus5 = getUpgradeVaultBonus(account?.upgradeVault?.upgrades, 5) || 0;
   const voteBonus3 = getVoteBonus(account, 3) || 0;
 
-  const snehebatuUnlocked = Number(account?.gemShopPurchases?.[9]) > 0;
-  const minorBonus = hasDoot || coralKidLinked || snehebatuUnlocked
-    ? getMinorDivinityBonus(character, account, 0)
-    : character?.linkedDeity === 0 ? character?.deityMinorBonus
-      : character?.secondLinkedDeityIndex === 0 ? character?.secondDeityMinorBonus
-        : 0;
+  const minorBonus = getActiveMinorDivinityBonus(character, account, 0);
 
   // gearBonus now includes gallery and hatRack bonuses
   // The game floors the additive base only, then multiplies - truncating before a ~200x multiplier,

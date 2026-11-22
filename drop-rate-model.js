@@ -33,8 +33,17 @@ function calculate(raw,M=root.PrayerMath){
  const errors=[],originalError=console.error;let parsed;
  try{console.error=(...args)=>errors.push(String(args[0]));parsed=M.parseData(d,copy.charNames,copy.companion,copy.guildData,copy.serverVars||{},copy.accountCreateTime,copy.tournament);}finally{console.error=originalError;}
  if(errors.length)throw new Error('Some save sections could not be decoded. Import a fresh full export.');
+ // Clamworks projects the imported loadout, not the cached PVStatList totals.
+ // Calculate the roster first, then apply results, matching the AFK stat rebuild.
+ const clamCharacters=parsed.characters.map(ch=>({...ch,stats:{...ch.stats}}));
+ const clamStats=clamCharacters.map(ch=>{try{
+  const stats=root.ConnectedPrimaryStats.calculate(ch,parsed.account,clamCharacters,M,false);
+  if(stats.some(s=>s.unknown.length||!Number.isFinite(s.computed)))throw Error('Could not rebuild Clamworks primary stats.');
+  return {stats};
+ }catch(error){return {error:error.message};}});
+ clamStats.forEach((entry,i)=>{if(entry.stats)entry.stats.forEach((stat,j)=>{clamCharacters[i].stats[['strength','agility','wisdom','luck'][j]]=stat.computed;});});
  const holes=parse(d.Holes);
- return {todo:root.StatTodoModel?.build(parsed,'drop',d),savedAt: copy.lastUpdated || null, characters:parsed.characters.map(ch=>{
+ return {todo:root.StatTodoModel?.build(parsed,'drop',d),savedAt: copy.lastUpdated || null, characters:parsed.characters.map((ch,clamIndex)=>{
   const missing=['PVStatList_','EquipOrder_','Lv0_','Prayers_','CardEquip_'].filter(k=>d[k+ch.playerId]===undefined);
   try{
    if([39,40,70,71,118,119].includes(Number(ch.mapIndex)))throw new Error('Dungeon drop rate uses live dungeon stats that are not in this export.');
@@ -49,7 +58,9 @@ function calculate(raw,M=root.PrayerMath){
    const cove=Number(ch.mapIndex)===216&&Number(holes?.[0]?.[ch.playerId])===17;
    const normal=result.dropRate,total=cove?parsed.account.hole.caverns.crystalGlunkoCove.dropRate:normal;
    if(!Number.isFinite(total))throw new Error('Non-finite drop rate');
-   let loot={rareMultiplier:1+M.getTalentBonus(ch.flatTalents,'RARES_EVERYWHERE!')/100,crystalRolls:ch.crystalSpawnChance?.embiggener||1,quests:parse(d['QuestComplete_'+ch.playerId])||{},stamps:parse(d.StampLvM)||[],recipes:parse(d.AnvilCraftStatus)||[],storage:parse(d.InvStorageUsed)||{},stampMultiplier:1+((parsed.account.bribes?.[1]?.done?parsed.account.bribes[1].value:0)+(parsed.account.bribes?.[8]?.done?parsed.account.bribes[8].value:0))/100,hpMultiplier:M.getMonsterHpTotal(1,ch,parsed.account)};try{const stats=M.getMaxDamage(ch,parsed.characters,parsed.account);Object.assign(loot,{damage:stats.maxDamage,clamworksDamage:M.getMaxDamage({...ch,mapIndex:306,targetMonster:'w7a6'},parsed.characters,parsed.account).maxDamage,accuracy:stats.accuracy,unlocked:parsed.account.towers?.towersTwo>.5,base:M.getMultiKillBase(ch,parsed.characters,parsed.account),perTier:Array.from({length:7},(_,world)=>M.getMultiKillPerTier(ch,parsed.characters,parsed.account,world))});}catch{}
+   let loot={rareMultiplier:1+M.getTalentBonus(ch.flatTalents,'RARES_EVERYWHERE!')/100,crystalRolls:ch.crystalSpawnChance?.embiggener||1,quests:parse(d['QuestComplete_'+ch.playerId])||{},stamps:parse(d.StampLvM)||[],recipes:parse(d.AnvilCraftStatus)||[],storage:parse(d.InvStorageUsed)||{},stampMultiplier:1+((parsed.account.bribes?.[1]?.done?parsed.account.bribes[1].value:0)+(parsed.account.bribes?.[8]?.done?parsed.account.bribes[8].value:0))/100,hpMultiplier:M.getMonsterHpTotal(1,ch,parsed.account)};try{const stats=M.getMaxDamage(ch,parsed.characters,parsed.account);Object.assign(loot,{damage:stats.maxDamage,accuracy:stats.accuracy,unlocked:parsed.account.towers?.towersTwo>.5,base:M.getMultiKillBase(ch,parsed.characters,parsed.account),perTier:Array.from({length:7},(_,world)=>M.getMultiKillPerTier(ch,parsed.characters,parsed.account,world))});}catch{}
+   const clamCharacter=clamCharacters[clamIndex];
+   try{if(clamStats[clamIndex].error)throw Error(clamStats[clamIndex].error);loot.clamworksDamage=M.getMaxDamage({...clamCharacter,mapIndex:306,targetMonster:'w7a6'},clamCharacters,parsed.account).maxDamage;if(!Number.isFinite(loot.clamworksDamage))throw Error('Invalid Clamworks damage.');}catch(error){loot.clamworksError=error.message;}
    const bundles=parse(d.BundlesReceived)||{};
    loot.stackBonuses={pack:Number(bundles.bon_k)===1?2:1,goldenChance:M.getDoubleGoldenFoodDrop(parsed.account),statueChance:M.getDoubleStatueDrop(parsed.account,ch,parsed.characters),legend:Number(M.getLegendTalentBonus(parsed.account,2))||0,statueUpgrade:Number(M.getSpelunkingBonus(parsed.account,48))||0};
    const buffs=parse(d['BuffsActive_'+ch.playerId])||[];

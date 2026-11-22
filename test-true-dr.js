@@ -23,7 +23,7 @@ assert.equal(M.evaluate([[e('0','Item',.5,1,'quest')]],1,{quests:{quest:1}},{sav
 assert(Math.abs(M.evaluate([[e('0','PremiumGem',.001,3)]],100000).chance-.01)<1e-12,'Direct gem scaling uses DR^0.2');
 assert.equal(M.evaluate([[e('0','TalentBook1',1,3623100)]],100000).quantity,1,'Encoded talent level is not stack size');
 // Saved death note ranks must actually contribute to per-tier multikill.
-const ctx={console,structuredClone,setTimeout};vm.createContext(ctx);for(const f of ['prayer-math-engine.js','drop-rate-model.js'])vm.runInContext(fs.readFileSync(f,'utf8'),ctx);
+const ctx={console,structuredClone,setTimeout};vm.createContext(ctx);for(const f of ['prayer-math-engine.js','connected-primary-stats.js','drop-rate-model.js'])vm.runInContext(fs.readFileSync(f,'utf8'),ctx);
 const raw=JSON.parse(fs.readFileSync('../example json.txt','utf8')),P=ctx.PrayerMath,parsed=P.parseData(raw.data,raw.charNames,raw.companion,raw.guildData,raw.serverVars,raw.accountCreateTime,raw.tournament),ch=parsed.characters[0],acc=parsed.account;
 const before=P.getMultiKillPerTier(ch,parsed.characters,acc,0),changed={...acc,deathNote:{...acc.deathNote,0:{...acc.deathNote[0],rank:acc.deathNote[0].rank+50},miniBosses:{...acc.deathNote.miniBosses,rank:acc.deathNote.miniBosses.rank+20}}};
 assert(Math.abs(P.getMultiKillPerTier(ch,parsed.characters,changed,0)-before-70)<1e-8);

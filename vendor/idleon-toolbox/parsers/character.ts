@@ -276,6 +276,7 @@ export const initializeCharacter = (char: any, charactersLevels: any, account: a
   // These switches are character-specific portal unlocks, not collection ownership.
   character.galleryUnlocked = Number(char?.KillsLeft2Advance?.[250]?.[0]) <= 0;
   character.hatRackUnlocked = Number(char?.KillsLeft2Advance?.[50]?.[0]) <= 0;
+  character.capeVineUnlocked = Number(char?.KillsLeft2Advance?.[100]?.[0]) <= 0;
   if (!char?.CharacterClass) return character;
   character.classIndex = char?.CharacterClass;
   character.class = classes?.[char?.CharacterClass];

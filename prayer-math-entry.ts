@@ -38,6 +38,7 @@ export {getBubbleBonus,isPrismaBubble} from './vendor/idleon-toolbox/parsers/wor
 export {isCompanionBonusActive} from './vendor/idleon-toolbox/parsers/misc';
 
 export {getResearchGridBonus} from './vendor/idleon-toolbox/parsers/world-7/research';
+export {getActiveMinorDivinityBonus} from './vendor/idleon-toolbox/parsers/world-5/divinity';
 
 export {getSkillExpMulti,getJadeRate} from './vendor/idleon-toolbox/parsers/character';
 export {allProwess} from './vendor/idleon-toolbox/parsers/efficiency';
@@ -138,6 +139,7 @@ export {calcShinyLvMulti} from './vendor/idleon-toolbox/parsers/world-4/breeding
 
 // Primary stats are rebuilt for AFK projections using the equipped loadout.
 export {getStatsFromGear} from './vendor/idleon-toolbox/parsers/items';
+export {getCapeVine} from './vendor/idleon-toolbox/parsers/world-4/capeVine';
 export {getObolsBonus} from './vendor/idleon-toolbox/parsers/obols';
 export {getStampsBonusByStat} from './vendor/idleon-toolbox/parsers/world-1/stamps';
 export {getCardBonusByEffect} from './vendor/idleon-toolbox/parsers/cards';

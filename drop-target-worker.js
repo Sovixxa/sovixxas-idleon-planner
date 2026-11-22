@@ -1,5 +1,5 @@
 'use strict';
-importScripts('prayer-math-engine.js','stat-todo-model.js','drop-rate-model.js','drop-source-info.js','drop-target-sources.js','drop-target-model.js');
+importScripts('prayer-math-engine.js','connected-primary-stats.js','stat-todo-model.js','drop-rate-model.js','drop-source-info.js','drop-target-sources.js','drop-target-model.js');
 let session,raw;
 onmessage=({data})=>{try{
  if(data.raw){raw=data.raw;session=DropTargetModel.session(raw,PrayerMath);}

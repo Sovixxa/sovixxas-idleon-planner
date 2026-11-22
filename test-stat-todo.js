@@ -1,7 +1,7 @@
 'use strict';
 const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
 const c={console,structuredClone};vm.createContext(c);
-for(const f of ['prayer-math-engine.js','game-currency.js','shadow-caps-data.js','stat-todo-model.js','drop-rate-model.js','combat-stat-model.js'])vm.runInContext(fs.readFileSync(f,'utf8'),c);
+for(const f of ['prayer-math-engine.js','connected-primary-stats.js','game-currency.js','shadow-caps-data.js','stat-todo-model.js','drop-rate-model.js','combat-stat-model.js'])vm.runInContext(fs.readFileSync(f,'utf8'),c);
 const raw=JSON.parse(fs.readFileSync('../example json.txt','utf8')),before=JSON.stringify(raw);
 for(const kind of ['drop','damage','classExp']){
  const result=kind==='drop'?c.DropRateModel.calculate(raw):c.CombatStatModel.calculate(raw,kind);

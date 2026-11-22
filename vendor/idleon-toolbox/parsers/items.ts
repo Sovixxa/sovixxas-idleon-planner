@@ -2,6 +2,7 @@ import { bonuses, items, itemsArray } from '@website-data';
 import { cleanUnderscore } from '@utility/helpers';
 import { getGalleryBonus } from './world-7/gallery';
 import { getHatRackBonus } from './world-3/hatRack';
+import { getCapeVineBonus } from './world-4/capeVine';
 import { getResearchGridBonus } from './world-7/research';
 
 
@@ -77,7 +78,8 @@ export const getStatsFromGear = (character: any, bonusIndex: any, account?: any,
   // The client replaces these equipped slots only after the corresponding portal unlock.
   const isCollectionSlot = (index: number) =>
     ((index === 10 || index === 14) && character.galleryUnlocked)
-    || (index === 8 && character.hatRackUnlocked);
+    || (index === 8 && character.hatRackUnlocked)
+    || (index === 12 && character.capeVineUnlocked);
 
   // Well_Dressed research (grid 172) amplifies attire MISC bonuses, never its base stats.
   const wellDressedBonus = getResearchGridBonus(account, 172, 0);
@@ -105,9 +107,10 @@ export const getStatsFromGear = (character: any, bonusIndex: any, account?: any,
   // Get gallery and hatRack bonuses for tracked item types
   const galleryBonus = character.galleryUnlocked ? getGalleryBonus(account, bonusName, character) || 0 : 0;
   const hatRackBonus = character.hatRackUnlocked ? getHatRackBonus(account, bonusName) || 0 : 0;
+  const capeVineBonus = character.capeVineUnlocked ? getCapeVineBonus(account, bonusName) : 0;
 
   const gearTotal = equipmentTotal + toolsTotal;
-  const value = gearTotal + galleryBonus + hatRackBonus;
+  const value = gearTotal + galleryBonus + hatRackBonus + capeVineBonus;
 
   return {
     value,
@@ -118,6 +121,7 @@ export const getStatsFromGear = (character: any, bonusIndex: any, account?: any,
       { name: 'Equipment', value: gearTotal },
       { name: 'Gallery', value: galleryBonus },
       { name: 'Hat Rack', value: hatRackBonus },
+      { name: 'Cape Vine', value: capeVineBonus },
       { name: '' }
     ],
     newBreakdown: {
@@ -126,6 +130,7 @@ export const getStatsFromGear = (character: any, bonusIndex: any, account?: any,
         { name: 'Equipment', value: gearTotal },
         { name: 'Gallery', value: galleryBonus },
         { name: 'Hat Rack', value: hatRackBonus },
+        { name: 'Cape Vine', value: capeVineBonus },
       ]
     }
   };
