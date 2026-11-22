@@ -18,7 +18,7 @@ function decode(raw={},catalog=root.WORLD7_CATALOG,extra=root.UPDATE_CATALOG){
  const known=Array.isArray(m)&&m.length>0,at=(row,col)=>known?number(m[row]?.[col]):null,rank=at(0,2),lumi=at(0,0);
  const levels=R[57].map((_,i)=>at(3,i)),boost=i=>levels[i]==null?null:levels[i]*Number(R[58][i]);
  const unlocks=R[56].map((description,id)=>({id,name:text(description),hint:text(R[62][id]),owned:at(2,id)==null?null:at(2,id)>=1,available:rank==null?null:id<Math.min(7,rank)+Math.floor(Math.max(0,rank-7)/2),cost:unlockCost(id)}));
- const boosts=R[57].map((description,id)=>({id,name:text(description),level:levels[id],value:boost(id),available:rank==null?null:id<Math.min(6,rank)+Math.floor(Math.max(0,rank-6)/2),cost:levels[id]==null?null:boostCost(id,levels[id]),effect:levels[id]==null?text(description):text(description).replace('{',fmt(boost(id))).replace('}',fmt(1+boost(id)/100))}));
+ const boosts=R[57].map((description,id)=>({id,name:text(description),level:levels[id],value:boost(id),perLevel:Number(R[58][id]),available:rank==null?null:id<Math.min(6,rank)+Math.floor(Math.max(0,rank-6)/2),cost:levels[id]==null?null:boostCost(id,levels[id]),effect:levels[id]==null?text(description):text(description).replace('{',fmt(boost(id))).replace('}',fmt(1+boost(id)/100))}));
  const arr=key=>parse(data[key]),opts={1:232,4:319,8:464,14:594,22:369};
  function progress(id){
   const sum=list=>Array.isArray(list)&&list.every(x=>number(x)!=null)?list.reduce((a,b)=>a+Number(b),0):null;
@@ -61,11 +61,13 @@ function decode(raw={},catalog=root.WORLD7_CATALOG,extra=root.UPDATE_CATALOG){
 function render(host,raw){const model=decode(raw),token={};host._menagerieToken=token;let tab='Missions',filter='all',analysis=null,selectedBoost=null;
  const compact=fmt,price=fmt;
  function boostPreview(x){
-  const head='<section class="mena-analysis mena-costs" role="dialog" aria-label="Upcoming upgrade prices"><button type="button" class="mena-costs-close" data-mena-close aria-label="Close upgrade prices">×</button><h3>Upcoming upgrade prices</h3>';
+  const head='<section class="mena-analysis mena-costs" popover="auto" role="dialog" aria-label="Upcoming upgrade prices"><button type="button" class="mena-costs-close" data-mena-close aria-label="Close upgrade prices">×</button><h3>Upcoming upgrade prices</h3>';
   if(x.level==null)return head+'<p>Boost level unavailable.</p></section>';
+  const increase=x.name.includes('}')?`+${fmt(x.perLevel/100)}× to multiplier`:x.name.replace('{',fmt(x.perLevel));
+  const next=x.name.replace('{',fmt((x.level+1)*x.perLevel)).replace('}',fmt(1+(x.level+1)*x.perLevel/100));
   let total=0;
   const rows=Array.from({length:10},(_,i)=>{const level=x.level+i,cost=boostCost(x.id,level);total+=cost;return `<tr><td>${fmt(level)} → ${fmt(level+1)}</td><td>${price(cost)}</td><td>${price(total)}</td></tr>`;}).join('');
-  return `${head}<p>${esc(x.effect)}</p><p>${status(x.available,'Available','Rank locked')}</p><table><thead><tr><th>Level</th><th>Price (Lumi)</th><th>Total (Lumi)</th></tr></thead><tbody>${rows}</tbody></table></section>`;
+  return `${head}<p>${esc(x.effect)}</p><p class="mena-boost-increase">Per level: ${esc(increase)}</p><p>Next level: ${esc(next)}</p><p>${status(x.available,'Available','Rank locked')}</p><table><thead><tr><th>Level</th><th>Price (Lumi)</th><th>Total (Lumi)</th></tr></thead><tbody>${rows}</tbody></table></section>`;
  }
  const status=(v,yes,no)=>v==null?'Unknown':v?yes:no;
  const tile=(icon,name,value,detail,upgrade='')=>`<article class="mena-tile"><img src="assets/${icon}.png" alt=""><div><strong>${esc(name)}</strong><span>${esc(value)}</span><small>${esc(detail)}</small>${upgrade?`<div class="mena-jelly-upgrade"><strong>Next upgrades</strong><small>${esc(upgrade)}</small></div>`:''}</div></article>`;
@@ -103,6 +105,8 @@ function render(host,raw){const model=decode(raw),token={};host._menagerieToken=
   if(tab==='Lumi sources'&&analysis?.available){const next=analysis.nextLumiBoost;content=`<section class="mena-analysis"><h3>${fmt(analysis.rate)} Lumi / hour</h3>${analysis.missing.length?'<p>Missing source data: '+esc(analysis.missing.join(', '))+'</p>':''}<p>Next Lumi boost: ${fmt(next.cost)} Lumi → +${fmt(next.gain)} Lumi/hour · Payback: ${fmt(next.paybackHours)} hours · ${next.affordable?'Affordable':'Insufficient Lumi'}.</p><table><thead><tr><th>Source</th><th>Contribution</th></tr></thead><tbody>${analysis.factors.map(x=>`<tr><td>${esc(x.name)}</td><td>×${fmt(x.value)}</td></tr>`).join('')}${analysis.additive.map(x=>`<tr><td>${esc(x.name)}</td><td>+${fmt(x.value)}% additive</td></tr>`).join('')}</tbody></table></section>`+content;}
   body.innerHTML=content;
   const closePreview=()=>{const id=selectedBoost;selectedBoost=null;paint();host.querySelector(`[data-mena-boost="${id}"]`)?.focus({preventScroll:true});};
+  const popup=host.querySelector('.mena-costs');
+  if(popup){popup.showPopover();popup.addEventListener('toggle',e=>{if(e.newState==='closed'&&popup.isConnected&&selectedBoost!=null){selectedBoost=null;paint();}});}
   const closeButton=host.querySelector('[data-mena-close]');if(closeButton)closeButton.onclick=closePreview;
   host.onkeydown=e=>{if(e.key==='Escape'&&selectedBoost!=null){e.preventDefault();closePreview();}};
   host.querySelectorAll('[data-mena-boost]').forEach(b=>b.onclick=()=>{const id=Number(b.dataset.menaBoost);selectedBoost=selectedBoost===id?null:id;paint();host.querySelector(`[data-mena-boost="${id}"]`).focus({preventScroll:true});});host.querySelectorAll('[data-mena-tab]').forEach(b=>b.onclick=()=>{tab=b.dataset.menaTab;paint();});const select=host.querySelector('[data-mena-filter]');if(select){select.value=filter;select.onchange=()=>{filter=select.value;paint();};}
